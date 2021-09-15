@@ -4,12 +4,12 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/arcology/evm/common"
-	"github.com/arcology/evm/consensus"
-	"github.com/arcology/evm/core/types"
-	"github.com/arcology/evm/core/vm"
-	"github.com/arcology/evm/params"
-	adaptor "github.com/arcology/vm-adaptor/evm"
+	"github.com/arcology-network/evm/common"
+	"github.com/arcology-network/evm/consensus"
+	"github.com/arcology-network/evm/core/types"
+	"github.com/arcology-network/evm/core/vm"
+	"github.com/arcology-network/evm/params"
+	adaptor "github.com/arcology-network/vm-adaptor/evm"
 )
 
 var (

@@ -4,14 +4,14 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/arcology/concurrenturl/v2"
-	urlcommon "github.com/arcology/concurrenturl/v2/common"
-	"github.com/arcology/evm/common"
-	"github.com/arcology/evm/core"
-	"github.com/arcology/evm/core/types"
-	"github.com/arcology/evm/core/vm"
-	"github.com/arcology/evm/crypto"
-	"github.com/arcology/evm/params"
+	"github.com/arcology-network/concurrenturl/v2"
+	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	"github.com/arcology-network/evm/common"
+	"github.com/arcology-network/evm/core"
+	"github.com/arcology-network/evm/core/types"
+	"github.com/arcology-network/evm/core/vm"
+	"github.com/arcology-network/evm/crypto"
+	"github.com/arcology-network/evm/params"
 )
 
 type EUV2 struct {

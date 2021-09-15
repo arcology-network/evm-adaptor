@@ -4,15 +4,15 @@ import (
 	"encoding/hex"
 	"math/big"
 
-	"github.com/arcology/concurrenturl/v2"
-	urlcommon "github.com/arcology/concurrenturl/v2/common"
+	"github.com/arcology-network/concurrenturl/v2"
+	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
 
-	// urltype "github.com/arcology/concurrenturl/v2/type"
-	commutative "github.com/arcology/concurrenturl/v2/type/commutative"
-	noncommutative "github.com/arcology/concurrenturl/v2/type/noncommutative"
-	evmcommon "github.com/arcology/evm/common"
-	evmtypes "github.com/arcology/evm/core/types"
-	"github.com/arcology/evm/crypto"
+	// urltype "github.com/arcology-network/concurrenturl/v2/type"
+	commutative "github.com/arcology-network/concurrenturl/v2/type/commutative"
+	noncommutative "github.com/arcology-network/concurrenturl/v2/type/noncommutative"
+	evmcommon "github.com/arcology-network/evm/common"
+	evmtypes "github.com/arcology-network/evm/core/types"
+	"github.com/arcology-network/evm/crypto"
 )
 
 type ethStateV2 struct {

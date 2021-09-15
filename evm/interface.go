@@ -3,8 +3,8 @@ package evm
 import (
 	"math/big"
 
-	"github.com/arcology/evm/common"
-	"github.com/arcology/evm/core/types"
+	"github.com/arcology-network/evm/common"
+	"github.com/arcology-network/evm/core/types"
 )
 
 type StateDB interface {

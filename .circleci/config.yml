@@ -11,7 +11,7 @@ jobs:
       - run: sudo apt update
       - run: sudo apt install libboost-all-dev
       - run: sudo apt install libtbb-dev
-      - run: go env -w GOPRIVATE=github.com/arcology
+      - run: go env -w GOPRIVATE=github.com/arcology-network
       - run: sudo bash .circleci/download_artifacts.sh
       # - run: sudo ln -s /home/circleci/project/liburlarbitrator.so /usr/local/lib
       - run: go build ./...

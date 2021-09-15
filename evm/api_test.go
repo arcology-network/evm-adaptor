@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/arcology/evm/crypto"
+	"github.com/arcology-network/evm/crypto"
 )
 
 func TestBytesToInt32(t *testing.T) {

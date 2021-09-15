@@ -6,9 +6,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/arcology/common-lib/types"
-	clib "github.com/arcology/concurrentlib"
-	"github.com/arcology/evm/common"
+	"github.com/arcology-network/common-lib/types"
+	clib "github.com/arcology-network/concurrentlib"
+	"github.com/arcology-network/evm/common"
 )
 
 func arrayCreateV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {

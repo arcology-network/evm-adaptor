@@ -6,17 +6,17 @@ import (
 	"reflect"
 	"testing"
 
-	cmncommon "github.com/arcology/common-lib/common"
-	cmntypes "github.com/arcology/common-lib/types"
-	"github.com/arcology/concurrenturl/v2"
-	urlcommon "github.com/arcology/concurrenturl/v2/common"
-	urltype "github.com/arcology/concurrenturl/v2/type"
-	"github.com/arcology/concurrenturl/v2/type/commutative"
-	"github.com/arcology/concurrenturl/v2/type/noncommutative"
-	"github.com/arcology/evm/common"
-	"github.com/arcology/evm/core/types"
-	"github.com/arcology/evm/crypto"
-	adaptor "github.com/arcology/vm-adaptor/evm"
+	cmncommon "github.com/arcology-network/common-lib/common"
+	cmntypes "github.com/arcology-network/common-lib/types"
+	"github.com/arcology-network/concurrenturl/v2"
+	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	urltype "github.com/arcology-network/concurrenturl/v2/type"
+	"github.com/arcology-network/concurrenturl/v2/type/commutative"
+	"github.com/arcology-network/concurrenturl/v2/type/noncommutative"
+	"github.com/arcology-network/evm/common"
+	"github.com/arcology-network/evm/core/types"
+	"github.com/arcology-network/evm/crypto"
+	adaptor "github.com/arcology-network/vm-adaptor/evm"
 )
 
 var (

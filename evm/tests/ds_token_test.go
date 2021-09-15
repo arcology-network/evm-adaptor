@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arcology/concurrenturl/v2"
-	urlcommon "github.com/arcology/concurrenturl/v2/common"
-	"github.com/arcology/concurrenturl/v2/type/commutative"
-	evmcommon "github.com/arcology/evm/common"
-	adaptor "github.com/arcology/vm-adaptor/evm"
+	"github.com/arcology-network/concurrenturl/v2"
+	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	"github.com/arcology-network/concurrenturl/v2/type/commutative"
+	evmcommon "github.com/arcology-network/evm/common"
+	adaptor "github.com/arcology-network/vm-adaptor/evm"
 )
 
 var (

@@ -8,14 +8,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arcology/concurrenturl/v2"
-	urlcommon "github.com/arcology/concurrenturl/v2/common"
-	urltype "github.com/arcology/concurrenturl/v2/type"
-	commutative "github.com/arcology/concurrenturl/v2/type/commutative"
-	noncommutative "github.com/arcology/concurrenturl/v2/type/noncommutative"
-	evmcommon "github.com/arcology/evm/common"
-	arbitrator "github.com/arcology/urlarbitrator-engine/go-wrapper"
-	"github.com/arcology/vm-adaptor/evm"
+	"github.com/arcology-network/concurrenturl/v2"
+	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	urltype "github.com/arcology-network/concurrenturl/v2/type"
+	commutative "github.com/arcology-network/concurrenturl/v2/type/commutative"
+	noncommutative "github.com/arcology-network/concurrenturl/v2/type/noncommutative"
+	evmcommon "github.com/arcology-network/evm/common"
+	arbitrator "github.com/arcology-network/urlarbitrator-engine/go-wrapper"
+	"github.com/arcology-network/vm-adaptor/evm"
 )
 
 func TestStateDBV2GetNonexistBalance(t *testing.T) {

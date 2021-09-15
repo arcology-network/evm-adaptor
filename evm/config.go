@@ -3,11 +3,11 @@ package evm
 import (
 	"math/big"
 
-	"github.com/arcology/evm/common"
-	"github.com/arcology/evm/consensus"
-	"github.com/arcology/evm/core/types"
-	"github.com/arcology/evm/core/vm"
-	"github.com/arcology/evm/params"
+	"github.com/arcology-network/evm/common"
+	"github.com/arcology-network/evm/consensus"
+	"github.com/arcology-network/evm/core/types"
+	"github.com/arcology-network/evm/core/vm"
+	"github.com/arcology-network/evm/params"
 )
 
 // ChainContext supports retrieving headers and consensus parameters from the
