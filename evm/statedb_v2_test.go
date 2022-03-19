@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
 	"github.com/arcology-network/concurrenturl/v2"
 	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
 	urltype "github.com/arcology-network/concurrenturl/v2/type"
@@ -19,9 +20,9 @@ import (
 )
 
 func TestStateDBV2GetNonexistBalance(t *testing.T) {
-	db := urlcommon.NewDataStore()
+	db := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	db.Save(urlcommon.NewPlatform().Eth10Account(), meta)
+	db.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
 	url := concurrenturl.NewConcurrentUrl(db)
 
 	account := evmcommon.BytesToAddress([]byte{201, 202, 203, 204, 205})
@@ -30,7 +31,9 @@ func TestStateDBV2GetNonexistBalance(t *testing.T) {
 	statedb.CreateAccount(account)
 	_, transitions := url.Export(true)
 	t.Log("\n" + formatTransitions(transitions))
-	url.Commit(transitions, []uint32{1})
+	url.Import(transitions)
+	url.PostImport()
+	url.Commit([]uint32{1})
 
 	url = concurrenturl.NewConcurrentUrl(db)
 	statedb = evm.NewStateDBV2(nil, db, url)
@@ -42,9 +45,9 @@ func TestStateDBV2GetNonexistBalance(t *testing.T) {
 }
 
 func TestStateDBV2GetNonexistCode(t *testing.T) {
-	db := urlcommon.NewDataStore()
+	db := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	db.Save(urlcommon.NewPlatform().Eth10Account(), meta)
+	db.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
 	url := concurrenturl.NewConcurrentUrl(db)
 
 	account := evmcommon.BytesToAddress([]byte{201, 202, 203, 204, 205})
@@ -53,7 +56,9 @@ func TestStateDBV2GetNonexistCode(t *testing.T) {
 	statedb.CreateAccount(account)
 	_, transitions := url.Export(true)
 	t.Log("\n" + formatTransitions(transitions))
-	url.Commit(transitions, []uint32{1})
+	url.Import(transitions)
+	url.PostImport()
+	url.Commit([]uint32{1})
 
 	url = concurrenturl.NewConcurrentUrl(db)
 	statedb = evm.NewStateDBV2(nil, db, url)
@@ -65,9 +70,9 @@ func TestStateDBV2GetNonexistCode(t *testing.T) {
 }
 
 func TestStateDBV2GetNonexistStorageState(t *testing.T) {
-	db := urlcommon.NewDataStore()
+	db := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	db.Save(urlcommon.NewPlatform().Eth10Account(), meta)
+	db.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
 	url := concurrenturl.NewConcurrentUrl(db)
 
 	account := evmcommon.BytesToAddress([]byte{201, 202, 203, 204, 205})
@@ -76,7 +81,9 @@ func TestStateDBV2GetNonexistStorageState(t *testing.T) {
 	statedb.CreateAccount(account)
 	_, transitions := url.Export(true)
 	t.Log("\n" + formatTransitions(transitions))
-	url.Commit(transitions, []uint32{1})
+	url.Import(transitions)
+	url.PostImport()
+	url.Commit([]uint32{1})
 
 	url = concurrenturl.NewConcurrentUrl(db)
 	statedb = evm.NewStateDBV2(nil, db, url)
@@ -88,9 +95,9 @@ func TestStateDBV2GetNonexistStorageState(t *testing.T) {
 }
 
 func TestStateDBV2(t *testing.T) {
-	db := urlcommon.NewDataStore()
+	db := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	db.Save(urlcommon.NewPlatform().Eth10Account(), meta)
+	db.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
 	url := concurrenturl.NewConcurrentUrl(db)
 
 	account := evmcommon.BytesToAddress([]byte{201, 202, 203, 204, 205})
@@ -103,7 +110,9 @@ func TestStateDBV2(t *testing.T) {
 	accesses, transitions := url.Export(true)
 	t.Log("\n" + formatTransitions(accesses))
 	t.Log("\n" + formatTransitions(transitions))
-	url.Commit(transitions, []uint32{1})
+	url.Import(transitions)
+	url.PostImport()
+	url.Commit([]uint32{1})
 
 	url1 := concurrenturl.NewConcurrentUrl(db)
 	statedb1 := evm.NewStateDBV2(nil, db, url1)
@@ -126,7 +135,9 @@ func TestStateDBV2(t *testing.T) {
 	t.Log(groups)
 	t.Log(flags)
 
-	url.Commit(append(t1, t2...), []uint32{2, 3})
+	url.Import(append(t1, t2...))
+	url.PostImport()
+	url.Commit([]uint32{2, 3})
 	url = concurrenturl.NewConcurrentUrl(db)
 	statedb = evm.NewStateDBV2(nil, db, url)
 	balance := statedb.GetBalance(account)
@@ -134,9 +145,9 @@ func TestStateDBV2(t *testing.T) {
 }
 
 func TestStateDBV2BalanceReadWriteConflict(t *testing.T) {
-	db := urlcommon.NewDataStore()
+	db := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	db.Save(urlcommon.NewPlatform().Eth10Account(), meta)
+	db.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
 	url := concurrenturl.NewConcurrentUrl(db)
 
 	account := evmcommon.BytesToAddress([]byte{201, 202, 203, 204, 205})
@@ -146,7 +157,9 @@ func TestStateDBV2BalanceReadWriteConflict(t *testing.T) {
 	statedb.AddBalance(account, new(big.Int).SetUint64(100))
 
 	_, transitions := url.Export(true)
-	url.Commit(transitions, []uint32{1})
+	url.Import(transitions)
+	url.PostImport()
+	url.Commit([]uint32{1})
 
 	url1 := concurrenturl.NewConcurrentUrl(db)
 	statedb1 := evm.NewStateDBV2(nil, db, url1)
@@ -180,9 +193,9 @@ func TestStateDBV2BalanceReadWriteConflict(t *testing.T) {
 }
 
 func TestStateDBV2NonceWrite(t *testing.T) {
-	db := urlcommon.NewDataStore()
+	db := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	db.Save(urlcommon.NewPlatform().Eth10Account(), meta)
+	db.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
 	url := concurrenturl.NewConcurrentUrl(db)
 
 	account := evmcommon.BytesToAddress([]byte{201, 202, 203, 204, 205})
@@ -191,7 +204,9 @@ func TestStateDBV2NonceWrite(t *testing.T) {
 	statedb.CreateAccount(account)
 
 	_, transitions := url.Export(true)
-	url.Commit(transitions, []uint32{1})
+	url.Import(transitions)
+	url.PostImport()
+	url.Commit([]uint32{1})
 
 	url1 := concurrenturl.NewConcurrentUrl(db)
 	statedb1 := evm.NewStateDBV2(nil, db, url1)
@@ -214,7 +229,9 @@ func TestStateDBV2NonceWrite(t *testing.T) {
 	t.Log(groups)
 	t.Log(flags)
 
-	url.Commit(append(t1, t2...), []uint32{2, 3})
+	url.Import(append(t1, t2...))
+	url.PostImport()
+	url.Commit([]uint32{2, 3})
 	url = concurrenturl.NewConcurrentUrl(db)
 	statedb = evm.NewStateDBV2(nil, db, url)
 	nonce := statedb.GetNonce(account)
@@ -222,9 +239,9 @@ func TestStateDBV2NonceWrite(t *testing.T) {
 }
 
 func TestExportOnFailure(t *testing.T) {
-	db := urlcommon.NewDataStore()
+	db := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	db.Save(urlcommon.NewPlatform().Eth10Account(), meta)
+	db.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
 
 	url := concurrenturl.NewConcurrentUrl(db)
 	account := evmcommon.BytesToAddress([]byte{0xcc})
@@ -234,7 +251,9 @@ func TestExportOnFailure(t *testing.T) {
 	statedb.CreateAccount(account)
 	statedb.CreateAccount(coinbase)
 	_, transitions := url.Export(true)
-	url.Commit(transitions, []uint32{1})
+	url.Import(transitions)
+	url.PostImport()
+	url.Commit([]uint32{1})
 
 	accesses, transitions := evm.ExportOnFailure(
 		db,
@@ -249,9 +268,9 @@ func TestExportOnFailure(t *testing.T) {
 }
 
 func TestExportOnConfliction(t *testing.T) {
-	db := urlcommon.NewDataStore()
+	db := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	db.Save(urlcommon.NewPlatform().Eth10Account(), meta)
+	db.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
 
 	url := concurrenturl.NewConcurrentUrl(db)
 	account := evmcommon.BytesToAddress([]byte{0xcc})
@@ -259,7 +278,9 @@ func TestExportOnConfliction(t *testing.T) {
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 1)
 	statedb.CreateAccount(account)
 	_, transitions := url.Export(true)
-	url.Commit(transitions, []uint32{1})
+	url.Import(transitions)
+	url.PostImport()
+	url.Commit([]uint32{1})
 
 	accesses, transitions := evm.ExportOnConfliction(
 		db,
@@ -271,9 +292,9 @@ func TestExportOnConfliction(t *testing.T) {
 }
 
 func BenchmarkExport(b *testing.B) {
-	db := urlcommon.NewDataStore()
+	db := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	db.Save(urlcommon.NewPlatform().Eth10Account(), meta)
+	db.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
 	url := concurrenturl.NewConcurrentUrl(db)
 
 	statedb := evm.NewStateDBV2(nil, db, url)
@@ -300,9 +321,9 @@ func BenchmarkExport(b *testing.B) {
 }
 
 func TestExport1(b *testing.T) {
-	db := urlcommon.NewDataStore()
+	db := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	db.Save(urlcommon.NewPlatform().Eth10Account(), meta)
+	db.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
 
 	begin := time.Now()
 	var transitions []urlcommon.UnivalueInterface
@@ -345,28 +366,28 @@ func formatValue(value interface{}) string {
 		meta := value.(*commutative.Meta)
 		var str string
 		str += "{"
-		for i, k := range meta.GetKeys() {
+		for i, k := range meta.PeekKeys() {
 			str += k
-			if i != len(meta.GetKeys())-1 {
+			if i != len(meta.PeekKeys())-1 {
 				str += ", "
 			}
 		}
 		str += "}"
-		if len(meta.GetAdded()) != 0 {
+		if len(meta.PeekAdded()) != 0 {
 			str += " + {"
-			for i, k := range meta.GetAdded() {
+			for i, k := range meta.PeekAdded() {
 				str += k
-				if i != len(meta.GetAdded())-1 {
+				if i != len(meta.PeekAdded())-1 {
 					str += ", "
 				}
 			}
 			str += "}"
 		}
-		if len(meta.GetRemoved()) != 0 {
+		if len(meta.PeekRemoved()) != 0 {
 			str += " - {"
-			for i, k := range meta.GetRemoved() {
+			for i, k := range meta.PeekRemoved() {
 				str += k
-				if i != len(meta.GetRemoved())-1 {
+				if i != len(meta.PeekRemoved())-1 {
 					str += ", "
 				}
 			}
@@ -380,7 +401,7 @@ func formatValue(value interface{}) string {
 	case *commutative.Balance:
 		v := value.(*commutative.Balance).Value()
 		d := value.(*commutative.Balance).GetDelta()
-		return fmt.Sprintf(" = %v + %v", v.(*big.Int).Uint64(), d.Int64())
+		return fmt.Sprintf(" = %v + %v", v.(*big.Int).Uint64(), d.(*big.Int).Int64())
 	case *commutative.Int64:
 		v := value.(*commutative.Int64).Value()
 		d := value.(*commutative.Int64).GetDelta()
@@ -392,7 +413,7 @@ func formatValue(value interface{}) string {
 func formatTransitions(transitions []urlcommon.UnivalueInterface) string {
 	var str string
 	for _, t := range transitions {
-		str += fmt.Sprintf("[%v:%v,%v,%v,%v]%s%s\n", t.(*urltype.Univalue).GetTx(), t.(*urltype.Univalue).Reads(), t.(*urltype.Univalue).Writes(), t.(*urltype.Univalue).Preexist(), t.(*urltype.Univalue).Composite(), t.(*urltype.Univalue).GetPath(), formatValue(t.(*urltype.Univalue).Value()))
+		str += fmt.Sprintf("[%v:%v,%v,%v,%v]%s%s\n", t.(*urltype.Univalue).GetTx(), t.(*urltype.Univalue).Reads(), t.(*urltype.Univalue).Writes(), t.(*urltype.Univalue).Preexist(), t.(*urltype.Univalue).Composite(), *(t.(*urltype.Univalue).GetPath()), formatValue(t.(*urltype.Univalue).Value()))
 	}
 	return str
 }
@@ -403,20 +424,24 @@ func detectConflict(transitions []urlcommon.UnivalueInterface) ([]uint32, []uint
 	paths := make([]string, length)
 	reads := make([]uint32, length)
 	writes := make([]uint32, length)
-	addOrDelete := make([]bool, length)
 	composite := make([]bool, length)
+	uniqueTxsDict := make(map[uint32]struct{})
 	for i, t := range transitions {
 		txs[i] = t.(*urltype.Univalue).GetTx()
-		paths[i] = t.(*urltype.Univalue).GetPath()
+		paths[i] = *(t.(*urltype.Univalue).GetPath())
 		reads[i] = t.(*urltype.Univalue).Reads()
 		writes[i] = t.(*urltype.Univalue).Writes()
-		addOrDelete[i] = t.(*urltype.Univalue).IfAddOrDelete()
 		composite[i] = t.(*urltype.Univalue).Composite()
+		uniqueTxsDict[txs[i]] = struct{}{}
 	}
 
+	uniqueTxs := make([]uint32, 0, len(uniqueTxsDict))
+	for tx := range uniqueTxsDict {
+		uniqueTxs = append(uniqueTxs, tx)
+	}
 	engine := arbitrator.Start()
-	_, buf := arbitrator.Insert(engine, txs, paths, reads, writes, addOrDelete, composite)
-	txs, groups, flags := arbitrator.Detect(engine, uint32(length))
-	arbitrator.Clear(engine, buf)
+	arbitrator.Insert(engine, txs, paths, reads, writes, composite)
+	txs, groups, flags := arbitrator.DetectLegacy(engine, uniqueTxs)
+	arbitrator.Clear(engine)
 	return txs, groups, flags
 }

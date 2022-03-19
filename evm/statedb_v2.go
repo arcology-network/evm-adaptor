@@ -8,6 +8,7 @@ import (
 	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
 
 	// urltype "github.com/arcology-network/concurrenturl/v2/type"
+	commonlib "github.com/arcology-network/common-lib/common"
 	commutative "github.com/arcology-network/concurrenturl/v2/type/commutative"
 	noncommutative "github.com/arcology-network/concurrenturl/v2/type/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
@@ -22,11 +23,11 @@ type ethStateV2 struct {
 	logs   map[evmcommon.Hash][]*evmtypes.Log
 
 	kapi *APIV2
-	db   urlcommon.DB
+	db   urlcommon.DatastoreInterface
 	url  *concurrenturl.ConcurrentUrl
 }
 
-func NewStateDBV2(kapi *APIV2, db urlcommon.DB, url *concurrenturl.ConcurrentUrl) StateDB {
+func NewStateDBV2(kapi *APIV2, db urlcommon.DatastoreInterface, url *concurrenturl.ConcurrentUrl) StateDB {
 	return &ethStateV2{
 		logs: make(map[evmcommon.Hash][]*evmtypes.Log),
 		kapi: kapi,
@@ -295,7 +296,7 @@ func GetAccountPathSize(url *concurrenturl.ConcurrentUrl) int {
 }
 
 func ExportOnFailure(
-	db urlcommon.DB,
+	db urlcommon.DatastoreInterface,
 	txIndex int,
 	from, coinbase evmcommon.Address,
 	gasUsed uint64, gasPrice *big.Int,
@@ -310,7 +311,7 @@ func ExportOnFailure(
 }
 
 func ExportOnConfliction(
-	db urlcommon.DB,
+	db urlcommon.DatastoreInterface,
 	txIndex int,
 	from evmcommon.Address,
 ) ([]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface) {
@@ -321,6 +322,33 @@ func ExportOnConfliction(
 	return url.Export(true)
 }
 
+func ExportOnFailureEx(
+	db urlcommon.DatastoreInterface,
+	txIndex int,
+	from, coinbase evmcommon.Address,
+	gasUsed uint64, gasPrice *big.Int,
+) ([][]byte, [][]byte) {
+	url := concurrenturl.NewConcurrentUrl(db)
+	state := NewStateDBV2(nil, db, url)
+	state.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
+	state.AddBalance(coinbase, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
+	state.SubBalance(from, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
+	state.SetNonce(from, 0)
+	return url.ExportEncoded()
+}
+
+func ExportOnConflictionEx(
+	db urlcommon.DatastoreInterface,
+	txIndex int,
+	from evmcommon.Address,
+) ([][]byte, [][]byte) {
+	url := concurrenturl.NewConcurrentUrl(db)
+	state := NewStateDBV2(nil, db, url)
+	state.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
+	state.SetNonce(from, 0)
+	return url.ExportEncoded()
+}
+
 func addressToHex(addr evmcommon.Address) string {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], addr[:])
@@ -328,27 +356,39 @@ func addressToHex(addr evmcommon.Address) string {
 }
 
 func getAccountRootPath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
-	return url.Platform.Eth10Account() + addressToHex(account) + "/"
+	var accHex [2 * evmcommon.AddressLength]byte
+	hex.Encode(accHex[:], account[:])
+	return commonlib.StrCat(url.Platform.Eth10Account(), string(accHex[:]), "/")
 }
 
 func getStorageRootPath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
-	return getAccountRootPath(url, account) + "storage/native/"
+	var accHex [2 * evmcommon.AddressLength]byte
+	hex.Encode(accHex[:], account[:])
+	return commonlib.StrCat(url.Platform.Eth10Account(), string(accHex[:]), "/storage/native/")
 }
 
 func getStorageKeyPath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, key evmcommon.Hash) string {
-	return getStorageRootPath(url, account) + key.Hex()
+	var accHex [2 * evmcommon.AddressLength]byte
+	hex.Encode(accHex[:], account[:])
+	return commonlib.StrCat(url.Platform.Eth10Account(), string(accHex[:]), "/storage/native/", key.Hex())
 }
 
 func getBalancePath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
-	return getAccountRootPath(url, account) + "balance"
+	var accHex [2 * evmcommon.AddressLength]byte
+	hex.Encode(accHex[:], account[:])
+	return commonlib.StrCat(url.Platform.Eth10Account(), string(accHex[:]), "/balance")
 }
 
 func getNoncePath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
-	return getAccountRootPath(url, account) + "nonce"
+	var accHex [2 * evmcommon.AddressLength]byte
+	hex.Encode(accHex[:], account[:])
+	return commonlib.StrCat(url.Platform.Eth10Account(), string(accHex[:]), "/nonce")
 }
 
 func getCodePath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
-	return getAccountRootPath(url, account) + "code"
+	var accHex [2 * evmcommon.AddressLength]byte
+	hex.Encode(accHex[:], account[:])
+	return commonlib.StrCat(url.Platform.Eth10Account(), string(accHex[:]), "/code")
 }
 
 func accountExist(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, tid uint32) bool {
@@ -356,7 +396,7 @@ func accountExist(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, t
 }
 
 func createAccount(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, tid uint32) {
-	if err := url.Preload(tid, url.Platform.Eth10(), addressToHex(account)); err != nil {
+	if err := url.CreateAccount(tid, url.Platform.Eth10(), addressToHex(account)); err != nil {
 		panic(err)
 	}
 

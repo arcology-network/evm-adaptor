@@ -4,8 +4,10 @@ import (
 	"math/big"
 	"testing"
 
+	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
 	"github.com/arcology-network/concurrenturl/v2"
 	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	curstorage "github.com/arcology-network/concurrenturl/v2/storage"
 	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	"github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/types"
@@ -14,10 +16,10 @@ import (
 
 func TestTransfer(t *testing.T) {
 	config := MainConfig()
-	persistentDB := urlcommon.NewDataStore()
+	persistentDB := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	persistentDB.Save(urlcommon.NewPlatform().Eth10Account(), meta)
-	db := urlcommon.NewTransientDB(persistentDB)
+	persistentDB.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
+	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
 	api := adaptor.NewAPIV2(db, url)
@@ -31,7 +33,9 @@ func TestTransfer(t *testing.T) {
 
 	// Transfer.
 	url = concurrenturl.NewConcurrentUrl(db)
-	url.Commit(transitions, []uint32{0})
+	url.Import(transitions)
+	url.PostImport()
+	url.Commit([]uint32{0})
 	api = adaptor.NewAPIV2(db, url)
 	statedb = adaptor.NewStateDBV2(api, db, url)
 	eu := adaptor.NewEUV2(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url)
@@ -41,8 +45,8 @@ func TestTransfer(t *testing.T) {
 	config.Time = new(big.Int).SetUint64(10000000)
 
 	msg := types.NewMessage(user1, &user2, 0, new(big.Int).SetUint64(100), 1e15, new(big.Int).SetUint64(1), nil, nil, true)
-	_, transitions, receipt := eu.Run(common.BytesToHash([]byte{1, 1, 1}), 1, &msg, adaptor.NewEVMBlockContextV2(config), adaptor.NewEVMTxContext(msg))
-	// t.Log("\n" + formatTransitions(accesses))
+	accesses, transitions, receipt := eu.Run(common.BytesToHash([]byte{1, 1, 1}), 1, &msg, adaptor.NewEVMBlockContextV2(config), adaptor.NewEVMTxContext(msg))
+	t.Log("\n" + formatTransitions(accesses))
 	t.Log("\n" + formatTransitions(transitions))
 	t.Log(receipt)
 }

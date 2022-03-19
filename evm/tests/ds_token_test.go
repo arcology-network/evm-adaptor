@@ -5,8 +5,10 @@ import (
 	"testing"
 	"time"
 
+	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
 	"github.com/arcology-network/concurrenturl/v2"
 	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	curstorage "github.com/arcology-network/concurrenturl/v2/storage"
 	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	adaptor "github.com/arcology-network/vm-adaptor/evm"
@@ -17,9 +19,9 @@ var (
 )
 
 func TestDSTokenMint(t *testing.T) {
-	persistentDB := urlcommon.NewDataStore()
+	persistentDB := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	persistentDB.Save(urlcommon.NewPlatform().Eth10Account(), meta)
+	persistentDB.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
 	// db := urlcommon.NewTransientDB(persistentDB)
 	db := persistentDB
 
@@ -43,12 +45,14 @@ func TestDSTokenMint(t *testing.T) {
 	// Call mint twice.
 	N := 10
 	url = concurrenturl.NewConcurrentUrl(db)
-	url.Commit(transitions, []uint32{1})
+	url.Import(transitions)
+	url.PostImport()
+	url.Commit([]uint32{1})
 	totalTransitions := []urlcommon.UnivalueInterface{}
 	txs := []uint32{}
 	begin := time.Now()
 	for i := 0; i < N; i++ {
-		tdb := urlcommon.NewTransientDB(db)
+		tdb := curstorage.NewTransientDB(db)
 		url = concurrenturl.NewConcurrentUrl(tdb)
 		api := adaptor.NewAPIV2(tdb, url)
 		statedb := adaptor.NewStateDBV2(api, tdb, url)
@@ -86,9 +90,11 @@ func TestDSTokenMint(t *testing.T) {
 	begin = time.Now()
 
 	// Call defer function.
-	tdb := urlcommon.NewTransientDB(db)
+	tdb := curstorage.NewTransientDB(db)
 	url = concurrenturl.NewConcurrentUrl(tdb)
-	url.Commit(totalTransitions, txs)
+	url.Import(totalTransitions)
+	url.PostImport()
+	url.Commit(txs)
 	t.Log("time for commit: ", time.Since(begin))
 	begin = time.Now()
 
@@ -116,6 +122,8 @@ func TestDSTokenMint(t *testing.T) {
 
 	// Commit mint and defer.
 	url = concurrenturl.NewConcurrentUrl(db)
-	url.Commit(totalTransitions, txs)
+	url.Import(totalTransitions)
+	url.PostImport()
+	url.Commit(txs)
 	t.Log("time for final commit: ", time.Since(begin))
 }

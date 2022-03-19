@@ -1,6 +1,8 @@
 package evm
 
 import (
+	"bytes"
+	"fmt"
 	"math"
 	"math/big"
 
@@ -18,11 +20,11 @@ type EUV2 struct {
 	evm     *vm.EVM
 	statedb vm.StateDB
 	api     *APIV2
-	db      urlcommon.DB
+	db      urlcommon.DatastoreInterface
 	url     *concurrenturl.ConcurrentUrl
 }
 
-func NewEUV2(chainConfig *params.ChainConfig, vmConfig vm.Config, chainContext core.ChainContext, statedb vm.StateDB, api *APIV2, db urlcommon.DB, url *concurrenturl.ConcurrentUrl) *EUV2 {
+func NewEUV2(chainConfig *params.ChainConfig, vmConfig vm.Config, chainContext core.ChainContext, statedb vm.StateDB, api *APIV2, db urlcommon.DatastoreInterface, url *concurrenturl.ConcurrentUrl) *EUV2 {
 	return &EUV2{
 		evm:     vm.NewEVMEx(vm.BlockContext{BlockNumber: new(big.Int).SetUint64(100000000)}, vm.TxContext{}, statedb, chainConfig, vmConfig, api),
 		statedb: statedb,
@@ -32,7 +34,7 @@ func NewEUV2(chainConfig *params.ChainConfig, vmConfig vm.Config, chainContext c
 	}
 }
 
-func (eu *EUV2) SetContext(statedb vm.StateDB, api *APIV2, db urlcommon.DB, url *concurrenturl.ConcurrentUrl) {
+func (eu *EUV2) SetContext(statedb vm.StateDB, api *APIV2, db urlcommon.DatastoreInterface, url *concurrenturl.ConcurrentUrl) {
 	eu.api = api
 	eu.statedb = statedb
 	eu.db = db
@@ -66,17 +68,69 @@ func (eu *EUV2) Run(thash common.Hash, tindex int, msg *types.Message, blockCont
 	receipt.TxHash = thash
 	receipt.GasUsed = result.UsedGas
 	if msg.To() == nil {
-		receipt.ContractAddress = crypto.CreateAddress(eu.evm.Origin, msg.Nonce())
+		userSpecifiedAddress := crypto.CreateAddress(eu.evm.Origin, msg.Nonce())
+		receipt.ContractAddress = result.ContractAddress
+		if !bytes.Equal(userSpecifiedAddress.Bytes(), result.ContractAddress.Bytes()) {
+			eu.api.AddLog("ContractAddressWarning", fmt.Sprintf("user specified address = %v, inner address = %v", userSpecifiedAddress, result.ContractAddress))
+		}
 	}
 	receipt.Logs = eu.statedb.(*ethStateV2).GetLogs(thash)
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
 	if !result.Failed() {
-		accesses, transitions := eu.url.Export(true)
+		accesses, transitions := eu.url.Export(false)
 		return accesses, transitions, receipt
 	} else {
 		accesses, transitions := ExportOnFailure(eu.db, tindex, msg.From(), blockContext.Coinbase, receipt.GasUsed, msg.GasPrice())
 		return accesses, transitions, receipt
+	}
+}
+
+func (eu *EUV2) RunEx(thash common.Hash, tindex int, msg *types.Message, blockContext vm.BlockContext, txContext vm.TxContext) ([][]byte, [][]byte, *types.Receipt, []byte) {
+	eu.statedb.(*ethStateV2).Prepare(thash, common.Hash{}, tindex)
+	eu.api.Prepare(thash, blockContext.BlockNumber, uint32(tindex))
+	eu.evm.Context = blockContext
+	eu.evm.TxContext = txContext
+
+	gp := core.GasPool(math.MaxUint64)
+
+	result, err := core.ApplyMessage(eu.evm, *msg, &gp)
+
+	if err != nil {
+		fmt.Printf("core.ApplyMessage err:%v\n", err)
+		result = &core.ExecutionResult{
+			Err: err,
+		}
+	}
+
+	if result.Err != nil {
+		fmt.Printf("result.Err err: %v\n", result.Err)
+	}
+
+	assertLog := GetAssert(result.ReturnData)
+	if len(assertLog) > 0 {
+		eu.api.AddLog("assert", assertLog)
+	}
+
+	receipt := types.NewReceipt(nil, result.Failed(), result.UsedGas)
+	receipt.TxHash = thash
+	receipt.GasUsed = result.UsedGas
+	if msg.To() == nil {
+		userSpecifiedAddress := crypto.CreateAddress(eu.evm.Origin, msg.Nonce())
+		receipt.ContractAddress = result.ContractAddress
+		if !bytes.Equal(userSpecifiedAddress.Bytes(), result.ContractAddress.Bytes()) {
+			eu.api.AddLog("ContractAddressWarning", fmt.Sprintf("user specified address = %v, inner address = %v", userSpecifiedAddress, result.ContractAddress))
+		}
+	}
+	receipt.Logs = eu.statedb.(*ethStateV2).GetLogs(thash)
+	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
+
+	if !result.Failed() {
+		accesses, transitions := eu.url.ExportEncoded()
+		return accesses, transitions, receipt, result.ReturnData
+	} else {
+		accesses, transitions := ExportOnFailureEx(eu.db, tindex, msg.From(), blockContext.Coinbase, receipt.GasUsed, msg.GasPrice())
+		return accesses, transitions, receipt, result.ReturnData
 	}
 }
 

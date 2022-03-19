@@ -95,11 +95,11 @@ type APIV2 struct {
 	queue     *concurrentlib.Queue
 	deferCall *concurrentlib.DeferCall
 
-	db  urlcommon.DB
+	db  urlcommon.DatastoreInterface
 	url *concurrenturl.ConcurrentUrl
 }
 
-func NewAPIV2(db urlcommon.DB, url *concurrenturl.ConcurrentUrl) *APIV2 {
+func NewAPIV2(db urlcommon.DatastoreInterface, url *concurrenturl.ConcurrentUrl) *APIV2 {
 	return &APIV2{
 		db:  db,
 		url: url,

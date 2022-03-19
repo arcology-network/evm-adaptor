@@ -2,11 +2,11 @@ from solcx import compile_files
 import sys
 
 compiled_sol = compile_files(
-    ['./BasicFunction.sol', './ConcurrentLibInterface.sol'],
+    ['./NativeStorage.sol'],
     output_values = ['bin', 'abi']
 )
 
-defer_perf = compiled_sol['./BasicFunction.sol:BasicFunction']
+defer_perf = compiled_sol['./NativeStorage.sol:NativeStorage']
 # concurrent_queue = compiled_sol['./ConcurrentLibInterface.sol:ConcurrentQueue']
 
 with open('code.txt', 'w') as f:
