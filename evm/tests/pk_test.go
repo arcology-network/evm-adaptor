@@ -43,7 +43,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 
 	// Deploy KittyCore.
 	eu, config := prepare(db, 10000000, transitions, []uint32{0})
-	transitions, receipt := deploy(eu, config, ceoAddress, 0, coreCode)
+	transitions, receipt := deploy(eu, config, ceoAddress, 0, coreCodeV2)
 	t.Log("\n" + formatTransitions(transitions))
 	t.Log(receipt)
 	coreAddress := receipt.ContractAddress
@@ -51,7 +51,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 
 	// Deploy SaleClockAuction.
 	eu, config = prepare(db, 10000001, transitions, []uint32{1})
-	transitions, receipt = deploy(eu, config, ceoAddress, 1, saleCode, coreAddress.Bytes(), []byte{100})
+	transitions, receipt = deploy(eu, config, ceoAddress, 1, saleAuctionCodeV2, coreAddress.Bytes(), []byte{100})
 	t.Log("\n" + formatTransitions(transitions))
 	t.Log(receipt)
 	saleAddress := receipt.ContractAddress
@@ -59,7 +59,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 
 	// Deploy SiringClockAuction.
 	eu, config = prepare(db, 10000002, transitions, []uint32{2})
-	transitions, receipt = deploy(eu, config, ceoAddress, 2, sireCode, coreAddress.Bytes(), []byte{100})
+	transitions, receipt = deploy(eu, config, ceoAddress, 2, siringAuctionCodeV2, coreAddress.Bytes(), []byte{100})
 	t.Log("\n" + formatTransitions(transitions))
 	t.Log(receipt)
 	sireAddress := receipt.ContractAddress
@@ -67,7 +67,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 
 	// Deploy GeneScience.
 	eu, config = prepare(db, 10000003, transitions, []uint32{3})
-	transitions, receipt = deploy(eu, config, ceoAddress, 3, geneCode, []byte{}, coreAddress.Bytes())
+	transitions, receipt = deploy(eu, config, ceoAddress, 3, geneScienceCodeV2, []byte{}, coreAddress.Bytes())
 	t.Log("\n" + formatTransitions(transitions))
 	t.Log(receipt)
 	geneAddress := receipt.ContractAddress
@@ -141,7 +141,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 	config.Time = new(big.Int).SetUint64(10000010)
 	eu = adaptor.NewEUV2(config.ChainConfig, *config.VMConfig, config.Chain, nil, nil, nil, nil)
 	url = concurrenturl.NewConcurrentUrl(nil)
-	for i := 0; i < 100000; i++ {
+	for i := 0; i < 10000; i++ {
 		// url = concurrenturl.NewConcurrentUrl(db)
 		url.Init(db)
 		api := adaptor.NewAPIV2(db, url)
@@ -173,7 +173,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 		totalAccesses = append(totalAccesses, accesses...)
 		txs = append(txs, uint32(i+1))
 
-		if (i+1)%50000 == 0 {
+		if (i+1)%5000 == 0 {
 			// t.Log("\n" + formatTransitions(transitions))
 			// t.Log(receipt)
 			t.Log("i = ", i, "----------------------------------------------------------------")

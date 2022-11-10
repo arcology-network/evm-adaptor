@@ -77,6 +77,30 @@ func TestPrintMethodID(t *testing.T) {
 	printMethodID("Queue", "popUint256(string)", t)
 	// Others
 	printMethodID("Others", "defer(string)", t)
+	// DynamicArray
+	printMethodID("DynamicArray", "create(string,uint256)", t)
+	printMethodID("DynamicArray", "length(string)", t)
+	printMethodID("DynamicArray", "pushBack(string,uint256)", t)
+	printMethodID("DynamicArray", "pushBack(string,address)", t)
+	printMethodID("DynamicArray", "pushBack(string,bytes)", t)
+	printMethodID("DynamicArray", "tryPopFrontUint256(string)", t)
+	printMethodID("DynamicArray", "tryPopFrontAddress(string)", t)
+	printMethodID("DynamicArray", "tryPopFrontBytes(string)", t)
+	printMethodID("DynamicArray", "popFrontUint256(string)", t)
+	printMethodID("DynamicArray", "popFrontAddress(string)", t)
+	printMethodID("DynamicArray", "popFrontBytes(string)", t)
+	printMethodID("DynamicArray", "tryPopBackUint256(string)", t)
+	printMethodID("DynamicArray", "tryPopBackAddress(string)", t)
+	printMethodID("DynamicArray", "tryPopBackBytes(string)", t)
+	printMethodID("DynamicArray", "popBackUint256(string)", t)
+	printMethodID("DynamicArray", "popBackAddress(string)", t)
+	printMethodID("DynamicArray", "popBackBytes(string)", t)
+	printMethodID("DynamicArray", "tryGetUint256(string,uint256)", t)
+	printMethodID("DynamicArray", "tryGetAddress(string,uint256)", t)
+	printMethodID("DynamicArray", "tryGetBytes(string,uint256)", t)
+	printMethodID("DynamicArray", "getUint256(string,uint256)", t)
+	printMethodID("DynamicArray", "getAddress(string,uint256)", t)
+	printMethodID("DynamicArray", "getBytes(string,uint256)", t)
 }
 
 func printMethodID(className, signature string, t *testing.T) {

@@ -159,7 +159,7 @@ func (state *ethStateV2) GetRefund() uint64 {
 }
 
 func (state *ethStateV2) GetCommittedState(addr evmcommon.Address, key evmcommon.Hash) evmcommon.Hash {
-	if value := state.db.Retrive(getStorageKeyPath(state.url, addr, key)); value == nil {
+	if value, _ := state.db.Retrive(getStorageKeyPath(state.url, addr, key)); value == nil {
 		return evmcommon.Hash{}
 	} else {
 		return evmcommon.BytesToHash(value.(*noncommutative.Bytes).Data())
@@ -203,24 +203,23 @@ func (state *ethStateV2) Empty(addr evmcommon.Address) bool {
 		return true
 	}
 
-	if value, err := state.url.Read(urlcommon.SYSTEM, getBalancePath(state.url, addr)); err != nil {
+	if value, err := state.url.TryRead(urlcommon.SYSTEM, getBalancePath(state.url, addr)); err != nil {
 		panic(err)
 	} else {
-		v, _, _ := value.(*commutative.Balance).Get(0, "", nil)
-		if v.(*commutative.Balance).Value().(*big.Int).Cmp(new(big.Int).SetInt64(0)) != 0 {
+		if value.(*commutative.Balance).Value().(*big.Int).Cmp(new(big.Int).SetInt64(0)) != 0 {
 			return false
 		}
 	}
 
-	if value, err := state.url.Read(urlcommon.SYSTEM, getNoncePath(state.url, addr)); err != nil {
+	if value, err := state.url.TryRead(urlcommon.SYSTEM, getNoncePath(state.url, addr)); err != nil {
 		panic(err)
 	} else {
-		if *value.(*noncommutative.Int64) != 0 {
+		if value.(*commutative.Int64).Value().(int64) != 0 {
 			return false
 		}
 	}
 
-	if value, err := state.url.Read(urlcommon.SYSTEM, getCodePath(state.url, addr)); err != nil {
+	if value, err := state.url.TryRead(urlcommon.SYSTEM, getCodePath(state.url, addr)); err != nil {
 		panic(err)
 	} else {
 		return len(value.(*noncommutative.Bytes).Data()) == 0
@@ -333,8 +332,8 @@ func ExportOnFailureEx(
 	state.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
 	state.AddBalance(coinbase, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
 	state.SubBalance(from, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
-	state.SetNonce(from, 0)
-	return url.ExportEncoded()
+	// state.SetNonce(from, 0)
+	return url.ExportEncoded(nil)
 }
 
 func ExportOnConflictionEx(
@@ -346,7 +345,12 @@ func ExportOnConflictionEx(
 	state := NewStateDBV2(nil, db, url)
 	state.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
 	state.SetNonce(from, 0)
-	return url.ExportEncoded()
+	return url.ExportEncoded(func(accesses, transitions []urlcommon.UnivalueInterface) ([]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface) {
+		for _, t := range transitions {
+			t.SetTransitionType(urlcommon.INVARIATE_TRANSITIONS)
+		}
+		return accesses, transitions
+	})
 }
 
 func addressToHex(addr evmcommon.Address) string {

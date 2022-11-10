@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 
 	"github.com/arcology-network/common-lib/types"
@@ -434,6 +435,286 @@ func queuePopUint256V2(api *APIV2, caller, callee common.Address, input []byte, 
 		return nil, false
 	}
 	return value, true
+}
+
+func dynarrayCreateV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	elemType := BytesToInt32(input[64:68])
+	idLen := BytesToInt32(input[96:100])
+	id := string(input[100 : 100+idLen])
+	ok := api.dynarray.Create(types.Address(hex.EncodeToString(caller.Bytes())), id, int(elemType))
+	return nil, ok
+}
+
+func dynarrayLengthV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	idLen := BytesToInt32(input[64:68])
+	id := string(input[68 : 68+idLen])
+	length := api.dynarray.GetSize(types.Address(hex.EncodeToString(caller.Bytes())), id)
+	if length == -1 {
+		return nil, false
+	}
+	ret := padLeftToSize(Int64ToBytes(int64(length)), 32)
+	return ret, true
+}
+
+func dynarrayPushBackUint256V2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	elem := input[36:68]
+	idLen := BytesToInt32(input[96:100])
+	id := string(input[100 : 100+idLen])
+	ok := api.dynarray.PushBack(types.Address(hex.EncodeToString(caller.Bytes())), id, elem, clib.DataTypeUint256)
+	return nil, ok
+}
+
+func dynarrayPushBackAddressV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	elem := input[48:68]
+	idLen := BytesToInt32(input[96:100])
+	id := string(input[100 : 100+idLen])
+	ok := api.dynarray.PushBack(types.Address(hex.EncodeToString(caller.Bytes())), id, elem, clib.DataTypeAddress)
+	return nil, ok
+}
+
+func dynarrayPushBackBytesV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	idLenOffset := BytesToInt32(input[32:36])
+	idLen := BytesToInt32(input[idLenOffset+32 : idLenOffset+36])
+	id := string(input[idLenOffset+36 : idLenOffset+36+idLen])
+	elemLenOffset := BytesToInt32(input[64:68])
+	elemLen := BytesToInt32(input[elemLenOffset+32 : elemLenOffset+36])
+	elem := input[elemLenOffset+36 : elemLenOffset+36+elemLen]
+	ok := api.dynarray.PushBack(types.Address(hex.EncodeToString(caller.Bytes())), id, elem, clib.DataTypeBytes)
+	return nil, ok
+}
+
+func dynarrayTryPopFrontUint256V2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	idLen := BytesToInt32(input[64:68])
+	id := string(input[68 : 68+idLen])
+	elem, err := api.dynarray.PopFront(types.Address(hex.EncodeToString(caller.Bytes())), id, clib.DataTypeUint256)
+	if err == nil {
+		data := append(elem, padLeftToSize([]byte{1}, 32)...)
+		return data, true
+	} else if errors.Is(err, clib.ErrDynArrayIndexOutOfRange) {
+		data := append(padLeftToSize([]byte{0}, 32), padLeftToSize([]byte{0}, 32)...)
+		return data, true
+	} else {
+		return nil, false
+	}
+}
+
+func dynarrayTryPopFrontAddressV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	idLen := BytesToInt32(input[64:68])
+	id := string(input[68 : 68+idLen])
+	elem, err := api.dynarray.PopFront(types.Address(hex.EncodeToString(caller.Bytes())), id, clib.DataTypeAddress)
+	if err == nil {
+		data := append(padLeftToSize(elem, 32), padLeftToSize([]byte{1}, 32)...)
+		return data, true
+	} else if errors.Is(err, clib.ErrDynArrayIndexOutOfRange) {
+		data := append(padLeftToSize([]byte{0}, 32), padLeftToSize([]byte{0}, 32)...)
+		return data, true
+	} else {
+		return nil, false
+	}
+}
+
+func dynarrayTryPopFrontBytesV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	idLen := BytesToInt32(input[64:68])
+	id := string(input[68 : 68+idLen])
+	elem, err := api.dynarray.PopFront(types.Address(hex.EncodeToString(caller.Bytes())), id, clib.DataTypeBytes)
+	if err == nil {
+		data := append(append(append(padLeftToSize([]byte{64}, 32), padLeftToSize([]byte{1}, 32)...), padLeftToSize(Int64ToBytes(int64(len(elem))), 32)...), elem...)
+		return data, true
+	} else if errors.Is(err, clib.ErrDynArrayIndexOutOfRange) {
+		data := append(append(padLeftToSize([]byte{64}, 32), padLeftToSize([]byte{0}, 32)...), padLeftToSize([]byte{0}, 32)...)
+		return data, true
+	} else {
+		return nil, false
+	}
+}
+
+func dynarrayPopFrontUint256V2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	idLen := BytesToInt32(input[64:68])
+	id := string(input[68 : 68+idLen])
+	elem, err := api.dynarray.PopFront(types.Address(hex.EncodeToString(caller.Bytes())), id, clib.DataTypeUint256)
+	if err == nil {
+		return elem, true
+	}
+	return nil, false
+}
+
+func dynarrayPopFrontAddressV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	idLen := BytesToInt32(input[64:68])
+	id := string(input[68 : 68+idLen])
+	elem, err := api.dynarray.PopFront(types.Address(hex.EncodeToString(caller.Bytes())), id, clib.DataTypeAddress)
+	if err == nil {
+		return padLeftToSize(elem, 32), true
+	}
+	return nil, false
+}
+
+func dynarrayPopFrontBytesV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	idLen := BytesToInt32(input[64:68])
+	id := string(input[68 : 68+idLen])
+	elem, err := api.dynarray.PopFront(types.Address(hex.EncodeToString(caller.Bytes())), id, clib.DataTypeBytes)
+	if err == nil {
+		data := append(append(padLeftToSize([]byte{32}, 32), padLeftToSize(Int64ToBytes(int64(len(elem))), 32)...), elem...)
+		return data, true
+	}
+	return nil, false
+}
+
+func dynarrayTryPopBackUint256V2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	idLen := BytesToInt32(input[64:68])
+	id := string(input[68 : 68+idLen])
+	elem, err := api.dynarray.PopBack(types.Address(hex.EncodeToString(caller.Bytes())), id, clib.DataTypeUint256)
+	if err == nil {
+		data := append(elem, padLeftToSize([]byte{1}, 32)...)
+		return data, true
+	} else if errors.Is(err, clib.ErrDynArrayIndexOutOfRange) {
+		data := append(padLeftToSize([]byte{0}, 32), padLeftToSize([]byte{0}, 32)...)
+		return data, true
+	} else {
+		return nil, false
+	}
+}
+
+func dynarrayTryPopBackAddressV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	idLen := BytesToInt32(input[64:68])
+	id := string(input[68 : 68+idLen])
+	elem, err := api.dynarray.PopBack(types.Address(hex.EncodeToString(caller.Bytes())), id, clib.DataTypeAddress)
+	if err == nil {
+		data := append(padLeftToSize(elem, 32), padLeftToSize([]byte{1}, 32)...)
+		return data, true
+	} else if errors.Is(err, clib.ErrDynArrayIndexOutOfRange) {
+		data := append(padLeftToSize([]byte{0}, 32), padLeftToSize([]byte{0}, 32)...)
+		return data, true
+	} else {
+		return nil, false
+	}
+}
+
+func dynarrayTryPopBackBytesV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	idLen := BytesToInt32(input[64:68])
+	id := string(input[68 : 68+idLen])
+	elem, err := api.dynarray.PopBack(types.Address(hex.EncodeToString(caller.Bytes())), id, clib.DataTypeBytes)
+	if err == nil {
+		data := append(append(append(padLeftToSize([]byte{64}, 32), padLeftToSize([]byte{1}, 32)...), padLeftToSize(Int64ToBytes(int64(len(elem))), 32)...), elem...)
+		return data, true
+	} else if errors.Is(err, clib.ErrDynArrayIndexOutOfRange) {
+		data := append(append(padLeftToSize([]byte{64}, 32), padLeftToSize([]byte{0}, 32)...), padLeftToSize([]byte{0}, 32)...)
+		return data, true
+	} else {
+		return nil, false
+	}
+}
+
+func dynarrayPopBackUint256V2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	idLen := BytesToInt32(input[64:68])
+	id := string(input[68 : 68+idLen])
+	elem, err := api.dynarray.PopBack(types.Address(hex.EncodeToString(caller.Bytes())), id, clib.DataTypeUint256)
+	if err == nil {
+		return elem, true
+	}
+	return nil, false
+}
+
+func dynarrayPopBackAddressV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	idLen := BytesToInt32(input[64:68])
+	id := string(input[68 : 68+idLen])
+	elem, err := api.dynarray.PopBack(types.Address(hex.EncodeToString(caller.Bytes())), id, clib.DataTypeAddress)
+	if err == nil {
+		return padLeftToSize(elem, 32), true
+	}
+	return nil, false
+}
+
+func dynarrayPopBackBytesV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	idLen := BytesToInt32(input[64:68])
+	id := string(input[68 : 68+idLen])
+	elem, err := api.dynarray.PopBack(types.Address(hex.EncodeToString(caller.Bytes())), id, clib.DataTypeBytes)
+	if err == nil {
+		data := append(append(padLeftToSize([]byte{32}, 32), padLeftToSize(Int64ToBytes(int64(len(elem))), 32)...), elem...)
+		return data, true
+	}
+	return nil, false
+}
+
+func dynarrayTryGetUint256V2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	index := BytesToInt32(input[64:68])
+	idLen := BytesToInt32(input[96:100])
+	id := string(input[100 : 100+idLen])
+	elem, err := api.dynarray.Get(types.Address(hex.EncodeToString(caller.Bytes())), id, int(index), clib.DataTypeUint256)
+	if err == nil {
+		data := append(elem, padLeftToSize([]byte{1}, 32)...)
+		return data, true
+	} else if errors.Is(err, clib.ErrDynArrayIndexOutOfRange) {
+		data := append(padLeftToSize([]byte{0}, 32), padLeftToSize([]byte{0}, 32)...)
+		return data, true
+	} else {
+		return nil, false
+	}
+}
+
+func dynarrayTryGetAddressV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	index := BytesToInt32(input[64:68])
+	idLen := BytesToInt32(input[96:100])
+	id := string(input[100 : 100+idLen])
+	elem, err := api.dynarray.Get(types.Address(hex.EncodeToString(caller.Bytes())), id, int(index), clib.DataTypeAddress)
+	if err == nil {
+		data := append(padLeftToSize(elem, 32), padLeftToSize([]byte{1}, 32)...)
+		return data, true
+	} else if errors.Is(err, clib.ErrDynArrayIndexOutOfRange) {
+		data := append(padLeftToSize([]byte{0}, 32), padLeftToSize([]byte{0}, 32)...)
+		return data, true
+	} else {
+		return nil, false
+	}
+}
+
+func dynarrayTryGetBytesV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	index := BytesToInt32(input[64:68])
+	idLen := BytesToInt32(input[96:100])
+	id := string(input[100 : 100+idLen])
+	elem, err := api.dynarray.Get(types.Address(hex.EncodeToString(caller.Bytes())), id, int(index), clib.DataTypeBytes)
+	if err == nil {
+		data := append(append(append(padLeftToSize([]byte{64}, 32), padLeftToSize([]byte{1}, 32)...), padLeftToSize(Int64ToBytes(int64(len(elem))), 32)...), elem...)
+		return data, true
+	} else if errors.Is(err, clib.ErrDynArrayIndexOutOfRange) {
+		data := append(append(padLeftToSize([]byte{64}, 32), padLeftToSize([]byte{0}, 32)...), padLeftToSize([]byte{0}, 32)...)
+		return data, true
+	} else {
+		return nil, false
+	}
+}
+
+func dynarrayGetUint256V2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	index := BytesToInt32(input[64:68])
+	idLen := BytesToInt32(input[96:100])
+	id := string(input[100 : 100+idLen])
+	elem, err := api.dynarray.Get(types.Address(hex.EncodeToString(caller.Bytes())), id, int(index), clib.DataTypeUint256)
+	if err == nil {
+		return elem, true
+	}
+	return nil, false
+}
+
+func dynarrayGetAddressV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	index := BytesToInt32(input[64:68])
+	idLen := BytesToInt32(input[96:100])
+	id := string(input[100 : 100+idLen])
+	elem, err := api.dynarray.Get(types.Address(hex.EncodeToString(caller.Bytes())), id, int(index), clib.DataTypeAddress)
+	if err == nil {
+		return padLeftToSize(elem, 32), true
+	}
+	return nil, false
+}
+
+func dynarrayGetBytesV2(api *APIV2, caller, callee common.Address, input []byte, origin common.Address, nonce uint64, thash, bhash common.Hash) ([]byte, bool) {
+	index := BytesToInt32(input[64:68])
+	idLen := BytesToInt32(input[96:100])
+	id := string(input[100 : 100+idLen])
+	elem, err := api.dynarray.Get(types.Address(hex.EncodeToString(caller.Bytes())), id, int(index), clib.DataTypeBytes)
+	if err == nil {
+		data := append(append(padLeftToSize([]byte{32}, 32), padLeftToSize(Int64ToBytes(int64(len(elem))), 32)...), elem...)
+		return data, true
+	}
+	return nil, false
 }
 
 func BytesToInt32(input []byte) int32 {

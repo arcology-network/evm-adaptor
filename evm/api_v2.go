@@ -60,6 +60,31 @@ var (
 			[4]byte{0x2b, 0x29, 0xc0, 0xfa}: varSetBytesV2,
 			[4]byte{0xd8, 0xde, 0x89, 0x9d}: varGetBytesV2,
 		},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x84}: {
+			[4]byte{0x46, 0xf8, 0x1a, 0x87}: dynarrayCreateV2,
+			[4]byte{0x43, 0x6a, 0x66, 0xe7}: dynarrayLengthV2,
+			[4]byte{0x47, 0xf3, 0x20, 0xc8}: dynarrayPushBackUint256V2,
+			[4]byte{0xbc, 0x6d, 0xb0, 0xfe}: dynarrayPushBackAddressV2,
+			[4]byte{0xa1, 0x1e, 0xc6, 0xda}: dynarrayPushBackBytesV2,
+			[4]byte{0x1c, 0x00, 0xd0, 0x65}: dynarrayTryPopFrontUint256V2,
+			[4]byte{0x54, 0x34, 0x8f, 0xce}: dynarrayTryPopFrontAddressV2,
+			[4]byte{0x7d, 0x50, 0x8c, 0xa0}: dynarrayTryPopFrontBytesV2,
+			[4]byte{0xfd, 0xf9, 0x38, 0x44}: dynarrayPopFrontUint256V2,
+			[4]byte{0x8f, 0xb0, 0x3f, 0xc5}: dynarrayPopFrontAddressV2,
+			[4]byte{0x77, 0x69, 0xf8, 0xeb}: dynarrayPopFrontBytesV2,
+			[4]byte{0x98, 0x97, 0xbc, 0x69}: dynarrayTryPopBackUint256V2,
+			[4]byte{0xda, 0x96, 0xd8, 0x48}: dynarrayTryPopBackAddressV2,
+			[4]byte{0x32, 0x2c, 0x59, 0xa5}: dynarrayTryPopBackBytesV2,
+			[4]byte{0xde, 0xec, 0x73, 0x67}: dynarrayPopBackUint256V2,
+			[4]byte{0x8f, 0x19, 0xae, 0x0e}: dynarrayPopBackAddressV2,
+			[4]byte{0x9d, 0xd6, 0x79, 0x3e}: dynarrayPopBackBytesV2,
+			[4]byte{0x66, 0xf4, 0x41, 0xdc}: dynarrayTryGetUint256V2,
+			[4]byte{0xc6, 0x5f, 0xf6, 0x90}: dynarrayTryGetAddressV2,
+			[4]byte{0x91, 0x76, 0x9b, 0x40}: dynarrayTryGetBytesV2,
+			[4]byte{0x8d, 0x20, 0x6a, 0xad}: dynarrayGetUint256V2,
+			[4]byte{0x21, 0xec, 0x12, 0x53}: dynarrayGetAddressV2,
+			[4]byte{0xbf, 0x2e, 0x89, 0x60}: dynarrayGetBytesV2,
+		},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xa0}: {
 			[4]byte{0x25, 0x70, 0xd9, 0xd3}: uuidGenV2,
 		},
@@ -93,6 +118,7 @@ type APIV2 struct {
 	array     *concurrentlib.FixedLengthArray
 	sortedMap *concurrentlib.SortedMap
 	queue     *concurrentlib.Queue
+	dynarray  *concurrentlib.DynamicArray
 	deferCall *concurrentlib.DeferCall
 
 	db  urlcommon.DatastoreInterface
@@ -135,6 +161,7 @@ func (api *APIV2) Prepare(thash common.Hash, height *big.Int, tindex uint32) {
 	api.array = concurrentlib.NewFixedLengthArray(api.url, context)
 	api.sortedMap = concurrentlib.NewSortedMap(api.url, context)
 	api.queue = concurrentlib.NewQueue(api.url, context)
+	api.dynarray = concurrentlib.NewDynamicArray(api.url, context)
 	api.deferCall = concurrentlib.NewDeferCall(api.url, context)
 }
 

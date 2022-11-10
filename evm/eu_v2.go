@@ -79,14 +79,15 @@ func (eu *EUV2) Run(thash common.Hash, tindex int, msg *types.Message, blockCont
 
 	if !result.Failed() {
 		accesses, transitions := eu.url.Export(false)
-		return accesses, transitions, receipt
+		_, nonceTransitions := ExportOnConfliction(eu.db, tindex, msg.From())
+		return accesses, append(transitions, nonceTransitions...), receipt
 	} else {
 		accesses, transitions := ExportOnFailure(eu.db, tindex, msg.From(), blockContext.Coinbase, receipt.GasUsed, msg.GasPrice())
 		return accesses, transitions, receipt
 	}
 }
 
-func (eu *EUV2) RunEx(thash common.Hash, tindex int, msg *types.Message, blockContext vm.BlockContext, txContext vm.TxContext) ([][]byte, [][]byte, *types.Receipt, []byte) {
+func (eu *EUV2) RunEx(thash common.Hash, tindex int, msg *types.Message, blockContext vm.BlockContext, txContext vm.TxContext) ([][]byte, [][]byte, [][]byte, *types.Receipt, []byte) {
 	eu.statedb.(*ethStateV2).Prepare(thash, common.Hash{}, tindex)
 	eu.api.Prepare(thash, blockContext.BlockNumber, uint32(tindex))
 	eu.evm.Context = blockContext
@@ -125,13 +126,15 @@ func (eu *EUV2) RunEx(thash common.Hash, tindex int, msg *types.Message, blockCo
 	receipt.Logs = eu.statedb.(*ethStateV2).GetLogs(thash)
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
+	var accesses, transitions [][]byte
 	if !result.Failed() {
-		accesses, transitions := eu.url.ExportEncoded()
-		return accesses, transitions, receipt, result.ReturnData
+		accesses, transitions = eu.url.ExportEncoded(nil)
 	} else {
-		accesses, transitions := ExportOnFailureEx(eu.db, tindex, msg.From(), blockContext.Coinbase, receipt.GasUsed, msg.GasPrice())
-		return accesses, transitions, receipt, result.ReturnData
+		accesses, transitions = ExportOnFailureEx(eu.db, tindex, msg.From(), blockContext.Coinbase, receipt.GasUsed, msg.GasPrice())
 	}
+
+	_, nonceTransitions := ExportOnConflictionEx(eu.db, tindex, msg.From())
+	return accesses, transitions, nonceTransitions, receipt, result.ReturnData
 }
 
 func GetAssert(ret []byte) string {

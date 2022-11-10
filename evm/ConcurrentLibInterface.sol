@@ -9,7 +9,7 @@ contract ConcurrentArray {
     /// @param id Name of the array, should be unique in the contract it belongs to
     /// @param size Size of the array
     /// @param elemType Type of the array elements
-    function create(string calldata id, uint256 size, int32 elemType) external;
+    function create(string calldata id, int32 size, int32 elemType) external;
 
     /// @notice Get the size of the array, cause an exception when the container id doesn't exist or index out of range
     /// @param id Name of the array
@@ -20,37 +20,37 @@ contract ConcurrentArray {
     /// @param id Name of the array
     /// @param index Index of the element
     /// @return value of the element
-    function getAddress(string calldata id, uint256 index) external view returns(address);
+    function getAddress(string calldata id, int32 index) external view returns(address);
 
     /// @notice Update a specific element in the array, cause an exception when the container id doesn't exist or index out of range
     /// @param id Name of the array
     /// @param index Index of the element
     /// @param value New value of the element
-    function set(string calldata id, uint256 index, address value) external;
+    function set(string calldata id, int32 index, address value) external;
 
     /// @notice Get a specific element from an array containing uint256s, cause an exception when the container id doesn't exist or index out of range
     /// @param id Name of the array
     /// @param index Index of the element
     /// @return value of the element
-    function getUint256(string calldata id, uint256 index) external view returns(uint256);
+    function getUint256(string calldata id, int32 index) external view returns(uint256);
 
     /// @notice Update a specific element in the array, cause an exception when the container id doesn't exist or index out of range
     /// @param id Name of the array
     /// @param index Index of the element
     /// @param value New value of the element
-    function set(string calldata id, uint256 index, uint256 value) external;
+    function set(string calldata id, int32 index, uint256 value) external;
 
     /// @notice Get a specific element from an array containing byte arrays, cause an exception when the container id doesn't exist or index out of range
     /// @param id Name of the array
     /// @param index Index of the element
     /// @return value of the element
-    function getBytes(string calldata id, uint256 index) external view returns(bytes memory);
+    function getBytes(string calldata id, int32 index) external view returns(bytes memory);
 
     /// @notice Update a specific element in the array, cause an exception when the container id doesn't exist or index out of range
     /// @param id Name of the array
     /// @param index Index of the element
     /// @param value New value of the element
-    function set(string calldata id, uint256 index, bytes calldata value) external;
+    function set(string calldata id, int32 index, bytes calldata value) external;
 }
 
 contract ConcurrentVariable {

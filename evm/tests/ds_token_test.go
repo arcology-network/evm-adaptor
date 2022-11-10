@@ -36,7 +36,7 @@ func TestDSTokenMint(t *testing.T) {
 
 	// Deploy DSToken.
 	eu, config := prepare(db, 10000000, transitions, []uint32{0})
-	transitions, receipt := deploy(eu, config, owner, 0, dstokenCode, []byte("TEST"))
+	transitions, receipt := deploy(eu, config, owner, 0, dsTokenV2Code, []byte{32}, []byte{4}, []byte("TESTxxxxxxxxxxxxxxxxxxxxxxxxxxxx"))
 	t.Log("\n" + formatTransitions(transitions))
 	t.Log(receipt)
 	dstokenAddress := receipt.ContractAddress
@@ -64,6 +64,10 @@ func TestDSTokenMint(t *testing.T) {
 
 		eu := adaptor.NewEUV2(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, tdb, url)
 		transitions, receipt = run(eu, config, &owner, &dstokenAddress, uint64(i+1), false, "mint(address,uint256)", []byte{byte((i + 1) / 65536), byte((i + 1) / 256), byte((i + 1) % 256)}, []byte{1})
+		if i <= 1 {
+			t.Log("\n", formatTransitions(transitions))
+			t.Log(receipt)
+		}
 		if receipt.Status != 1 {
 			t.Log(receipt)
 			t.Fail()
@@ -115,6 +119,7 @@ func TestDSTokenMint(t *testing.T) {
 		return
 	}
 	t.Log("time for defer: ", time.Since(begin))
+	t.Log("\n" + formatTransitions(transitions))
 	begin = time.Now()
 
 	totalTransitions = append(totalTransitions, transitions...)

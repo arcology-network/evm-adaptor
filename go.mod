@@ -1,11 +1,50 @@
 module github.com/arcology-network/vm-adaptor
 
-go 1.15
+go 1.19
 
 require (
-	github.com/arcology-network/common-lib v0.9.2-0.20210825054709-eadab62563f0
-	github.com/arcology-network/concurrentlib v0.9.2-0.20210827064910-628d88bdcf28
-	github.com/arcology-network/concurrenturl v0.0.0-20210827064126-c271c3ef7fb3
-	github.com/arcology-network/evm v1.10.4-0.20210723080918-610ef3636717
-	github.com/arcology-network/urlarbitrator-engine v0.0.0-20210827014224-c260f4efc3f7
+	github.com/arcology-network/common-lib v0.0.0-20221110013709-f355641f88df
+	github.com/arcology-network/concurrentlib v0.0.0-20221110045316-d3e3f75e4656
+	github.com/arcology-network/concurrenturl v0.0.0-20221110014513-705bbd1cba8c
+	github.com/arcology-network/evm v0.0.0-20221110011616-1cdc0ab27c8e
+	github.com/arcology-network/urlarbitrator-engine v0.0.0-20221110025906-6a811a6a0cd8
+)
+
+require (
+	github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96 // indirect
+	github.com/StackExchange/wmi v1.2.1 // indirect
+	github.com/VictoriaMetrics/fastcache v1.5.7 // indirect
+	github.com/arcology-network/3rd-party v0.0.0-20221110004651-3ae5c3009a22 // indirect
+	github.com/btcsuite/btcd v0.20.1-beta // indirect
+	github.com/cespare/xxhash v1.1.0 // indirect
+	github.com/cespare/xxhash/v2 v2.1.1 // indirect
+	github.com/deckarep/golang-set v0.0.0-20180603214616-504e848d77ea // indirect
+	github.com/dgraph-io/badger v1.6.2 // indirect
+	github.com/dgraph-io/ristretto v0.0.2 // indirect
+	github.com/dustin/go-humanize v1.0.0 // indirect
+	github.com/elliotchance/orderedmap v1.5.0 // indirect
+	github.com/go-ole/go-ole v1.2.5 // indirect
+	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/golang/snappy v0.0.3-0.20201103224600-674baa8c7fc3 // indirect
+	github.com/google/uuid v1.3.0 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
+	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
+	github.com/holiman/uint256 v1.1.1 // indirect
+	github.com/mattn/go-runewidth v0.0.9 // indirect
+	github.com/olekukonko/tablewriter v0.0.5 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/prometheus/tsdb v0.7.1 // indirect
+	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
+	github.com/spaolacci/murmur3 v1.1.0 // indirect
+	github.com/syndtr/goleveldb v1.0.1-0.20210305035536-64b5b1c73954 // indirect
+	github.com/tklauser/go-sysconf v0.3.5 // indirect
+	github.com/tklauser/numcpus v0.2.2 // indirect
+	golang.org/x/crypto v0.2.0 // indirect
+	golang.org/x/exp v0.0.0-20221109205753-fc8884afc316 // indirect
+	golang.org/x/net v0.2.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
+	google.golang.org/protobuf v1.23.0 // indirect
+	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 )

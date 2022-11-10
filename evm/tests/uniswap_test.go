@@ -201,7 +201,7 @@ func deploy(eu *adaptor.EUV2, config *adaptor.Config, owner evmcommon.Address, n
 	for _, arg := range args {
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
 	}
-	msg := evmtypes.NewMessage(owner, nil, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, true)
+	msg := evmtypes.NewMessage(owner, nil, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
 	_, transitions, receipt := eu.Run(evmcommon.BytesToHash([]byte{byte(nonce + 1), byte(nonce + 1), byte(nonce + 1)}), int(nonce+1), &msg, adaptor.NewEVMBlockContextV2(config), adaptor.NewEVMTxContext(msg))
 	return transitions, receipt
 }
