@@ -2,12 +2,18 @@ module github.com/arcology-network/vm-adaptor
 
 go 1.19
 
+// replace github.com/arcology-network/common-lib => ../common-lib/
+// replace github.com/arcology-network/concurrenturl => ../concurrenturl/
+// replace github.com/arcology-network/concurrentlib => ../concurrentlib/
+// replace github.com/arcology-network/urlarbitrator-engine => ../urlarbitrator-engine/
+
+require github.com/arcology-network/evm v0.0.0-20221110011616-1cdc0ab27c8e
+
 require (
-	github.com/arcology-network/common-lib v0.0.0-20221110013709-f355641f88df
-	github.com/arcology-network/concurrentlib v0.0.0-20221110045316-d3e3f75e4656
-	github.com/arcology-network/concurrenturl v0.0.0-20221110014513-705bbd1cba8c
-	github.com/arcology-network/evm v0.0.0-20221110011616-1cdc0ab27c8e
-	github.com/arcology-network/urlarbitrator-engine v0.0.0-20221110025906-6a811a6a0cd8
+	github.com/arcology-network/common-lib v1.7.1
+	github.com/arcology-network/concurrentlib v1.7.1
+	github.com/arcology-network/concurrenturl v1.7.1
+	github.com/arcology-network/urlarbitrator-engine v1.7.1
 )
 
 require (
