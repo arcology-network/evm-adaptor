@@ -20,8 +20,8 @@ func TestNativeStorage(t *testing.T) {
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	api := adaptor.NewAPIV2(db, url)
-	statedb := adaptor.NewStateDBV2(api, db, url)
+	api := adaptor.NewAPI(db, url)
+	statedb := adaptor.NewStateDB(api, db, url)
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(coinbase)
 	statedb.CreateAccount(owner)

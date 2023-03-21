@@ -83,7 +83,7 @@ func GetHashFn(blockNumber *big.Int, parentHash common.Hash, chain ChainContext)
 // This does not take the necessary gas in to account to make the transfer valid.
 
 func CanTransferV2(db vm.StateDB, addr common.Address, amount *big.Int) bool {
-	return db.(*ethStateV2).GetBalanceNoRecord(addr).Cmp(amount) >= 0
+	return db.(*ethState).PeekBalance(addr).Cmp(amount) >= 0
 }
 
 // Transfer subtracts amount from sender and adds amount to recipient using the given Db

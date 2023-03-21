@@ -23,8 +23,8 @@ func TestUniswapFunctionTest(t *testing.T) {
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	api := adaptor.NewAPIV2(db, url)
-	statedb := adaptor.NewStateDBV2(api, db, url)
+	api := adaptor.NewAPI(db, url)
+	statedb := adaptor.NewStateDB(api, db, url)
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(coinbase)
 	statedb.CreateAccount(owner)
@@ -180,23 +180,23 @@ func TestUniswapFunctionTest(t *testing.T) {
 	}
 }
 
-func prepare(db urlcommon.DatastoreInterface, height uint64, transitions []urlcommon.UnivalueInterface, txs []uint32) (*adaptor.EUV2, *adaptor.Config) {
+func prepare(db urlcommon.DatastoreInterface, height uint64, transitions []urlcommon.UnivalueInterface, txs []uint32) (*adaptor.EU, *adaptor.Config) {
 	url := concurrenturl.NewConcurrentUrl(db)
 	url.Import(transitions)
 	url.PostImport()
 	url.Commit(txs)
-	api := adaptor.NewAPIV2(db, url)
-	statedb := adaptor.NewStateDBV2(api, db, url)
+	api := adaptor.NewAPI(db, url)
+	statedb := adaptor.NewStateDB(api, db, url)
 
 	config := MainConfig()
 	config.Coinbase = &coinbase
 	config.BlockNumber = new(big.Int).SetUint64(height)
 	config.Time = new(big.Int).SetUint64(height)
 
-	return adaptor.NewEUV2(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url), config
+	return adaptor.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url), config
 }
 
-func deploy(eu *adaptor.EUV2, config *adaptor.Config, owner evmcommon.Address, nonce uint64, code string, args ...[]byte) ([]urlcommon.UnivalueInterface, *evmtypes.Receipt) {
+func deploy(eu *adaptor.EU, config *adaptor.Config, owner evmcommon.Address, nonce uint64, code string, args ...[]byte) ([]urlcommon.UnivalueInterface, *evmtypes.Receipt) {
 	data := evmcommon.Hex2Bytes(code)
 	for _, arg := range args {
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
@@ -206,7 +206,7 @@ func deploy(eu *adaptor.EUV2, config *adaptor.Config, owner evmcommon.Address, n
 	return transitions, receipt
 }
 
-func run(eu *adaptor.EUV2, config *adaptor.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]urlcommon.UnivalueInterface, *evmtypes.Receipt) {
+func run(eu *adaptor.EU, config *adaptor.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]urlcommon.UnivalueInterface, *evmtypes.Receipt) {
 	data := crypto.Keccak256([]byte(function))[:4]
 	for _, arg := range args {
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
@@ -216,7 +216,7 @@ func run(eu *adaptor.EUV2, config *adaptor.Config, from, to *evmcommon.Address, 
 	return transitions, receipt
 }
 
-func runEx(eu *adaptor.EUV2, config *adaptor.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface, *evmtypes.Receipt) {
+func runEx(eu *adaptor.EU, config *adaptor.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface, *evmtypes.Receipt) {
 	data := crypto.Keccak256([]byte(function))[:4]
 	for _, arg := range args {
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)

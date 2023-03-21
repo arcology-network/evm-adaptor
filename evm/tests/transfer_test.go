@@ -22,8 +22,8 @@ func TestTransfer(t *testing.T) {
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	api := adaptor.NewAPIV2(db, url)
-	statedb := adaptor.NewStateDBV2(api, db, url)
+	api := adaptor.NewAPI(db, url)
+	statedb := adaptor.NewStateDB(api, db, url)
 	statedb.Prepare(common.Hash{}, common.Hash{}, 0)
 	statedb.CreateAccount(coinbase)
 	statedb.CreateAccount(user1)
@@ -36,9 +36,9 @@ func TestTransfer(t *testing.T) {
 	url.Import(transitions)
 	url.PostImport()
 	url.Commit([]uint32{0})
-	api = adaptor.NewAPIV2(db, url)
-	statedb = adaptor.NewStateDBV2(api, db, url)
-	eu := adaptor.NewEUV2(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url)
+	api = adaptor.NewAPI(db, url)
+	statedb = adaptor.NewStateDB(api, db, url)
+	eu := adaptor.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url)
 
 	config.Coinbase = &coinbase
 	config.BlockNumber = new(big.Int).SetUint64(10000000)

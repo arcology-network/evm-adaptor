@@ -26,8 +26,8 @@ func TestDSTokenMint(t *testing.T) {
 	db := persistentDB
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	api := adaptor.NewAPIV2(db, url)
-	statedb := adaptor.NewStateDBV2(api, db, url)
+	api := adaptor.NewAPI(db, url)
+	statedb := adaptor.NewStateDB(api, db, url)
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(coinbase)
 	statedb.CreateAccount(owner)
@@ -54,15 +54,15 @@ func TestDSTokenMint(t *testing.T) {
 	for i := 0; i < N; i++ {
 		tdb := curstorage.NewTransientDB(db)
 		url = concurrenturl.NewConcurrentUrl(tdb)
-		api := adaptor.NewAPIV2(tdb, url)
-		statedb := adaptor.NewStateDBV2(api, tdb, url)
+		api := adaptor.NewAPI(tdb, url)
+		statedb := adaptor.NewStateDB(api, tdb, url)
 
 		config := MainConfig()
 		config.Coinbase = &coinbase
 		config.BlockNumber = new(big.Int).SetUint64(10000001)
 		config.Time = new(big.Int).SetUint64(10000001)
 
-		eu := adaptor.NewEUV2(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, tdb, url)
+		eu := adaptor.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, tdb, url)
 		transitions, receipt = run(eu, config, &owner, &dstokenAddress, uint64(i+1), false, "mint(address,uint256)", []byte{byte((i + 1) / 65536), byte((i + 1) / 256), byte((i + 1) % 256)}, []byte{1})
 		if i <= 1 {
 			t.Log("\n", formatTransitions(transitions))
@@ -103,15 +103,15 @@ func TestDSTokenMint(t *testing.T) {
 	begin = time.Now()
 
 	url = concurrenturl.NewConcurrentUrl(tdb)
-	api = adaptor.NewAPIV2(tdb, url)
-	statedb = adaptor.NewStateDBV2(api, tdb, url)
+	api = adaptor.NewAPI(tdb, url)
+	statedb = adaptor.NewStateDB(api, tdb, url)
 
 	config = MainConfig()
 	config.Coinbase = &coinbase
 	config.BlockNumber = new(big.Int).SetUint64(10000001)
 	config.Time = new(big.Int).SetUint64(10000001)
 
-	eu = adaptor.NewEUV2(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, tdb, url)
+	eu = adaptor.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, tdb, url)
 	transitions, receipt = run(eu, config, &owner, &dstokenAddress, uint64(N+1), false, "updateTotalSupply(string)", []byte{32}, []byte{17}, append([]byte("updateTotalSupply"), []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}...))
 	if receipt.Status != 1 {
 		t.Log(receipt)

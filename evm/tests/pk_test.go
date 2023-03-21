@@ -29,8 +29,8 @@ func TestParallelKittiesPerf(t *testing.T) {
 	db.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	api := adaptor.NewAPIV2(db, url)
-	statedb := adaptor.NewStateDBV2(api, db, url)
+	api := adaptor.NewAPI(db, url)
+	statedb := adaptor.NewStateDB(api, db, url)
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(coinbase)
 	statedb.CreateAccount(ceoAddress)
@@ -139,20 +139,20 @@ func TestParallelKittiesPerf(t *testing.T) {
 	config.Coinbase = &coinbase
 	config.BlockNumber = new(big.Int).SetUint64(10000010)
 	config.Time = new(big.Int).SetUint64(10000010)
-	eu = adaptor.NewEUV2(config.ChainConfig, *config.VMConfig, config.Chain, nil, nil, nil, nil)
+	eu = adaptor.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, nil, nil, nil, nil)
 	url = concurrenturl.NewConcurrentUrl(nil)
 	for i := 0; i < 10000; i++ {
 		// url = concurrenturl.NewConcurrentUrl(db)
 		url.Init(db)
-		api := adaptor.NewAPIV2(db, url)
-		statedb := adaptor.NewStateDBV2(api, db, url)
+		api := adaptor.NewAPI(db, url)
+		statedb := adaptor.NewStateDB(api, db, url)
 
 		// config := MainConfig()
 		// config.Coinbase = &coinbase
 		// config.BlockNumber = new(big.Int).SetUint64(10000010)
 		// config.Time = new(big.Int).SetUint64(10000010)
 
-		// eu := adaptor.NewEUV2(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url)
+		// eu := adaptor.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url)
 		eu.SetContext(statedb, api, db, url)
 		accesses, transitions, receipt = runEx(eu, config, &cooAddress, &coreAddress, uint64(i), false, "createPromoKitty(uint256,address)", []byte{byte((i + 1) / 65536), byte((i + 1) / 256), byte((i + 1) % 256)}, []byte{byte(i / 65536), byte((i + 1) / 256), byte((i + 1) % 256)})
 		// _, transitions, receipt = runEx(eu, config, &cooAddress, &coreAddress, uint64(i), false, "createPromoKitty(uint256,address)", []byte{byte((i + 1) / 65536), byte((i + 1) / 256), byte((i + 1) % 256)}, []byte{byte(i / 65536), byte((i + 1) / 256), byte((i + 1) % 256)})
@@ -219,8 +219,8 @@ func TestParallelKittiesTransfer(t *testing.T) {
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	api := adaptor.NewAPIV2(db, url)
-	statedb := adaptor.NewStateDBV2(api, db, url)
+	api := adaptor.NewAPI(db, url)
+	statedb := adaptor.NewStateDB(api, db, url)
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(coinbase)
 	statedb.CreateAccount(ceoAddress)
