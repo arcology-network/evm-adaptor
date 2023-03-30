@@ -12,23 +12,27 @@ replace github.com/arcology-network/urlarbitrator-engine => ../urlarbitrator-eng
 
 require (
 	github.com/arcology-network/common-lib v1.7.1
-	github.com/arcology-network/concurrentlib v1.7.1 //v0.0.0-00010101000000-000000000000
 	github.com/arcology-network/concurrenturl v1.7.1
 	//github.com/arcology-network/evm v0.0.0-20221110011616-1cdc0ab27c8e
 	github.com/arcology-network/urlarbitrator-engine v1.7.1
 )
 
 require (
+	github.com/arcology-network/concurrentlib v1.7.1
 	github.com/arcology-network/evm v0.0.0-20221110011616-1cdc0ab27c8e
 	github.com/holiman/uint256 v1.2.1
 )
 
 require (
 	github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96 // indirect
+	github.com/HPISTechnologies/3rd-party v1.5.1-0.20220902061630-ee3f724d0dbc // indirect
+	github.com/HPISTechnologies/common-lib v1.7.0 // indirect
+	github.com/HPISTechnologies/concurrenturl v1.6.2-0.20221103064740-987edfad3b72 // indirect
+	github.com/HPISTechnologies/evm v1.10.4-0.20220902063532-a4690b596277 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/VictoriaMetrics/fastcache v1.6.0 // indirect
 	github.com/arcology-network/3rd-party v1.7.1 // indirect
-	github.com/btcsuite/btcd v0.20.1-beta // indirect
+	github.com/btcsuite/btcd v0.21.0-beta // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/deckarep/golang-set v0.0.0-20180603214616-504e848d77ea // indirect
