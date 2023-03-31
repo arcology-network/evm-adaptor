@@ -3,53 +3,53 @@ package abi
 import (
 	"encoding/binary"
 	"errors"
-	"reflect"
 
+	"github.com/arcology-network/common-lib/common"
 	"github.com/holiman/uint256"
 )
 
-type Decoder struct{}
-
-func NewDecoder() *Decoder {
-	return &Decoder{}
-}
-
-func (this *Decoder) Decode(raw []byte, idx int, typed interface{}, depth uint8) (interface{}, error) {
-	if idx >= len(raw)/32 {
-		return nil, errors.New("Error: Out of range access!!")
+func Decode(raw []byte, idx int, typed interface{}, depth uint8, maxLength int) (interface{}, error) {
+	if depth < 1 {
+		return nil, errors.New("Error: Can be 0 deep!!")
 	}
 
-	switch reflect.TypeOf(typed).String() {
-	case "bool":
+	if idx >= len(raw)/32 {
+		return raw, nil
+	}
+
+	switch typed.(type) {
+	case bool:
 		return raw[len(raw[idx*32:idx*32+32])-1] == 1, nil
-	case "uint8":
+	case uint8:
 		return uint8(raw[idx*32+32-1]), nil
-	case "uint16":
+	case uint16:
 		return binary.BigEndian.Uint16(raw[idx*32+32-2 : idx*32+32]), nil
-	case "uint32":
+	case uint32:
 		return binary.BigEndian.Uint32(raw[idx*32+32-4 : idx*32+32]), nil
-	case "uint64":
+	case uint64:
 		return binary.BigEndian.Uint64(raw[idx*32+32-8 : idx*32+32]), nil
-	case "[]uint8":
+	case []uint8:
 		if depth == 1 {
-			return raw, nil
+			length := common.Min(len(raw), maxLength)
+			return raw[idx*32 : idx*32+length], nil
 		}
 		depth--
 
-		offset := binary.BigEndian.Uint32(raw[idx*32+32-4 : idx*32+32])
-		return this.next(raw, offset, depth)
+		sub := raw[idx*32+32-4 : idx*32+32]
+		offset := binary.BigEndian.Uint32(sub)
+		return next(raw, offset, depth, maxLength)
 
-	case "*uint256.Int":
+	case *uint256.Int:
 		var v uint256.Int
 		v.SetBytes(raw[idx*32 : idx*32+32])
 		return v, nil
 	}
-	return raw, nil
+	return raw, errors.New("Error: Unknown type")
 }
 
-func (this *Decoder) next(raw []byte, offset uint32, depth uint8) (interface{}, error) {
-	length, _ := this.Decode(raw[offset:], 0, uint32(0), depth)
+func next(raw []byte, offset uint32, depth uint8, maxLength int) (interface{}, error) {
+	length, _ := Decode(raw[offset:], 0, uint32(0), depth, maxLength)
 	sub := raw[offset+32 : offset+length.(uint32)+32]
 
-	return this.Decode(sub, 0, []byte{}, depth)
+	return Decode(sub, 0, []byte{}, depth, maxLength)
 }

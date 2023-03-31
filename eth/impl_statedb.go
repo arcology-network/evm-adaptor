@@ -133,10 +133,6 @@ func (this *ImplStateDB) SetCode(addr evmcommon.Address, code []byte) {
 }
 
 func (this *ImplStateDB) GetCodeSize(addr evmcommon.Address) int {
-	// if state.kapi.IsKernelAPI(addr) {
-	// 	// FIXME!
-	// 	return 0xff
-	// }
 	return len(this.GetCode(addr))
 }
 

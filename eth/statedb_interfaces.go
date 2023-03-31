@@ -88,7 +88,6 @@ type KernelAPI interface {
 	AddLog(key, value string)
 	GetLogs() []euCommon.ILog
 	ClearLogs()
-	IsKernelAPI(addr common.Address) bool
 	Prepare(txHash common.Hash)
 	Call(caller, callee common.Address, input []byte, origin common.Address, nonce uint64, blockhash common.Hash) ([]byte, bool)
 }

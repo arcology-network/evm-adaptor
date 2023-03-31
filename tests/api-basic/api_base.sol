@@ -21,14 +21,43 @@ contract Bytes {
             byteArray[i] = 0x41;
         }
 
-        Length(); 
-        Push(byteArray, arr2);    
+        require(Length() == 0); 
+        Push(byteArray, arr2);  
+        Push(byteArray, arr2);  
+
+        require(Length() == 2); 
+        bytes memory stored = Get(1);
+        require(stored.length == byteArray.length);
+        for (uint  i = 0; i < byteArray.length; i ++) {
+            require(stored[i] == byteArray[i]);
+        }
+
+        bytes memory elems = new bytes(5);
+        for (uint  i = 0; i < elems.length; i ++) {
+            elems[i] = 0xaa;
+        }
+        Set(1, elems);
+       
+        stored = Get(0);
+        require(stored.length == byteArray.length);
+        for (uint  i = 0; i < byteArray.length; i ++) {
+            require(stored[i] == byteArray[i]);
+        }
+
+        stored = Get(1);
+        require(stored.length == elems.length); 
+        for (uint  i = 0; i < elems.length; i ++) {
+            require(stored[i] == elems[i]);
+        }
+
+        Delete(1);
     }
 
     function Length() public returns(uint256) {  // 58 94 13 33
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("Length(bytes) returns(uint256)", id));
         require(success, "Bytes.Length() Failed");
-        return 123;
+        uint256 length = abi.decode(data, (uint256));
+        return length;
     }
 
     function Delete(uint256 idx) public { // 80 26 32 97
@@ -45,14 +74,15 @@ contract Bytes {
         require(success, "Bytes.Push() Failed");
     }   
 
-    function Get(uint256 idx) public returns(bytes memory)  { // ef a3 ab 94
+
+    function Get(uint256 idx) public returns(bytes memory)  { // 31 fe 88 d0
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("Get(bytes, uint256) returns(bytes)", id, idx));
         require(success, "Bytes.Get() Failed");
-        return data;
+        return abi.decode(data, (bytes));  
     }
 
     function Set(uint256 idx, bytes memory elem) public { // 7a fa 62 38
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("Set(bytes, idx, bytes)", id, idx, elem));
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("Set(bytes, uint256, bytes)", id, idx, elem));
         require(success, "Bytes.Set() Failed");
     }
 }

@@ -24,12 +24,11 @@ type API struct {
 	dc           *types.DeferCall
 	predecessors []common.Hash
 
-	seed uint64 // for uuid generation
+	seed   uint64 // for uuid generation
+	serial uint64
 
 	// dynarray  *concurrentlib.DynamicArray
 	// deferCall *concurrentlib.DeferCall
-
-	// db  urlcommon.DatastoreInterface
 	concurrencyHandler *ConcurrentContainer // APIs under the concurrency namespace
 	ccurl              *concurrenturl.ConcurrentUrl
 }
@@ -48,6 +47,11 @@ func (this *API) Prepare(txHash common.Hash, height *big.Int, txIndex uint32) {
 	this.concurrencyHandler = NewConcurrentContainer(txHash, txIndex, this)
 }
 
+func (this *API) Serial() uint64 {
+	this.serial++
+	return this.serial
+}
+
 // Generate an UUID based on transaction hash and the counter
 func (this *API) GenUUID() []byte {
 	this.seed++
@@ -55,7 +59,6 @@ func (this *API) GenUUID() []byte {
 	return id[:]
 }
 
-// Implement KernelAPI interface.
 func (this *API) AddLog(key, value string) {
 	this.logs = append(this.logs, &types.ExecutingLog{
 		Key:   key,
@@ -71,24 +74,12 @@ func (this *API) ClearLogs() {
 	this.logs = this.logs[:0]
 }
 
-func (this *API) IsKernelAPI(callee common.Address) bool {
-	_, ok := apiNamespaces[[20]byte(callee)]
-	return ok
-}
-
-func (this *API) Call(caller, callee common.Address, input []byte, origin common.Address, nonce uint64, blockhash common.Hash) ([]byte, bool) {
-	_, ok := apiNamespaces[callee]
-	if !ok {
-		panic("Should never enter here")
-	}
-
+func (this *API) Call(caller, callee common.Address, input []byte, origin common.Address, nonce uint64, blockhash common.Hash) (bool, []byte, bool) {
 	if callee == [20]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x84} {
-		return this.concurrencyHandler.Call(caller, input, origin, nonce)
+		result, successful := this.concurrencyHandler.Call(caller, input, origin, nonce)
+		return true, result, successful
 	}
-
-	panic("unexpected method got")
-
-	return []byte{}, false
+	return false, []byte{}, false
 }
 
 // For defer call.

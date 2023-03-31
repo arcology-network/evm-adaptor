@@ -3,48 +3,41 @@ package abi
 import (
 	"encoding/binary"
 	"errors"
-	"reflect"
 
 	"github.com/holiman/uint256"
 )
 
-type Encoder struct{}
-
-func NewEncoder() *Encoder {
-	return &Encoder{}
-}
-
-func (this *Encoder) Encode(typed interface{}) ([]byte, error) {
+func Encode(typed interface{}) ([]byte, error) {
 	buffer := [32]byte{}
 
-	switch reflect.TypeOf(typed).String() {
-	case "bool":
+	switch typed.(type) {
+	case bool:
 		if typed.(bool) {
 			buffer[31] = 1
 		}
 		return buffer[:], nil
 
-	case "uint8":
+	case uint8:
 		buffer[31] = typed.(uint8)
 		return buffer[:], nil
 
-	case "uint16":
+	case uint16:
 		binary.BigEndian.PutUint16(buffer[32-2:], typed.(uint16))
 		return buffer[:], nil
 
-	case "uint32":
+	case uint32:
 		binary.BigEndian.PutUint32(buffer[32-4:], typed.(uint32))
 		return buffer[:], nil
 
-	case "uint64":
+	case uint64:
 		binary.BigEndian.PutUint64(buffer[32-8:], typed.(uint64))
 		return buffer[:], nil
 
-	case "*uint256.Int":
+	case *uint256.Int:
 		bytes := typed.(*uint256.Int).Bytes32()
 		return bytes[:], nil
 
-	case "[]uint8":
+	case []uint8:
 		binary.BigEndian.PutUint32(buffer[32-4:], uint32(len(typed.([]byte))))
 		if len(typed.([]byte))%32 == 0 {
 			return append(buffer[:], typed.([]byte)...), nil

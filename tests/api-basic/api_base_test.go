@@ -22,7 +22,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/errors"
 )
 
-func TestApiEntry(t *testing.T) {
+func TestApiInterfaces(t *testing.T) {
 	config := tests.MainConfig()
 	persistentDB := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())

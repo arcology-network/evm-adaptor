@@ -29,28 +29,28 @@ func FormatValue(value interface{}) string {
 		meta := value.(*commutative.Meta)
 		var str string
 		str += "{"
-		for i, k := range meta.PeekKeys() {
+		for i, k := range meta.KeyView() {
 			str += k
-			if i != len(meta.PeekKeys())-1 {
+			if i != len(meta.KeyView())-1 {
 				str += ", "
 			}
 		}
 		str += "}"
-		if len(meta.PeekAdded()) != 0 {
+		if len(meta.Added()) != 0 {
 			str += " + {"
-			for i, k := range meta.PeekAdded() {
+			for i, k := range meta.Added() {
 				str += k
-				if i != len(meta.PeekAdded())-1 {
+				if i != len(meta.Added())-1 {
 					str += ", "
 				}
 			}
 			str += "}"
 		}
-		if len(meta.PeekRemoved()) != 0 {
+		if len(meta.Removed()) != 0 {
 			str += " - {"
-			for i, k := range meta.PeekRemoved() {
+			for i, k := range meta.Removed() {
 				str += k
-				if i != len(meta.PeekRemoved())-1 {
+				if i != len(meta.Removed())-1 {
 					str += ", "
 				}
 			}
