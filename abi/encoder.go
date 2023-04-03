@@ -50,3 +50,17 @@ func Encode(typed interface{}) ([]byte, error) {
 
 	return []byte{}, errors.New("Error: Unsupported data type")
 }
+
+func AddOffset(sections [][]byte) []byte {
+	encoded := []byte{}
+
+	// sumLength := 0
+	// for i := 0; i < len(sections); i++ {
+	// 	sumLength
+	// }
+
+	// offset := [32]byte{}
+	// offset[len(offset)-1] = uint8(len(offset))
+	// encoded = append(offset[:], encoded...)
+	return encoded
+}

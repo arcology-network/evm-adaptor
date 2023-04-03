@@ -6,7 +6,6 @@ import (
 	uint256 "github.com/holiman/uint256"
 
 	"github.com/arcology-network/concurrenturl/v2"
-	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
 	commutative "github.com/arcology-network/concurrenturl/v2/type/commutative"
 	noncommutative "github.com/arcology-network/concurrenturl/v2/type/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
@@ -67,7 +66,7 @@ func (state *ImplStateDB) PeekBalance(addr evmcommon.Address) *big.Int {
 		return new(big.Int)
 	}
 
-	if value, err := state.url.TryRead(urlcommon.SYSTEM, getBalancePath(state.url, addr)); err != nil {
+	if value, err := state.url.Peek(getBalancePath(state.url, addr)); err != nil {
 		panic(err)
 	} else {
 		// return value.(*urltype.Univalue).Value().(*commutative.U256).Value().(*big.Int)
@@ -85,7 +84,7 @@ func (state *ImplStateDB) GetNonce(addr evmcommon.Address) uint64 {
 		return 0
 	}
 
-	if value, err := state.url.TryRead(urlcommon.SYSTEM, getNoncePath(state.url, addr)); err != nil {
+	if value, err := state.url.Peek(getNoncePath(state.url, addr)); err != nil {
 		panic(err)
 	} else {
 		return uint64(value.(*commutative.Int64).Value().(int64))
@@ -194,7 +193,7 @@ func (state *ImplStateDB) Empty(addr evmcommon.Address) bool {
 		return true
 	}
 
-	if value, err := state.url.TryRead(urlcommon.SYSTEM, getBalancePath(state.url, addr)); err != nil {
+	if value, err := state.url.Peek(getBalancePath(state.url, addr)); err != nil {
 		panic(err)
 	} else {
 		if value.(*commutative.U256).Value().(*big.Int).Cmp(new(big.Int).SetInt64(0)) != 0 {
@@ -202,7 +201,7 @@ func (state *ImplStateDB) Empty(addr evmcommon.Address) bool {
 		}
 	}
 
-	if value, err := state.url.TryRead(urlcommon.SYSTEM, getNoncePath(state.url, addr)); err != nil {
+	if value, err := state.url.Peek(getNoncePath(state.url, addr)); err != nil {
 		panic(err)
 	} else {
 		if value.(*commutative.Int64).Value().(int64) != 0 {
@@ -210,7 +209,7 @@ func (state *ImplStateDB) Empty(addr evmcommon.Address) bool {
 		}
 	}
 
-	if value, err := state.url.TryRead(urlcommon.SYSTEM, getCodePath(state.url, addr)); err != nil {
+	if value, err := state.url.Peek(getCodePath(state.url, addr)); err != nil {
 		panic(err)
 	} else {
 		return len(value.(*noncommutative.Bytes).Data()) == 0

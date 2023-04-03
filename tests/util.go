@@ -29,9 +29,9 @@ func FormatValue(value interface{}) string {
 		meta := value.(*commutative.Meta)
 		var str string
 		str += "{"
-		for i, k := range meta.KeyView() {
-			str += k
-			if i != len(meta.KeyView())-1 {
+		for i, k := range meta.Keys() {
+			str += k.(string)
+			if i != len(meta.Keys())-1 {
 				str += ", "
 			}
 		}

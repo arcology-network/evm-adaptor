@@ -49,7 +49,7 @@ func (this *CCurlPathBuilder) New(account types.Address, containerId string, key
 
 func (this *CCurlPathBuilder) makeStorageRootPath(account types.Address, txIndex uint32) bool {
 	accountRoot := this.buildAccountRootPath(account)
-	if value, err := this.ccurl.TryRead(txIndex, accountRoot); err != nil {
+	if value, err := this.ccurl.Peek(accountRoot); err != nil {
 		return false
 	} else if value == nil { // The account didn't exist.
 		if err := this.ccurl.CreateAccount(txIndex, this.ccurl.Platform.Eth10(), string(account)); err != nil {
@@ -62,7 +62,7 @@ func (this *CCurlPathBuilder) makeStorageRootPath(account types.Address, txIndex
 
 func (this *CCurlPathBuilder) makeContainerRootPath(account types.Address, id string, txIndex uint32) bool {
 	containerRoot := this.buildContainerRootPath(account, id)
-	if value, err := this.ccurl.TryRead(txIndex, containerRoot); err != nil || value != nil {
+	if value, err := this.ccurl.Peek(containerRoot); err != nil || value != nil {
 		return false
 	}
 

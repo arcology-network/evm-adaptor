@@ -47,6 +47,9 @@ func (this *ConcurrentContainer) Call(caller evmCommon.Address, input []byte, or
 	case [4]byte{0x31, 0xfe, 0x88, 0xd0}:
 		return this.Get(caller, input[4:])
 
+	case [4]byte{0x51, 0xbc, 0x98, 0x39}:
+		return this.Pop(caller, input[4:])
+
 	case [4]byte{0xdb, 0x33, 0xc5, 0x7a}:
 		print(input)
 		return this.Set(caller, input[4:])
@@ -63,26 +66,11 @@ func (this *ConcurrentContainer) New(caller evmCommon.Address, input []byte) ([]
 	return id[:], this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id), 0, elemType)
 }
 
-// Push a new element into the container
-func (this *ConcurrentContainer) Push(caller evmCommon.Address, input []byte, origin evmCommon.Address, nonce uint64) ([]byte, bool) {
-	path := this.buildPath(caller, input) // Container path
-
-	buffer := common.DeepCopy(this.api.txHash[:])
-	codec.Uint64(this.api.Serial()).EncodeToBuffer(buffer[len(buffer)-8:])
-	key := path + hex.EncodeToString(buffer)
-
-	value, _ := abi.Decode(input, 1, []byte{}, 2, math.MaxInt)
-	err := this.connector.ccurl.Write(this.api.txIndex, key, noncommutative.NewBytes(value.([]byte)))
-	return []byte{}, err == nil
-}
-
 // Get the number of elements in the container
 func (this *ConcurrentContainer) Length(caller evmCommon.Address, input []byte) ([]byte, bool) {
 	path := this.buildPath(caller, input) // Container path
-
 	if meta, err := this.connector.ccurl.Read(this.api.txIndex, path); err == nil {
-		keys := meta.(*commutative.Meta).KeyView()
-		if encoded, err := abi.Encode(uint256.NewInt(uint64(len(keys)))); err == nil {
+		if encoded, err := abi.Encode(uint256.NewInt(uint64(meta.(*commutative.Meta).Length()))); err == nil {
 			return encoded, true
 		}
 	}
@@ -93,7 +81,7 @@ func (this *ConcurrentContainer) Get(caller evmCommon.Address, input []byte) ([]
 	path := this.buildPath(caller, input) // Build container path
 	idx, _ := abi.Decode(input, 1, uint64(0), 1, 32)
 
-	if value, err := this.connector.ccurl.ReadAt(this.api.txIndex, path, idx.(uint64)); err != nil {
+	if value, err := this.connector.ccurl.ReadAt(this.api.txIndex, path, idx.(uint64)); value == nil || err != nil {
 		return []byte{}, false
 	} else {
 		if encoded, err := abi.Encode(value.(*noncommutative.Bytes).Data()); err == nil { // Encode the result
@@ -127,6 +115,37 @@ func (this *ConcurrentContainer) Set(caller evmCommon.Address, input []byte) ([]
 		return []byte{}, true
 	}
 	return []byte{}, false
+}
+
+// Push a new element into the container
+func (this *ConcurrentContainer) Push(caller evmCommon.Address, input []byte, origin evmCommon.Address, nonce uint64) ([]byte, bool) {
+	path := this.buildPath(caller, input) // Container path
+
+	buffer := common.DeepCopy(this.api.txHash[:])
+	codec.Uint64(this.api.Serial()).EncodeToBuffer(buffer[len(buffer)-8:])
+	key := path + hex.EncodeToString(buffer)
+
+	value, _ := abi.Decode(input, 1, []byte{}, 2, math.MaxInt)
+	err := this.connector.ccurl.Write(this.api.txIndex, key, noncommutative.NewBytes(value.([]byte)))
+	return []byte{}, err == nil
+}
+
+func (this *ConcurrentContainer) Pop(caller evmCommon.Address, input []byte) ([]byte, bool) {
+	path := this.buildPath(caller, input) // Build container path
+	if value, err := this.connector.ccurl.PopBack(this.api.txIndex, path); err != nil {
+		return []byte{}, false
+	} else {
+		if value != nil {
+			encoded, err := abi.Encode([]byte(value.(*noncommutative.Bytes).Data()))
+
+			offset := [32]byte{}
+			offset[len(offset)-1] = uint8(len(offset))
+			encoded = append(offset[:], encoded...)
+			return encoded, err == nil
+		}
+	}
+	return []byte{}, true
+
 }
 
 // Build the container path

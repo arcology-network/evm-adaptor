@@ -23,9 +23,9 @@ contract Bytes {
 
         require(Length() == 0); 
         Push(byteArray, arr2);  
-        Push(byteArray, arr2);  
-
+        Push(byteArray, arr2);          
         require(Length() == 2); 
+
         bytes memory stored = Get(1);
         require(stored.length == byteArray.length);
         for (uint  i = 0; i < byteArray.length; i ++) {
@@ -50,7 +50,11 @@ contract Bytes {
             require(stored[i] == elems[i]);
         }
 
-        Delete(1);
+        stored = Pop();
+        for (uint  i = 0; i < elems.length; i ++) {
+            require(stored[i] == elems[i]);
+        }
+        require(Length() == 1); 
     }
 
     function Length() public returns(uint256) {  // 58 94 13 33
@@ -60,13 +64,10 @@ contract Bytes {
         return length;
     }
 
-    function Delete(uint256 idx) public { // 80 26 32 97
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("Delete(bytes, uint256)", id, idx));
+    function Pop() public returns(bytes memory) { // 80 26 32 97
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("Pop() returns(bytes)", id));
         require(success, "Bytes.Pop() Failed");
-    }
-
-    function Pop() public {
-        Delete(Length() - 1);
+        return abi.decode(data, (bytes)); 
     }
 
     function Push(bytes memory elem, uint[] memory array) public { //9e c6 69 25
