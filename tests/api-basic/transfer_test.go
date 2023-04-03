@@ -52,4 +52,8 @@ func TestTransfer(t *testing.T) {
 	t.Log("\n" + FormatTransitions(accesses))
 	t.Log("\n" + FormatTransitions(transitions))
 	t.Log(receipt)
+
+	if receipt.Status != 1 {
+		t.Error("Error: Transfer failed")
+	}
 }

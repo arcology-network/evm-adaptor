@@ -1,4 +1,4 @@
-package tests
+package common
 
 import (
 	"fmt"
@@ -89,7 +89,7 @@ func FormatTransitions(transitions []urlcommon.UnivalueInterface) string {
 	return str
 }
 
-func detectConflict(transitions []urlcommon.UnivalueInterface) ([]uint32, []uint32, []bool) {
+func DetectConflict(transitions []urlcommon.UnivalueInterface) ([]uint32, []uint32, []bool) {
 	length := len(transitions)
 	txs := make([]uint32, length)
 	paths := make([]string, length)

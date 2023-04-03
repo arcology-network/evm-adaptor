@@ -12,7 +12,6 @@ import (
 	"github.com/arcology-network/concurrenturl/v2"
 	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
 	curstorage "github.com/arcology-network/concurrenturl/v2/storage"
-	urltype "github.com/arcology-network/concurrenturl/v2/type"
 	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	arbitrator "github.com/arcology-network/urlarbitrator-engine/go-wrapper"
@@ -110,7 +109,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 	t.Log(receipt)
 	accesses = append(accesses, acc...)
 
-	conflicts, _, _ := detectConflict(accesses)
+	conflicts, _, _ := DetectConflict(accesses)
 	t.Log("AccessRecords\n" + FormatTransitions(accesses))
 	if len(conflicts) != 0 {
 		t.Error("unexpected conflictions:", conflicts)
@@ -188,7 +187,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 			// t.Log("time for codec: ", time.Since(begin))
 
 			begin = time.Now()
-			conflicts, _, _ := detectConflict(totalAccesses)
+			conflicts, _, _ := DetectConflict(totalAccesses)
 			if len(conflicts) != 0 {
 				t.Error("unexpected conflicts:", conflicts)
 				return
@@ -312,50 +311,6 @@ func TestParallelKittiesTransfer(t *testing.T) {
 	transitions, receipt = run(eu, config, &ceoAddress, &coreAddress, 10, true, "transfer(address,uint256)", cfoAddress.Bytes(), kittyId)
 	t.Log("\n" + FormatTransitions(transitions))
 	t.Log(receipt)
-}
-
-func detectConflict(transitions []urlcommon.UnivalueInterface) ([]uint32, []uint32, []bool) {
-	start := time.Now()
-	length := len(transitions)
-	txs := make([]uint32, length)
-	paths := make([]string, length)
-	reads := make([]uint32, length)
-	writes := make([]uint32, length)
-	composite := make([]bool, length)
-	uniqueTxsDict := make(map[uint32]struct{})
-	for i, t := range transitions {
-		txs[i] = t.(*urltype.Univalue).GetTx()
-		paths[i] = *(t.(*urltype.Univalue).GetPath())
-		reads[i] = t.(*urltype.Univalue).Reads()
-		writes[i] = t.(*urltype.Univalue).Writes()
-		composite[i] = t.(*urltype.Univalue).Composite()
-		uniqueTxsDict[txs[i]] = struct{}{}
-	}
-
-	uniqueTxs := make([]uint32, 0, len(uniqueTxsDict))
-	for tx := range uniqueTxsDict {
-		uniqueTxs = append(uniqueTxs, tx)
-	}
-	fmt.Println(time.Since(start))
-
-	// engine := arbitrator.Start()
-	NumPerBatch := 13500
-	for i := 0; i < len(txs)/NumPerBatch; i++ {
-		start := time.Now()
-		arbitrator.Insert(engine, txs[i*NumPerBatch:(i+1)*NumPerBatch], paths[i*NumPerBatch:(i+1)*NumPerBatch], reads[i*NumPerBatch:(i+1)*NumPerBatch], writes[i*NumPerBatch:(i+1)*NumPerBatch], composite[i*NumPerBatch:(i+1)*NumPerBatch])
-		fmt.Println(i, time.Since(start))
-	}
-
-	// start := time.Now()
-	// arbitrator.Insert(engine, txs, paths, reads, writes, composite)
-	// fmt.Println(time.Since(start))
-	start = time.Now()
-	txs, groups, flags := arbitrator.DetectLegacy(engine, uniqueTxs)
-	fmt.Println(time.Since(start))
-	start = time.Now()
-	arbitrator.Clear(engine)
-	fmt.Println(time.Since(start))
-	return txs, groups, flags
 }
 
 func PrintMemUsage() {

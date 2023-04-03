@@ -9,7 +9,7 @@ import (
 	urlcmn "github.com/arcology-network/concurrenturl/v2/common"
 	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	evmcmn "github.com/arcology-network/evm/common"
-	adaptor "github.com/arcology-network/vm-adaptor/evm"
+	adaptor "github.com/arcology-network/vm-adaptor/eth"
 )
 
 func TestDynamicArrayBasic(t *testing.T) {

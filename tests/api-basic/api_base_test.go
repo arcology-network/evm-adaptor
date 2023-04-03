@@ -17,6 +17,7 @@ import (
 	"github.com/arcology-network/evm/crypto"
 	ccEu "github.com/arcology-network/vm-adaptor"
 	ccApi "github.com/arcology-network/vm-adaptor/api"
+	euCommon "github.com/arcology-network/vm-adaptor/common"
 	eth "github.com/arcology-network/vm-adaptor/eth"
 	tests "github.com/arcology-network/vm-adaptor/tests"
 	"github.com/syndtr/goleveldb/leveldb/errors"
@@ -37,7 +38,7 @@ func TestApiInterfaces(t *testing.T) {
 	statedb.CreateAccount(tests.User1)
 	statedb.AddBalance(tests.User1, new(big.Int).SetUint64(1e18))
 	_, transitions := url.Export(true)
-	t.Log("\n" + tests.FormatTransitions(transitions))
+	t.Log("\n" + euCommon.FormatTransitions(transitions))
 
 	// Deploy.
 	url = concurrenturl.NewConcurrentUrl(db)
