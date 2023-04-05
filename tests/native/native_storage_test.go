@@ -22,14 +22,15 @@ func TestNativeStorage(t *testing.T) {
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	// api := ccapi.NewAPI(url)
 	statedb := cceueth.NewImplStateDB(url)
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(tests.Coinbase)
-	statedb.CreateAccount(tests.Owner)
-	statedb.AddBalance(tests.Owner, new(big.Int).SetUint64(1e18))
 	statedb.CreateAccount(tests.User1)
 	statedb.AddBalance(tests.User1, new(big.Int).SetUint64(1e18))
+
+	statedb.CreateAccount(tests.Owner)
+	statedb.AddBalance(tests.Owner, new(big.Int).SetUint64(1e18))
+
 	_, transitions := url.Export(true)
 
 	// ================================== Compile ==================================

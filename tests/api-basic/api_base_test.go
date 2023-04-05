@@ -76,6 +76,7 @@ func TestApiInterfaces(t *testing.T) {
 	// ================================== Call length() ==================================
 	url = concurrenturl.NewConcurrentUrl(db)
 	url.Import(transitions)
+	url.PostImport()
 	errs := url.Commit([]uint32{1})
 	if len(errs) != 0 {
 		t.Error(errs)
