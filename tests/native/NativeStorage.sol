@@ -8,11 +8,16 @@ contract NativeStorage {
 
     S public s;
 
+   constructor  () public { 
+        accessX();
+        accessY();
+   }
+
     function accessX() public {
-        s.x = 1;
+        // s.x = 1;
     }
 
     function accessY() public {
-        s.y = 2;
+        // s.y = 2;
     }
 }

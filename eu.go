@@ -49,7 +49,7 @@ func (eu *EU) SetContext(statedb vm.StateDB, api *api.API, db urlcommon.Datastor
 	eu.evm.SetApi(api)
 }
 
-func (eu *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, blockContext vm.BlockContext, txContext vm.TxContext) ([]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface, *types.Receipt) {
+func (eu *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, blockContext vm.BlockContext, txContext vm.TxContext) ([]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface, *types.Receipt, error) {
 	eu.statedb.(*eth.ImplStateDB).Prepare(txHash, ethCommon.Hash{}, txIndex)
 	eu.api.Prepare(txHash, blockContext.BlockNumber, uint32(txIndex))
 	eu.evm.Context = blockContext
@@ -94,7 +94,7 @@ func (eu *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, blockC
 		})
 	}
 
-	return accesses, transitions, receipt
+	return accesses, transitions, receipt, err
 }
 
 func GetAssert(ret []byte) string {

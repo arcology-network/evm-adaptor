@@ -32,7 +32,7 @@ func TestTransfer(t *testing.T) {
 	statedb.CreateAccount(tests.User1)
 	statedb.AddBalance(tests.User1, new(big.Int).SetUint64(1e18))
 	_, transitions := url.Export(true)
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + tests.FormatTransitions(transitions))
 
 	// Transfer.
 	url = concurrenturl.NewConcurrentUrl(db)
@@ -48,12 +48,12 @@ func TestTransfer(t *testing.T) {
 	config.Time = new(big.Int).SetUint64(10000000)
 
 	msg := types.NewMessage(tests.User1, &tests.User2, 0, new(big.Int).SetUint64(100), 1e15, new(big.Int).SetUint64(1), nil, nil, true)
-	accesses, transitions, receipt := eu.Run(common.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg))
-	t.Log("\n" + FormatTransitions(accesses))
-	t.Log("\n" + FormatTransitions(transitions))
+	accesses, transitions, receipt, err := eu.Run(common.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg))
+	t.Log("\n" + tests.FormatTransitions(accesses))
+	t.Log("\n" + tests.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	if receipt.Status != 1 {
-		t.Error("Error: Transfer failed")
+		t.Error("Error: Transfer failed !!!", err)
 	}
 }

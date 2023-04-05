@@ -1,7 +1,8 @@
-package tests
+package native
 
 import (
 	"math/big"
+	"os/exec"
 	"testing"
 
 	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
@@ -10,7 +11,8 @@ import (
 	curstorage "github.com/arcology-network/concurrenturl/v2/storage"
 	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
-	adaptor "github.com/arcology-network/vm-adaptor/evm"
+	cceueth "github.com/arcology-network/vm-adaptor/eth"
+	"github.com/arcology-network/vm-adaptor/tests"
 )
 
 func TestNativeStorage(t *testing.T) {
@@ -20,33 +22,56 @@ func TestNativeStorage(t *testing.T) {
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	api := adaptor.NewAPI(db, url)
-	statedb := adaptor.NewStateDB(api, db, url)
+	// api := ccapi.NewAPI(url)
+	statedb := cceueth.NewImplStateDB(url)
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
-	statedb.CreateAccount(coinbase)
-	statedb.CreateAccount(owner)
-	statedb.AddBalance(owner, new(big.Int).SetUint64(1e18))
-	statedb.CreateAccount(user1)
-	statedb.AddBalance(user1, new(big.Int).SetUint64(1e18))
+	statedb.CreateAccount(tests.Coinbase)
+	statedb.CreateAccount(tests.Owner)
+	statedb.AddBalance(tests.Owner, new(big.Int).SetUint64(1e18))
+	statedb.CreateAccount(tests.User1)
+	statedb.AddBalance(tests.User1, new(big.Int).SetUint64(1e18))
 	_, transitions := url.Export(true)
 
-	// Deploy NativeStorage.
-	eu, config := prepare(db, 10000000, transitions, []uint32{0})
-	transitions, receipt := deploy(eu, config, owner, 0, NativeStorageCode)
-	t.Log("\n" + FormatTransitions(transitions))
+	// ================================== Compile ==================================
+	_, err := exec.Command("python", "./compiler.py").Output() // capture the output of the Python script
+	if err != nil {
+		panic(err)
+	}
+
+	bytecode, err := tests.BytecodeReader("./bytecode.txt") // Read the byte code
+	if err != nil {
+		t.Error("Error: ", err)
+	}
+
+	// Compile
+	// ================= Deploy the contract==================================
+	eu, config := tests.Prepare(db, 10000000, transitions, []uint32{0})
+	transitions, receipt, err := tests.Deploy(eu, config, tests.Owner, 0, bytecode)
+	t.Log("\n" + tests.FormatTransitions(transitions))
 	t.Log(receipt)
 	address := receipt.ContractAddress
 	t.Log(address)
+	if receipt.Status != 1 {
+		t.Error("Error: Failed to deploy!!!", err)
+	}
 
+	// ================================== Call the contract ==================================
 	// Call accessX.
-	eu, config = prepare(db, 10000001, transitions, []uint32{1})
-	acc, transitions, receipt := runEx(eu, config, &user1, &address, 1, true, "accessX()")
-	t.Log("\n" + FormatTransitions(acc))
+	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{1})
+	acc, transitions, receipt, err := tests.RunEx(eu, config, &tests.User1, &address, 1, true, "accessX()")
+	t.Log("\n" + tests.FormatTransitions(acc))
 	t.Log(receipt)
+
+	if receipt.Status != 1 {
+		t.Error("Error: Failed to call accessX()!!!", err)
+	}
 
 	// Call accessY.
-	eu, config = prepare(db, 10000002, transitions, []uint32{2})
-	acc, _, receipt = runEx(eu, config, &user1, &address, 2, true, "accessY()")
-	t.Log("\n" + FormatTransitions(acc))
+	eu, config = tests.Prepare(db, 10000002, transitions, []uint32{2})
+	acc, _, receipt, err = tests.RunEx(eu, config, &tests.User1, &address, 2, true, "accessY()")
+	t.Log("\n" + tests.FormatTransitions(acc))
 	t.Log(receipt)
+	if receipt.Status != 1 {
+		t.Error("Error: Failed to call accessY()!!!", err)
+	}
 }
