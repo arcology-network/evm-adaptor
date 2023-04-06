@@ -27,7 +27,6 @@ func TestApiInterfaces(t *testing.T) {
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	//	api := ccApi.NewAPI(url)
 	statedb := eth.NewImplStateDB(url)
 	statedb.Prepare(common.Hash{}, common.Hash{}, 0)
 	statedb.CreateAccount(tests.Coinbase)
@@ -43,7 +42,7 @@ func TestApiInterfaces(t *testing.T) {
 	url.Commit([]uint32{0})
 	api := ccApi.NewAPI(url)
 	statedb = eth.NewImplStateDB(url)
-	eu := ccEu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url)
+	eu := ccEu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url)
 
 	config.Coinbase = &tests.Coinbase
 	config.BlockNumber = new(big.Int).SetUint64(10000000)
@@ -72,7 +71,7 @@ func TestApiInterfaces(t *testing.T) {
 	if receipt.Status != 1 || err != nil {
 		t.Error("Error: Deployment failed!!!", err)
 	}
-	// return
+
 	// ================================== Call length() ==================================
 	url = concurrenturl.NewConcurrentUrl(db)
 	url.Import(transitions)
@@ -84,7 +83,7 @@ func TestApiInterfaces(t *testing.T) {
 	}
 	api = ccApi.NewAPI(url)
 	statedb = eth.NewImplStateDB(url)
-	eu = ccEu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url)
+	eu = ccEu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url)
 
 	config.BlockNumber = new(big.Int).SetUint64(10000001)
 	config.Time = new(big.Int).SetUint64(10000001)
@@ -97,7 +96,7 @@ func TestApiInterfaces(t *testing.T) {
 	t.Log("\n" + tests.FormatTransitions(transitions))
 	t.Log(receipt)
 	if receipt.Status != 1 {
-		t.Error("Error: Set failed!!!", err)
+		t.Error("Error: Failed to calll length()!!!", err)
 	}
 
 	// Get.

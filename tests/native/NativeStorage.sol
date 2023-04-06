@@ -1,23 +1,29 @@
 pragma solidity ^0.5.0;
 
-contract NativeStorage {
-    struct S {
-        uint256 x;
-        uint256 y;
-    }
-
-    S public s;
+contract NativeStorage {   
+        uint256 x = 1 ;
+        uint256 y = 100 ;
 
    constructor  () public { 
-        accessX();
-        accessY();
+        incrementX();
+        incrementY();
+        require(x == 2);
+        require(y == 102);
    }
 
-    function accessX() public {
-        // s.x = 1;
+    function incrementX() public {
+        x ++;
     }
 
-    function accessY() public {
-        // s.y = 2;
+    function incrementY() public {
+       y += 2;
+    }
+
+    function checkX(uint256 value) view public {
+        require(x == value);
+    }
+
+    function checkY(uint256 value) view public {
+         require(y == value);
     }
 }

@@ -1,4 +1,4 @@
-package basic
+package transfer
 
 import (
 	"math/big"
@@ -25,7 +25,7 @@ func TestTransfer(t *testing.T) {
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	api := ccApi.NewAPI(url)
+	// api := ccApi.NewAPI(url)
 	statedb := eth.NewImplStateDB(url)
 	statedb.Prepare(common.Hash{}, common.Hash{}, 0)
 	statedb.CreateAccount(tests.Coinbase)
@@ -41,7 +41,7 @@ func TestTransfer(t *testing.T) {
 	url.Commit([]uint32{0})
 	api = ccApi.NewAPI(url)
 	statedb = eth.NewImplStateDB(url)
-	eu := ccEu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url)
+	eu := ccEu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url)
 
 	config.Coinbase = &tests.Coinbase
 	config.BlockNumber = new(big.Int).SetUint64(10000000)

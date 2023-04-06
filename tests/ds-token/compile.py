@@ -11,9 +11,9 @@ def compile_contracts(dir):
     # print(sources)
     return compile_files(sources, output_values = ['abi', 'bin'])
 
-compiled_sol = compile_contracts('./ds_token_v2')
+targetPath = os.path.dirname(os.path.realpath(__file__))
+compiled_sol = compile_contracts(targetPath + '/contracts')
+dstoken = compiled_sol[targetPath + '/contracts/token.sol:DSToken']
 
-dstoken = compiled_sol['./ds_token_v2/token.sol:DSToken']
-
-with open('ds_token_v2.txt', 'w') as f:
+with open('bytecode.txt', 'w') as f:
     f.write('code = "{}"\n'.format(dstoken['bin']))

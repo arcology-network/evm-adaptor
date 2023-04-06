@@ -132,9 +132,12 @@ func FormatTransitions(transitions []urlcommon.UnivalueInterface) string {
 
 func Prepare(db urlcommon.DatastoreInterface, height uint64, transitions []urlcommon.UnivalueInterface, txs []uint32) (*cceu.EU, *cceu.Config) {
 	url := concurrenturl.NewConcurrentUrl(db)
-	url.Import(transitions)
-	url.PostImport()
-	url.Commit(txs)
+	if transitions != nil && len(transitions) != 0 {
+		url.Import(transitions)
+		url.PostImport()
+		url.Commit(txs)
+	}
+
 	api := ccapi.NewAPI(url)
 	statedb := cceueth.NewImplStateDB(url)
 
@@ -143,7 +146,7 @@ func Prepare(db urlcommon.DatastoreInterface, height uint64, transitions []urlco
 	config.BlockNumber = new(big.Int).SetUint64(height)
 	config.Time = new(big.Int).SetUint64(height)
 
-	return cceu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url), config
+	return cceu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url), config
 }
 
 func Deploy(eu *cceu.EU, config *cceu.Config, owner evmcommon.Address, nonce uint64, code string, args ...[]byte) ([]urlcommon.UnivalueInterface, *evmtypes.Receipt, error) {
@@ -166,10 +169,10 @@ func Deploy(eu *cceu.EU, config *cceu.Config, owner evmcommon.Address, nonce uin
 // 	return transitions, receipt, err
 // }
 
-func RunEx(eu *cceu.EU, config *cceu.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface, *evmtypes.Receipt, error) {
+func CallFunc(eu *cceu.EU, config *cceu.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, encodedArgs ...[]byte) ([]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface, *evmtypes.Receipt, error) {
 	data := crypto.Keccak256([]byte(function))[:4]
-	for _, arg := range args {
-		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
+	for _, arg := range encodedArgs {
+		data = append(data, arg...)
 	}
 	msg := evmtypes.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
 	accesses, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, cceu.NewEVMBlockContextV2(config), cceu.NewEVMTxContext(msg))
