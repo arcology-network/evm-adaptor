@@ -2,7 +2,9 @@ package native
 
 import (
 	"math/big"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 
 	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
@@ -112,20 +114,16 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 	_, transitions := url.Export(true)
 
 	// ================================== Compile ==================================
-	_, err := exec.Command("python", "./compiler.py").Output() // capture the output of the Python script
-	if err != nil {
-		panic(err)
+	currentPath, _ := os.Getwd()
+	compiler := filepath.Dir(currentPath) + "/compiler.py"
+	code, err := tests.CompileContracts(compiler, "./NativeStorage.sol", "NativeStorage")
+	if err != nil || len(code) == 0 {
+		t.Error("Error: Failed to generate the byte code")
 	}
 
-	bytecode, err := tests.BytecodeReader("./bytecode.txt") // Read the byte code
-	if err != nil {
-		t.Error("Error: ", err)
-	}
-
-	// Compile
 	// ================================ Deploy the contract==================================
 	eu, config := tests.Prepare(db, 10000000, transitions, []uint32{0})
-	transitions, receipt, err := tests.Deploy(eu, config, tests.Owner, 0, bytecode)
+	transitions, receipt, err := tests.Deploy(eu, config, tests.Owner, 0, code)
 	t.Log("\n" + tests.FormatTransitions(transitions))
 	t.Log(receipt)
 	address := receipt.ContractAddress

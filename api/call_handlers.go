@@ -35,7 +35,7 @@ func (this *ConcurrentContainer) Call(caller evmCommon.Address, input []byte, or
 	copy(signature[:], input)
 
 	switch signature {
-	case [4]byte{0x74, 0x08, 0x8d, 0x96}:
+	case [4]byte{0x5f, 0x7e, 0xdb, 0x9a}:
 		return this.New(caller, input[4:])
 
 	case [4]byte{0xb8, 0xeb, 0xfc, 0x10}:
@@ -52,17 +52,20 @@ func (this *ConcurrentContainer) Call(caller evmCommon.Address, input []byte, or
 
 	case [4]byte{0x6a, 0x79, 0x6b, 0xfa}:
 		return this.Set(caller, input[4:])
-
-	default:
-		this.api.AddLog("Unhandled function call", hex.EncodeToString(input))
 	}
-	return []byte{}, true
+
+	return this.Unknow(caller, input[4:])
+}
+
+func (this *ConcurrentContainer) Unknow(caller evmCommon.Address, input []byte) ([]byte, bool) {
+	this.api.AddLog("Unhandled function call", hex.EncodeToString(input))
+	return []byte{}, false
 }
 
 func (this *ConcurrentContainer) New(caller evmCommon.Address, input []byte) ([]byte, bool) {
-	elemType := int(input[31]) // Data type should only take one byte.
-	id := this.api.GenUUID()   // Generate a uuid for the container
-	return id[:], this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id), 0, elemType)
+	// elemType := int(input[31]) // Data type should only take one byte.
+	id := this.api.GenUUID() // Generate a uuid for the container
+	return id[:], this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id), 0)
 }
 
 // Get the number of elements in the container
@@ -124,8 +127,12 @@ func (this *ConcurrentContainer) Push(caller evmCommon.Address, input []byte, or
 	codec.Uint64(this.api.Serial()).EncodeToBuffer(buffer[len(buffer)-8:])
 	key := path + hex.EncodeToString(buffer)
 
-	value, _ := abi.Decode(input, 1, []byte{}, 2, math.MaxInt)
-	err := this.connector.ccurl.Write(this.api.txIndex, key, noncommutative.NewBytes(value.([]byte)))
+	value, err := abi.Decode(input, 1, []byte{}, 2, math.MaxInt)
+	if value == nil || err != nil {
+		return []byte{}, false
+	}
+
+	err = this.connector.ccurl.Write(this.api.txIndex, key, noncommutative.NewBytes(value.([]byte)))
 	return []byte{}, err == nil
 }
 

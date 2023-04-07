@@ -5,8 +5,6 @@ import "./Base.sol";
 contract Bool {
     Base base;
 
-    event logMsg(string message);
-
     constructor  () public {
         base = new Base();
     }

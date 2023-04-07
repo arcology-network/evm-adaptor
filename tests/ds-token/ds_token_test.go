@@ -12,6 +12,7 @@ import (
 	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	adaptor "github.com/arcology-network/vm-adaptor/evm"
+	"github.com/arcology-network/vm-adaptor/tests"
 )
 
 var (
@@ -29,7 +30,7 @@ func TestDSTokenMint(t *testing.T) {
 	api := adaptor.NewAPI(db, url)
 	statedb := adaptor.NewStateDB(api, db, url)
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
-	statedb.CreateAccount(coinbase)
+	statedb.CreateAccount(tests.Coinbase)
 	statedb.CreateAccount(owner)
 	statedb.AddBalance(owner, new(big.Int).SetUint64(1e18))
 	_, transitions := url.Export(true)

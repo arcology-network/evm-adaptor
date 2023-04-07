@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
 
-contract Bytes {
+contract Example {
     uint256 constant public BYTES = 3;
     address constant public API = address(0x84); 
 
@@ -12,7 +12,7 @@ contract Bytes {
 
     constructor  () public {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("New()"));       
-        require(success, "Bytes.New() Failed");
+        require(success, "Example.New() Failed");
         id = data;
  
         bytes memory byteArray = new bytes(75);
@@ -58,31 +58,31 @@ contract Bytes {
 
     function length() public returns(uint256) {  // 58 94 13 33
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("length(bytes) returns(uint256)", id));
-        require(success, "Bytes.length() Failed");
+        require(success, "Example.length() Failed");
         uint256 length = abi.decode(data, (uint256));
         return length;
     }
 
     function pop() public returns(bytes memory) { // 80 26 32 97
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("pop() returns(bytes)", id));
-        require(success, "Bytes.pop() Failed");
+        require(success, "Example.pop() Failed");
         return abi.decode(data, (bytes)); 
     }
 
     function push(bytes memory elem, uint[] memory array) public { //9e c6 69 25
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("push(bytes, bytes)",  id, elem));
-        require(success, "Bytes.push() Failed");
+        require(success, "Example.push() Failed");
     }   
 
 
     function get(uint256 idx) public returns(bytes memory)  { // 31 fe 88 d0
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("get(bytes, uint256) returns(bytes)", id, idx));
-        require(success, "Bytes.get() Failed");
+        require(success, "Example.get() Failed");
         return abi.decode(data, (bytes));  
     }
 
     function set(uint256 idx, bytes memory elem) public { // 7a fa 62 38
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("set(bytes, uint256, bytes)", id, idx, elem));
-        require(success, "Bytes.set() Failed");
+        require(success, "Example.set() Failed");
     }
 }

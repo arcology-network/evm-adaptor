@@ -7,7 +7,7 @@ contract Base {
     event logMsg(string message);
 
     constructor () public {
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("constructor()"));       
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("New()"));       
         require(success, "Base.constructor() Failed");
         ctrn = data; 
     }
@@ -42,5 +42,9 @@ contract Base {
     function set(bytes memory encoded) public { // 7a fa 62 38
         (bool success, bytes memory data) = address(API).call(encoded);
         require(success, "Base.set() Failed");
+    }
+    
+    function log(bytes memory elem) public { // 7a fa 62 38
+        address(API).call(abi.encodeWithSignature("log(bytes)", id(), elem));     
     }
 }

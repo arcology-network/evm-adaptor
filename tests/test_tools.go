@@ -7,14 +7,16 @@ import (
 	"math"
 	"math/big"
 	"os"
+	"os/exec"
 
+	common "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl/v2"
 	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
 	urltype "github.com/arcology-network/concurrenturl/v2/type"
 	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	"github.com/arcology-network/concurrenturl/v2/type/noncommutative"
-	"github.com/arcology-network/evm/common"
 	evmcommon "github.com/arcology-network/evm/common"
+
 	"github.com/arcology-network/evm/consensus"
 	"github.com/arcology-network/evm/core/types"
 	evmtypes "github.com/arcology-network/evm/core/types"
@@ -30,17 +32,17 @@ import (
 )
 
 var (
-	Coinbase = common.BytesToAddress([]byte("coinbase"))
-	Owner    = common.BytesToAddress([]byte("owner"))
-	User1    = common.BytesToAddress([]byte("user1"))
-	User2    = common.BytesToAddress([]byte("user2"))
+	Coinbase = evmcommon.BytesToAddress([]byte("coinbase"))
+	Owner    = evmcommon.BytesToAddress([]byte("owner"))
+	User1    = evmcommon.BytesToAddress([]byte("user1"))
+	User2    = evmcommon.BytesToAddress([]byte("user2"))
 )
 
 // fakeChain implements the ChainContext interface.
 type fakeChain struct {
 }
 
-func (chain *fakeChain) GetHeader(common.Hash, uint64) *types.Header {
+func (chain *fakeChain) GetHeader(evmcommon.Hash, uint64) *types.Header {
 	return &types.Header{}
 }
 
@@ -54,7 +56,7 @@ func MainConfig() *eu.Config {
 		ChainConfig: params.MainnetChainConfig,
 		VMConfig:    &vmConfig,
 		BlockNumber: new(big.Int).SetUint64(10000000),
-		ParentHash:  common.Hash{},
+		ParentHash:  evmcommon.Hash{},
 		Time:        new(big.Int).SetUint64(10000000),
 		Coinbase:    &Coinbase,
 		GasLimit:    math.MaxUint64,
@@ -159,16 +161,6 @@ func Deploy(eu *cceu.EU, config *cceu.Config, owner evmcommon.Address, nonce uin
 	return transitions, receipt, err
 }
 
-// func Run(eu *cceu.EU, config *cceu.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]urlcommon.UnivalueInterface, *evmtypes.Receipt, error) {
-// 	data := crypto.Keccak256([]byte(function))[:4]
-// 	for _, arg := range args {
-// 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
-// 	}
-// 	msg := evmtypes.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
-// 	_, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, cceu.NewEVMBlockContextV2(config), cceu.NewEVMTxContext(msg))
-// 	return transitions, receipt, err
-// }
-
 func CallFunc(eu *cceu.EU, config *cceu.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, encodedArgs ...[]byte) ([]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface, *evmtypes.Receipt, error) {
 	data := crypto.Keccak256([]byte(function))[:4]
 	for _, arg := range encodedArgs {
@@ -187,10 +179,32 @@ func BytecodeReader(fileName string) (string, error) {
 	}
 	defer file.Close()
 
+	if e := os.Remove(fileName); e != nil {
+		return "", errors.New("Failed to remove the bytecode file")
+	}
+
 	// Create a scanner to read the file with the specified encoding
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
 	scanner.Scan() // read the first line of the file
 
 	return scanner.Text(), nil // Convert the scanned text to a string
+}
+
+func CompileContracts(compiler, file, contract string) (string, error) {
+	if !common.FileExists(compiler) {
+		return "", errors.New("Error: Compiler doesn't exist in " + compiler)
+	}
+
+	if !common.FileExists(file) {
+		return "", errors.New("Error: The contract file doesn't exist in " + file)
+	}
+
+	currentPath, _ := os.Getwd()
+	fmt.Println(currentPath)
+	if code, err := exec.Command("python", compiler, file, contract).Output(); err == nil && len(code) > 0 {
+		return string(code), nil
+	} else {
+		return "", (err)
+	}
 }

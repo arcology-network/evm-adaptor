@@ -49,7 +49,11 @@ func Decode(raw []byte, idx int, typed interface{}, depth uint8, maxLength int) 
 
 func next(raw []byte, offset uint32, depth uint8, maxLength int) (interface{}, error) {
 	length, _ := Decode(raw[offset:], 0, uint32(0), depth, maxLength)
-	sub := raw[offset+32 : offset+length.(uint32)+32]
 
+	if offset+length.(uint32)+32 > uint32(len(raw)) {
+		return nil, errors.New("Error: Access out of range")
+	}
+
+	sub := raw[offset+32 : offset+length.(uint32)+32]
 	return Decode(sub, 0, []byte{}, depth, maxLength)
 }

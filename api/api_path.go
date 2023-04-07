@@ -27,7 +27,7 @@ func NewCCurlPathBuilder(txHash ethCommon.Hash, txIndex uint32, ccurl *concurren
 }
 
 // Make Arcology paths under the current account
-func (this *CCurlPathBuilder) New(account types.Address, containerId string, keyType int, valueType int) bool {
+func (this *CCurlPathBuilder) New(account types.Address, containerId string, keyType int) bool {
 	if !this.makeStorageRootPath(account, this.txIndex) { // Create the root path if has been created yet.
 		return false
 	}
@@ -86,6 +86,10 @@ func (this *CCurlPathBuilder) buildContainerRootPath(account types.Address, id s
 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/")
 }
 
+func (this *CCurlPathBuilder) buildValuePath(account types.Address, id string, key interface{}) string {
+	return fmt.Sprintf("%s%v", this.buildContainerRootPath(account, id), key)
+}
+
 // func (this *CCurlPathBuilder) buildContainerLength(account types.Address, id string) string {
 // 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/")
 
@@ -111,10 +115,6 @@ func (this *CCurlPathBuilder) buildContainerRootPath(account types.Address, id s
 // func (this *CCurlPathBuilder) buildValueTypePath(account types.Address, id string) string {
 // 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/@")
 // }
-
-func (this *CCurlPathBuilder) buildValuePath(account types.Address, id string, key interface{}) string {
-	return fmt.Sprintf("%s%v", this.buildContainerRootPath(account, id), key)
-}
 
 // func (this *CCurlPathBuilder) buildContainerType(url *concurrenturl.ConcurrentUrl, account types.Address, id string, txIndex uint32) int {
 // 	if value, err := url.Read(txIndex, this.buildContainerTypePath(account, id)); err != nil || value == nil {
