@@ -17,6 +17,10 @@ func Decode(raw []byte, idx int, typed interface{}, depth uint8, maxLength int) 
 		return raw, nil
 	}
 
+	if idx*32+32 > len(raw) {
+		return nil, errors.New("Error: Access out of range")
+	}
+
 	switch typed.(type) {
 	case bool:
 		return raw[len(raw[idx*32:idx*32+32])-1] == 1, nil
