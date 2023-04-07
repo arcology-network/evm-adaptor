@@ -56,13 +56,6 @@ func TestContractU256(t *testing.T) {
 		t.Error("Error: Failed to generate the byte code")
 	}
 
-	// currentPath, _ := os.Getwd()
-	// compiler := filepath.Dir(filepath.Dir(currentPath)) + "/tests/compiler.py"
-	// code, err := tests.CompileContracts(compiler, "./Bytes_test.sol", "ByteTest")
-	// if err != nil || len(code) == 0 {
-	// 	t.Error("Error: Failed to generate the byte code")
-	// }
-
 	// ================================== Deploy the contract ==================================
 	msg := types.NewMessage(tests.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), common.Hex2Bytes(code), nil, true)        // Build the message
 	_, transitions, receipt, err := eu.Run(common.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg)) // Execute it
@@ -70,7 +63,7 @@ func TestContractU256(t *testing.T) {
 
 	// t.Log("\n" + FormatTransitions(accesses))
 	t.Log("\n" + tests.FormatTransitions(transitions))
-	// t.Log(receipt)
+	t.Log(receipt)
 	// contractAddress := receipt.ContractAddress
 	if receipt.Status != 1 || err != nil {
 		t.Error("Error: Deployment failed!!!", err)
