@@ -1,4 +1,4 @@
-package api
+package common
 
 import (
 	"fmt"
@@ -61,7 +61,7 @@ func (this *CCurlPathBuilder) makeStorageRootPath(account types.Address, txIndex
 }
 
 func (this *CCurlPathBuilder) makeContainerRootPath(account types.Address, id string, txIndex uint32) bool {
-	containerRoot := this.buildContainerRootPath(account, id)
+	containerRoot := this.BuildContainerRootPath(account, id)
 	if value, err := this.ccurl.Peek(containerRoot); err != nil || value != nil {
 		return false
 	}
@@ -82,18 +82,18 @@ func (this *CCurlPathBuilder) buildDeferCallPath(account types.Address, id strin
 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/defer/", id)
 }
 
-func (this *CCurlPathBuilder) buildContainerRootPath(account types.Address, id string) string {
+func (this *CCurlPathBuilder) BuildContainerRootPath(account types.Address, id string) string {
 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/")
 }
 
 func (this *CCurlPathBuilder) buildValuePath(account types.Address, id string, key interface{}) string {
-	return fmt.Sprintf("%s%v", this.buildContainerRootPath(account, id), key)
+	return fmt.Sprintf("%s%v", this.BuildContainerRootPath(account, id), key)
 }
 
 // func (this *CCurlPathBuilder) buildContainerLength(account types.Address, id string) string {
 // 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/")
 
-// 	if value, err := this.url.Read(this.context.GetIndex(), buildContainerRootPath(this.url, account, id)); err != nil || value == nil {
+// 	if value, err := this.url.Read(this.context.GetIndex(), BuildContainerRootPath(this.url, account, id)); err != nil || value == nil {
 // 		return ContainerSizeInvalid
 // 	} else {
 // 		return len(value.(*commutative.Meta).KeyView()) - 2

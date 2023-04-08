@@ -11,7 +11,7 @@ import (
 	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
 	ccurlstorage "github.com/arcology-network/concurrenturl/v2/storage"
 	"github.com/arcology-network/concurrenturl/v2/type/commutative"
-	"github.com/arcology-network/evm/common"
+	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/crypto"
 	ccEu "github.com/arcology-network/vm-adaptor"
@@ -29,7 +29,7 @@ func TestApiInterfaces(t *testing.T) {
 
 	url := concurrenturl.NewConcurrentUrl(db)
 	statedb := eth.NewImplStateDB(url)
-	statedb.Prepare(common.Hash{}, common.Hash{}, 0)
+	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(tests.Coinbase)
 	statedb.CreateAccount(tests.User1)
 	statedb.AddBalance(tests.User1, new(big.Int).SetUint64(1e18))
@@ -58,8 +58,8 @@ func TestApiInterfaces(t *testing.T) {
 	}
 
 	// ================================== Deploy the contract ==================================
-	msg := types.NewMessage(tests.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), common.Hex2Bytes(code), nil, true)        // Build the message
-	_, transitions, receipt, err := eu.Run(common.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg)) // Execute it
+	msg := types.NewMessage(tests.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)        // Build the message
+	_, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg)) // Execute it
 	// ---------------
 
 	// t.Log("\n" + FormatTransitions(accesses))
@@ -87,10 +87,10 @@ func TestApiInterfaces(t *testing.T) {
 	config.Time = new(big.Int).SetUint64(10000001)
 
 	data := crypto.Keccak256([]byte("length()"))[:4]
-	data = append(data, common.BytesToHash(tests.User1.Bytes()).Bytes()...)
-	data = append(data, common.BytesToHash([]byte{0xcc}).Bytes()...)
+	data = append(data, evmcommon.BytesToHash(tests.User1.Bytes()).Bytes()...)
+	data = append(data, evmcommon.BytesToHash([]byte{0xcc}).Bytes()...)
 	msg = types.NewMessage(tests.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, true)
-	_, transitions, receipt, err = eu.Run(common.BytesToHash([]byte{2, 2, 2}), 2, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg))
+	_, transitions, receipt, err = eu.Run(evmcommon.BytesToHash([]byte{2, 2, 2}), 2, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg))
 	t.Log("\n" + tests.FormatTransitions(transitions))
 	t.Log(receipt)
 	if receipt.Status != 1 {
@@ -115,7 +115,7 @@ func TestApiInterfaces(t *testing.T) {
 
 	// data = crypto.Keccak256([]byte("getSum()"))[:4]
 	// msg = types.NewMessage(tests.User1, &contractAddress, 2, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, true)
-	// accesses, transitions, receipt, err := eu.Run(common.BytesToHash([]byte{3, 3, 3}), 3, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg))
+	// accesses, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{3, 3, 3}), 3, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg))
 	// t.Log("\n" + tests.FormatTransitions(accesses))
 	// t.Log("\n" + tests.FormatTransitions(transitions))
 	// t.Log(receipt)

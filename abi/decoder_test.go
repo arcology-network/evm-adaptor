@@ -24,7 +24,8 @@ func TestDecoder(t *testing.T) {
 	fmt.Println(buffer)
 
 	subbytes := buffer.([]byte)
-	if len(buffer.([]byte)) != 75 || common.FindFirstIf(&subbytes, func(v byte) bool { return v != 65 }) != -1 {
+	idx, _ := common.FindFirstIf(&subbytes, func(v byte) bool { return v != 65 })
+	if len(buffer.([]byte)) != 75 || idx != -1 {
 		t.Error("Error; The array should be 75 byte long!")
 	}
 
