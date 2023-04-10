@@ -43,9 +43,13 @@ func (state *ImplStateDB) AddBalance(addr evmcommon.Address, amount *big.Int) {
 		createAccount(state.url, addr, state.tid)
 	}
 
-	if err := state.url.Write(state.tid, getBalancePath(state.url, addr), commutative.NewU256(nil, amount)); err != nil {
-		panic(err) //should not just panic
+	if delta, ok := commutative.NewU256DeltaFromBigInt(amount); ok {
+		if err := state.url.Write(state.tid, getBalancePath(state.url, addr), delta); err != nil {
+			panic(err) //should not just panic
+		}
+		return
 	}
+	panic("Error: Failed to call AddBalance()")
 }
 
 func (state *ImplStateDB) GetBalance(addr evmcommon.Address) *big.Int {

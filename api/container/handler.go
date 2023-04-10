@@ -1,4 +1,4 @@
-package api
+package concurrentcontainer
 
 import (
 	"encoding/hex"
@@ -19,23 +19,23 @@ import (
 )
 
 // APIs under the concurrency namespace
-type ConcurrentContainer struct {
+type Container struct {
 	api       apicommon.ContextInfoInterface
 	connector *apicommon.CCurlPathBuilder
 }
 
-func NewConcurrentContainer(api apicommon.ContextInfoInterface) *ConcurrentContainer {
-	return &ConcurrentContainer{
+func NewContainer(api apicommon.ContextInfoInterface) *Container {
+	return &Container{
 		api:       api,
 		connector: apicommon.NewCCurlPathBuilder(api.TxHash(), api.TxIndex(), api.Ccurl()),
 	}
 }
 
-func (this *ConcurrentContainer) Address() [20]byte {
+func (this *Container) Address() [20]byte {
 	return [20]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x84}
 }
 
-func (this *ConcurrentContainer) Call(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
+func (this *Container) Call(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
@@ -62,19 +62,19 @@ func (this *ConcurrentContainer) Call(caller evmcommon.Address, input []byte, or
 	return this.Unknow(caller, input[4:])
 }
 
-func (this *ConcurrentContainer) Unknow(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Container) Unknow(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	this.api.AddLog("Unhandled function call", hex.EncodeToString(input))
 	return []byte{}, false
 }
 
-func (this *ConcurrentContainer) New(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Container) New(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	// elemType := int(input[31]) // Data type should only take one byte.
 	id := this.api.GenUUID() // Generate a uuid for the container
 	return id[:], this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id), 0)
 }
 
 // Get the number of elements in the container
-func (this *ConcurrentContainer) Length(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Container) Length(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path := this.buildPath(caller, input) // Container path
 	if meta, err := this.api.Ccurl().Read(this.api.TxIndex(), path); err == nil {
 		if encoded, err := abi.Encode(uint256.NewInt(uint64(meta.(*commutative.Meta).Length()))); err == nil {
@@ -84,7 +84,7 @@ func (this *ConcurrentContainer) Length(caller evmcommon.Address, input []byte) 
 	return []byte{}, false
 }
 
-func (this *ConcurrentContainer) Get(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Container) Get(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path := this.buildPath(caller, input) // Build container path
 	idx, _ := abi.Decode(input, 1, uint64(0), 1, 32)
 
@@ -101,7 +101,7 @@ func (this *ConcurrentContainer) Get(caller evmcommon.Address, input []byte) ([]
 	return []byte{}, false
 }
 
-func (this *ConcurrentContainer) Set(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Container) Set(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path := this.buildPath(caller, input) // Build container path
 	idx, err := abi.Decode(input, 1, uint64(0), 1, 32)
 	if err != nil {
@@ -125,7 +125,7 @@ func (this *ConcurrentContainer) Set(caller evmcommon.Address, input []byte) ([]
 }
 
 // Push a new element into the container
-func (this *ConcurrentContainer) Push(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
+func (this *Container) Push(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
 	path := this.buildPath(caller, input) // Container path
 
 	buffer := codec.Bytes32(this.api.TxHash()).Clone()
@@ -141,7 +141,7 @@ func (this *ConcurrentContainer) Push(caller evmcommon.Address, input []byte, or
 	return []byte{}, err == nil
 }
 
-func (this *ConcurrentContainer) Pop(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Container) Pop(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path := this.buildPath(caller, input) // Build container path
 	if value, err := this.api.Ccurl().PopBack(this.api.TxIndex(), path); err != nil {
 		return []byte{}, false
@@ -160,7 +160,7 @@ func (this *ConcurrentContainer) Pop(caller evmcommon.Address, input []byte) ([]
 }
 
 // Build the container path
-func (this *ConcurrentContainer) buildPath(caller evmcommon.Address, input []byte) string {
+func (this *Container) buildPath(caller evmcommon.Address, input []byte) string {
 	id, _ := abi.Decode(input, 0, []byte{}, 2, 32)                                                                            // max 32 bytes                                                                          // container ID
 	return this.connector.BuildContainerRootPath(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id.([]byte))) // unique ID
 }

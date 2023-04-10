@@ -2,7 +2,6 @@ package eth
 
 import (
 	"encoding/hex"
-	"math/big"
 
 	codec "github.com/arcology-network/common-lib/codec"
 	commonlib "github.com/arcology-network/common-lib/common"
@@ -89,7 +88,8 @@ func createAccount(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, 
 		panic(err)
 	}
 
-	if err := url.Write(tid, getBalancePath(url, account), commutative.NewU256(uint256.NewInt(0), new(big.Int))); err != nil { // Initialize balance
+	if err := url.Write(tid, getBalancePath(url, account),
+		commutative.NewU256(uint256.NewInt(0), commutative.U256MIN, commutative.U256MAX)); err != nil { // Initialize balance
 		panic(err)
 	}
 	if err := url.Write(tid, getNoncePath(url, account), commutative.NewInt64(0, 0)); err != nil {

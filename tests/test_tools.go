@@ -108,7 +108,7 @@ func FormatValue(value interface{}) string {
 	case *commutative.U256:
 		v := value.(*commutative.U256).Value()
 		d := value.(*commutative.U256).GetDelta()
-		return fmt.Sprintf(" = %v + %v", (*(v.(*uint256.Int))), d.(*big.Int).Int64())
+		return fmt.Sprintf(" = %v + %v", (*(v.(*uint256.Int))), d.(*uint256.Int).Uint64())
 	case *commutative.Int64:
 		v := value.(*commutative.Int64).Value()
 		d := value.(*commutative.Int64).GetDelta()

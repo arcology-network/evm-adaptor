@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
-	"github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl/v2"
 	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
 	ccurlstorage "github.com/arcology-network/concurrenturl/v2/storage"
@@ -20,7 +19,7 @@ import (
 	tests "github.com/arcology-network/vm-adaptor/tests"
 )
 
-func TestContainerU256(t *testing.T) {
+func TestCumulativeU256(t *testing.T) {
 	config := tests.MainConfig()
 	persistentDB := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(ccurlcommon.NewPlatform().Eth10Account())
@@ -52,12 +51,7 @@ func TestContainerU256(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	compiler := filepath.Dir(filepath.Dir(filepath.Dir(currentPath))) + "/tests/compiler.py"
-	baseFile := filepath.Dir(currentPath) + "/base/Base.sol"
-	if err := common.CopyFile(baseFile, currentPath+"/Base.sol"); err != nil {
-		t.Error(err)
-	}
-
-	code, err := tests.CompileContracts(compiler, "./U256_test.sol", "U256Test")
+	code, err := tests.CompileContracts(compiler, "./U256_test.sol", "CumulativeU256Test")
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}
