@@ -1,4 +1,4 @@
-package basic
+package base
 
 import (
 	"math/big"
@@ -14,8 +14,8 @@ import (
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/crypto"
-	ccEu "github.com/arcology-network/vm-adaptor"
-	ccApi "github.com/arcology-network/vm-adaptor/api"
+	cceu "github.com/arcology-network/vm-adaptor"
+	ccapi "github.com/arcology-network/vm-adaptor/api"
 	eth "github.com/arcology-network/vm-adaptor/eth"
 	tests "github.com/arcology-network/vm-adaptor/tests"
 )
@@ -41,9 +41,9 @@ func TestApiInterfaces(t *testing.T) {
 	url.Import(transitions)
 	url.PostImport()
 	url.Commit([]uint32{0})
-	api := ccApi.NewAPI(url)
+	api := ccapi.NewAPI(url)
 	statedb = eth.NewImplStateDB(url)
-	eu := ccEu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url)
+	eu := cceu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url)
 
 	config.Coinbase = &tests.Coinbase
 	config.BlockNumber = new(big.Int).SetUint64(10000000)
@@ -51,15 +51,15 @@ func TestApiInterfaces(t *testing.T) {
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
-	compiler := filepath.Dir(currentPath) + "/compiler.py"
-	code, err := tests.CompileContracts(compiler, "./ApiBase.sol", "Bytes")
+	compiler := filepath.Dir(filepath.Dir(filepath.Dir(currentPath))) + "/tests/compiler.py"
+	code, err := tests.CompileContracts(compiler, "./base_test.sol", "BaseTest")
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}
 
 	// ================================== Deploy the contract ==================================
 	msg := types.NewMessage(tests.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)        // Build the message
-	_, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg)) // Execute it
+	_, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContextV2(config), cceu.NewEVMTxContext(msg)) // Execute it
 	// ---------------
 
 	// t.Log("\n" + FormatTransitions(accesses))
@@ -79,9 +79,9 @@ func TestApiInterfaces(t *testing.T) {
 		t.Error(errs)
 		return
 	}
-	api = ccApi.NewAPI(url)
+	api = ccapi.NewAPI(url)
 	statedb = eth.NewImplStateDB(url)
-	eu = ccEu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url)
+	eu = cceu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url)
 
 	config.BlockNumber = new(big.Int).SetUint64(10000001)
 	config.Time = new(big.Int).SetUint64(10000001)
@@ -90,7 +90,7 @@ func TestApiInterfaces(t *testing.T) {
 	data = append(data, evmcommon.BytesToHash(tests.User1.Bytes()).Bytes()...)
 	data = append(data, evmcommon.BytesToHash([]byte{0xcc}).Bytes()...)
 	msg = types.NewMessage(tests.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, true)
-	_, transitions, receipt, err = eu.Run(evmcommon.BytesToHash([]byte{2, 2, 2}), 2, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg))
+	_, transitions, receipt, err = eu.Run(evmcommon.BytesToHash([]byte{2, 2, 2}), 2, &msg, cceu.NewEVMBlockContextV2(config), cceu.NewEVMTxContext(msg))
 	t.Log("\n" + tests.FormatTransitions(transitions))
 	t.Log(receipt)
 	if receipt.Status != 1 {
@@ -106,16 +106,16 @@ func TestApiInterfaces(t *testing.T) {
 	// 	t.Error(errs)
 	// 	return
 	// }
-	// api = ccApi.NewAPI(url)
+	// api = ccapi.NewAPI(url)
 	// statedb = eth.NewImplStateDB(url)
-	// eu = ccEu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url)
+	// eu = cceu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url)
 
 	// config.BlockNumber = new(big.Int).SetUint64(10000002)
 	// config.Time = new(big.Int).SetUint64(10000002)
 
 	// data = crypto.Keccak256([]byte("getSum()"))[:4]
 	// msg = types.NewMessage(tests.User1, &contractAddress, 2, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, true)
-	// accesses, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{3, 3, 3}), 3, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg))
+	// accesses, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{3, 3, 3}), 3, &msg, cceu.NewEVMBlockContextV2(config), cceu.NewEVMTxContext(msg))
 	// t.Log("\n" + tests.FormatTransitions(accesses))
 	// t.Log("\n" + tests.FormatTransitions(transitions))
 	// t.Log(receipt)

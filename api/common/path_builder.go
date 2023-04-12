@@ -1,8 +1,6 @@
 package common
 
 import (
-	"fmt"
-
 	commonlib "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/types"
 	ethCommon "github.com/arcology-network/evm/common"
@@ -36,14 +34,6 @@ func (this *CCurlPathBuilder) New(account types.Address, containerId string, key
 		return false
 	}
 
-	// Write the container meta data.
-	// if err := this.ccurl.Write(this.txIndex, this.buildKeyTypePath(account, containerId), noncommutative.NewInt64(int64(keyType))); err != nil {
-	// 	return false
-	// }
-
-	// if err := this.ccurl.Write(this.txIndex, this.buildValueTypePath(account, containerId), noncommutative.NewInt64(int64(valueType))); err != nil {
-	// 	return false
-	// }
 	return true
 }
 
@@ -78,16 +68,8 @@ func (this *CCurlPathBuilder) buildAccountRootPath(account types.Address) string
 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/")
 }
 
-func (this *CCurlPathBuilder) buildDeferCallPath(account types.Address, id string) string {
-	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/defer/", id)
-}
-
 func (this *CCurlPathBuilder) BuildContainerRootPath(account types.Address, id string) string {
 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/")
-}
-
-func (this *CCurlPathBuilder) buildValuePath(account types.Address, id string, key interface{}) string {
-	return fmt.Sprintf("%s%v", this.BuildContainerRootPath(account, id), key)
 }
 
 // func (this *CCurlPathBuilder) buildContainerLength(account types.Address, id string) string {

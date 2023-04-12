@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
 
-contract Bytes {
+contract BaseTest {
     uint256 constant public BYTES = 3;
     address constant public API = address(0x84); 
 

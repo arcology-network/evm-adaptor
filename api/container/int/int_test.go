@@ -57,7 +57,7 @@ func TestContractInt(t *testing.T) {
 		t.Error(err)
 	}
 
-	code, err := tests.CompileContracts(compiler, "./Int_test.sol", "IntTest")
+	code, err := tests.CompileContracts(compiler, "./int_test.sol", "IntTest")
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}

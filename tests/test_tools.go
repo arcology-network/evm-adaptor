@@ -50,7 +50,7 @@ func (chain *fakeChain) Engine() consensus.Engine {
 	return nil
 }
 
-func MainConfig() *eu.Config {
+func MainConfig() *cceu.Config {
 	vmConfig := vm.Config{}
 	cfg := &eu.Config{
 		ChainConfig: params.MainnetChainConfig,

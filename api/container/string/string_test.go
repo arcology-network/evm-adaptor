@@ -20,7 +20,7 @@ import (
 	tests "github.com/arcology-network/vm-adaptor/tests"
 )
 
-func TestContractBool(t *testing.T) {
+func TestContractString(t *testing.T) {
 	config := tests.MainConfig()
 	persistentDB := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(ccurlcommon.NewPlatform().Eth10Account())
@@ -57,7 +57,7 @@ func TestContractBool(t *testing.T) {
 		t.Error(err)
 	}
 
-	code, err := tests.CompileContracts(compiler, "./Bool_test.sol", "BoolTest")
+	code, err := tests.CompileContracts(compiler, "./string_test.sol", "StringTest")
 	if err != nil || len(code) == 0 {
 		t.Error(err)
 	}

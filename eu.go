@@ -15,19 +15,20 @@ import (
 	"github.com/arcology-network/evm/core/vm"
 	"github.com/arcology-network/evm/crypto"
 	"github.com/arcology-network/evm/params"
-	api "github.com/arcology-network/vm-adaptor/api"
+
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 	eth "github.com/arcology-network/vm-adaptor/eth"
 )
 
 type EU struct {
 	evm *vm.EVM // Original ETH EVM
 
-	statedb vm.StateDB // Arcology Implementation of Eth StateDB interfaces
-	api     *api.API   // Arcology API calls
+	statedb vm.StateDB                      // Arcology Implementation of Eth StateDB interfaces
+	api     eucommon.ConcurrentApiInterface // Arcology API calls
 	url     *concurrenturl.ConcurrentUrl
 }
 
-func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, chainContext core.ChainContext, statedb vm.StateDB, api *api.API, url *concurrenturl.ConcurrentUrl) *EU {
+func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, chainContext core.ChainContext, statedb vm.StateDB, api eucommon.ConcurrentApiInterface, url *concurrenturl.ConcurrentUrl) *EU {
 	eu := &EU{
 		evm:     vm.NewEVM(vm.BlockContext{BlockNumber: new(big.Int).SetUint64(100000000)}, vm.TxContext{}, statedb, chainConfig, vmConfig),
 		statedb: statedb,
@@ -39,7 +40,7 @@ func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, chainContext cor
 	return eu
 }
 
-func (eu *EU) SetContext(statedb vm.StateDB, api *api.API, url *concurrenturl.ConcurrentUrl) {
+func (eu *EU) SetContext(statedb vm.StateDB, api eucommon.ConcurrentApiInterface, url *concurrenturl.ConcurrentUrl) {
 	eu.api = api
 	eu.statedb = statedb
 	// eu.db = db

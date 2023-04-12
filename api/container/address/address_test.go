@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
+	common "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl/v2"
 	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
 	ccurlstorage "github.com/arcology-network/concurrenturl/v2/storage"
@@ -19,7 +20,7 @@ import (
 	tests "github.com/arcology-network/vm-adaptor/tests"
 )
 
-func TestCumulativeU256(t *testing.T) {
+func TestContractAddress(t *testing.T) {
 	config := tests.MainConfig()
 	persistentDB := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(ccurlcommon.NewPlatform().Eth10Account())
@@ -51,11 +52,15 @@ func TestCumulativeU256(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	compiler := filepath.Dir(filepath.Dir(filepath.Dir(currentPath))) + "/tests/compiler.py"
-	code, err := tests.CompileContracts(compiler, "./U256_test.sol", "CumulativeU256Test")
-	if err != nil || len(code) == 0 {
-		t.Error("Error: Failed to generate the byte code")
+	baseFile := filepath.Dir(currentPath) + "/base/Base.sol"
+	if err := common.CopyFile(baseFile, currentPath+"/Base.sol"); err != nil {
+		t.Error(err)
 	}
 
+	code, err := tests.CompileContracts(compiler, "./address_test.sol", "AddressTest")
+	if err != nil || len(code) == 0 {
+		t.Error(err)
+	}
 	// ================================== Deploy the contract ==================================
 	msg := types.NewMessage(tests.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)        // Build the message
 	_, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg)) // Execute it
@@ -63,37 +68,10 @@ func TestCumulativeU256(t *testing.T) {
 
 	// t.Log("\n" + FormatTransitions(accesses))
 	t.Log("\n" + tests.FormatTransitions(transitions))
-	t.Log(receipt)
+	// t.Log(receipt)
 	// contractAddress := receipt.ContractAddress
 	if receipt.Status != 1 || err != nil {
 		t.Error("Error: Deployment failed!!!", err)
 	}
-
-	// ================================== Call length() ==================================
-	// url = concurrenturl.NewConcurrentUrl(db)
-	// url.Import(transitions)
-	// url.PostImport()
-	// errs := url.Commit([]uint32{1})
-	// if len(errs) != 0 {
-	// 	t.Error(errs)
-	// 	return
-	// }
-	// api = ccApi.NewAPI(url)
-	// statedb = eth.NewImplStateDB(url)
-	// eu = ccEu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url)
-
-	// config.BlockNumber = new(big.Int).SetUint64(10000001)
-	// config.Time = new(big.Int).SetUint64(10000001)
-
-	// data := crypto.Keccak256([]byte("length()"))[:4]
-	// data = append(data, evmcommon.BytesToHash(tests.User1.Bytes()).Bytes()...)
-	// data = append(data, evmcommon.BytesToHash([]byte{0xcc}).Bytes()...)
-	// msg = types.NewMessage(tests.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, true)
-	// _, transitions, receipt, err = eu.Run(evmcommon.BytesToHash([]byte{2, 2, 2}), 2, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg))
-	// t.Log("\n" + tests.FormatTransitions(transitions))
-	// t.Log(receipt)
-	// if receipt.Status != 1 {
-	// 	t.Error("Error: Failed to calll length()!!!", err)
-	// }
 
 }

@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
-	common "github.com/arcology-network/common-lib/common"
+	"github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl/v2"
 	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
 	ccurlstorage "github.com/arcology-network/concurrenturl/v2/storage"
@@ -20,7 +20,7 @@ import (
 	tests "github.com/arcology-network/vm-adaptor/tests"
 )
 
-func TestContractAddress(t *testing.T) {
+func TestContractBool(t *testing.T) {
 	config := tests.MainConfig()
 	persistentDB := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(ccurlcommon.NewPlatform().Eth10Account())
@@ -57,7 +57,7 @@ func TestContractAddress(t *testing.T) {
 		t.Error(err)
 	}
 
-	code, err := tests.CompileContracts(compiler, "./Address_test.sol", "AddressTest")
+	code, err := tests.CompileContracts(compiler, "./bool_test.sol", "BoolTest")
 	if err != nil || len(code) == 0 {
 		t.Error(err)
 	}
