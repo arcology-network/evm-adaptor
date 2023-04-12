@@ -10,35 +10,39 @@ import (
 )
 
 // Ccurl connectors for Arcology APIs
-type CCurlPathBuilder struct {
+type CcurlConnector struct {
 	txHash  ethCommon.Hash
 	txIndex uint32
 	ccurl   *concurrenturl.ConcurrentUrl
+	prefix  string
 }
 
-func NewCCurlPathBuilder(txHash ethCommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl) *CCurlPathBuilder {
-	return &CCurlPathBuilder{
+func NewCCurlConnector(prefix string, txHash ethCommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
+	return &CcurlConnector{
+		prefix:  prefix,
 		txHash:  txHash,
 		txIndex: txIndex,
 		ccurl:   ccurl,
 	}
 }
 
+func (this *CcurlConnector) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }
+
 // Make Arcology paths under the current account
-func (this *CCurlPathBuilder) New(account types.Address, containerId string, keyType int) bool {
-	if !this.makeStorageRootPath(account, this.txIndex) { // Create the root path if has been created yet.
+func (this *CcurlConnector) New(account types.Address, containerId string, keyType int) bool {
+	if !this.newStorageRoot(account, this.txIndex) { // Create the root path if has been created yet.
 		return false
 	}
 
-	if !this.makeContainerRootPath(account, containerId, this.txIndex) { // Create the container path if has been created yet.
+	if !this.newContainerRoot(account, containerId, this.txIndex) { // Create the container path if has been created yet.
 		return false
 	}
 
 	return true
 }
 
-func (this *CCurlPathBuilder) makeStorageRootPath(account types.Address, txIndex uint32) bool {
-	accountRoot := this.buildAccountRootPath(account)
+func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32) bool {
+	accountRoot := commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/")
 	if value, err := this.ccurl.Peek(accountRoot); err != nil {
 		return false
 	} else if value == nil { // The account didn't exist.
@@ -50,8 +54,8 @@ func (this *CCurlPathBuilder) makeStorageRootPath(account types.Address, txIndex
 	return true
 }
 
-func (this *CCurlPathBuilder) makeContainerRootPath(account types.Address, id string, txIndex uint32) bool {
-	containerRoot := this.BuildContainerRootPath(account, id)
+func (this *CcurlConnector) newContainerRoot(account types.Address, id string, txIndex uint32) bool {
+	containerRoot := this.Key(account, id)
 	if value, err := this.ccurl.Peek(containerRoot); err != nil || value != nil {
 		return false
 	}
@@ -64,15 +68,11 @@ func (this *CCurlPathBuilder) makeContainerRootPath(account types.Address, id st
 	return true
 }
 
-func (this *CCurlPathBuilder) buildAccountRootPath(account types.Address) string {
-	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/")
+func (this *CcurlConnector) Key(account types.Address, id string) string { // container ID
+	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), this.prefix, id, "/")
 }
 
-func (this *CCurlPathBuilder) BuildContainerRootPath(account types.Address, id string) string {
-	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/")
-}
-
-// func (this *CCurlPathBuilder) buildContainerLength(account types.Address, id string) string {
+// func (this *CcurlConnector) buildContainerLength(account types.Address, id string) string {
 // 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/")
 
 // 	if value, err := this.url.Read(this.context.GetIndex(), BuildContainerRootPath(this.url, account, id)); err != nil || value == nil {
@@ -82,23 +82,23 @@ func (this *CCurlPathBuilder) BuildContainerRootPath(account types.Address, id s
 // 	}
 // }
 
-// func (this *CCurlPathBuilder) buildContainerTypePath(account types.Address, id string) string {
+// func (this *CcurlConnector) buildContainerTypePath(account types.Address, id string) string {
 // 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/!/", id)
 // }
 
-// func (this *CCurlPathBuilder) buildSizePath(account types.Address, id string) string {
+// func (this *CcurlConnector) buildSizePath(account types.Address, id string) string {
 // 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/#")
 // }
 
-// func (this *CCurlPathBuilder) buildKeyTypePath(account types.Address, id string) string {
+// func (this *CcurlConnector) buildKeyTypePath(account types.Address, id string) string {
 // 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/!")
 // }
 
-// func (this *CCurlPathBuilder) buildValueTypePath(account types.Address, id string) string {
+// func (this *CcurlConnector) buildValueTypePath(account types.Address, id string) string {
 // 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/@")
 // }
 
-// func (this *CCurlPathBuilder) buildContainerType(url *concurrenturl.ConcurrentUrl, account types.Address, id string, txIndex uint32) int {
+// func (this *CcurlConnector) buildContainerType(url *concurrenturl.ConcurrentUrl, account types.Address, id string, txIndex uint32) int {
 // 	if value, err := url.Read(txIndex, this.buildContainerTypePath(account, id)); err != nil || value == nil {
 // 		return -1
 // 	} else {

@@ -19,13 +19,13 @@ import (
 // APIs under the concurrency namespace
 type Cumulative struct {
 	api       apicommon.ContextInfoInterface
-	connector *apicommon.CCurlPathBuilder
+	connector *apicommon.CcurlConnector
 }
 
 func NewCumulative(api apicommon.ContextInfoInterface) *Cumulative {
 	return &Cumulative{
 		api:       api,
-		connector: apicommon.NewCCurlPathBuilder(api.TxHash(), api.TxIndex(), api.Ccurl()),
+		connector: apicommon.NewCCurlConnector("/storage/cumulatives/", api.TxHash(), api.TxIndex(), api.Ccurl()),
 	}
 }
 
@@ -129,8 +129,8 @@ func (this *Cumulative) Sub(caller evmcommon.Address, input []byte) ([]byte, boo
 
 // Build the container path
 func (this *Cumulative) buildPath(caller evmcommon.Address, input []byte) string {
-	id, _ := abi.Decode(input, 0, []byte{}, 2, 32)                                                                            // max 32 bytes                                                                          // container ID
-	return this.connector.BuildContainerRootPath(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id.([]byte))) // unique ID
+	id, _ := abi.Decode(input, 0, []byte{}, 2, 32)                                                         // max 32 bytes                                                                          // container ID
+	return this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id.([]byte))) // unique ID
 }
 
 func print(input []byte) {

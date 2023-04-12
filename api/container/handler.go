@@ -2,9 +2,7 @@ package concurrentcontainer
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math"
-	"reflect"
 
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/types"
@@ -21,13 +19,13 @@ import (
 // APIs under the concurrency namespace
 type Container struct {
 	api       apicommon.ContextInfoInterface
-	connector *apicommon.CCurlPathBuilder
+	connector *apicommon.CcurlConnector
 }
 
 func NewContainer(api apicommon.ContextInfoInterface) *Container {
 	return &Container{
 		api:       api,
-		connector: apicommon.NewCCurlPathBuilder(api.TxHash(), api.TxIndex(), api.Ccurl()),
+		connector: apicommon.NewCCurlConnector("/storage/containers/", api.TxHash(), api.TxIndex(), api.Ccurl()),
 	}
 }
 
@@ -113,10 +111,6 @@ func (this *Container) Set(caller evmcommon.Address, input []byte) ([]byte, bool
 		return []byte{}, false
 	}
 
-	if reflect.TypeOf(bytes).String() != "[]uint8" { // Check the value data type
-		return []byte{}, false
-	}
-
 	value := noncommutative.NewBytes(bytes.([]byte))
 	if err := this.api.Ccurl().WriteAt(this.api.TxIndex(), path, idx.(uint64), value); err == nil {
 		return []byte{}, true
@@ -156,22 +150,10 @@ func (this *Container) Pop(caller evmcommon.Address, input []byte) ([]byte, bool
 		}
 	}
 	return []byte{}, true
-
 }
 
 // Build the container path
 func (this *Container) buildPath(caller evmcommon.Address, input []byte) string {
-	id, _ := abi.Decode(input, 0, []byte{}, 2, 32)                                                                            // max 32 bytes                                                                          // container ID
-	return this.connector.BuildContainerRootPath(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id.([]byte))) // unique ID
-}
-
-func print(input []byte) {
-	fmt.Println(input)
-	fmt.Println()
-	fmt.Println(input[:4])
-	input = input[4:]
-	for i := int(0); i < len(input)/32; i++ {
-		fmt.Println(input[i*32 : (i+1)*32])
-	}
-	fmt.Println()
+	id, _ := abi.Decode(input, 0, []byte{}, 2, 32)                                                         // max 32 bytes                                                                          // container ID
+	return this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id.([]byte))) // unique ID
 }
