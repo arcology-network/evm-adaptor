@@ -9,6 +9,7 @@ import (
 	"github.com/arcology-network/concurrenturl/v2"
 	"github.com/arcology-network/evm/common"
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
+	para "github.com/arcology-network/vm-adaptor/api/parallel"
 	base "github.com/arcology-network/vm-adaptor/api/types/base"
 	u256 "github.com/arcology-network/vm-adaptor/api/types/u256"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
@@ -39,9 +40,13 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	handlers := []apicommon.ConcurrencyHandlerInterface{
 		base.NewBaseHandlers(api),
 		u256.NewU256Handler(api),
+		para.NewParallelHandler(api),
 	}
 
 	for i, v := range handlers {
+		if _, ok := api.handlerDict[(handlers)[i].Address()]; ok {
+			panic("Error: Duplicate handler addresses found!!")
+		}
 		api.handlerDict[(handlers)[i].Address()] = v
 	}
 	return api

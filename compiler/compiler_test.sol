@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 
 contract Example {
-    uint256 constant public BYTES = 3;
+    
     address constant public API = address(0x84); 
 
     uint[] public arr2 = [1, 2, 3];

@@ -25,7 +25,7 @@ type BaseHandlers struct {
 func NewBaseHandlers(api apicommon.ContextInfoInterface) *BaseHandlers {
 	return &BaseHandlers{
 		api:       api,
-		connector: apicommon.NewCCurlConnector("/storage/containers/", api.TxHash(), api.TxIndex(), api.Ccurl()),
+		connector: apicommon.NewCCurlConnector("/containers/", api.TxHash(), api.TxIndex(), api.Ccurl()),
 	}
 }
 

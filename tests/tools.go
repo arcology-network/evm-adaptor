@@ -8,8 +8,10 @@ import (
 	"math/big"
 	"os"
 
+	"github.com/arcology-network/common-lib/cachedstorage"
 	"github.com/arcology-network/concurrenturl/v2"
-	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	ccurlstorage "github.com/arcology-network/concurrenturl/v2/storage"
 	urltype "github.com/arcology-network/concurrenturl/v2/type"
 	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	"github.com/arcology-network/concurrenturl/v2/type/noncommutative"
@@ -25,6 +27,7 @@ import (
 	eu "github.com/arcology-network/vm-adaptor"
 
 	ccapi "github.com/arcology-network/vm-adaptor/api"
+	"github.com/arcology-network/vm-adaptor/eth"
 	cceueth "github.com/arcology-network/vm-adaptor/eth"
 	"github.com/holiman/uint256"
 )
@@ -115,7 +118,7 @@ func FormatValue(value interface{}) string {
 	return ""
 }
 
-func FormatTransitions(transitions []urlcommon.UnivalueInterface) string {
+func FormatTransitions(transitions []ccurlcommon.UnivalueInterface) string {
 	var str string
 	for _, t := range transitions {
 		str += fmt.Sprintf("%v%v%v%v%v%v%v%v%v%v%v%v%v%v",
@@ -130,7 +133,7 @@ func FormatTransitions(transitions []urlcommon.UnivalueInterface) string {
 	return str
 }
 
-func Prepare(db urlcommon.DatastoreInterface, height uint64, transitions []urlcommon.UnivalueInterface, txs []uint32) (*cceu.EU, *cceu.Config) {
+func Prepare(db ccurlcommon.DatastoreInterface, height uint64, transitions []ccurlcommon.UnivalueInterface, txs []uint32) (*cceu.EU, *cceu.Config) {
 	url := concurrenturl.NewConcurrentUrl(db)
 	if transitions != nil && len(transitions) != 0 {
 		url.Import(transitions)
@@ -149,7 +152,7 @@ func Prepare(db urlcommon.DatastoreInterface, height uint64, transitions []urlco
 	return cceu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url), config
 }
 
-func Deploy(eu *cceu.EU, config *cceu.Config, owner evmcommon.Address, nonce uint64, code string, args ...[]byte) ([]urlcommon.UnivalueInterface, *evmtypes.Receipt, error) {
+func Deploy(eu *cceu.EU, config *cceu.Config, owner evmcommon.Address, nonce uint64, code string, args ...[]byte) ([]ccurlcommon.UnivalueInterface, *evmtypes.Receipt, error) {
 	data := evmcommon.Hex2Bytes(code)
 	for _, arg := range args {
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
@@ -159,7 +162,7 @@ func Deploy(eu *cceu.EU, config *cceu.Config, owner evmcommon.Address, nonce uin
 	return transitions, receipt, err
 }
 
-func CallFunc(eu *cceu.EU, config *cceu.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, encodedArgs ...[]byte) ([]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface, *evmtypes.Receipt, error) {
+func CallFunc(eu *cceu.EU, config *cceu.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, encodedArgs ...[]byte) ([]ccurlcommon.UnivalueInterface, []ccurlcommon.UnivalueInterface, *evmtypes.Receipt, error) {
 	data := crypto.Keccak256([]byte(function))[:4]
 	for _, arg := range encodedArgs {
 		data = append(data, arg...)
@@ -198,4 +201,35 @@ func PrintInput(input []byte) {
 		fmt.Println(input[i*32 : (i+1)*32])
 	}
 	fmt.Println()
+}
+
+func NewTestEU() (*eu.EU, *eu.Config, ccurlcommon.DatastoreInterface, *concurrenturl.ConcurrentUrl) {
+	persistentDB := cachedstorage.NewDataStore()
+	meta, _ := commutative.NewMeta(ccurlcommon.NewPlatform().Eth10Account())
+	persistentDB.Inject(ccurlcommon.NewPlatform().Eth10Account(), meta)
+	db := ccurlstorage.NewTransientDB(persistentDB)
+
+	url := concurrenturl.NewConcurrentUrl(db)
+	statedb := eth.NewImplStateDB(url)
+	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
+	statedb.CreateAccount(Coinbase)
+	statedb.CreateAccount(User1)
+	statedb.AddBalance(User1, new(big.Int).SetUint64(1e18))
+	_, transitions := url.Export(true)
+	fmt.Println("\n" + FormatTransitions(transitions))
+
+	// Deploy.
+	url = concurrenturl.NewConcurrentUrl(db)
+	url.Import(transitions)
+	url.PostImport()
+	url.Commit([]uint32{0})
+	api := ccapi.NewAPI(url)
+	statedb = eth.NewImplStateDB(url)
+
+	config := MainConfig()
+	config.Coinbase = &Coinbase
+	config.BlockNumber = new(big.Int).SetUint64(10000000)
+	config.Time = new(big.Int).SetUint64(10000000)
+
+	return cceu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url), config, db, url
 }

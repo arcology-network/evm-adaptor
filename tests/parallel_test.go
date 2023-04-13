@@ -6,36 +6,28 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/arcology-network/common-lib/common"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/types"
-	ccEu "github.com/arcology-network/vm-adaptor"
+	cceu "github.com/arcology-network/vm-adaptor"
 	compiler "github.com/arcology-network/vm-adaptor/compiler"
 )
 
-func TestContractBytes32(t *testing.T) {
+func TestParallelInvoke(t *testing.T) {
 	eu, config, _, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
-	targetPath := project + "/api/types/"
-	baseFile := targetPath + "base/Base.sol"
 
-	if err := common.CopyFile(baseFile, targetPath+"bytes32/Base.sol"); err != nil {
-		t.Error(err)
-	}
-
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"bytes32/bytes32_test.sol", "Bytes32Test")
-	os.Remove(targetPath + "bytes32/Base.sol")
+	code, err := compiler.CompileContracts(pyCompiler, project+"/api/parallel/parallel_test.sol", "ParallelInvokeTest")
 
 	if err != nil || len(code) == 0 {
-		t.Error(err)
+		t.Error("Error: Failed to generate the byte code")
 	}
 	// ================================== Deploy the contract ==================================
-	msg := types.NewMessage(User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)              // Build the message
-	_, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg)) // Execute it
+	msg := types.NewMessage(User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false)             // Build the message
+	_, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContextV2(config), cceu.NewEVMTxContext(msg)) // Execute it
 	// ---------------
 
 	// t.Log("\n" + FormatTransitions(accesses))

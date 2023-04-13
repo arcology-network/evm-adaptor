@@ -14,12 +14,12 @@ type CcurlConnector struct {
 	txHash  ethCommon.Hash
 	txIndex uint32
 	ccurl   *concurrenturl.ConcurrentUrl
-	prefix  string
+	subDir  string
 }
 
-func NewCCurlConnector(prefix string, txHash ethCommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
+func NewCCurlConnector(subDir string, txHash ethCommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
 	return &CcurlConnector{
-		prefix:  prefix,
+		subDir:  subDir,
 		txHash:  txHash,
 		txIndex: txIndex,
 		ccurl:   ccurl,
@@ -72,5 +72,5 @@ func (this *CcurlConnector) newContainerRoot(account types.Address, id string, t
 }
 
 func (this *CcurlConnector) Key(account types.Address, id string) string { // container ID
-	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), this.prefix, id, "/")
+	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage", this.subDir, id, "/")
 }

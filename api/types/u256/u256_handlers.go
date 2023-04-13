@@ -17,23 +17,23 @@ import (
 )
 
 // APIs under the concurrency namespace
-type U256Handler struct {
+type ParallelHandler struct {
 	api       apicommon.ContextInfoInterface
 	connector *apicommon.CcurlConnector
 }
 
-func NewU256Handler(api apicommon.ContextInfoInterface) *U256Handler {
-	return &U256Handler{
+func NewU256Handler(api apicommon.ContextInfoInterface) *ParallelHandler {
+	return &ParallelHandler{
 		api:       api,
-		connector: apicommon.NewCCurlConnector("/storage/containers/", api.TxHash(), api.TxIndex(), api.Ccurl()),
+		connector: apicommon.NewCCurlConnector("/containers/", api.TxHash(), api.TxIndex(), api.Ccurl()),
 	}
 }
 
-func (this *U256Handler) Address() [20]byte {
+func (this *ParallelHandler) Address() [20]byte {
 	return [20]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x85}
 }
 
-func (this *U256Handler) Call(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
+func (this *ParallelHandler) Call(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
@@ -53,12 +53,12 @@ func (this *U256Handler) Call(caller evmcommon.Address, input []byte, origin evm
 	return this.Unknow(caller, input[4:])
 }
 
-func (this *U256Handler) Unknow(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *ParallelHandler) Unknow(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	this.api.AddLog("Unhandled function call in cumulative handler router", hex.EncodeToString(input))
 	return []byte{}, false
 }
 
-func (this *U256Handler) New(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *ParallelHandler) New(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	id := this.api.GenUUID()
 	if !this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id), 0) { // A new container
 		return []byte{}, false
@@ -87,7 +87,7 @@ func (this *U256Handler) New(caller evmcommon.Address, input []byte) ([]byte, bo
 	return id, true
 }
 
-func (this *U256Handler) Get(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *ParallelHandler) Get(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false
@@ -105,7 +105,7 @@ func (this *U256Handler) Get(caller evmcommon.Address, input []byte) ([]byte, bo
 	return []byte{}, false
 }
 
-func (this *U256Handler) Add(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *ParallelHandler) Add(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false
@@ -120,7 +120,7 @@ func (this *U256Handler) Add(caller evmcommon.Address, input []byte) ([]byte, bo
 	return []byte{}, this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value) == nil
 }
 
-func (this *U256Handler) Sub(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *ParallelHandler) Sub(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false
@@ -136,7 +136,7 @@ func (this *U256Handler) Sub(caller evmcommon.Address, input []byte) ([]byte, bo
 }
 
 // Build the container path
-func (this *U256Handler) buildPath(caller evmcommon.Address, input []byte) (string, error) {
+func (this *ParallelHandler) buildPath(caller evmcommon.Address, input []byte) (string, error) {
 	id, err := abi.Decode(input, 0, []byte{}, 2, 32) // max 32 bytes
 	if err != nil {
 		return "", nil
