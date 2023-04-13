@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "./Cumulative.sol";
+import "./U256Cumulative.sol";
 
 contract CumulativeU256Test {
     U256 cumulative ;

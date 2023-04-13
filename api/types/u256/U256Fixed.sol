@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "./Dynamic.sol";
+import "./U256.sol";
 
 contract U256Fixed {
     U256 array;

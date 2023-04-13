@@ -9,8 +9,8 @@ import (
 	"github.com/arcology-network/concurrenturl/v2"
 	"github.com/arcology-network/evm/common"
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
-	concurrentcontainer "github.com/arcology-network/vm-adaptor/api/container"
-	cumulative "github.com/arcology-network/vm-adaptor/api/cumulative"
+	base "github.com/arcology-network/vm-adaptor/api/types/base"
+	u256 "github.com/arcology-network/vm-adaptor/api/types/u256"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
 
@@ -37,8 +37,8 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	}
 
 	handlers := []apicommon.ConcurrencyHandlerInterface{
-		concurrentcontainer.NewContainer(api),
-		cumulative.NewCumulative(api),
+		base.NewBaseHandlers(api),
+		u256.NewU256Handler(api),
 	}
 
 	for i, v := range handlers {

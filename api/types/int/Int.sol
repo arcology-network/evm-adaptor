@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./Base.sol";
 
-contract Int {
+contract Integer {
     Base base;
 
     constructor  () public {  base = new Base(); }

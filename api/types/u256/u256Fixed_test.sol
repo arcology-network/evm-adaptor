@@ -1,10 +1,9 @@
 pragma solidity ^0.5.0;
 
-import "./Fixed.sol";
+import "./U256Fixed.sol";
 
 contract U256FixedTest {
     U256Fixed container;
-    U256[] array;
 
     constructor() public {    
         container = new U256Fixed(4, 0);
