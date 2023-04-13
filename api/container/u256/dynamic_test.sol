@@ -1,8 +1,8 @@
 pragma solidity ^0.5.0;
 
-import "./U256.sol";
+import "./Dynamic.sol";
 
-contract U256Test {
+contract U256DynamicTest {
     U256 container = new U256();
     U256[] array;
 

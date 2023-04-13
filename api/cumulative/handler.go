@@ -2,14 +2,14 @@ package cumulative
 
 import (
 	"encoding/hex"
-	"fmt"
-	"math"
-	"reflect"
+	"strconv"
 
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/types"
+	"github.com/holiman/uint256"
 
-	"github.com/arcology-network/concurrenturl/v2/type/noncommutative"
+	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 
@@ -20,12 +20,13 @@ import (
 type Cumulative struct {
 	api       apicommon.ContextInfoInterface
 	connector *apicommon.CcurlConnector
+	path      string
 }
 
 func NewCumulative(api apicommon.ContextInfoInterface) *Cumulative {
 	return &Cumulative{
 		api:       api,
-		connector: apicommon.NewCCurlConnector("/storage/cumulatives/", api.TxHash(), api.TxIndex(), api.Ccurl()),
+		connector: apicommon.NewCCurlConnector("/storage/containers/", api.TxHash(), api.TxIndex(), api.Ccurl()),
 	}
 }
 
@@ -59,22 +60,46 @@ func (this *Cumulative) Unknow(caller evmcommon.Address, input []byte) ([]byte, 
 }
 
 func (this *Cumulative) New(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	// elemType := int(input[31]) // Data type should only take one byte.
-	id := this.api.GenUUID() // Generate a uuid for the container
-	return id[:], this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id), 0)
+	id := this.api.GenUUID()
+	if !this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id), 0) { // A new container
+		return []byte{}, false
+	}
+
+	txHash := this.api.TxHash()
+	path := this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id))
+
+	key := path + // Root
+		hex.EncodeToString(txHash[:8]) + "-" + // Tx hash to avoid conflict
+		strconv.Itoa(int(ccurlcommon.CommutativeUint256)) + "-" + // value type
+		strconv.Itoa(int(this.api.SUID())) // Element ID
+
+	val, valErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
+	min, minErr := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
+	max, maxErr := abi.Decode(input, 2, &uint256.Int{}, 1, 32)
+
+	if valErr != nil || minErr != nil || maxErr != nil {
+		return []byte{}, false
+	}
+
+	newU256 := commutative.NewU256(val.(*uint256.Int), min.(*uint256.Int), max.(*uint256.Int))
+	if err := this.api.Ccurl().Write(this.api.TxIndex(), key, newU256); err != nil {
+		return []byte{}, false
+	}
+	return id, true
 }
 
 func (this *Cumulative) Get(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	path := this.buildPath(caller, input) // Build container path
-	idx, _ := abi.Decode(input, 1, uint64(0), 1, 32)
+	path, err := this.buildPath(caller, input) // Build container path
+	if len(path) == 0 || err != nil {
+		return []byte{}, false
+	}
 
-	if value, err := this.api.Ccurl().ReadAt(this.api.TxIndex(), path, idx.(uint64)); value == nil || err != nil {
+	if value, err := this.api.Ccurl().ReadAt(this.api.TxIndex(), path, 0); value == nil || err != nil {
 		return []byte{}, false
 	} else {
-		if encoded, err := abi.Encode(value.(*noncommutative.Bytes).Data()); err == nil { // Encode the result
-			offset := [32]byte{}
-			offset[len(offset)-1] = uint8(len(offset))
-			encoded = append(offset[:], encoded...)
+
+		updated := value.(*commutative.U256).Value().(*uint256.Int)
+		if encoded, err := abi.Encode(updated); err == nil { // Encode the result
 			return encoded, true
 		}
 	}
@@ -82,64 +107,40 @@ func (this *Cumulative) Get(caller evmcommon.Address, input []byte) ([]byte, boo
 }
 
 func (this *Cumulative) Add(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	path := this.buildPath(caller, input) // Build container path
-	idx, err := abi.Decode(input, 1, uint64(0), 1, 32)
+	path, err := this.buildPath(caller, input) // Build container path
+	if len(path) == 0 || err != nil {
+		return []byte{}, false
+	}
+
+	delta, err := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
 	if err != nil {
 		return []byte{}, false
 	}
 
-	bytes, err := abi.Decode(input, 2, []byte{}, 2, math.MaxInt)
-	if bytes == nil || err != nil {
-		return []byte{}, false
-	}
-
-	if reflect.TypeOf(bytes).String() != "[]uint8" { // Check the value data type
-		return []byte{}, false
-	}
-
-	value := noncommutative.NewBytes(bytes.([]byte))
-	if err := this.api.Ccurl().WriteAt(this.api.TxIndex(), path, idx.(uint64), value); err == nil {
-		return []byte{}, true
-	}
-	return []byte{}, false
+	value := commutative.NewU256Delta(delta.(*uint256.Int), true)
+	return []byte{}, this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value) == nil
 }
 
 func (this *Cumulative) Sub(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	path := this.buildPath(caller, input) // Build container path
-	idx, err := abi.Decode(input, 1, uint64(0), 1, 32)
+	path, err := this.buildPath(caller, input) // Build container path
+	if len(path) == 0 || err != nil {
+		return []byte{}, false
+	}
+
+	delta, err := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
 	if err != nil {
 		return []byte{}, false
 	}
 
-	bytes, err := abi.Decode(input, 2, []byte{}, 2, math.MaxInt)
-	if bytes == nil || err != nil {
-		return []byte{}, false
-	}
-
-	if reflect.TypeOf(bytes).String() != "[]uint8" { // Check the value data type
-		return []byte{}, false
-	}
-
-	value := noncommutative.NewBytes(bytes.([]byte))
-	if err := this.api.Ccurl().WriteAt(this.api.TxIndex(), path, idx.(uint64), value); err == nil {
-		return []byte{}, true
-	}
-	return []byte{}, false
+	value := commutative.NewU256Delta(delta.(*uint256.Int), false)
+	return []byte{}, this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value) == nil
 }
 
 // Build the container path
-func (this *Cumulative) buildPath(caller evmcommon.Address, input []byte) string {
-	id, _ := abi.Decode(input, 0, []byte{}, 2, 32)                                                         // max 32 bytes                                                                          // container ID
-	return this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id.([]byte))) // unique ID
-}
-
-func print(input []byte) {
-	fmt.Println(input)
-	fmt.Println()
-	fmt.Println(input[:4])
-	input = input[4:]
-	for i := int(0); i < len(input)/32; i++ {
-		fmt.Println(input[i*32 : (i+1)*32])
-	}
-	fmt.Println()
+func (this *Cumulative) buildPath(caller evmcommon.Address, input []byte) (string, error) {
+	id, err := abi.Decode(input, 0, []byte{}, 2, 32) // max 32 bytes
+	if err != nil {
+		return "", nil
+	} // container ID
+	return this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id.([]byte))), nil // unique ID
 }

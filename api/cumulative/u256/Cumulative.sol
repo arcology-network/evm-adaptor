@@ -7,6 +7,7 @@ contract U256 {
     constructor (uint256 v, uint256 min, uint256 max) public {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("New(uint256, uint256, uint256) returns(bytes)", v, min, max));
         id = data; 
+        assert(success);
     }
     
     function get() public returns(uint256) {  
@@ -16,7 +17,7 @@ contract U256 {
 
     function add(uint256 v) public returns(bool) { 
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("add(bytes, uint256) returns(bool)", id, v));
-        return abi.decode(data, (bool)); 
+        return success; 
     }
 
     function sub(uint256 v) public returns(bool) { 

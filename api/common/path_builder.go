@@ -26,6 +26,8 @@ func NewCCurlConnector(prefix string, txHash ethCommon.Hash, txIndex uint32, ccu
 	}
 }
 
+func (this *CcurlConnector) TxHash() ethCommon.Hash              { return this.txHash }
+func (this *CcurlConnector) TxIndex() uint32                     { return this.txIndex }
 func (this *CcurlConnector) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }
 
 // Make Arcology paths under the current account
@@ -34,7 +36,8 @@ func (this *CcurlConnector) New(account types.Address, containerId string, keyTy
 		return false
 	}
 
-	if !this.newContainerRoot(account, containerId, this.txIndex) { // Create the container path if has been created yet.
+	// Create the container path if has been created yet.
+	if !this.newContainerRoot(account, containerId[:], this.txIndex) {
 		return false
 	}
 
@@ -71,48 +74,3 @@ func (this *CcurlConnector) newContainerRoot(account types.Address, id string, t
 func (this *CcurlConnector) Key(account types.Address, id string) string { // container ID
 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), this.prefix, id, "/")
 }
-
-// func (this *CcurlConnector) buildContainerLength(account types.Address, id string) string {
-// 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/")
-
-// 	if value, err := this.url.Read(this.context.GetIndex(), BuildContainerRootPath(this.url, account, id)); err != nil || value == nil {
-// 		return ContainerSizeInvalid
-// 	} else {
-// 		return len(value.(*commutative.Meta).KeyView()) - 2
-// 	}
-// }
-
-// func (this *CcurlConnector) buildContainerTypePath(account types.Address, id string) string {
-// 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/!/", id)
-// }
-
-// func (this *CcurlConnector) buildSizePath(account types.Address, id string) string {
-// 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/#")
-// }
-
-// func (this *CcurlConnector) buildKeyTypePath(account types.Address, id string) string {
-// 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/!")
-// }
-
-// func (this *CcurlConnector) buildValueTypePath(account types.Address, id string) string {
-// 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage/containers/", id, "/@")
-// }
-
-// func (this *CcurlConnector) buildContainerType(url *concurrenturl.ConcurrentUrl, account types.Address, id string, txIndex uint32) int {
-// 	if value, err := url.Read(txIndex, this.buildContainerTypePath(account, id)); err != nil || value == nil {
-// 		return -1
-// 	} else {
-// 		return int(*value.(*noncommutative.Int64))
-// 	}
-// }
-
-// func buildDefaultValue(dataType int) ([]byte, bool) {
-// 	switch dataType {
-// 	case DataTypeAddress:
-// 		return common.Address{}.Bytes(), true
-// 	case DataTypeUint256:
-// 		return common.Hash{}.Bytes(), true
-// 	default:
-// 		return nil, true
-// 	}
-// }

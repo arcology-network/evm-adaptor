@@ -32,6 +32,12 @@ func Decode(raw []byte, idx int, typed interface{}, depth uint8, maxLength int) 
 		return binary.BigEndian.Uint32(raw[idx*32+32-4 : idx*32+32]), nil
 	case uint64:
 		return binary.BigEndian.Uint64(raw[idx*32+32-8 : idx*32+32]), nil
+
+	case *uint256.Int:
+		var v uint256.Int
+		v.SetBytes(raw[idx*32 : idx*32+32])
+		return &v, nil
+
 	case []uint8:
 		if depth == 1 {
 			length := common.Min(len(raw), maxLength)
@@ -42,12 +48,8 @@ func Decode(raw []byte, idx int, typed interface{}, depth uint8, maxLength int) 
 		sub := raw[idx*32+32-4 : idx*32+32]
 		offset := binary.BigEndian.Uint32(sub)
 		return next(raw, offset, depth, maxLength)
-
-	case *uint256.Int:
-		var v uint256.Int
-		v.SetBytes(raw[idx*32 : idx*32+32])
-		return v, nil
 	}
+
 	return raw, errors.New("Error: Unknown type")
 }
 

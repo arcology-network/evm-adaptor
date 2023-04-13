@@ -16,12 +16,12 @@ import (
 	"github.com/arcology-network/evm/core/types"
 	ccEu "github.com/arcology-network/vm-adaptor"
 	ccApi "github.com/arcology-network/vm-adaptor/api"
+	compiler "github.com/arcology-network/vm-adaptor/compiler"
 	eth "github.com/arcology-network/vm-adaptor/eth"
-	tests "github.com/arcology-network/vm-adaptor/tests"
 )
 
 func TestContractAddress(t *testing.T) {
-	config := tests.MainConfig()
+	config := compiler.MainConfig()
 	persistentDB := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(ccurlcommon.NewPlatform().Eth10Account())
 	persistentDB.Inject(ccurlcommon.NewPlatform().Eth10Account(), meta)
@@ -30,11 +30,11 @@ func TestContractAddress(t *testing.T) {
 	url := concurrenturl.NewConcurrentUrl(db)
 	statedb := eth.NewImplStateDB(url)
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
-	statedb.CreateAccount(tests.Coinbase)
-	statedb.CreateAccount(tests.User1)
-	statedb.AddBalance(tests.User1, new(big.Int).SetUint64(1e18))
+	statedb.CreateAccount(compiler.Coinbase)
+	statedb.CreateAccount(compiler.User1)
+	statedb.AddBalance(compiler.User1, new(big.Int).SetUint64(1e18))
 	_, transitions := url.Export(true)
-	t.Log("\n" + tests.FormatTransitions(transitions))
+	t.Log("\n" + compiler.FormatTransitions(transitions))
 
 	// Deploy.
 	url = concurrenturl.NewConcurrentUrl(db)
@@ -45,29 +45,29 @@ func TestContractAddress(t *testing.T) {
 	statedb = eth.NewImplStateDB(url)
 	eu := ccEu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url)
 
-	config.Coinbase = &tests.Coinbase
+	config.Coinbase = &compiler.Coinbase
 	config.BlockNumber = new(big.Int).SetUint64(10000000)
 	config.Time = new(big.Int).SetUint64(10000000)
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
-	compiler := filepath.Dir(filepath.Dir(filepath.Dir(currentPath))) + "/tests/compiler.py"
+	pyCompiler := filepath.Dir(filepath.Dir(filepath.Dir(currentPath))) + "/compiler/compiler.py"
 	baseFile := filepath.Dir(currentPath) + "/base/Base.sol"
 	if err := common.CopyFile(baseFile, currentPath+"/Base.sol"); err != nil {
 		t.Error(err)
 	}
 
-	code, err := tests.CompileContracts(compiler, "./address_test.sol", "AddressTest")
+	code, err := compiler.CompileContracts(pyCompiler, "./address_test.sol", "AddressTest")
 	if err != nil || len(code) == 0 {
 		t.Error(err)
 	}
 	// ================================== Deploy the contract ==================================
-	msg := types.NewMessage(tests.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)        // Build the message
+	msg := types.NewMessage(compiler.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)     // Build the message
 	_, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg)) // Execute it
 	// ---------------
 
 	// t.Log("\n" + FormatTransitions(accesses))
-	t.Log("\n" + tests.FormatTransitions(transitions))
+	t.Log("\n" + compiler.FormatTransitions(transitions))
 	// t.Log(receipt)
 	// contractAddress := receipt.ContractAddress
 	if receipt.Status != 1 || err != nil {

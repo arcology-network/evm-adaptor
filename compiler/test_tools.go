@@ -1,4 +1,4 @@
-package tests
+package compiler
 
 import (
 	"bufio"
@@ -207,4 +207,15 @@ func CompileContracts(compiler, file, contract string) (string, error) {
 	} else {
 		return "", (err)
 	}
+}
+
+func PrintInput(input []byte) {
+	fmt.Println(input)
+	fmt.Println()
+	fmt.Println(input[:4])
+	input = input[4:]
+	for i := int(0); i < len(input)/32; i++ {
+		fmt.Println(input[i*32 : (i+1)*32])
+	}
+	fmt.Println()
 }
