@@ -18,7 +18,7 @@ import (
 )
 
 func TestTransfer(t *testing.T) {
-	config := tests.MainConfig()
+	config := tests.MainTestConfig()
 	persistentDB := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
 	persistentDB.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
@@ -41,14 +41,14 @@ func TestTransfer(t *testing.T) {
 	url.Commit([]uint32{0})
 	api = ccApi.NewAPI(url)
 	statedb = eth.NewImplStateDB(url)
-	eu := ccEu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url)
+	eu := ccEu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api)
 
 	config.Coinbase = &tests.Coinbase
 	config.BlockNumber = new(big.Int).SetUint64(10000000)
 	config.Time = new(big.Int).SetUint64(10000000)
 
 	msg := types.NewMessage(tests.User1, &tests.User2, 0, new(big.Int).SetUint64(100), 1e15, new(big.Int).SetUint64(1), nil, nil, true)
-	accesses, transitions, receipt, err := eu.Run(common.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg))
+	accesses, transitions, receipt, _, err := eu.Run(common.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg))
 	t.Log("\n" + tests.FormatTransitions(accesses))
 	t.Log("\n" + tests.FormatTransitions(transitions))
 	t.Log(receipt)

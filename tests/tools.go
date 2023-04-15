@@ -1,137 +1,28 @@
 package tests
 
 import (
-	"bufio"
-	"errors"
 	"fmt"
 	"math"
 	"math/big"
-	"os"
 
 	"github.com/arcology-network/common-lib/cachedstorage"
 	"github.com/arcology-network/concurrenturl/v2"
 	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
 	ccurlstorage "github.com/arcology-network/concurrenturl/v2/storage"
-	urltype "github.com/arcology-network/concurrenturl/v2/type"
 	"github.com/arcology-network/concurrenturl/v2/type/commutative"
-	"github.com/arcology-network/concurrenturl/v2/type/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
 
-	"github.com/arcology-network/evm/consensus"
-	"github.com/arcology-network/evm/core/types"
 	evmtypes "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/core/vm"
 	"github.com/arcology-network/evm/crypto"
 	"github.com/arcology-network/evm/params"
 	cceu "github.com/arcology-network/vm-adaptor"
-	eu "github.com/arcology-network/vm-adaptor"
 
 	ccapi "github.com/arcology-network/vm-adaptor/api"
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/eth"
 	cceueth "github.com/arcology-network/vm-adaptor/eth"
-	"github.com/holiman/uint256"
 )
-
-var (
-	Coinbase = evmcommon.BytesToAddress([]byte("coinbase"))
-	Owner    = evmcommon.BytesToAddress([]byte("owner"))
-	User1    = evmcommon.BytesToAddress([]byte("user1"))
-	User2    = evmcommon.BytesToAddress([]byte("user2"))
-)
-
-// fakeChain implements the ChainContext interface.
-type fakeChain struct {
-}
-
-func (chain *fakeChain) GetHeader(evmcommon.Hash, uint64) *types.Header {
-	return &types.Header{}
-}
-
-func (chain *fakeChain) Engine() consensus.Engine {
-	return nil
-}
-
-func MainConfig() *cceu.Config {
-	vmConfig := vm.Config{}
-	cfg := &eu.Config{
-		ChainConfig: params.MainnetChainConfig,
-		VMConfig:    &vmConfig,
-		BlockNumber: new(big.Int).SetUint64(10000000),
-		ParentHash:  evmcommon.Hash{},
-		Time:        new(big.Int).SetUint64(10000000),
-		Coinbase:    &Coinbase,
-		GasLimit:    math.MaxUint64,
-		Difficulty:  new(big.Int).SetUint64(10000000),
-	}
-	cfg.Chain = new(fakeChain)
-	return cfg
-}
-
-func FormatValue(value interface{}) string {
-	switch value.(type) {
-	case *commutative.Meta:
-		meta := value.(*commutative.Meta)
-		var str string
-		str += "{"
-		for i, k := range meta.Keys() {
-			str += k.(string)
-			if i != len(meta.Keys())-1 {
-				str += ", "
-			}
-		}
-		str += "}"
-		if len(meta.Added()) != 0 {
-			str += " + {"
-			for i, k := range meta.Added() {
-				str += k
-				if i != len(meta.Added())-1 {
-					str += ", "
-				}
-			}
-			str += "}"
-		}
-		if len(meta.Removed()) != 0 {
-			str += " - {"
-			for i, k := range meta.Removed() {
-				str += k
-				if i != len(meta.Removed())-1 {
-					str += ", "
-				}
-			}
-			str += "}"
-		}
-		return str
-	case *noncommutative.Int64:
-		// uint256.NewInt(0)
-		return fmt.Sprintf(" = %v", (*(value.(*noncommutative.Int64))))
-	case *noncommutative.Bytes:
-		return fmt.Sprintf(" = %v", value.(*noncommutative.Bytes).Data())
-	case *commutative.U256:
-		v := value.(*commutative.U256).Value()
-		d := value.(*commutative.U256).GetDelta()
-		return fmt.Sprintf(" = %v + %v", (*(v.(*uint256.Int))), d.(*uint256.Int).Uint64())
-	case *commutative.Int64:
-		v := value.(*commutative.Int64).Value()
-		d := value.(*commutative.Int64).GetDelta()
-		return fmt.Sprintf(" = %v + %v", v, d)
-	}
-	return ""
-}
-
-func FormatTransitions(transitions []ccurlcommon.UnivalueInterface) string {
-	var str string
-	for _, t := range transitions {
-		str += fmt.Sprintf("%v%v%v%v%v%v%v%v%v%v%v%v%v%v",
-			"Tx=", t.(*urltype.Univalue).GetTx(),
-			" Reads=", t.(*urltype.Univalue).Reads(),
-			" Writes=", t.(*urltype.Univalue).Writes(),
-			" Preexists=", t.(*urltype.Univalue).Preexist(),
-			" Composite=", t.(*urltype.Univalue).Composite(),
-			" Path=", *(t.(*urltype.Univalue).GetPath()),
-			" Value", FormatValue(t.(*urltype.Univalue).Value())+"\n")
-	}
-	return str
-}
 
 func Prepare(db ccurlcommon.DatastoreInterface, height uint64, transitions []ccurlcommon.UnivalueInterface, txs []uint32) (*cceu.EU, *cceu.Config) {
 	url := concurrenturl.NewConcurrentUrl(db)
@@ -144,12 +35,12 @@ func Prepare(db ccurlcommon.DatastoreInterface, height uint64, transitions []ccu
 	api := ccapi.NewAPI(url)
 	statedb := cceueth.NewImplStateDB(url)
 
-	config := MainConfig()
-	config.Coinbase = &Coinbase
+	config := MainTestConfig()
+	config.Coinbase = &eucommon.Coinbase
 	config.BlockNumber = new(big.Int).SetUint64(height)
 	config.Time = new(big.Int).SetUint64(height)
 
-	return cceu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url), config
+	return cceu.NewEU(config.ChainConfig, *config.VMConfig, statedb, api), config
 }
 
 func Deploy(eu *cceu.EU, config *cceu.Config, owner evmcommon.Address, nonce uint64, code string, args ...[]byte) ([]ccurlcommon.UnivalueInterface, *evmtypes.Receipt, error) {
@@ -158,7 +49,7 @@ func Deploy(eu *cceu.EU, config *cceu.Config, owner evmcommon.Address, nonce uin
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
 	}
 	msg := evmtypes.NewMessage(owner, nil, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-	_, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{byte(nonce + 1), byte(nonce + 1), byte(nonce + 1)}), int(nonce+1), &msg, cceu.NewEVMBlockContextV2(config), cceu.NewEVMTxContext(msg))
+	_, transitions, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{byte(nonce + 1), byte(nonce + 1), byte(nonce + 1)}), int(nonce+1), &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	return transitions, receipt, err
 }
 
@@ -168,28 +59,8 @@ func CallFunc(eu *cceu.EU, config *cceu.Config, from, to *evmcommon.Address, non
 		data = append(data, arg...)
 	}
 	msg := evmtypes.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
-	accesses, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, cceu.NewEVMBlockContextV2(config), cceu.NewEVMTxContext(msg))
+	accesses, transitions, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	return accesses, transitions, receipt, err
-}
-
-func BytecodeReader(fileName string) (string, error) {
-	// Open the file
-	file, err := os.Open(fileName)
-	if err != nil {
-		return "", errors.New("Failed to read " + fileName)
-	}
-	defer file.Close()
-
-	if e := os.Remove(fileName); e != nil {
-		return "", errors.New("Failed to remove the bytecode file")
-	}
-
-	// Create a scanner to read the file with the specified encoding
-	scanner := bufio.NewScanner(file)
-	scanner.Split(bufio.ScanLines)
-	scanner.Scan() // read the first line of the file
-
-	return scanner.Text(), nil // Convert the scanned text to a string
 }
 
 func PrintInput(input []byte) {
@@ -203,7 +74,23 @@ func PrintInput(input []byte) {
 	fmt.Println()
 }
 
-func NewTestEU() (*eu.EU, *eu.Config, ccurlcommon.DatastoreInterface, *concurrenturl.ConcurrentUrl) {
+func MainTestConfig() *cceu.Config {
+	vmConfig := vm.Config{}
+	cfg := &cceu.Config{
+		ChainConfig: params.MainnetChainConfig,
+		VMConfig:    &vmConfig,
+		BlockNumber: big.NewInt(0),
+		ParentHash:  evmcommon.Hash{},
+		Time:        big.NewInt(0),
+		Coinbase:    &eucommon.Coinbase,
+		GasLimit:    math.MaxUint64, // Should come from the message
+		Difficulty:  big.NewInt(0),
+	}
+	cfg.Chain = new(cceu.DummyChain)
+	return cfg
+}
+
+func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concurrenturl.ConcurrentUrl) {
 	persistentDB := cachedstorage.NewDataStore()
 	meta, _ := commutative.NewMeta(ccurlcommon.NewPlatform().Eth10Account())
 	persistentDB.Inject(ccurlcommon.NewPlatform().Eth10Account(), meta)
@@ -212,11 +99,11 @@ func NewTestEU() (*eu.EU, *eu.Config, ccurlcommon.DatastoreInterface, *concurren
 	url := concurrenturl.NewConcurrentUrl(db)
 	statedb := eth.NewImplStateDB(url)
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
-	statedb.CreateAccount(Coinbase)
-	statedb.CreateAccount(User1)
-	statedb.AddBalance(User1, new(big.Int).SetUint64(1e18))
+	statedb.CreateAccount(eucommon.Coinbase)
+	statedb.CreateAccount(eucommon.User1)
+	statedb.AddBalance(eucommon.User1, new(big.Int).SetUint64(1e18))
 	_, transitions := url.Export(true)
-	fmt.Println("\n" + FormatTransitions(transitions))
+	fmt.Println("\n" + eucommon.FormatTransitions(transitions))
 
 	// Deploy.
 	url = concurrenturl.NewConcurrentUrl(db)
@@ -226,10 +113,27 @@ func NewTestEU() (*eu.EU, *eu.Config, ccurlcommon.DatastoreInterface, *concurren
 	api := ccapi.NewAPI(url)
 	statedb = eth.NewImplStateDB(url)
 
-	config := MainConfig()
-	config.Coinbase = &Coinbase
+	config := MainTestConfig()
+	config.Coinbase = &eucommon.Coinbase
 	config.BlockNumber = new(big.Int).SetUint64(10000000)
 	config.Time = new(big.Int).SetUint64(10000000)
 
-	return cceu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, url), config, db, url
+	return cceu.NewEU(config.ChainConfig, *config.VMConfig, statedb, api), config, db, url
 }
+
+// func NewTestEUwithUrl(db ccurlcommon.DatastoreInterface, ccurl *concurrenturl.ConcurrentUrl) (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concurrenturl.ConcurrentUrl) {
+// 	// Deploy.
+// 	ccurl = concurrenturl.NewConcurrentUrl(db)
+// 	ccurl.Import(transitions)
+// 	ccurl.PostImport()
+// 	ccurl.Commit([]uint32{0})
+// 	api := ccapi.NewAPI(url)
+// 	statedb = eth.NewImplStateDB(url)
+
+// 	config := MainTestConfig()
+// 	config.Coinbase = &eucommon.Coinbase
+// 	config.BlockNumber = new(big.Int).SetUint64(10000000)
+// 	config.Time = new(big.Int).SetUint64(10000000)
+
+// 	return cceu.NewEU(config.ChainConfig, *config.VMConfig, statedb, api), config, db, url
+// }

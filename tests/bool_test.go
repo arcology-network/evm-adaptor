@@ -10,6 +10,7 @@ import (
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/types"
 	ccEu "github.com/arcology-network/vm-adaptor"
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 	compiler "github.com/arcology-network/vm-adaptor/compiler"
 )
 
@@ -34,12 +35,12 @@ func TestContractBool(t *testing.T) {
 	os.Remove(targetPath + "/bool/Base.sol")
 
 	// ================================== Deploy the contract ==================================
-	msg := types.NewMessage(User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)              // Build the message
-	_, transitions, receipt, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContextV2(config), ccEu.NewEVMTxContext(msg)) // Execute it
+	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)      // Build the message
+	_, transitions, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg)) // Execute it
 	// ---------------
 
 	// t.Log("\n" + FormatTransitions(accesses))
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	// t.Log(receipt)
 	// contractAddress := receipt.ContractAddress
 	if receipt.Status != 1 || err != nil {

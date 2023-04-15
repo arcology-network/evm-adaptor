@@ -8,6 +8,14 @@ import (
 	"github.com/holiman/uint256"
 )
 
+func DecodeTo[T any](raw []byte, idx int, typed T, depth uint8, maxLength int) (T, error) {
+	v, err := Decode(raw, idx, typed, depth, maxLength)
+	if err == nil {
+		return v.(T), err
+	}
+	return typed, err
+}
+
 func Decode(raw []byte, idx int, typed interface{}, depth uint8, maxLength int) (interface{}, error) {
 	if depth < 1 {
 		return nil, errors.New("Error: Can be 0 deep!!")
@@ -37,6 +45,21 @@ func Decode(raw []byte, idx int, typed interface{}, depth uint8, maxLength int) 
 		var v uint256.Int
 		v.SetBytes(raw[idx*32 : idx*32+32])
 		return &v, nil
+
+	case uint256.Int:
+		var v uint256.Int
+		v.SetBytes(raw[idx*32 : idx*32+32])
+		return v, nil
+
+	case [20]uint8:
+		var v [20]byte
+		copy(v[:], raw[idx*32+12:idx*32+32])
+		return v, nil
+
+	case [32]uint8:
+		var v [32]byte
+		copy(v[:], raw[idx*32:idx*32+32])
+		return v, nil
 
 	case []uint8:
 		if depth == 1 {

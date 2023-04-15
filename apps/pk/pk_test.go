@@ -15,6 +15,7 @@ import (
 	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	arbitrator "github.com/arcology-network/urlarbitrator-engine/go-wrapper"
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 	adaptor "github.com/arcology-network/vm-adaptor/evm"
 )
 
@@ -43,7 +44,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 	// Deploy KittyCore.
 	eu, config := prepare(db, 10000000, transitions, []uint32{0})
 	transitions, receipt := deploy(eu, config, ceoAddress, 0, coreCodeV2)
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	coreAddress := receipt.ContractAddress
 	t.Log(coreAddress)
@@ -51,7 +52,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 	// Deploy SaleClockAuction.
 	eu, config = prepare(db, 10000001, transitions, []uint32{1})
 	transitions, receipt = deploy(eu, config, ceoAddress, 1, saleAuctionCodeV2, coreAddress.Bytes(), []byte{100})
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	saleAddress := receipt.ContractAddress
 	t.Log(saleAddress)
@@ -59,7 +60,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 	// Deploy SiringClockAuction.
 	eu, config = prepare(db, 10000002, transitions, []uint32{2})
 	transitions, receipt = deploy(eu, config, ceoAddress, 2, siringAuctionCodeV2, coreAddress.Bytes(), []byte{100})
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	sireAddress := receipt.ContractAddress
 	t.Log(sireAddress)
@@ -67,7 +68,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 	// Deploy GeneScience.
 	eu, config = prepare(db, 10000003, transitions, []uint32{3})
 	transitions, receipt = deploy(eu, config, ceoAddress, 3, geneScienceCodeV2, []byte{}, coreAddress.Bytes())
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	geneAddress := receipt.ContractAddress
 	t.Log(geneAddress)
@@ -77,40 +78,40 @@ func TestParallelKittiesPerf(t *testing.T) {
 	// Call setSaleAuctionAddress.
 	eu, config = prepare(db, 10000004, transitions, []uint32{4})
 	acc, transitions, receipt := runEx(eu, config, &ceoAddress, &coreAddress, 4, true, "setSaleAuctionAddress(address)", saleAddress.Bytes())
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	accesses = append(accesses, acc...)
 
 	// Call setSiringAuctionAddress.
 	eu, config = prepare(db, 10000005, transitions, []uint32{5})
 	acc, transitions, receipt = runEx(eu, config, &ceoAddress, &coreAddress, 5, true, "setSiringAuctionAddress(address)", sireAddress.Bytes())
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	accesses = append(accesses, acc...)
 
 	// Call setGeneScienceAddress.
 	eu, config = prepare(db, 10000006, transitions, []uint32{6})
 	acc, transitions, receipt = runEx(eu, config, &ceoAddress, &coreAddress, 6, true, "setGeneScienceAddress(address)", geneAddress.Bytes())
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	accesses = append(accesses, acc...)
 
 	// Call setCOO.
 	eu, config = prepare(db, 10000007, transitions, []uint32{7})
 	acc, transitions, receipt = runEx(eu, config, &ceoAddress, &coreAddress, 7, true, "setCOO(address)", cooAddress.Bytes())
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	accesses = append(accesses, acc...)
 
 	// Call setCFO.
 	eu, config = prepare(db, 10000008, transitions, []uint32{8})
 	acc, transitions, receipt = runEx(eu, config, &ceoAddress, &coreAddress, 8, true, "setCFO(address)", cfoAddress.Bytes())
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	accesses = append(accesses, acc...)
 
 	conflicts, _, _ := DetectConflict(accesses)
-	t.Log("AccessRecords\n" + FormatTransitions(accesses))
+	t.Log("AccessRecords\n" + eucommon.FormatTransitions(accesses))
 	if len(conflicts) != 0 {
 		t.Error("unexpected conflictions:", conflicts)
 		// return
@@ -119,7 +120,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 	// Call unpause.
 	eu, config = prepare(db, 10000009, transitions, []uint32{9})
 	transitions, receipt = run(eu, config, &ceoAddress, &coreAddress, 9, true, "unpause()")
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	PrintMemUsage()
@@ -134,7 +135,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 	txs := []uint32{}
 	begin := time.Now()
 
-	config = MainConfig()
+	config = MainTestConfig()
 	config.Coinbase = &coinbase
 	config.BlockNumber = new(big.Int).SetUint64(10000010)
 	config.Time = new(big.Int).SetUint64(10000010)
@@ -146,7 +147,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 		api := adaptor.NewAPI(db, url)
 		statedb := adaptor.NewStateDB(api, db, url)
 
-		// config := MainConfig()
+		// config := MainTestConfig()
 		// config.Coinbase = &coinbase
 		// config.BlockNumber = new(big.Int).SetUint64(10000010)
 		// config.Time = new(big.Int).SetUint64(10000010)
@@ -166,14 +167,14 @@ func TestParallelKittiesPerf(t *testing.T) {
 		commonlib.GobDecode(bs, &ts)
 		totalTransitions = append(totalTransitions, ts...)
 		// if i == 0 || i == 256 {
-		// 	t.Log("\n" + FormatTransitions(accesses))
+		// 	t.Log("\n" + eucommon.FormatTransitions(accesses))
 		// }
 		// totalTransitions = append(totalTransitions, transitions...)
 		totalAccesses = append(totalAccesses, accesses...)
 		txs = append(txs, uint32(i+1))
 
 		if (i+1)%5000 == 0 {
-			// t.Log("\n" + FormatTransitions(transitions))
+			// t.Log("\n" + eucommon.FormatTransitions(transitions))
 			// t.Log(receipt)
 			t.Log("i = ", i, "----------------------------------------------------------------")
 			t.Log("time for exec: ", time.Since(begin))
@@ -233,7 +234,7 @@ func TestParallelKittiesTransfer(t *testing.T) {
 	// Deploy KittyCore.
 	eu, config := prepare(db, 10000000, transitions, []uint32{0})
 	transitions, receipt := deploy(eu, config, ceoAddress, 0, coreCode)
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	coreAddress := receipt.ContractAddress
 	t.Log(coreAddress)
@@ -241,7 +242,7 @@ func TestParallelKittiesTransfer(t *testing.T) {
 	// Deploy SaleClockAuction.
 	eu, config = prepare(db, 10000001, transitions, []uint32{1})
 	transitions, receipt = deploy(eu, config, ceoAddress, 1, saleCode, coreAddress.Bytes(), []byte{100})
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	saleAddress := receipt.ContractAddress
 	t.Log(saleAddress)
@@ -249,7 +250,7 @@ func TestParallelKittiesTransfer(t *testing.T) {
 	// Deploy SiringClockAuction.
 	eu, config = prepare(db, 10000002, transitions, []uint32{2})
 	transitions, receipt = deploy(eu, config, ceoAddress, 2, sireCode, coreAddress.Bytes(), []byte{100})
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	sireAddress := receipt.ContractAddress
 	t.Log(sireAddress)
@@ -257,7 +258,7 @@ func TestParallelKittiesTransfer(t *testing.T) {
 	// Deploy GeneScience.
 	eu, config = prepare(db, 10000003, transitions, []uint32{3})
 	transitions, receipt = deploy(eu, config, ceoAddress, 3, geneCode, []byte{}, coreAddress.Bytes())
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	geneAddress := receipt.ContractAddress
 	t.Log(geneAddress)
@@ -265,43 +266,43 @@ func TestParallelKittiesTransfer(t *testing.T) {
 	// Call setSaleAuctionAddress.
 	eu, config = prepare(db, 10000004, transitions, []uint32{4})
 	transitions, receipt = run(eu, config, &ceoAddress, &coreAddress, 4, true, "setSaleAuctionAddress(address)", saleAddress.Bytes())
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Call setSiringAuctionAddress.
 	eu, config = prepare(db, 10000005, transitions, []uint32{5})
 	transitions, receipt = run(eu, config, &ceoAddress, &coreAddress, 5, true, "setSiringAuctionAddress(address)", sireAddress.Bytes())
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Call setGeneScienceAddress.
 	eu, config = prepare(db, 10000006, transitions, []uint32{6})
 	transitions, receipt = run(eu, config, &ceoAddress, &coreAddress, 6, true, "setGeneScienceAddress(address)", geneAddress.Bytes())
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Call setCOO.
 	eu, config = prepare(db, 10000007, transitions, []uint32{7})
 	transitions, receipt = run(eu, config, &ceoAddress, &coreAddress, 7, true, "setCOO(address)", cooAddress.Bytes())
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Call setCFO.
 	eu, config = prepare(db, 10000008, transitions, []uint32{8})
 	transitions, receipt = run(eu, config, &ceoAddress, &coreAddress, 8, true, "setCFO(address)", cfoAddress.Bytes())
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Call unpause.
 	eu, config = prepare(db, 10000009, transitions, []uint32{9})
 	transitions, receipt = run(eu, config, &ceoAddress, &coreAddress, 9, true, "unpause()")
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Call createPromoKitty. Assign a kitty to ceo.
 	eu, config = prepare(db, 10000010, transitions, []uint32{10})
 	transitions, receipt = run(eu, config, &cooAddress, &coreAddress, 0, true, "createPromoKitty(uint256,address)", []byte{1}, ceoAddress.Bytes())
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	kittyId := receipt.Logs[0].Data[:32]
 	t.Log(kittyId)
@@ -309,7 +310,7 @@ func TestParallelKittiesTransfer(t *testing.T) {
 	// Call transfer. Transfer ceo's kitty to cfo.
 	eu, config = prepare(db, 10000011, transitions, []uint32{1})
 	transitions, receipt = run(eu, config, &ceoAddress, &coreAddress, 10, true, "transfer(address,uint256)", cfoAddress.Bytes(), kittyId)
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 }
 

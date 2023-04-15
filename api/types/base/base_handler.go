@@ -13,16 +13,17 @@ import (
 	abi "github.com/arcology-network/vm-adaptor/abi"
 
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/holiman/uint256"
 )
 
 // APIs under the concurrency namespace
 type BaseHandlers struct {
-	api       apicommon.ContextInfoInterface
+	api       eucommon.ConcurrentApiRouterInterface
 	connector *apicommon.CcurlConnector
 }
 
-func NewBaseHandlers(api apicommon.ContextInfoInterface) *BaseHandlers {
+func NewBaseHandlers(api eucommon.ConcurrentApiRouterInterface) *BaseHandlers {
 	return &BaseHandlers{
 		api:       api,
 		connector: apicommon.NewCCurlConnector("/containers/", api.TxHash(), api.TxIndex(), api.Ccurl()),
@@ -33,7 +34,7 @@ func (this *BaseHandlers) Address() [20]byte {
 	return [20]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x84}
 }
 
-func (this *BaseHandlers) Call(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
+func (this *BaseHandlers) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
@@ -57,7 +58,7 @@ func (this *BaseHandlers) Call(caller evmcommon.Address, input []byte, origin ev
 		return this.Set(caller, input[4:])
 	}
 
-	return this.Unknow(caller, input[4:])
+	return this.Unknow(caller, input)
 }
 
 func (this *BaseHandlers) Unknow(caller evmcommon.Address, input []byte) ([]byte, bool) {
@@ -66,7 +67,6 @@ func (this *BaseHandlers) Unknow(caller evmcommon.Address, input []byte) ([]byte
 }
 
 func (this *BaseHandlers) New(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	// elemType := int(input[31]) // Data type should only take one byte.
 	id := this.api.GenUUID()                                                                                // Generate a uuid for the container
 	return id[:], this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id), 0) // Create a new container
 }

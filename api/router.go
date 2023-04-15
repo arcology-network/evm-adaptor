@@ -8,6 +8,7 @@ import (
 
 	"github.com/arcology-network/concurrenturl/v2"
 	"github.com/arcology-network/evm/common"
+	"github.com/arcology-network/evm/core/vm"
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
 	para "github.com/arcology-network/vm-adaptor/api/parallel"
 	base "github.com/arcology-network/vm-adaptor/api/types/base"
@@ -24,22 +25,22 @@ type API struct {
 
 	seed   uint64 // for uuid generation
 	serial uint64
-
-	// dynarray  *concurrentlib.DynamicArray
 	// deferCall *concurrentlib.DeferCall
-	handlerDict map[[20]byte]apicommon.ConcurrencyHandlerInterface // APIs under the concurrency namespace
+
+	evm         *vm.EVM
+	handlerDict map[[20]byte]apicommon.ConcurrentApiHandlerInterface // APIs under the concurrency namespace
 	ccurl       *concurrenturl.ConcurrentUrl
 }
 
 func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	api := &API{
 		ccurl:       ccurl,
-		handlerDict: make(map[[20]byte]apicommon.ConcurrencyHandlerInterface),
+		handlerDict: make(map[[20]byte]apicommon.ConcurrentApiHandlerInterface),
 	}
 
-	handlers := []apicommon.ConcurrencyHandlerInterface{
+	handlers := []apicommon.ConcurrentApiHandlerInterface{
 		base.NewBaseHandlers(api),
-		u256.NewU256Handler(api),
+		u256.NewU256CumulativeHandler(api),
 		para.NewParallelHandler(api),
 	}
 
@@ -52,6 +53,15 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	return api
 }
 
+func (this *API) New(txHash common.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl) eucommon.ConcurrentApiRouterInterface {
+	api := NewAPI(ccurl)
+	api.txHash = txHash
+	api.txIndex = txIndex
+	return api
+}
+
+func (this *API) GetVM() *vm.EVM                      { return this.evm }
+func (this *API) SetVM(evm *vm.EVM)                   { this.evm = evm }
 func (this *API) TxHash() [32]byte                    { return this.txHash }
 func (this *API) TxIndex() uint32                     { return this.txIndex }
 func (this *API) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }
@@ -91,7 +101,7 @@ func (this *API) ClearLogs() {
 
 func (this *API) Call(caller, callee common.Address, input []byte, origin common.Address, nonce uint64, blockhash common.Hash) (bool, []byte, bool) {
 	if handler, ok := this.handlerDict[callee]; ok {
-		result, successful := handler.Call(caller, input, origin, nonce)
+		result, successful := handler.Call(caller, callee, input, origin, nonce)
 		return true, result, successful
 	}
 	return false, []byte{}, false

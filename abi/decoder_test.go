@@ -61,4 +61,9 @@ func TestDecoder(t *testing.T) {
 	if len(buffer.([]byte)) != 5 {
 		t.Error("Error: Wrong length")
 	}
+
+	buffer32, _ := Decode(raw, 0, [32]byte{}, 2, math.MaxInt)
+	if buffer32.([32]byte)[31] != 96 {
+		t.Error("Error: Wrong [32]byte length")
+	}
 }

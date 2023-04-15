@@ -54,7 +54,7 @@ func TestNativeContractSameBlock(t *testing.T) {
 	// Compile
 	// ================================ Deploy the contract==================================
 	eu, config := tests.Prepare(db, 10000000, transitions, []uint32{0})
-	transitions, receipt, err := tests.Deploy(eu, config, tests.Owner, 0, bytecode)
+	transitions, receipt, _, err := tests.Deploy(eu, config, tests.Owner, 0, bytecode)
 	t.Log("\n" + tests.FormatTransitions(transitions))
 	t.Log(receipt)
 	address := receipt.ContractAddress
@@ -123,7 +123,7 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 
 	// ================================ Deploy the contract==================================
 	eu, config := tests.Prepare(db, 10000000, transitions, []uint32{0})
-	transitions, receipt, err := tests.Deploy(eu, config, tests.Owner, 0, code)
+	transitions, receipt, _, err := tests.Deploy(eu, config, tests.Owner, 0, code)
 	t.Log("\n" + tests.FormatTransitions(transitions))
 	t.Log(receipt)
 	address := receipt.ContractAddress
@@ -143,7 +143,7 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 
 	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{0})
 	encoded, _ := abi.Encode(uint64(3))
-	acc, transitions, receipt, err := tests.CallFunc(eu, config, &tests.User1, &address, 0, true, "checkX(uint256)", encoded)
+	acc, transitions, receipt, _, err := tests.CallFunc(eu, config, &tests.User1, &address, 0, true, "checkX(uint256)", encoded)
 	t.Log("\n" + tests.FormatTransitions(acc))
 	t.Log(receipt)
 	if receipt.Status != 1 {

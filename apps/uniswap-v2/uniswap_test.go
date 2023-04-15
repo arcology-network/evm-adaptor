@@ -188,7 +188,7 @@ func prepare(db urlcommon.DatastoreInterface, height uint64, transitions []urlco
 	api := adaptor.NewAPI(db, url)
 	statedb := adaptor.NewStateDB(api, db, url)
 
-	config := MainConfig()
+	config := MainTestConfig()
 	config.Coinbase = &coinbase
 	config.BlockNumber = new(big.Int).SetUint64(height)
 	config.Time = new(big.Int).SetUint64(height)
@@ -202,7 +202,7 @@ func deploy(eu *adaptor.EU, config *adaptor.Config, owner evmcommon.Address, non
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
 	}
 	msg := evmtypes.NewMessage(owner, nil, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-	_, transitions, receipt := eu.Run(evmcommon.BytesToHash([]byte{byte(nonce + 1), byte(nonce + 1), byte(nonce + 1)}), int(nonce+1), &msg, adaptor.NewEVMBlockContextV2(config), adaptor.NewEVMTxContext(msg))
+	_, transitions, receipt := eu.Run(evmcommon.BytesToHash([]byte{byte(nonce + 1), byte(nonce + 1), byte(nonce + 1)}), int(nonce+1), &msg, adaptor.NewEVMBlockContext(config), adaptor.NewEVMTxContext(msg))
 	return transitions, receipt
 }
 
@@ -212,7 +212,7 @@ func run(eu *adaptor.EU, config *adaptor.Config, from, to *evmcommon.Address, no
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
 	}
 	msg := evmtypes.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
-	_, transitions, receipt := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, adaptor.NewEVMBlockContextV2(config), adaptor.NewEVMTxContext(msg))
+	_, transitions, receipt := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, adaptor.NewEVMBlockContext(config), adaptor.NewEVMTxContext(msg))
 	return transitions, receipt
 }
 
@@ -222,6 +222,6 @@ func runEx(eu *adaptor.EU, config *adaptor.Config, from, to *evmcommon.Address, 
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
 	}
 	msg := evmtypes.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
-	accesses, transitions, receipt := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, adaptor.NewEVMBlockContextV2(config), adaptor.NewEVMTxContext(msg))
+	accesses, transitions, receipt := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, adaptor.NewEVMBlockContext(config), adaptor.NewEVMTxContext(msg))
 	return accesses, transitions, receipt
 }
