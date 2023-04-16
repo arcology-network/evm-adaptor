@@ -13,7 +13,7 @@ contract Bool {
     }
 
     function push(bool elem) public { 
-       base.push(abi.encodeWithSignature("push(bytes, bytes)",  base.id(), abi.encode(elem)));
+       base.push(abi.encodeWithSignature("push(bytes,bytes)",  base.id(), abi.encode(elem)));
     }   
 
     function get(uint256 idx) public returns(bool)  { 
@@ -21,6 +21,6 @@ contract Bool {
     }
 
     function set(uint256 idx, bool elem) public {
-        base.set(abi.encodeWithSignature("set(bytes, uint256, bytes)", base.id(), idx, abi.encode(elem)));        
+        base.set(abi.encodeWithSignature("set(bytes,uint256,bytes)", base.id(), idx, abi.encode(elem)));        
     }
 }

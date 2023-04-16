@@ -13,7 +13,7 @@ contract Integer {
     }
 
     function push(int elem) public { //9e c6 69 25
-       base.push(abi.encodeWithSignature("push(bytes, bytes)",  base.id(), abi.encode(elem)));
+       base.push(abi.encodeWithSignature("push(bytes,bytes)",  base.id(), abi.encode(elem)));
     }   
 
     function get(uint256 idx) public returns(int)  { // 31 fe 88 d0
@@ -21,6 +21,6 @@ contract Integer {
     }
 
     function set(uint256 idx, int elem) public { // 7a fa 62 38
-        base.set(abi.encodeWithSignature("set(bytes, uint256, bytes)", base.id(), idx, abi.encode(elem)));        
+        base.set(abi.encodeWithSignature("set(bytes,uint256,bytes)", base.id(), idx, abi.encode(elem)));        
     }
 }

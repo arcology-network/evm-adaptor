@@ -15,7 +15,7 @@ contract String {
     }
 
     function push(string memory elem) public { 
-       base.push(abi.encodeWithSignature("push(bytes, bytes)",  base.id(), abi.encode(elem)));
+       base.push(abi.encodeWithSignature("push(bytes,bytes)",  base.id(), abi.encode(elem)));
     }   
 
     function get(uint256 idx) public returns(string memory)  { 
@@ -23,7 +23,7 @@ contract String {
     }
 
     function set(uint256 idx, string memory elem) public {
-        base.set(abi.encodeWithSignature("set(bytes, uint256, bytes)", base.id(), idx, abi.encode(elem)));        
+        base.set(abi.encodeWithSignature("set(bytes,uint256,bytes)", base.id(), idx, abi.encode(elem)));        
     }
 }
 

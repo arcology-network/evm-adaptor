@@ -9,8 +9,9 @@ import (
 	"github.com/arcology-network/concurrenturl/v2"
 	"github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/vm"
+	cceu "github.com/arcology-network/vm-adaptor"
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
-	para "github.com/arcology-network/vm-adaptor/api/parallel"
+	mp "github.com/arcology-network/vm-adaptor/api/multiprocess"
 	base "github.com/arcology-network/vm-adaptor/api/types/base"
 	u256 "github.com/arcology-network/vm-adaptor/api/types/u256"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
@@ -27,13 +28,14 @@ type API struct {
 	serial uint64
 	// deferCall *concurrentlib.DeferCall
 
-	evm         *vm.EVM
+	eu          *cceu.EU
 	handlerDict map[[20]byte]apicommon.ConcurrentApiHandlerInterface // APIs under the concurrency namespace
 	ccurl       *concurrenturl.ConcurrentUrl
 }
 
 func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	api := &API{
+		eu:          nil,
 		ccurl:       ccurl,
 		handlerDict: make(map[[20]byte]apicommon.ConcurrentApiHandlerInterface),
 	}
@@ -41,7 +43,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	handlers := []apicommon.ConcurrentApiHandlerInterface{
 		base.NewBaseHandlers(api),
 		u256.NewU256CumulativeHandler(api),
-		para.NewParallelHandler(api),
+		mp.NewParallelHandler(api),
 	}
 
 	for i, v := range handlers {
@@ -57,11 +59,12 @@ func (this *API) New(txHash common.Hash, txIndex uint32, ccurl *concurrenturl.Co
 	api := NewAPI(ccurl)
 	api.txHash = txHash
 	api.txIndex = txIndex
+	api.SetEU(this.eu)
 	return api
 }
 
-func (this *API) GetVM() *vm.EVM                      { return this.evm }
-func (this *API) SetVM(evm *vm.EVM)                   { this.evm = evm }
+func (this *API) VM() *vm.EVM                         { return this.eu.VM() }
+func (this *API) SetEU(eu interface{})                { this.eu = eu.(*cceu.EU) }
 func (this *API) TxHash() [32]byte                    { return this.txHash }
 func (this *API) TxIndex() uint32                     { return this.txIndex }
 func (this *API) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }

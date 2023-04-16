@@ -32,36 +32,38 @@ func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.State
 		api:     api,
 	}
 
-	eu.api.SetVM(eu.evm)
+	eu.api.SetEU(eu)
 	eu.evm.SetApi(api)
 	return eu
 }
 
-func (eu *EU) SetContext(statedb vm.StateDB, api eucommon.ConcurrentApiRouterInterface) {
-	eu.api = api
-	eu.statedb = statedb
+func (this *EU) VM() *vm.EVM { return this.evm }
 
-	eu.evm.StateDB = eu.statedb
-	eu.evm.SetApi(api)
+func (this *EU) SetContext(statedb vm.StateDB, api eucommon.ConcurrentApiRouterInterface) {
+	this.api = api
+	this.statedb = statedb
+
+	this.evm.StateDB = this.statedb
+	this.evm.SetApi(api)
 }
 
-func (eu *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, blockContext vm.BlockContext, txContext vm.TxContext) (
+func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, blockContext vm.BlockContext, txContext vm.TxContext) (
 	[]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface, *types.Receipt, *core.ExecutionResult, error) {
-	eu.statedb.(*eth.ImplStateDB).Prepare(txHash, ethCommon.Hash{}, txIndex)
-	eu.api.Prepare(txHash, blockContext.BlockNumber, uint32(txIndex))
-	eu.evm.Context = blockContext
-	eu.evm.TxContext = txContext
+	this.statedb.(*eth.ImplStateDB).Prepare(txHash, ethCommon.Hash{}, txIndex)
+	this.api.Prepare(txHash, blockContext.BlockNumber, uint32(txIndex))
+	this.evm.Context = blockContext
+	this.evm.TxContext = txContext
 
 	gasPool := core.GasPool(math.MaxUint64)
 
-	result, err := core.ApplyMessage(eu.evm, *msg, &gasPool) // Execute the transcation
+	result, err := core.ApplyMessage(this.evm, *msg, &gasPool) // Execute the transcation
 	if err != nil {
 		return []urlcommon.UnivalueInterface{}, []urlcommon.UnivalueInterface{}, nil, nil, err // Failed in Precheck before tx execution started
 	}
 
 	assertLog := GetAssertion(result.ReturnData) // Get the assertion
 	if len(assertLog) > 0 {
-		eu.api.AddLog("assert", assertLog)
+		this.api.AddLog("assert", assertLog)
 	}
 
 	// Create a new receipt
@@ -71,15 +73,15 @@ func (eu *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, blockC
 
 	// Check the newly created address
 	if msg.To() == nil {
-		userSpecifiedAddress := crypto.CreateAddress(eu.evm.Origin, msg.Nonce())
+		userSpecifiedAddress := crypto.CreateAddress(this.evm.Origin, msg.Nonce())
 		receipt.ContractAddress = result.ContractAddress
 		if !bytes.Equal(userSpecifiedAddress.Bytes(), result.ContractAddress.Bytes()) {
-			eu.api.AddLog("ContractAddressWarning", fmt.Sprintf("user specified address = %v, inner address = %v", userSpecifiedAddress, result.ContractAddress))
+			this.api.AddLog("ContractAddressWarning", fmt.Sprintf("user specified address = %v, inner address = %v", userSpecifiedAddress, result.ContractAddress))
 		}
 	}
-	receipt.Logs = eu.statedb.(*eth.ImplStateDB).GetLogs(txHash)
+	receipt.Logs = this.statedb.(*eth.ImplStateDB).GetLogs(txHash)
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
-	accesses, transitions := eu.api.Ccurl().Export(false)
+	accesses, transitions := this.api.Ccurl().Export(false)
 
 	if result.Failed() { // Failed
 		accesses = accesses[:0]

@@ -24,7 +24,7 @@ func TestParallelInvoke(t *testing.T) {
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
 
-	code, err := compiler.CompileContracts(pyCompiler, project+"/api/parallel/parallel_test.sol", "ParallelInvokeTest")
+	code, err := compiler.CompileContracts(pyCompiler, project+"/api/multiprocess/invoker_test.sol", "ParallelInvokeTest")
 
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
@@ -32,7 +32,7 @@ func TestParallelInvoke(t *testing.T) {
 	// ================================== Deploy the contract ==================================
 	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false)     // Build the message
 	_, transitions, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg)) // Execute it
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	// t.Log("\n" + eucommon.FormatTransitions(transitions))
 	// ---------------
 
 	contractAddress := receipt.ContractAddress
@@ -41,7 +41,6 @@ func TestParallelInvoke(t *testing.T) {
 	}
 	fmt.Println(receipt.ContractAddress)
 
-	// ================================== Call length() ==================================
 	url = concurrenturl.NewConcurrentUrl(db)
 	url.Import(transitions)
 	url.PostImport()
@@ -51,16 +50,14 @@ func TestParallelInvoke(t *testing.T) {
 		return
 	}
 
+	// ================================== Call length() ==================================
 	_, transitions, receipt, _, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	if err != nil {
 		fmt.Print(err)
 	}
 
 	data := crypto.Keccak256([]byte("callPara()"))[:4]
-	// data = append(data, evmcommon.BytesToHash(eucommon.User1.Bytes()).Bytes()...)
-	// data = append(data, evmcommon.BytesToHash([]byte{0xcc}).Bytes()...)
 	msg = types.NewMessage(eucommon.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-
 	_, transitions, receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	if err != nil {
 		t.Error(err)
@@ -70,10 +67,15 @@ func TestParallelInvoke(t *testing.T) {
 		t.Error(execResult.Err)
 	}
 
-	// t.Log("\n" + FormatTransitions(transitions))
-	// t.Log(receipt)
-	// if receipt.Status != 1 {
-	// 	t.Error("Error: Failed to calll length()!!!", err)
-	// }
+	// ================================== Call length() ==================================
+	// data := []byte{190, 86, 63, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 82, 82, 82, 82, 82, 82, 82, 82, 82, 82, 82, 82, 82, 82, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 82, 82, 82, 82, 82, 82, 82, 82, 82, 82, 82, 82, 82, 82, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	// data := crypto.Keccak256([]byte("jobExample(bytes)"))[:4]
+	// zero32 := [20]byte{}
+	// data = append(data, zero32[:]...)
+	// msg = types.NewMessage(eucommon.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	// _, transitions, receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 
+	// if execResult != nil && execResult.Err != nil {
+	// 	t.Error(execResult.Err)
+	// }
 }

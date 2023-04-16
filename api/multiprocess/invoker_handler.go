@@ -3,6 +3,8 @@ package parallel
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/arcology-network/concurrenturl/v2"
@@ -38,9 +40,12 @@ func (this *ParallelHandler) Call(caller, callee evmcommon.Address, input []byte
 	signature := [4]byte{}
 	copy(signature[:], input)
 
+	fmt.Println(input)
+	fmt.Println("==============================")
+
 	switch signature { // bf 22 6c 78
-	case [4]byte{0xcf, 0x29, 0xe8, 0xa1}:
-		return this.newJob(caller, callee, input)
+	case [4]byte{0xa4, 0x62, 0x12, 0x2d}: // a4 62 12 2d
+		return this.addJob(caller, callee, input[4:])
 
 	case [4]byte{0xb6, 0xff, 0x8b, 0xd9}:
 		return this.delJob(caller, callee, input[4:])
@@ -54,17 +59,28 @@ func (this *ParallelHandler) Call(caller, callee evmcommon.Address, input []byte
 	return this.unknow(caller, callee, input)
 }
 
-func (this *ParallelHandler) newJob(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *ParallelHandler) unknow(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+	this.api.AddLog("Unhandled function call in cumulative handler router", hex.EncodeToString(input))
+	return []byte{}, false
+}
+
+func (this *ParallelHandler) addJob(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	if len(input) < 4 {
 		return []byte(errors.New("Error: Invalid input").Error()), false
 	}
 
+	fmt.Println(input)
 	rawAddr, err := abi.DecodeTo(input, 0, [20]byte{}, 1, 32)
 	if err != nil {
 		return []byte(err.Error()), false
 	}
+	calleeAddr := evmcommon.BytesToAddress(rawAddr[:]) // Callee contract
 
-	calleeAddr := evmcommon.BytesToAddress(rawAddr[:])
+	subcall, err := abi.DecodeTo(input, 1, []byte{}, 2, math.MaxUint32)
+	if err != nil {
+		return []byte(err.Error()), false
+	}
+
 	msg := types.NewMessage( // Build the message
 		eucommon.User1,
 		&calleeAddr,
@@ -72,12 +88,21 @@ func (this *ParallelHandler) newJob(caller, callee evmcommon.Address, input []by
 		new(big.Int).SetUint64(0), // Amount to transfer
 		1e15,
 		new(big.Int).SetUint64(1),
-		input,
+		subcall, //need to remove the wrapper first
 		nil,
 		false, // Stop checking nonce
 	)
 
 	ccurl := concurrenturl.NewConcurrentUrl(ccurlstorage.NewTransientDB(*(this.api.Ccurl().Store())))
+	_, transitions := this.api.Ccurl().Export(false)
+	this.api.Ccurl().Import(transitions)
+	this.api.Ccurl().PostImport()
+	if errs := this.api.Ccurl().Commit([]uint32{1}); errs != nil && len(errs) != 0 {
+		return []byte("Error: Failed to import transitions"), false
+	}
+
+	// this.api.Ccurl().
+	// ccurl := this.api.Ccurl()
 	statedb := eth.NewImplStateDB(ccurl) // Eth state DB
 	statedb.Prepare([32]byte{}, [32]byte{}, len(this.jobs))
 
@@ -89,7 +114,7 @@ func (this *ParallelHandler) newJob(caller, callee evmcommon.Address, input []by
 	)
 
 	config := cceu.NewConfig()
-	_, _, receipt, exeResult, err := eu.Run(evmcommon.BytesToHash([]byte{}), 0, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	_, _, receipt, exeResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	if err != nil {
 		return []byte(err.Error()), false
 	}
@@ -117,9 +142,4 @@ func (this *ParallelHandler) clear(caller, callee evmcommon.Address, input []byt
 	// id := this.api.GenUUID()
 	// delta, err := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
 	return []byte{}, true
-}
-
-func (this *ParallelHandler) unknow(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-	this.api.AddLog("Unhandled function call in cumulative handler router", hex.EncodeToString(input))
-	return []byte{}, false
 }

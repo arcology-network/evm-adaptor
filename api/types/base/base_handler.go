@@ -39,22 +39,22 @@ func (this *BaseHandlers) Call(caller, callee evmcommon.Address, input []byte, o
 	copy(signature[:], input)
 
 	switch signature {
-	case [4]byte{0x5f, 0x7e, 0xdb, 0x9a}:
+	case [4]byte{0xcd, 0xbf, 0x60, 0x8d}: //cd bf 60 8d
 		return this.New(caller, input[4:])
 
-	case [4]byte{0xb8, 0xeb, 0xfc, 0x10}:
+	case [4]byte{0xe7, 0x71, 0xee, 0x0d}: // e771ee0d
 		return this.Push(caller, input[4:], origin, nonce)
 
-	case [4]byte{0xbe, 0x16, 0x6f, 0xcf}:
+	case [4]byte{0x84, 0x67, 0x3c, 0xc9}: // 84 67 3c c9
 		return this.Length(caller, input[4:])
 
-	case [4]byte{0xac, 0xc3, 0x86, 0x27}:
+	case [4]byte{0x4d, 0xd4, 0x9a, 0xb4}: // 4d d4 9a b4
 		return this.Get(caller, input[4:])
 
-	case [4]byte{0x89, 0x0e, 0xee, 0xb1}:
+	case [4]byte{0xa4, 0xec, 0xe5, 0x2c}: // a4 ec e5 2c
 		return this.Pop(caller, input[4:])
 
-	case [4]byte{0x6a, 0x79, 0x6b, 0xfa}:
+	case [4]byte{0x4c, 0x51, 0xa8, 0x8f}: // 4c51a88f
 		return this.Set(caller, input[4:])
 	}
 
@@ -63,6 +63,7 @@ func (this *BaseHandlers) Call(caller, callee evmcommon.Address, input []byte, o
 
 func (this *BaseHandlers) Unknow(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	this.api.AddLog("Unhandled function call", hex.EncodeToString(input))
+	panic("unhandled")
 	return []byte{}, false
 }
 
@@ -74,7 +75,7 @@ func (this *BaseHandlers) New(caller evmcommon.Address, input []byte) ([]byte, b
 // Get the number of elements in the container
 func (this *BaseHandlers) Length(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path := this.buildPath(caller, input) // BaseHandlers path
-	if meta, err := this.api.Ccurl().Read(this.api.TxIndex(), path); err == nil {
+	if meta, err := this.api.Ccurl().Read(this.api.TxIndex(), path); err == nil && meta != nil {
 		if encoded, err := abi.Encode(uint256.NewInt(uint64(meta.(*commutative.Meta).Length()))); err == nil {
 			return encoded, true
 		}

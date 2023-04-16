@@ -11,7 +11,7 @@ contract Example {
     event logMsg(string message);
 
     constructor  () public {
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("New()"));       
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("new()"));       
         require(success, "Example.New() Failed");
         id = data;
  
@@ -70,7 +70,7 @@ contract Example {
     }
 
     function push(bytes memory elem, uint[] memory array) public { //9e c6 69 25
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("push(bytes, bytes)",  id, elem));
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("push(bytes,bytes)",  id, elem));
         require(success, "Example.push() Failed");
     }   
 
@@ -82,7 +82,7 @@ contract Example {
     }
 
     function set(uint256 idx, bytes memory elem) public { // 7a fa 62 38
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("set(bytes, uint256, bytes)", id, idx, elem));
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("set(bytes,uint256,bytes)", id, idx, elem));
         require(success, "Example.set() Failed");
     }
 }

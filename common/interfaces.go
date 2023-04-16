@@ -13,8 +13,8 @@ import (
 )
 
 type ConcurrentApiRouterInterface interface {
-	SetVM(*vm.EVM)
-	GetVM() *vm.EVM
+	SetEU(interface{})
+	VM() *vm.EVM
 	AddLog(key, value string)
 	Call(caller, callee ethcommon.Address, input []byte, origin ethcommon.Address, nonce uint64, blockhash ethcommon.Hash) (bool, []byte, bool)
 	Prepare(ethcommon.Hash, *big.Int, uint32)

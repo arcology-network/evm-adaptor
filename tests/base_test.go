@@ -66,6 +66,6 @@ func TestBase(t *testing.T) {
 	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	if receipt.Status != 1 {
-		t.Error("Error: Failed to calll length()!!!", err)
+		t.Error("Error: Failed to call length()!!!", err)
 	}
 }
