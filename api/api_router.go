@@ -8,6 +8,7 @@ import (
 
 	"github.com/arcology-network/concurrenturl/v2"
 	"github.com/arcology-network/evm/common"
+	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/vm"
 	cceu "github.com/arcology-network/vm-adaptor"
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
@@ -63,6 +64,7 @@ func (this *API) New(txHash common.Hash, txIndex uint32, ccurl *concurrenturl.Co
 	return api
 }
 
+func (this *API) From() evmcommon.Address             { return this.eu.VM().TxContext.Origin }
 func (this *API) VM() *vm.EVM                         { return this.eu.VM() }
 func (this *API) SetEU(eu interface{})                { this.eu = eu.(*cceu.EU) }
 func (this *API) TxHash() [32]byte                    { return this.txHash }

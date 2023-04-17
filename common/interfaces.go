@@ -13,6 +13,8 @@ import (
 )
 
 type ConcurrentApiRouterInterface interface {
+	From() ethcommon.Address
+
 	SetEU(interface{})
 	VM() *vm.EVM
 	AddLog(key, value string)

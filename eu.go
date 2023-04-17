@@ -7,7 +7,7 @@ import (
 	"math/big"
 
 	common "github.com/arcology-network/common-lib/common"
-	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
 	ethCommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/core/types"
@@ -48,7 +48,7 @@ func (this *EU) SetContext(statedb vm.StateDB, api eucommon.ConcurrentApiRouterI
 }
 
 func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, blockContext vm.BlockContext, txContext vm.TxContext) (
-	[]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface, *types.Receipt, *core.ExecutionResult, error) {
+	[]ccurlcommon.UnivalueInterface, []ccurlcommon.UnivalueInterface, *types.Receipt, *core.ExecutionResult, error) {
 	this.statedb.(*eth.ImplStateDB).Prepare(txHash, ethCommon.Hash{}, txIndex)
 	this.api.Prepare(txHash, blockContext.BlockNumber, uint32(txIndex))
 	this.evm.Context = blockContext
@@ -58,7 +58,7 @@ func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, bloc
 
 	result, err := core.ApplyMessage(this.evm, *msg, &gasPool) // Execute the transcation
 	if err != nil {
-		return []urlcommon.UnivalueInterface{}, []urlcommon.UnivalueInterface{}, nil, nil, err // Failed in Precheck before tx execution started
+		return []ccurlcommon.UnivalueInterface{}, []ccurlcommon.UnivalueInterface{}, nil, nil, err // Failed in Precheck before tx execution started
 	}
 
 	assertLog := GetAssertion(result.ReturnData) // Get the assertion
@@ -85,7 +85,7 @@ func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, bloc
 
 	if result.Failed() { // Failed
 		accesses = accesses[:0]
-		common.RemoveIf(&transitions, func(val urlcommon.UnivalueInterface) bool {
+		common.RemoveIf(&transitions, func(val ccurlcommon.UnivalueInterface) bool {
 			path := val.GetPath()
 			return len(*path) <= 5 || (*path)[len(*path)-5:] != "nonce" // Keep nonce transitions only, nonce needs to increment anyway.
 		})

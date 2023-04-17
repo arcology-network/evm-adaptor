@@ -16,7 +16,7 @@ import (
 	compiler "github.com/arcology-network/vm-adaptor/compiler"
 )
 
-func TestParallelInvoke(t *testing.T) {
+func TestMultiProcess(t *testing.T) {
 	eu, config, db, url := NewTestEU()
 
 	// ================================== Compile the contract ==================================
@@ -24,7 +24,7 @@ func TestParallelInvoke(t *testing.T) {
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
 
-	code, err := compiler.CompileContracts(pyCompiler, project+"/api/multiprocess/invoker_test.sol", "ParallelInvokeTest")
+	code, err := compiler.CompileContracts(pyCompiler, project+"/api/multiprocess/multiprocess_test.sol", "MultiprocessTest")
 
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")

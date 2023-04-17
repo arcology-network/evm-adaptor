@@ -17,7 +17,7 @@ import (
 type ImplStateDB struct {
 	refund uint64
 	txHash evmcommon.Hash
-	tid    uint32
+	tid    uint32 // tx id
 	logs   map[evmcommon.Hash][]*evmtypes.Log
 
 	url *concurrenturl.ConcurrentUrl

@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-contract Parallel {
+contract Multiprocess {
     address constant private API = address(0x90); 
 
     function addJob (address addr, bytes memory args) public returns(bool, uint32)  {

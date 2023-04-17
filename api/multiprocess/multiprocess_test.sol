@@ -1,11 +1,10 @@
 pragma solidity ^0.5.0;
 
-import "./Invoker.sol";
+import "./Multiprocess.sol";
 
-contract ParallelInvokeTest {
+contract MultiprocessTest {
     function callPara() public  {
       
-
         bytes memory byteArray3 = new bytes(5);
         for (uint  i = 0; i < byteArray3.length; i ++) {
             byteArray3[i] = 0x52;
@@ -41,5 +40,27 @@ contract ParallelInvokeTest {
 
     function jobExample(address addr, bytes memory id1) pure public returns(uint256){
       return 112;
+    }
+
+    function isPrime(uint256 n) public pure returns(bool) {
+        // Check if n is less than 2.
+        if (n < 2) {
+            return false;
+        }
+        // Check if n is 2 or 3.
+        if (n == 2 || n == 3) {
+            return true;
+        }
+        // Check if n is divisible by 2 or 3.
+        if (n % 2 == 0 || n % 3 == 0) {
+            return false;
+        }
+        // Check for other divisors up to sqrt(n).
+        for (uint256 i = 5; i*i <= n; i += 6) {
+            if (n % i == 0 || n % (i + 2) == 0) {
+                return false;
+            }
+        }
+        return true;
     }
 }
