@@ -13,14 +13,14 @@ import (
 
 // APIs under the concurrency namespace
 type MultiprocessHandler struct {
-	api     eucommon.ConcurrentApiRouterInterface
-	manager *JobManager
+	api        eucommon.ConcurrentApiRouterInterface
+	jobManager *JobManager
 }
 
 func NewParallelHandler(apiRounter eucommon.ConcurrentApiRouterInterface) *MultiprocessHandler {
 	return &MultiprocessHandler{
-		api:     apiRounter,
-		manager: NewJobManager(apiRounter),
+		api:        apiRounter,
+		jobManager: NewJobManager(apiRounter),
 	}
 }
 
@@ -42,18 +42,33 @@ func (this *MultiprocessHandler) Call(caller, callee evmcommon.Address, input []
 	case [4]byte{0xb6, 0xff, 0x8b, 0xd9}:
 		return this.delJob(caller, callee, input[4:])
 
-	case [4]byte{0x02, 0xab, 0x4b, 0xbf}:
+	case [4]byte{0xc0, 0x40, 0x62, 0x26}:
 		return this.run(caller, callee, input[4:])
 
 	case [4]byte{0x64, 0x17, 0x43, 0x08}:
 		return this.clear(caller, callee, input[4:])
+
+	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}:
+		return this.length()
 	}
 	return this.unknow(caller, callee, input)
+}
+
+func (this *MultiprocessHandler) length() ([]byte, bool) {
+	if v, err := abi.Encode(uint64(len(this.jobManager.jobs))); err == nil {
+		return v, true
+	}
+	return []byte{}, false
 }
 
 func (this *MultiprocessHandler) unknow(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	this.api.AddLog("Unhandled function call in cumulative handler router", hex.EncodeToString(input))
 	return []byte{}, false
+}
+
+func (this *MultiprocessHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+	this.jobManager.Start()
+	return []byte{}, true
 }
 
 func (this *MultiprocessHandler) addJob(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
@@ -73,7 +88,8 @@ func (this *MultiprocessHandler) addJob(caller, callee evmcommon.Address, input 
 		return []byte(err.Error()), false
 	}
 
-	jobID := this.manager.Add(calleeAddr, funCall)
+	jobID := this.jobManager.Add(calleeAddr, funCall)
+
 	if buffer, err := abi.Encode(uint64(jobID)); err != nil {
 		return []byte(err.Error()), false
 	} else {
@@ -131,11 +147,11 @@ func (this *MultiprocessHandler) delJob(caller, callee evmcommon.Address, input 
 	return id, true
 }
 
-func (this *MultiprocessHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-	// id := this.api.GenUUID()
-	// delta, err := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
-	return []byte{}, true
-}
+// func (this *MultiprocessHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+// 	// id := this.api.GenUUID()
+// 	// delta, err := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
+// 	return []byte{}, true
+// }
 
 func (this *MultiprocessHandler) clear(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	// id := this.api.GenUUID()

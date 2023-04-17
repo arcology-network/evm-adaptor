@@ -3,8 +3,7 @@ package multiprocess
 import (
 	"math/big"
 
-	common "github.com/arcology-network/common-lib/common"
-	"github.com/arcology-network/concurrenturl/v2"
+	concurrenturl "github.com/arcology-network/concurrenturl/v2"
 	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
 	evmcommon "github.com/arcology-network/evm/common"
 
@@ -31,30 +30,30 @@ type Job struct {
 
 // APIs under the concurrency namespace
 type JobManager struct {
-	ccurl     *concurrenturl.ConcurrentUrl
-	jobs      []Job
-	threads   int
-	apiRouter eucommon.ConcurrentApiRouterInterface
-	// arbitrator ccur
+	jobs       []Job
+	threads    int
+	apiRouter  eucommon.ConcurrentApiRouterInterface
+	arbitrator *concurrenturl.ArbitratorSlow
 }
 
 func NewJobManager(apiRouter eucommon.ConcurrentApiRouterInterface) *JobManager {
 	return &JobManager{
-		jobs:      []Job{},
-		apiRouter: apiRouter,
-		threads:   16, // 16 threads by default
+		jobs:       []Job{},
+		apiRouter:  apiRouter,
+		threads:    16, // 16 threads by default
+		arbitrator: concurrenturl.NewArbitratorSlow(),
 	}
 }
 
 func (this *JobManager) Add(calleeAddr evmcommon.Address, funCall []byte) int {
-	this.apiRouter.From()
+	sender := this.apiRouter.From()
 	this.jobs = append(this.jobs,
 		Job{
-			sender: this.apiRouter.From(),
+			sender: sender,
 			caller: evmcommon.Address{},
 			callee: calleeAddr,
 			message: types.NewMessage( // Build the message
-				this.apiRouter.From(),
+				sender,
 				&calleeAddr,
 				0,
 				new(big.Int).SetUint64(0), // Amount to transfer
@@ -66,51 +65,44 @@ func (this *JobManager) Add(calleeAddr evmcommon.Address, funCall []byte) int {
 			),
 		},
 	)
-	return len(this.jobs)
+	return len(this.jobs) - 1
 }
 
 func (this *JobManager) Start() {
-	statedb := eth.NewImplStateDB(this.ccurl) // Eth state DB
-	statedb.Prepare([32]byte{}, [32]byte{}, len(this.jobs))
+	// processor := func(start, end, index int, args ...interface{}) {
+	for i := 0; i < len(this.jobs); i++ {
+		// for i := start; i < end; i++ {
+		statedb := eth.NewImplStateDB(this.apiRouter.Ccurl()) // Eth state DB
+		statedb.Prepare([32]byte{}, [32]byte{}, i)            // tx hash , block hash and tx index
 
-	hasher := func(start, end, index int, args ...interface{}) {
-		for i := start; i < end; i++ {
-			statedb := eth.NewImplStateDB(this.ccurl)  // Eth state DB
-			statedb.Prepare([32]byte{}, [32]byte{}, i) // tx hash , block hash and tx index
+		eu := cceu.NewEU(
+			params.MainnetChainConfig,
+			vm.Config{},
+			statedb,
+			this.apiRouter.New(evmcommon.Hash{}, 0, this.apiRouter.Ccurl()), // Call the function
+		)
 
-			eu := cceu.NewEU(
-				params.MainnetChainConfig,
-				vm.Config{},
-				statedb,
-				this.apiRouter.New(evmcommon.Hash{}, 0, this.ccurl), // Call function
-			)
-
-			config := cceu.NewConfig()
-			// var result *core.ExecutionResult
-			accesses, transitions, receipt, result, err :=
-				eu.Run(evmcommon.Hash{}, i, &this.jobs[i].message, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(this.jobs[i].message))
-
-			this.jobs[i].accesses = accesses
-			this.jobs[i].transitions = transitions
-			this.jobs[i].receipt = receipt
-			this.jobs[i].result = result
-			this.jobs[i].prechkErr = err
-		}
+		config := cceu.NewConfig()
+		this.jobs[i].accesses, this.jobs[i].transitions, this.jobs[i].receipt, this.jobs[i].result, this.jobs[i].prechkErr =
+			eu.Run(evmcommon.Hash{}, i, &this.jobs[i].message, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(this.jobs[i].message))
 	}
-	common.ParallelWorker(len(this.jobs), this.threads, hasher)
+	// }
+	// common.ParallelWorker(len(this.jobs), this.threads, processor)
 
+	// Copy all the transition to a single array for conflict detection
 	total := 0
 	for i := 0; i < len(this.jobs); i++ {
 		total += len(this.jobs[i].accesses)
 	}
+	accesses := make([]ccurlcommon.UnivalueInterface, total) // Pre-allocation for better performance
 
 	offset := 0
-	accesses := make([]ccurlcommon.UnivalueInterface, total)
 	for i := 0; i < len(this.jobs); i++ {
 		copy(accesses[offset:], this.jobs[i].accesses)
 		offset += len(this.jobs[i].accesses)
 	}
 
+	// Detect conflicts
 	arbitrator := concurrenturl.NewArbitratorSlow()
 	arbitrator.Detect(accesses)
 }

@@ -56,7 +56,7 @@ func TestMultiProcess(t *testing.T) {
 		fmt.Print(err)
 	}
 
-	data := crypto.Keccak256([]byte("callPara()"))[:4]
+	data := crypto.Keccak256([]byte("call()"))[:4]
 	msg = types.NewMessage(eucommon.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
 	_, transitions, receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	if err != nil {

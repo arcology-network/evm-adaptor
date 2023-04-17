@@ -3,8 +3,24 @@ pragma solidity ^0.5.0;
 import "./Multiprocess.sol";
 
 contract MultiprocessTest {
-    function callPara() public  {
-      
+    function call() public  { 
+        Multiprocess mp = new Multiprocess();
+
+        bytes memory byteArray = new bytes(15);
+        for (uint  i = 0; i < byteArray.length; i ++) {
+            byteArray[i] = 0x52;
+        }
+
+       mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
+       mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
+       mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
+       mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
+       mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
+       mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
+       assert(mp.length() == 6);
+    }
+
+    function callBasic() public  {      
         bytes memory byteArray3 = new bytes(5);
         for (uint  i = 0; i < byteArray3.length; i ++) {
             byteArray3[i] = 0x52;
@@ -22,7 +38,36 @@ contract MultiprocessTest {
        addJobTester(abi.encode(address(this), callArg));
 
        (success0, id) =address(address(0x90)).call(abi.encodeWithSignature("addJob(address,bytes)", address(this), callArg));   
+       assert(abi.decode(id, (uint256)) == 0);
        assert(success0);
+
+       (success0, id) =address(address(0x90)).call(abi.encodeWithSignature("addJob(address,bytes)", address(this), callArg));   
+       assert(abi.decode(id, (uint256)) == 1);
+       assert(success0);
+
+        (success0, id) =address(address(0x90)).call(abi.encodeWithSignature("addJob(address,bytes)", address(this), callArg));   
+       assert(abi.decode(id, (uint256)) == 2);
+       assert(success0);
+
+        (success0, id) =address(address(0x90)).call(abi.encodeWithSignature("addJob(address,bytes)", address(this), callArg));   
+       assert(abi.decode(id, (uint256)) == 3);
+       assert(success0);
+
+        (success0, id) =address(address(0x90)).call(abi.encodeWithSignature("addJob(address,bytes)", address(this), callArg));   
+       assert(abi.decode(id, (uint256)) == 4);
+       assert(success0);
+
+        (success0, id) =address(address(0x90)).call(abi.encodeWithSignature("addJob(address,bytes)", address(this), callArg));   
+       assert(abi.decode(id, (uint256)) == 5);
+       assert(success0);
+
+        (success0, id) =address(address(0x90)).call(abi.encodeWithSignature("run()", address(this), callArg));   
+    //    assert(success0);
+
+
+    //     (success0, id) =address(address(0x90)).call(abi.encodeWithSignature("addJob(address,bytes)", address(this), callArg));   
+    //    assert(abi.decode(id, (uint256)) == 6);
+    //    assert(success0);
     }
 
     function localTester (address addr, bytes memory args) public returns(bool, bytes memory)  {
@@ -39,6 +84,25 @@ contract MultiprocessTest {
     }
 
     function jobExample(address addr, bytes memory id1) pure public returns(uint256){
+        uint256 n = 100000;
+       if (n < 2) {
+            return n;
+        }
+        // Check if n is 2 or 3.
+        if (n == 2 || n == 3) {
+            return n;
+        }
+        // Check if n is divisible by 2 or 3.
+        if (n % 2 == 0 || n % 3 == 0) {
+            return 112;
+        }
+        // Check for other divisors up to sqrt(n).
+        for (uint256 i = 5; i*i <= n; i += 6) {
+            if (n % i == 0 || n % (i + 2) == 0) {
+                return 112;
+            }
+        }
+        // return true;
       return 112;
     }
 
