@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/arcology-network/common-lib/codec"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
@@ -39,24 +40,53 @@ func (this *MultiprocessHandler) Call(caller, callee evmcommon.Address, input []
 	case [4]byte{0xa4, 0x62, 0x12, 0x2d}: // a4 62 12 2d
 		return this.addJob(caller, callee, input[4:])
 
+	case [4]byte{0xe0, 0x88, 0x6f, 0x90}:
+		return this.at(input[4:])
+
 	case [4]byte{0xb6, 0xff, 0x8b, 0xd9}:
 		return this.delJob(caller, callee, input[4:])
+
+	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}:
+		return this.length()
 
 	case [4]byte{0xc0, 0x40, 0x62, 0x26}:
 		return this.run(caller, callee, input[4:])
 
-	case [4]byte{0x64, 0x17, 0x43, 0x08}:
-		return this.clear(caller, callee, input[4:])
+	case [4]byte{0xb4, 0x8f, 0xb6, 0xcf}:
+		return this.error(input[4:])
 
-	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}:
-		return this.length()
+	case [4]byte{0x64, 0x17, 0x43, 0x08}:
+		return this.clear()
 	}
 	return this.unknow(caller, callee, input)
 }
 
+func (this *MultiprocessHandler) clear() ([]byte, bool) {
+	buffer := [32]byte{}
+	codec.Uint64(this.jobManager.Clear()).EncodeToBuffer(buffer[len(buffer)-8:])
+	return buffer[:], true
+}
+
 func (this *MultiprocessHandler) length() ([]byte, bool) {
-	if v, err := abi.Encode(uint64(len(this.jobManager.jobs))); err == nil {
+	if v, err := abi.Encode(this.jobManager.Length()); err == nil {
 		return v, true
+	}
+	return []byte{}, false
+}
+
+func (this *MultiprocessHandler) error(input []byte) ([]byte, bool) {
+	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
+		if _, err := this.jobManager.At(idx); err != nil {
+			return codec.String(err.Error()).ToBytes(), err == nil
+		}
+	}
+	return []byte{}, false
+}
+
+func (this *MultiprocessHandler) at(input []byte) ([]byte, bool) {
+	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
+		data, err := this.jobManager.At(idx)
+		return data, err == nil
 	}
 	return []byte{}, false
 }
@@ -69,6 +99,17 @@ func (this *MultiprocessHandler) unknow(caller, callee evmcommon.Address, input 
 func (this *MultiprocessHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	this.jobManager.Start()
 	return []byte{}, true
+}
+
+func (this *MultiprocessHandler) delJob(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err != nil {
+		if _, err := this.jobManager.At(idx); err != nil {
+			return codec.String(err.Error()).ToBytes(), err == nil
+		}
+	}
+
+	id := this.api.GenUUID()
+	return id, true
 }
 
 func (this *MultiprocessHandler) addJob(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
@@ -140,21 +181,4 @@ func (this *MultiprocessHandler) addJob(caller, callee evmcommon.Address, input 
 
 	// v, err := abi.Encode(uint32(99))
 	// return v, err == nil
-}
-
-func (this *MultiprocessHandler) delJob(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-	id := this.api.GenUUID()
-	return id, true
-}
-
-// func (this *MultiprocessHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-// 	// id := this.api.GenUUID()
-// 	// delta, err := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
-// 	return []byte{}, true
-// }
-
-func (this *MultiprocessHandler) clear(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-	// id := this.api.GenUUID()
-	// delta, err := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
-	return []byte{}, true
 }

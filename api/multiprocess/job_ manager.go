@@ -1,11 +1,15 @@
 package multiprocess
 
 import (
+	"errors"
 	"math/big"
 
+	common "github.com/arcology-network/common-lib/common"
 	concurrenturl "github.com/arcology-network/concurrenturl/v2"
 	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	ccurlstorage "github.com/arcology-network/concurrenturl/v2/storage"
 	evmcommon "github.com/arcology-network/evm/common"
+	"github.com/arcology-network/evm/core"
 
 	types "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/core/vm"
@@ -22,10 +26,11 @@ type Job struct {
 	callee      evmcommon.Address
 	message     types.Message
 	receipt     *types.Receipt
-	result      interface{}
+	result      *core.ExecutionResult
 	prechkErr   error
 	accesses    []ccurlcommon.UnivalueInterface
 	transitions []ccurlcommon.UnivalueInterface
+	ccurl       *concurrenturl.ConcurrentUrl
 }
 
 // APIs under the concurrency namespace
@@ -43,6 +48,32 @@ func NewJobManager(apiRouter eucommon.ConcurrentApiRouterInterface) *JobManager 
 		threads:    16, // 16 threads by default
 		arbitrator: concurrenturl.NewArbitratorSlow(),
 	}
+}
+
+func (this *JobManager) Length() uint64 { return uint64(len(this.jobs)) }
+
+func (this *JobManager) At(idx uint64) ([]byte, error) {
+	if idx >= uint64(len(this.jobs)) {
+		return []byte{}, errors.New("Access out of range")
+	}
+
+	if this.jobs[idx].result != nil {
+		return this.jobs[idx].result.ReturnData, this.jobs[idx].result.Err
+	}
+	return []byte{}, this.jobs[idx].prechkErr
+}
+
+func (this *JobManager) Snapshot(current *concurrenturl.ConcurrentUrl) (*concurrenturl.ConcurrentUrl, error) {
+	_, transitions := current.Export(false)
+
+	snapshotUrl := concurrenturl.NewConcurrentUrl(ccurlstorage.NewTransientDB(*(current.Store())))
+	snapshotUrl.Import(transitions)
+	snapshotUrl.PostImport()
+
+	if errs := snapshotUrl.Commit(nil); errs != nil && len(errs) != 0 { // Commit all
+		return nil, errors.New("Error: Failed to import transitions")
+	}
+	return snapshotUrl, nil
 }
 
 func (this *JobManager) Add(calleeAddr evmcommon.Address, funCall []byte) int {
@@ -69,11 +100,17 @@ func (this *JobManager) Add(calleeAddr evmcommon.Address, funCall []byte) int {
 }
 
 func (this *JobManager) Start() {
+	snapshotUrl, err := this.Snapshot(this.apiRouter.Ccurl())
+	if err != nil {
+		return
+	}
+
 	// processor := func(start, end, index int, args ...interface{}) {
 	for i := 0; i < len(this.jobs); i++ {
 		// for i := start; i < end; i++ {
-		statedb := eth.NewImplStateDB(this.apiRouter.Ccurl()) // Eth state DB
-		statedb.Prepare([32]byte{}, [32]byte{}, i)            // tx hash , block hash and tx index
+		this.jobs[i].ccurl = concurrenturl.NewConcurrentUrl(ccurlstorage.NewTransientDB(*snapshotUrl.Store()))
+		statedb := eth.NewImplStateDB(this.jobs[i].ccurl) // Eth state DB
+		statedb.Prepare([32]byte{}, [32]byte{}, i)        // tx hash , block hash and tx index
 
 		eu := cceu.NewEU(
 			params.MainnetChainConfig,
@@ -89,20 +126,21 @@ func (this *JobManager) Start() {
 	// }
 	// common.ParallelWorker(len(this.jobs), this.threads, processor)
 
-	// Copy all the transition to a single array for conflict detection
-	total := 0
-	for i := 0; i < len(this.jobs); i++ {
-		total += len(this.jobs[i].accesses)
-	}
-	accesses := make([]ccurlcommon.UnivalueInterface, total) // Pre-allocation for better performance
-
-	offset := 0
-	for i := 0; i < len(this.jobs); i++ {
-		copy(accesses[offset:], this.jobs[i].accesses)
-		offset += len(this.jobs[i].accesses)
-	}
-
-	// Detect conflicts
+	// Detect potential conflicts
 	arbitrator := concurrenturl.NewArbitratorSlow()
+	accesses := common.ConcateFrom(this.jobs, func(v Job) []ccurlcommon.UnivalueInterface { return v.accesses })
 	arbitrator.Detect(accesses)
+}
+
+// Merge all the transitions
+func (this *JobManager) Commit(getter func(v interface{}) []ccurlcommon.UnivalueInterface) {
+	for i := 0; i < len(this.jobs); i++ {
+		this.apiRouter.Ccurl().Indexer().MergeFrom(this.jobs[i].ccurl.Indexer())
+	}
+}
+
+func (this *JobManager) Clear() uint64 {
+	length := len(this.jobs)
+	this.jobs = this.jobs[:0]
+	return uint64(length)
 }
