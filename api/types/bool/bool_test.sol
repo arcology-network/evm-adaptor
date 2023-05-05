@@ -29,11 +29,11 @@ contract BoolTest {
         require(container.get(2));
         require(!container.get(3));
 
-        // require(!container.pop());
-        // require(container.pop());
-        // require(container.pop());
-        // require(!container.pop());
-        // require(container.length() == 0); 
+        require(!container.pop());
+        require(container.pop());
+        require(container.pop());
+        require(!container.pop());
+        require(container.length() == 0); 
 
     }
 }

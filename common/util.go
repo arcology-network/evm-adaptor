@@ -5,11 +5,9 @@ import (
 	"math/rand"
 
 	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
-	urltype "github.com/arcology-network/concurrenturl/v2/type"
-	"github.com/arcology-network/concurrenturl/v2/type/commutative"
-	"github.com/arcology-network/concurrenturl/v2/type/noncommutative"
+	"github.com/arcology-network/concurrenturl/v2/commutative"
+	urltype "github.com/arcology-network/concurrenturl/v2/univalue"
 	arbitrator "github.com/arcology-network/urlarbitrator-engine/go-wrapper"
-	"github.com/holiman/uint256"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -24,12 +22,12 @@ func RandStringRunes(n int) string {
 
 func FormatValue(value interface{}) string {
 	switch value.(type) {
-	case *commutative.Meta:
-		meta := value.(*commutative.Meta)
+	case *commutative.Path:
+		meta := value.(*commutative.Path)
 		var str string
 		str += "{"
 		for i, k := range meta.Keys() {
-			str += k.(string)
+			str += k
 			if i != len(meta.Keys())-1 {
 				str += ", "
 			}
@@ -56,19 +54,19 @@ func FormatValue(value interface{}) string {
 			str += "}"
 		}
 		return str
-	case *noncommutative.Int64:
-		// uint256.NewInt(0)
-		return fmt.Sprintf(" = %v", (*(value.(*uint256.Int))))
-	case *noncommutative.Bytes:
-		return fmt.Sprintf(" = %v", value.(*noncommutative.Bytes).Data())
-	case *commutative.U256:
-		v := value.(*commutative.U256).Value()
-		d := value.(*commutative.U256).GetDelta()
-		return fmt.Sprintf(" = %v + %v", (*(v.(*uint256.Int))), d.(*uint256.Int).Uint64())
-	case *commutative.Int64:
-		v := value.(*commutative.Int64).Value()
-		d := value.(*commutative.Int64).GetDelta()
-		return fmt.Sprintf(" = %v + %v", v, d)
+		// case *noncommutative.Int64:
+		// 	// uint256.NewInt(0)
+		// 	return fmt.Sprintf(" = %v", (*(value.(*codec.Int64))))
+		// case *noncommutative.Bytes:
+		// 	return fmt.Sprintf(" = %v", value.(*noncommutative.Bytes).Value())
+		// case *commutative.U256:
+		// 	v := value.(*commutative.U256).Value()
+		// 	d := value.(*commutative.U256).Delta()
+		// 	return fmt.Sprintf(" = %v + %v", (*(v.(*codec.Uint256))), d.(*codec.Uint256).Uint64())
+		// case *commutative.Uint64:
+		// 	v := value.(*commutative.Uint64).Value()
+		// 	d := value.(*commutative.Uint64).Delta()
+		// 	return fmt.Sprintf(" = %v + %v", v, d)
 	}
 	return ""
 }
@@ -80,8 +78,8 @@ func FormatTransitions(transitions []urlcommon.UnivalueInterface) string {
 			"Tx=", t.(*urltype.Univalue).GetTx(),
 			" Reads=", t.(*urltype.Univalue).Reads(),
 			" Writes=", t.(*urltype.Univalue).Writes(),
+			" Delta Writes=", t.(*urltype.Univalue).DeltaWrites(),
 			" Preexists=", t.(*urltype.Univalue).Preexist(),
-			" Composite=", t.(*urltype.Univalue).Composite(),
 			" Path=", *(t.(*urltype.Univalue).GetPath()),
 			" Value", FormatValue(t.(*urltype.Univalue).Value())+"\n")
 	}
@@ -101,7 +99,7 @@ func DetectConflict(transitions []urlcommon.UnivalueInterface) ([]uint32, []uint
 		paths[i] = *(t.(*urltype.Univalue).GetPath())
 		reads[i] = t.(*urltype.Univalue).Reads()
 		writes[i] = t.(*urltype.Univalue).Writes()
-		composite[i] = t.(*urltype.Univalue).Composite()
+		composite[i] = t.(*urltype.Univalue).Reads() == 0 && t.(*urltype.Univalue).Writes() == 0 && t.(*urltype.Univalue).DeltaWrites() >= 0
 		uniqueTxsDict[txs[i]] = struct{}{}
 	}
 

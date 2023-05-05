@@ -7,8 +7,7 @@ import (
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/types"
 
-	commutative "github.com/arcology-network/concurrenturl/v2/type/commutative"
-	"github.com/arcology-network/concurrenturl/v2/type/noncommutative"
+	"github.com/arcology-network/concurrenturl/v2/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 
@@ -74,8 +73,8 @@ func (this *BaseHandlers) new(caller evmcommon.Address, input []byte) ([]byte, b
 // Get the number of elements in the container
 func (this *BaseHandlers) length(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path := this.buildPath(caller, input) // BaseHandlers path
-	if meta, err := this.api.Ccurl().Read(this.api.TxIndex(), path); err == nil && meta != nil {
-		if encoded, err := abi.Encode(uint256.NewInt(uint64(meta.(*commutative.Meta).Length()))); err == nil {
+	if path, err := this.api.Ccurl().Read(this.api.TxIndex(), path); err == nil && path != nil {
+		if encoded, err := abi.Encode(uint256.NewInt(uint64(len(path.([]string))))); err == nil {
 			return encoded, true
 		}
 	}
@@ -92,7 +91,7 @@ func (this *BaseHandlers) get(caller evmcommon.Address, input []byte) ([]byte, b
 	if value, err := this.api.Ccurl().ReadAt(this.api.TxIndex(), path, idx); value == nil || err != nil {
 		return []byte{}, false
 	} else {
-		if encoded, err := abi.Encode(value.(*noncommutative.Bytes).Data()); err == nil { // Encode the result
+		if encoded, err := abi.Encode(value.([]byte)); err == nil { // Encode the result
 			offset := [32]byte{}
 			offset[len(offset)-1] = uint8(len(offset))
 			encoded = append(offset[:], encoded...)
@@ -123,7 +122,7 @@ func (this *BaseHandlers) set(caller evmcommon.Address, input []byte) ([]byte, b
 
 // Push a new element into the container
 func (this *BaseHandlers) push(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
-	txHash := codec.Bytes32(this.api.TxHash()).Clone()
+	txHash := codec.Bytes32(this.api.TxHash()).Clone().(codec.Bytes32)
 	codec.Uint64(this.api.SUID()).EncodeToBuffer(txHash[len(txHash)-8:])
 
 	path := this.buildPath(caller, input) // BaseHandlers path
@@ -144,7 +143,7 @@ func (this *BaseHandlers) pop(caller evmcommon.Address, input []byte) ([]byte, b
 		return []byte{}, false
 	} else {
 		if value != nil {
-			encoded, err := abi.Encode([]byte(value.(*noncommutative.Bytes).Data()))
+			encoded, err := abi.Encode(value.([]byte))
 
 			offset := [32]byte{}
 			offset[len(offset)-1] = uint8(len(offset))

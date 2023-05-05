@@ -8,8 +8,8 @@ import (
 	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
 	"github.com/arcology-network/concurrenturl/v2"
 	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	"github.com/arcology-network/concurrenturl/v2/commutative"
 	curstorage "github.com/arcology-network/concurrenturl/v2/storage"
-	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	evmtypes "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/crypto"
@@ -18,8 +18,8 @@ import (
 
 func TestUniswapFunctionTest(t *testing.T) {
 	persistentDB := cachedstorage.NewDataStore()
-	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	persistentDB.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
+	meta := commutative.NewPath()
+	persistentDB.Inject((&concurrenturl.Platform{}).Eth10Account(), meta)
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
@@ -33,7 +33,7 @@ func TestUniswapFunctionTest(t *testing.T) {
 	statedb.AddBalance(user1, new(big.Int).SetUint64(1e18))
 	statedb.CreateAccount(user2)
 	statedb.AddBalance(user2, new(big.Int).SetUint64(1e18))
-	_, transitions := url.Export(true)
+	_, transitions := url.ExportAll()
 
 	// Deploy UniswapV2Factory.
 	eu, config := prepare(db, 10000000, transitions, []uint32{0})

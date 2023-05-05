@@ -6,9 +6,8 @@ import (
 	codec "github.com/arcology-network/common-lib/codec"
 	commonlib "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl/v2"
-	commutative "github.com/arcology-network/concurrenturl/v2/type/commutative"
+	commutative "github.com/arcology-network/concurrenturl/v2/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
-	uint256 "github.com/holiman/uint256"
 )
 
 type EthCCurlConnector struct {
@@ -88,11 +87,11 @@ func createAccount(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, 
 		panic(err)
 	}
 
-	if err := url.Write(tid, getBalancePath(url, account),
-		commutative.NewU256(uint256.NewInt(0), commutative.U256MIN, commutative.U256MAX)); err != nil { // Initialize balance
+	if err := url.Write(tid, getBalancePath(url, account), commutative.NewU256(commutative.U256_MIN, commutative.U256_MAX)); err != nil { // Initialize balance
 		panic(err)
 	}
-	if err := url.Write(tid, getNoncePath(url, account), commutative.NewInt64(0, 0)); err != nil {
+
+	if err := url.Write(tid, getNoncePath(url, account), commutative.NewUint64()); err != nil {
 		panic(err)
 	}
 	// if err := url.Write(tid, getCodePath(url, account), noncommutative.NewBytes(nil)); err != nil {

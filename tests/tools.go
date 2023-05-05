@@ -6,10 +6,10 @@ import (
 	"math/big"
 
 	"github.com/arcology-network/common-lib/cachedstorage"
-	"github.com/arcology-network/concurrenturl/v2"
+	concurrenturl "github.com/arcology-network/concurrenturl/v2"
 	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	"github.com/arcology-network/concurrenturl/v2/commutative"
 	ccurlstorage "github.com/arcology-network/concurrenturl/v2/storage"
-	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 
 	evmtypes "github.com/arcology-network/evm/core/types"
@@ -92,8 +92,7 @@ func MainTestConfig() *cceu.Config {
 
 func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concurrenturl.ConcurrentUrl) {
 	persistentDB := cachedstorage.NewDataStore()
-	meta, _ := commutative.NewMeta(ccurlcommon.NewPlatform().Eth10Account())
-	persistentDB.Inject(ccurlcommon.NewPlatform().Eth10Account(), meta)
+	persistentDB.Inject((&concurrenturl.Platform{}).Eth10Account(), commutative.NewPath())
 	db := ccurlstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
@@ -102,7 +101,7 @@ func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concu
 	statedb.CreateAccount(eucommon.Coinbase)
 	statedb.CreateAccount(eucommon.User1)
 	statedb.AddBalance(eucommon.User1, new(big.Int).SetUint64(1e18))
-	_, transitions := url.Export(true)
+	_, transitions := url.ExportAll()
 	fmt.Println("\n" + eucommon.FormatTransitions(transitions))
 
 	// Deploy.

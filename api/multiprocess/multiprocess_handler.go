@@ -136,49 +136,4 @@ func (this *MultiprocessHandler) addJob(caller, callee evmcommon.Address, input 
 	} else {
 		return buffer, true
 	}
-
-	// msg := types.NewMessage( // Build the message
-	// 	eucommon.User1,
-	// 	&calleeAddr,
-	// 	0,
-	// 	new(big.Int).SetUint64(0), // Amount to transfer
-	// 	1e15,
-	// 	new(big.Int).SetUint64(1),
-	// 	funCall, //need to remove the wrapper first
-	// 	nil,
-	// 	false, // Stop checking nonce
-	// )
-
-	// ccurl := concurrenturl.NewConcurrentUrl(ccurlstorage.NewTransientDB(*(this.api.Ccurl().Store())))
-	// _, transitions := this.api.Ccurl().Export(false)
-	// this.api.Ccurl().Import(transitions)
-	// this.api.Ccurl().PostImport()
-	// if errs := this.api.Ccurl().Commit([]uint32{1}); errs != nil && len(errs) != 0 {
-	// 	return []byte("Error: Failed to import transitions"), false
-	// }
-
-	// // this.api.Ccurl().
-	// // ccurl := this.api.Ccurl()
-	// statedb := eth.NewImplStateDB(ccurl) // Eth state DB
-	// statedb.Prepare([32]byte{}, [32]byte{}, 0)
-
-	// eu := cceu.NewEU(
-	// 	params.MainnetChainConfig,
-	// 	vm.Config{},
-	// 	statedb,
-	// 	this.api.New(common.Hash{}, 0, ccurl), // Call function
-	// )
-
-	// config := cceu.NewConfig()
-	// _, _, receipt, exeResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
-	// if err != nil {
-	// 	return []byte(err.Error()), false
-	// }
-
-	// if exeResult.Err != nil || receipt.Status != 1 {
-	// 	return []byte(exeResult.Err.Error()), false
-	// }
-
-	// v, err := abi.Encode(uint32(99))
-	// return v, err == nil
 }

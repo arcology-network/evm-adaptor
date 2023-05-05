@@ -5,9 +5,10 @@ import (
 
 	uint256 "github.com/holiman/uint256"
 
+	codec "github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/concurrenturl/v2"
-	commutative "github.com/arcology-network/concurrenturl/v2/type/commutative"
-	noncommutative "github.com/arcology-network/concurrenturl/v2/type/noncommutative"
+	commutative "github.com/arcology-network/concurrenturl/v2/commutative"
+	noncommutative "github.com/arcology-network/concurrenturl/v2/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	evmtypes "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/crypto"
@@ -60,8 +61,7 @@ func (state *ImplStateDB) GetBalance(addr evmcommon.Address) *big.Int {
 	if value, err := state.url.Read(state.tid, getBalancePath(state.url, addr)); err != nil {
 		panic(err)
 	} else {
-		v, _, _ := value.(*commutative.U256).Get("", nil)
-		return (*(v.(*commutative.U256).Value().(*uint256.Int))).ToBig() // v.(*commutative.U256).Value().(*big.Int)
+		return (*(value.(*uint256.Int))).ToBig() // v.(*commutative.U256).Value().(*big.Int)
 	}
 }
 
@@ -74,7 +74,8 @@ func (state *ImplStateDB) PeekBalance(addr evmcommon.Address) *big.Int {
 		panic(err)
 	} else {
 		// return value.(*urltype.Univalue).Value().(*commutative.U256).Value().(*big.Int)
-		return value.(*commutative.U256).Value().(*uint256.Int).ToBig()
+		v, _, _ := value.(*commutative.U256).Get()
+		return v.(*uint256.Int).ToBig()
 	}
 }
 
@@ -91,7 +92,8 @@ func (state *ImplStateDB) GetNonce(addr evmcommon.Address) uint64 {
 	if value, err := state.url.Peek(getNoncePath(state.url, addr)); err != nil {
 		panic(err)
 	} else {
-		return uint64(value.(*commutative.Int64).Value().(int64))
+		v, _, _ := value.(*commutative.Uint64).Get()
+		return v.(uint64)
 	}
 }
 
@@ -100,7 +102,7 @@ func (state *ImplStateDB) SetNonce(addr evmcommon.Address, nonce uint64) {
 		createAccount(state.url, addr, state.tid)
 	}
 
-	if err := state.url.Write(state.tid, getNoncePath(state.url, addr), commutative.NewInt64(0, 1)); err != nil {
+	if err := state.url.Write(state.tid, getNoncePath(state.url, addr), commutative.NewUint64Delta(1)); err != nil {
 		panic(err)
 	}
 }
@@ -121,7 +123,7 @@ func (state *ImplStateDB) GetCode(addr evmcommon.Address) []byte {
 	if value, err := state.url.Read(state.tid, getCodePath(state.url, addr)); err != nil {
 		panic(err)
 	} else {
-		return value.(*noncommutative.Bytes).Data()
+		return value.([]byte)
 	}
 }
 
@@ -156,7 +158,8 @@ func (this *ImplStateDB) GetCommittedState(addr evmcommon.Address, key evmcommon
 	if value, _ := this.url.ReadCommitted(this.tid, getStorageKeyPath(this.url, addr, key)); value == nil {
 		return evmcommon.Hash{}
 	} else {
-		return evmcommon.BytesToHash(value.(*noncommutative.Bytes).Data())
+		v, _, _ := value.(*noncommutative.Bytes).Get()
+		return evmcommon.BytesToHash(v.([]byte))
 	}
 }
 
@@ -166,7 +169,7 @@ func (state *ImplStateDB) GetState(addr evmcommon.Address, key evmcommon.Hash) e
 	} else if value == nil {
 		return evmcommon.Hash{}
 	} else {
-		return evmcommon.BytesToHash(value.(*noncommutative.Bytes).Data())
+		return evmcommon.BytesToHash(value.([]byte))
 	}
 }
 
@@ -200,7 +203,8 @@ func (state *ImplStateDB) Empty(addr evmcommon.Address) bool {
 	if value, err := state.url.Peek(getBalancePath(state.url, addr)); err != nil {
 		panic(err)
 	} else {
-		if value.(*commutative.U256).Value().(*big.Int).Cmp(new(big.Int).SetInt64(0)) != 0 {
+		v, _, _ := value.(*commutative.U256).Get()
+		if v.(*uint256.Int).Cmp(commutative.U256_ZERO) != 0 {
 			return false
 		}
 	}
@@ -208,7 +212,8 @@ func (state *ImplStateDB) Empty(addr evmcommon.Address) bool {
 	if value, err := state.url.Peek(getNoncePath(state.url, addr)); err != nil {
 		panic(err)
 	} else {
-		if value.(*commutative.Int64).Value().(int64) != 0 {
+		v, _, _ := value.(*commutative.Uint64).Get()
+		if v.(uint64) != 0 {
 			return false
 		}
 	}
@@ -216,7 +221,7 @@ func (state *ImplStateDB) Empty(addr evmcommon.Address) bool {
 	if value, err := state.url.Peek(getCodePath(state.url, addr)); err != nil {
 		panic(err)
 	} else {
-		return len(value.(*noncommutative.Bytes).Data()) == 0
+		return len(value.(*noncommutative.Bytes).Value().(codec.Bytes)) == 0
 	}
 }
 
@@ -331,7 +336,7 @@ func GetAccountPathSize(url *concurrenturl.ConcurrentUrl) int {
 // 	state := NewImplStateDB(nil, db, url)
 // 	state.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
 // 	state.SetNonce(from, 0)
-// 	return url.Export(true)
+// 	return url.ExportAll()
 // }
 
 // func ExportOnConflictionEx(

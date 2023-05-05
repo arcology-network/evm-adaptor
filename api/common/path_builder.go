@@ -6,7 +6,7 @@ import (
 	ethCommon "github.com/arcology-network/evm/common"
 
 	"github.com/arcology-network/concurrenturl/v2"
-	commutative "github.com/arcology-network/concurrenturl/v2/type/commutative"
+	commutative "github.com/arcology-network/concurrenturl/v2/commutative"
 )
 
 // Ccurl connectors for Arcology APIs
@@ -63,11 +63,10 @@ func (this *CcurlConnector) newContainerRoot(account types.Address, id string, t
 		return false
 	}
 
-	if path, err := commutative.NewMeta(containerRoot); err != nil {
-		return false
-	} else if err := this.ccurl.Write(txIndex, containerRoot, path); err != nil {
+	if err := this.ccurl.Write(txIndex, containerRoot, commutative.NewPath()); err != nil {
 		return false
 	}
+
 	return true
 }
 

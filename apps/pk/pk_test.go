@@ -11,8 +11,8 @@ import (
 	commonlib "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl/v2"
 	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	"github.com/arcology-network/concurrenturl/v2/commutative"
 	curstorage "github.com/arcology-network/concurrenturl/v2/storage"
-	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	arbitrator "github.com/arcology-network/urlarbitrator-engine/go-wrapper"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
@@ -21,12 +21,12 @@ import (
 
 func TestParallelKittiesPerf(t *testing.T) {
 	// persistentDB := urlcommon.NewDataStore()
-	// meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	// persistentDB.Save(urlcommon.NewPlatform().Eth10Account(), meta)
+	// meta:= commutative.NewPath()
+	// persistentDB.Save((&concurrenturl.Platform{}).Eth10Account(), meta)
 	// db := urlcommon.NewTransientDB(persistentDB)
 	db := cachedstorage.NewDataStore()
-	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	db.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
+	meta := commutative.NewPath()
+	db.Inject((&concurrenturl.Platform{}).Eth10Account(), meta)
 
 	url := concurrenturl.NewConcurrentUrl(db)
 	api := adaptor.NewAPI(db, url)
@@ -39,7 +39,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 	statedb.AddBalance(cooAddress, new(big.Int).SetUint64(1e18))
 	statedb.CreateAccount(cfoAddress)
 	statedb.AddBalance(cfoAddress, new(big.Int).SetUint64(1e18))
-	_, transitions := url.Export(true)
+	_, transitions := url.ExportAll()
 
 	// Deploy KittyCore.
 	eu, config := prepare(db, 10000000, transitions, []uint32{0})
@@ -214,8 +214,8 @@ var engine = arbitrator.Start()
 
 func TestParallelKittiesTransfer(t *testing.T) {
 	persistentDB := cachedstorage.NewDataStore()
-	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	persistentDB.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
+	meta := commutative.NewPath()
+	persistentDB.Inject((&concurrenturl.Platform{}).Eth10Account(), meta)
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
@@ -229,7 +229,7 @@ func TestParallelKittiesTransfer(t *testing.T) {
 	statedb.AddBalance(cooAddress, new(big.Int).SetUint64(1e18))
 	statedb.CreateAccount(cfoAddress)
 	statedb.AddBalance(cfoAddress, new(big.Int).SetUint64(1e18))
-	_, transitions := url.Export(true)
+	_, transitions := url.ExportAll()
 
 	// Deploy KittyCore.
 	eu, config := prepare(db, 10000000, transitions, []uint32{0})

@@ -8,8 +8,7 @@ import (
 	"github.com/arcology-network/common-lib/types"
 	"github.com/holiman/uint256"
 
-	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
-	"github.com/arcology-network/concurrenturl/v2/type/commutative"
+	"github.com/arcology-network/concurrenturl/v2/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 
@@ -39,16 +38,16 @@ func (this *u256Cumulative) Call(caller, callee evmcommon.Address, input []byte,
 	copy(signature[:], input)
 
 	switch signature {
-	case [4]byte{0x26, 0x4a, 0x7f, 0x20}:
+	case [4]byte{0x1c, 0x64, 0x49, 0x9c}:
 		return this.New(caller, input[4:])
 
-	case [4]byte{0x1e, 0x81, 0x3e, 0x5d}:
+	case [4]byte{0x6d, 0x4c, 0xe6, 0x3c}:
 		return this.Get(caller, input[4:])
 
-	case [4]byte{0x76, 0x18, 0xc3, 0x17}:
+	case [4]byte{0xaf, 0xc9, 0xfc, 0x46}:
 		return this.Add(caller, input[4:])
 
-	case [4]byte{0x57, 0xf1, 0xa8, 0x7e}:
+	case [4]byte{0xd8, 0x94, 0x8b, 0x09}:
 		return this.Sub(caller, input[4:])
 	}
 	return this.Unknow(caller, input)
@@ -70,18 +69,18 @@ func (this *u256Cumulative) New(caller evmcommon.Address, input []byte) ([]byte,
 
 	key := path + // Root
 		hex.EncodeToString(txHash[:8]) + "-" + // Tx hash to avoid conflict
-		strconv.Itoa(int(ccurlcommon.CommutativeUint256)) + "-" + // value type
+		strconv.Itoa(int(commutative.UINT256)) + "-" + // value type ID
 		strconv.Itoa(int(this.api.SUID())) // Element ID
 
-	val, valErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
-	min, minErr := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
-	max, maxErr := abi.Decode(input, 2, &uint256.Int{}, 1, 32)
+	// val, valErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
+	min, minErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
+	max, maxErr := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
 
-	if valErr != nil || minErr != nil || maxErr != nil {
+	if minErr != nil || maxErr != nil {
 		return []byte{}, false
 	}
 
-	newU256 := commutative.NewU256(val.(*uint256.Int), min.(*uint256.Int), max.(*uint256.Int))
+	newU256 := commutative.NewU256(min.(*uint256.Int), max.(*uint256.Int))
 	if err := this.api.Ccurl().Write(this.api.TxIndex(), key, newU256); err != nil {
 		return []byte{}, false
 	}
@@ -98,7 +97,7 @@ func (this *u256Cumulative) Get(caller evmcommon.Address, input []byte) ([]byte,
 		return []byte{}, false
 	} else {
 
-		updated := value.(*commutative.U256).Value().(*uint256.Int)
+		updated := value.(*uint256.Int)
 		if encoded, err := abi.Encode(updated); err == nil { // Encode the result
 			return encoded, true
 		}

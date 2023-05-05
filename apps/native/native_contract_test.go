@@ -9,9 +9,8 @@ import (
 
 	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
 	"github.com/arcology-network/concurrenturl/v2"
-	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	"github.com/arcology-network/concurrenturl/v2/commutative"
 	curstorage "github.com/arcology-network/concurrenturl/v2/storage"
-	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
@@ -21,8 +20,8 @@ import (
 
 func TestNativeContractSameBlock(t *testing.T) {
 	persistentDB := cachedstorage.NewDataStore()
-	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	persistentDB.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
+	meta := commutative.NewPath()
+	persistentDB.Inject((&concurrenturl.Platform{}).Eth10Account(), meta)
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
@@ -39,7 +38,7 @@ func TestNativeContractSameBlock(t *testing.T) {
 	statedb.CreateAccount(eucommon.Owner)
 	statedb.AddBalance(eucommon.Owner, new(big.Int).SetUint64(1e18))
 
-	_, transitions := url.Export(true)
+	_, transitions := url.ExportAll()
 
 	// ================================== Compile ==================================
 	_, err := exec.Command("python", "./compiler.py").Output() // capture the output of the Python script
@@ -94,8 +93,8 @@ func TestNativeContractSameBlock(t *testing.T) {
 
 func TestNativeContractAcrossBlocks(t *testing.T) {
 	persistentDB := cachedstorage.NewDataStore()
-	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	persistentDB.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
+	meta := commutative.NewPath()
+	persistentDB.Inject((&concurrenturl.Platform{}).Eth10Account(), meta)
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
@@ -112,7 +111,7 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 	statedb.CreateAccount(eucommon.Owner)
 	statedb.AddBalance(eucommon.Owner, new(big.Int).SetUint64(1e18))
 
-	_, transitions := url.Export(true)
+	_, transitions := url.ExportAll()
 
 	// ================================== Compile ==================================
 	currentPath, _ := os.Getwd()

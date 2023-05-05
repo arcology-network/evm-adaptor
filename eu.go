@@ -81,7 +81,7 @@ func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, bloc
 	}
 	receipt.Logs = this.statedb.(*eth.ImplStateDB).GetLogs(txHash)
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
-	accesses, transitions := this.api.Ccurl().Export(false)
+	accesses, transitions := this.api.Ccurl().ExportAll()
 
 	if result.Failed() { // Failed
 		accesses = accesses[:0]

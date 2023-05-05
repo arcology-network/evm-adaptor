@@ -22,6 +22,6 @@ contract U256FixedTest {
         require(container.get(0) == uint256(11));
         require(container.get(1) == uint256(12));
         require(container.get(2) == uint256(13));
-        require(container.get(3) == uint256(14));       
+        require(container.get(3) == uint256(14));    
     }
 }

@@ -6,9 +6,8 @@ import (
 
 	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
 	"github.com/arcology-network/concurrenturl/v2"
-	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	"github.com/arcology-network/concurrenturl/v2/commutative"
 	curstorage "github.com/arcology-network/concurrenturl/v2/storage"
-	"github.com/arcology-network/concurrenturl/v2/type/commutative"
 	"github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/types"
 	ccEu "github.com/arcology-network/vm-adaptor"
@@ -20,8 +19,8 @@ import (
 func TestTransfer(t *testing.T) {
 	config := tests.MainTestConfig()
 	persistentDB := cachedstorage.NewDataStore()
-	meta, _ := commutative.NewMeta(urlcommon.NewPlatform().Eth10Account())
-	persistentDB.Inject(urlcommon.NewPlatform().Eth10Account(), meta)
+	meta := commutative.NewPath()
+	persistentDB.Inject((&concurrenturl.Platform{}).Eth10Account(), meta)
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
@@ -31,7 +30,7 @@ func TestTransfer(t *testing.T) {
 	statedb.CreateAccount(tests.Coinbase)
 	statedb.CreateAccount(tests.User1)
 	statedb.AddBalance(tests.User1, new(big.Int).SetUint64(1e18))
-	_, transitions := url.Export(true)
+	_, transitions := url.ExportAll()
 	t.Log("\n" + tests.FormatTransitions(transitions))
 
 	// Transfer.

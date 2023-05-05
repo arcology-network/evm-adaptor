@@ -7,6 +7,7 @@ import (
 	common "github.com/arcology-network/common-lib/common"
 	concurrenturl "github.com/arcology-network/concurrenturl/v2"
 	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	indexer "github.com/arcology-network/concurrenturl/v2/indexer"
 	ccurlstorage "github.com/arcology-network/concurrenturl/v2/storage"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core"
@@ -38,7 +39,7 @@ type JobManager struct {
 	jobs       []Job
 	threads    int
 	apiRouter  eucommon.ConcurrentApiRouterInterface
-	arbitrator *concurrenturl.ArbitratorSlow
+	arbitrator *indexer.ArbitratorSlow
 }
 
 func NewJobManager(apiRouter eucommon.ConcurrentApiRouterInterface) *JobManager {
@@ -46,7 +47,7 @@ func NewJobManager(apiRouter eucommon.ConcurrentApiRouterInterface) *JobManager 
 		jobs:       []Job{},
 		apiRouter:  apiRouter,
 		threads:    16, // 16 threads by default
-		arbitrator: concurrenturl.NewArbitratorSlow(),
+		arbitrator: indexer.NewArbitratorSlow(),
 	}
 }
 
@@ -64,7 +65,7 @@ func (this *JobManager) At(idx uint64) ([]byte, error) {
 }
 
 func (this *JobManager) Snapshot(current *concurrenturl.ConcurrentUrl) (*concurrenturl.ConcurrentUrl, error) {
-	_, transitions := current.Export(false)
+	_, transitions := current.ExportAll()
 
 	snapshotUrl := concurrenturl.NewConcurrentUrl(ccurlstorage.NewTransientDB(*(current.Store())))
 	snapshotUrl.Import(transitions)
@@ -127,9 +128,12 @@ func (this *JobManager) Start() {
 	// common.ParallelWorker(len(this.jobs), this.threads, processor)
 
 	// Detect potential conflicts
-	arbitrator := concurrenturl.NewArbitratorSlow()
-	accesses := common.ConcateFrom(this.jobs, func(v Job) []ccurlcommon.UnivalueInterface { return v.accesses })
-	arbitrator.Detect(accesses)
+	arbitrator := indexer.NewArbitratorSlow()
+	// accesses := common.ConcateFrom(this.jobs, func(v Job) []ccurlcommon.UnivalueInterface { return v.accesses })
+
+	accesseVec := []ccurlcommon.UnivalueInterface{}
+	common.Foreach(this.jobs, func(job *Job) { accesseVec = append(accesseVec, job.accesses...) })
+	arbitrator.Detect(accesseVec)
 }
 
 // Merge all the transitions
