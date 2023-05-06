@@ -6,9 +6,9 @@ import (
 	uint256 "github.com/holiman/uint256"
 
 	codec "github.com/arcology-network/common-lib/codec"
-	"github.com/arcology-network/concurrenturl/v2"
-	commutative "github.com/arcology-network/concurrenturl/v2/commutative"
-	noncommutative "github.com/arcology-network/concurrenturl/v2/noncommutative"
+	"github.com/arcology-network/concurrenturl"
+	commutative "github.com/arcology-network/concurrenturl/commutative"
+	noncommutative "github.com/arcology-network/concurrenturl/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	evmtypes "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/crypto"

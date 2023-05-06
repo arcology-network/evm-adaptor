@@ -4,7 +4,7 @@ package common
 import (
 	"math/big"
 
-	"github.com/arcology-network/concurrenturl/v2"
+	"github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/evm/common"
 	ethcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/consensus"

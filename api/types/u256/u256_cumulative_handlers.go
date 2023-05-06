@@ -8,7 +8,7 @@ import (
 	"github.com/arcology-network/common-lib/types"
 	"github.com/holiman/uint256"
 
-	"github.com/arcology-network/concurrenturl/v2/commutative"
+	"github.com/arcology-network/concurrenturl/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 

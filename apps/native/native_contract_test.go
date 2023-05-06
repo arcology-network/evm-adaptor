@@ -3,19 +3,19 @@ package native
 import (
 	"math/big"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"testing"
 
 	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
-	"github.com/arcology-network/concurrenturl/v2"
-	"github.com/arcology-network/concurrenturl/v2/commutative"
-	curstorage "github.com/arcology-network/concurrenturl/v2/storage"
+	"github.com/arcology-network/concurrenturl"
+	"github.com/arcology-network/concurrenturl/commutative"
+	curstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
+	"github.com/arcology-network/vm-adaptor/compiler"
 	cceueth "github.com/arcology-network/vm-adaptor/eth"
-	tests "github.com/arcology-network/vm-adaptor/tests"
+	"github.com/arcology-network/vm-adaptor/tests"
 )
 
 func TestNativeContractSameBlock(t *testing.T) {
@@ -38,23 +38,22 @@ func TestNativeContractSameBlock(t *testing.T) {
 	statedb.CreateAccount(eucommon.Owner)
 	statedb.AddBalance(eucommon.Owner, new(big.Int).SetUint64(1e18))
 
-	_, transitions := url.ExportAll()
-
 	// ================================== Compile ==================================
-	_, err := exec.Command("python", "./compiler.py").Output() // capture the output of the Python script
-	if err != nil {
-		panic(err)
-	}
+	currentPath, _ := os.Getwd()
+	project := filepath.Dir(filepath.Dir(currentPath))
+	pyCompiler := project + "/compiler/compiler.py"
+	// targetPath := project + "/api/types/"
 
-	bytecode, err := eucommon.BytecodeReader("./bytecode.txt") // Read the byte code
-	if err != nil {
-		t.Error("Error: ", err)
+	bytecode, err := compiler.CompileContracts(pyCompiler, currentPath+"/NativeStorage.sol", "NativeStorage")
+	if err != nil || len(bytecode) == 0 {
+		t.Error("Error: Failed to generate the byte code")
 	}
 
 	// Compile
 	// ================================ Deploy the contract==================================
+	_, transitions := url.ExportAll()
 	eu, config := tests.Prepare(db, 10000000, transitions, []uint32{0})
-	transitions, receipt, _, err := tests.Deploy(eu, config, eucommon.Owner, 0, bytecode)
+	transitions, receipt, err := tests.Deploy(eu, config, eucommon.Owner, 0, bytecode)
 	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	address := receipt.ContractAddress
@@ -111,19 +110,20 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 	statedb.CreateAccount(eucommon.Owner)
 	statedb.AddBalance(eucommon.Owner, new(big.Int).SetUint64(1e18))
 
-	_, transitions := url.ExportAll()
-
-	// ================================== Compile ==================================
+	// // ================================== Compile ==================================
 	currentPath, _ := os.Getwd()
-	compiler := filepath.Dir(currentPath) + "/compiler.py"
-	code, err := eucommon.CompileContracts(compiler, "./NativeStorage.sol", "NativeStorage")
-	if err != nil || len(code) == 0 {
+	project := filepath.Dir(filepath.Dir(currentPath))
+	pyCompiler := project + "/compiler/compiler.py"
+	// targetPath := project + "/api/types/"
+
+	bytecode, err := compiler.CompileContracts(pyCompiler, currentPath+"/NativeStorage.sol", "NativeStorage")
+	if err != nil || len(bytecode) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}
-
 	// ================================ Deploy the contract==================================
+	_, transitions := url.ExportAll()
 	eu, config := tests.Prepare(db, 10000000, transitions, []uint32{0})
-	transitions, receipt, _, err := tests.Deploy(eu, config, eucommon.Owner, 0, code)
+	transitions, receipt, err := tests.Deploy(eu, config, eucommon.Owner, 0, bytecode)
 	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	address := receipt.ContractAddress
@@ -138,34 +138,33 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	if receipt.Status != 1 || err != nil {
-		t.Error("Error: Failed to call incrementX() 1!!!", err)
+		t.Error("Error: Failed to call incrementX()!!!", err)
 	}
 
 	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{0})
-	encoded, _ := abi.Encode(uint64(3))
-	acc, transitions, receipt, _, err := tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkX(uint256)", encoded)
+	encodedInput, _ := abi.Encode(uint64(3))
+	acc, transitions, receipt, err := tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkX(uint256)", encodedInput)
 	t.Log("\n" + eucommon.FormatTransitions(acc))
 	t.Log(receipt)
 	if receipt.Status != 1 {
-		t.Error("Error: Failed to call checkX() 1!!!", err)
+		t.Error("Error: Failed to call checkX()!!!", err)
 	}
 
 	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{0})
-	encoded, _ = abi.Encode(uint64(102))
-	acc, transitions, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkY(uint256)", encoded)
+	encodedInput, _ = abi.Encode(uint64(102))
+	acc, transitions, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkY(uint256)", encodedInput)
 	t.Log("\n" + eucommon.FormatTransitions(acc))
 	t.Log(receipt)
 	if receipt.Status != 1 {
-		t.Error("Error: Failed to call checkY() 1!!!", err)
+		t.Error("Error: Failed to call checkY()!!!", err)
 	}
 
-	// eu, config = eucommon.Prepare(db, 10000001, transitions, []uint32{0})
-	// encoded, _ = abi.Encode(uint64(2))
-	// acc, transitions, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkX(uint256)", encoded)
-	// t.Log("\n" + eucommon.FormatTransitions(acc))
-	// t.Log(receipt)
-	// if receipt.Status != 1 {
-	// 	t.Error("Error: Failed to call checkX() 1!!!", err)
-	// }
-
+	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{0})
+	encodedInput, _ = abi.Encode(uint64(3))
+	acc, _, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkX(uint256)", encodedInput)
+	t.Log("\n" + eucommon.FormatTransitions(acc))
+	t.Log(receipt)
+	if receipt.Status != 1 || err != nil {
+		t.Error("Error: Failed to call checkX()!!!", err)
+	}
 }

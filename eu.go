@@ -7,7 +7,7 @@ import (
 	"math/big"
 
 	common "github.com/arcology-network/common-lib/common"
-	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
+	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	ethCommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/core/types"

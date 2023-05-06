@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/arcology-network/concurrenturl/v2"
+	"github.com/arcology-network/concurrenturl"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/crypto"
@@ -64,5 +64,35 @@ func TestMultiProcess(t *testing.T) {
 
 	if execResult != nil && execResult.Err != nil {
 		t.Error(execResult.Err)
+	}
+
+	if receipt.Status != 1 || err != nil {
+		t.Error("Error: Failed to call!!!", err)
+	}
+
+	data = crypto.Keccak256([]byte("jobExample()"))[:4]
+	msg = types.NewMessage(
+		eucommon.User1,
+		&contractAddress,
+		1,
+		new(big.Int).SetUint64(0),
+		1e15,
+		new(big.Int).SetUint64(1),
+		data,
+		nil,
+		false,
+	)
+	_, transitions, receipt, execResult, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if execResult != nil && execResult.Err != nil {
+		t.Error(execResult.Err)
+	}
+
+	if receipt.Status != 1 || err != nil {
+		t.Error("Error: Failed to call!!!", err)
 	}
 }

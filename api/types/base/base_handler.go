@@ -7,7 +7,7 @@ import (
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/types"
 
-	"github.com/arcology-network/concurrenturl/v2/noncommutative"
+	"github.com/arcology-network/concurrenturl/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/arcology-network/concurrenturl/v2"
+	"github.com/arcology-network/concurrenturl"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/crypto"

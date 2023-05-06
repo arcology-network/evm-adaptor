@@ -35,15 +35,15 @@ func TestContractString(t *testing.T) {
 		t.Error("Error: Failed to generate the byte code")
 	}
 	// ================================== Deploy the contract ==================================
-	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)      // Build the message
-	_, transitions, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg)) // Execute it
+	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)                    // Build the message
+	_, transitions, receipt, executionResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg)) // Execute it
 	// ---------------
 
 	// t.Log("\n" + FormatTransitions(accesses))
 	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	// t.Log(receipt)
 	// contractAddress := receipt.ContractAddress
-	if receipt.Status != 1 || err != nil {
+	if receipt.Status != 1 || err != nil || executionResult.Err != nil {
 		t.Error("Error: Deployment failed!!!", err)
 	}
 }

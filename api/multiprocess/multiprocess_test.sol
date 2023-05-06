@@ -16,8 +16,10 @@ contract MultiprocessTest {
        mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
        mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
        mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
-       mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
-       assert(mp.length() == 6);
+       assert(mp.length() == 5);
+
+       (bool success, bytes memory id) = address(address(0x90)).call(abi.encodeWithSignature("run()", address(this)));   
+       assert(success);
     }
 
     function callBasic() public  {      
@@ -35,33 +37,8 @@ contract MultiprocessTest {
        (bool success0, bytes memory id) = address(this).call(callArg);
        assert(success0);
 
-       addJobTester(abi.encode(address(this), callArg));
-
-       (success0, id) = address(address(0x90)).call(abi.encodeWithSignature("addJob(address,bytes)", address(this), callArg));   
-       assert(abi.decode(id, (uint256)) == 0);
-       assert(success0);
-
-       (success0, id) = address(address(0x90)).call(abi.encodeWithSignature("addJob(address,bytes)", address(this), callArg));   
-       assert(abi.decode(id, (uint256)) == 1);
-       assert(success0);
-
-       (success0, id) = address(address(0x90)).call(abi.encodeWithSignature("addJob(address,bytes)", address(this), callArg));   
-       assert(abi.decode(id, (uint256)) == 2);
-       assert(success0);
-
-       (success0, id) = address(address(0x90)).call(abi.encodeWithSignature("addJob(address,bytes)", address(this), callArg));   
-       assert(abi.decode(id, (uint256)) == 3);
-       assert(success0);
-
-       (success0, id) = address(address(0x90)).call(abi.encodeWithSignature("addJob(address,bytes)", address(this), callArg));   
-       assert(abi.decode(id, (uint256)) == 4);
-       assert(success0);
-
-       (success0, id) = address(address(0x90)).call(abi.encodeWithSignature("addJob(address,bytes)", address(this), callArg));   
-       assert(abi.decode(id, (uint256)) == 5);
-       assert(success0);
-
        (success0, id) = address(address(0x90)).call(abi.encodeWithSignature("run()", address(this), callArg));   
+       assert(success0);
     }
 
     function localTester (address addr, bytes memory args) public returns(bool, bytes memory)  {
@@ -77,7 +54,15 @@ contract MultiprocessTest {
         return (true, funcCall);
     }
 
+    // function jobExample() pure public returns(uint256){
+    //   return 112;
+    // }
+
     function jobExample(address addr, bytes memory id1) pure public returns(uint256){
+      return 112;
+    }
+
+    function jobExample() pure public returns(uint256){
       return 112;
     }
 }

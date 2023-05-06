@@ -6,10 +6,10 @@ import (
 	"math/big"
 
 	"github.com/arcology-network/common-lib/cachedstorage"
-	concurrenturl "github.com/arcology-network/concurrenturl/v2"
-	ccurlcommon "github.com/arcology-network/concurrenturl/v2/common"
-	"github.com/arcology-network/concurrenturl/v2/commutative"
-	ccurlstorage "github.com/arcology-network/concurrenturl/v2/storage"
+	concurrenturl "github.com/arcology-network/concurrenturl"
+	ccurlcommon "github.com/arcology-network/concurrenturl/common"
+	"github.com/arcology-network/concurrenturl/commutative"
+	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
 
 	evmtypes "github.com/arcology-network/evm/core/types"

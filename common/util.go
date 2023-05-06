@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math/rand"
 
-	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
-	"github.com/arcology-network/concurrenturl/v2/commutative"
-	urltype "github.com/arcology-network/concurrenturl/v2/univalue"
+	urlcommon "github.com/arcology-network/concurrenturl/common"
+	"github.com/arcology-network/concurrenturl/commutative"
+	urltype "github.com/arcology-network/concurrenturl/univalue"
 	arbitrator "github.com/arcology-network/urlarbitrator-engine/go-wrapper"
 )
 

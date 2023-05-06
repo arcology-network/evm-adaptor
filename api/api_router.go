@@ -4,10 +4,10 @@ import (
 	"math/big"
 
 	"github.com/arcology-network/common-lib/codec"
+	common "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/types"
 
-	"github.com/arcology-network/concurrenturl/v2"
-	"github.com/arcology-network/evm/common"
+	"github.com/arcology-network/concurrenturl"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/vm"
 	cceu "github.com/arcology-network/vm-adaptor"
@@ -20,10 +20,10 @@ import (
 
 type API struct {
 	logs         []eucommon.ILog
-	txHash       common.Hash // Tx hash
-	txIndex      uint32      // Tx index in the block
+	txHash       evmcommon.Hash // Tx hash
+	txIndex      uint32         // Tx index in the block
 	dc           *types.DeferCall
-	predecessors []common.Hash
+	predecessors []evmcommon.Hash
 
 	seed   uint64 // for uuid generation
 	serial uint64
@@ -56,7 +56,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	return api
 }
 
-func (this *API) New(txHash common.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl) eucommon.ConcurrentApiRouterInterface {
+func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl) eucommon.ConcurrentApiRouterInterface {
 	api := NewAPI(ccurl)
 	api.txHash = txHash
 	api.txIndex = txIndex
@@ -71,7 +71,7 @@ func (this *API) TxHash() [32]byte                    { return this.txHash }
 func (this *API) TxIndex() uint32                     { return this.txIndex }
 func (this *API) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }
 
-func (this *API) Prepare(txHash common.Hash, height *big.Int, txIndex uint32) {
+func (this *API) Prepare(txHash evmcommon.Hash, height *big.Int, txIndex uint32) {
 	this.txHash = txHash
 	this.txIndex = txIndex
 	this.dc = nil
@@ -104,9 +104,15 @@ func (this *API) ClearLogs() {
 	this.logs = this.logs[:0]
 }
 
-func (this *API) Call(caller, callee common.Address, input []byte, origin common.Address, nonce uint64, blockhash common.Hash) (bool, []byte, bool) {
+func (this *API) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64, blockhash evmcommon.Hash) (bool, []byte, bool) {
 	if handler, ok := this.handlerDict[callee]; ok {
-		result, successful := handler.Call(caller, callee, input, origin, nonce)
+		result, successful := handler.Call(
+			evmcommon.Address(codec.Bytes20(caller).Clone().(codec.Bytes20)),
+			evmcommon.Address(codec.Bytes20(callee).Clone().(codec.Bytes20)),
+			common.Clone(input),
+			origin,
+			nonce,
+		)
 		return true, result, successful
 	}
 	return false, []byte{}, false
@@ -130,7 +136,7 @@ func (this *API) GetDeferCall() *types.DeferCall {
 	return this.dc
 }
 
-func (this *API) SetPredecessors(predecessors []common.Hash) {
+func (this *API) SetPredecessors(predecessors []evmcommon.Hash) {
 	this.predecessors = predecessors
 }
 

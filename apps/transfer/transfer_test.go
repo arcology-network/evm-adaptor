@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
-	"github.com/arcology-network/concurrenturl/v2"
-	"github.com/arcology-network/concurrenturl/v2/commutative"
-	curstorage "github.com/arcology-network/concurrenturl/v2/storage"
+	"github.com/arcology-network/concurrenturl"
+	"github.com/arcology-network/concurrenturl/commutative"
+	curstorage "github.com/arcology-network/concurrenturl/storage"
 	"github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/types"
 	ccEu "github.com/arcology-network/vm-adaptor"

@@ -97,7 +97,7 @@ func (this *MultiprocessHandler) unknow(caller, callee evmcommon.Address, input 
 }
 
 func (this *MultiprocessHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-	this.jobManager.Start()
+	this.jobManager.Run()
 	return []byte{}, true
 }
 

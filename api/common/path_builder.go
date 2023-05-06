@@ -5,8 +5,8 @@ import (
 	"github.com/arcology-network/common-lib/types"
 	ethCommon "github.com/arcology-network/evm/common"
 
-	"github.com/arcology-network/concurrenturl/v2"
-	commutative "github.com/arcology-network/concurrenturl/v2/commutative"
+	"github.com/arcology-network/concurrenturl"
+	commutative "github.com/arcology-network/concurrenturl/commutative"
 )
 
 // Ccurl connectors for Arcology APIs

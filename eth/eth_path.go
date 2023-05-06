@@ -5,8 +5,8 @@ import (
 
 	codec "github.com/arcology-network/common-lib/codec"
 	commonlib "github.com/arcology-network/common-lib/common"
-	"github.com/arcology-network/concurrenturl/v2"
-	commutative "github.com/arcology-network/concurrenturl/v2/commutative"
+	"github.com/arcology-network/concurrenturl"
+	commutative "github.com/arcology-network/concurrenturl/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 )
 

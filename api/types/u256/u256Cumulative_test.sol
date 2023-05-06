@@ -27,15 +27,6 @@ contract CumulativeU256Test {
         require(cumulative.add(99));
         require(cumulative.get() == 99);
         require(cumulative.sub(99));
-        // require(cumulative.get() == 0);
-
-        // cumulative.add(1);
-        // require(cumulative.get() == 1);
-
-        // cumulative.sub(100);
-        // require(cumulative.get() == 100);
-
-        // cumulative.sub(99);
-        // require(cumulative.get() == 1);
+        require(cumulative.get() == 0);
     }
 }

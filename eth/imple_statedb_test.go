@@ -8,9 +8,9 @@ import (
 	"time"
 
 	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
-	concurrenturl "github.com/arcology-network/concurrenturl/v2"
-	urlcommon "github.com/arcology-network/concurrenturl/v2/common"
-	commutative "github.com/arcology-network/concurrenturl/v2/commutative"
+	concurrenturl "github.com/arcology-network/concurrenturl"
+	urlcommon "github.com/arcology-network/concurrenturl/common"
+	commutative "github.com/arcology-network/concurrenturl/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	euCommon "github.com/arcology-network/vm-adaptor/common"
 )
