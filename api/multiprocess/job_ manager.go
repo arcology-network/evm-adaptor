@@ -2,13 +2,16 @@ package multiprocess
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
+	"time"
 
 	common "github.com/arcology-network/common-lib/common"
 	concurrenturl "github.com/arcology-network/concurrenturl"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
+	"github.com/arcology-network/concurrenturl/univalue"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core"
 	types "github.com/arcology-network/evm/core/types"
@@ -35,7 +38,7 @@ type Job struct {
 
 // APIs under the concurrency namespace
 type JobManager struct {
-	jobs       []Job
+	jobs       []*Job
 	threads    int
 	apiRouter  eucommon.ConcurrentApiRouterInterface
 	arbitrator *indexer.ArbitratorSlow
@@ -43,7 +46,7 @@ type JobManager struct {
 
 func NewJobManager(apiRouter eucommon.ConcurrentApiRouterInterface) *JobManager {
 	return &JobManager{
-		jobs:       []Job{},
+		jobs:       []*Job{},
 		apiRouter:  apiRouter,
 		threads:    16, // 16 threads by default
 		arbitrator: indexer.NewArbitratorSlow(),
@@ -63,23 +66,10 @@ func (this *JobManager) At(idx uint64) ([]byte, error) {
 	return []byte{}, this.jobs[idx].prechkErr
 }
 
-func (this *JobManager) Snapshot(current *concurrenturl.ConcurrentUrl) (*concurrenturl.ConcurrentUrl, error) {
-	_, transitions := current.ExportAll()
-
-	snapshotUrl := concurrenturl.NewConcurrentUrl(ccurlstorage.NewTransientDB(*(current.Store())))
-	snapshotUrl.Import(transitions)
-	snapshotUrl.PostImport()
-
-	if errs := snapshotUrl.Commit(nil); len(errs) != 0 { // Commit all
-		return nil, errors.New("Error: Failed to import transitions")
-	}
-	return snapshotUrl, nil
-}
-
 func (this *JobManager) Add(calleeAddr evmcommon.Address, funCall []byte) int {
 	sender := this.apiRouter.From()
 	this.jobs = append(this.jobs,
-		Job{
+		&Job{
 			sender: sender,
 			caller: evmcommon.Address{},
 			callee: calleeAddr,
@@ -99,46 +89,69 @@ func (this *JobManager) Add(calleeAddr evmcommon.Address, funCall []byte) int {
 	return len(this.jobs) - 1
 }
 
-func (this *JobManager) Run() {
-	snapshotUrl, err := this.Snapshot(this.apiRouter.Ccurl())
-	if err != nil {
-		return
-	}
+func (this *JobManager) Snapshot(mainProcessCcurl *concurrenturl.ConcurrentUrl) ccurlcommon.DatastoreInterface {
+	transitions := mainProcessCcurl.Export()                                                              // Get the all up-to-date transitions from the main thread
+	mainProcessTrans := univalue.Univalues(common.Clone(transitions)).To(univalue.TransitionFilters()...) // Filter out unwanted ones
 
-	processor := func(start, end, index int, args ...interface{}) {
-		for i := 0; i < len(this.jobs); i++ {
-			// for i := start; i < end; i++ {
-			this.jobs[i].ccurl = concurrenturl.NewConcurrentUrl(ccurlstorage.NewTransientDB(*snapshotUrl.Store()))
-			statedb := eth.NewImplStateDB(this.jobs[i].ccurl) // Eth state DB
-			statedb.Prepare([32]byte{}, [32]byte{}, i)        // tx hash , block hash and tx index
+	transientDB := ccurlstorage.NewTransientDB(this.apiRouter.Ccurl().WriteCache().Store()) // Should be the same as Importer().Store()
+	snapshot := concurrenturl.NewConcurrentUrl(transientDB).Import(mainProcessTrans).Sort()
+	return snapshot.Commit(nil).Importer().Store() // Commit these changes to the a transient DB
+}
+
+func (this *JobManager) Run() bool {
+	snapshot := this.Snapshot(this.apiRouter.Ccurl())
+	t0 := time.Now()
+	config := cceu.NewConfig()
+	executor := func(start, end, index int, args ...interface{}) {
+		for i := start; i < end; i++ {
+			// for i := 0; i < len(this.jobs); i++ {
+			ccurl := (&concurrenturl.ConcurrentUrl{}).New(
+				indexer.NewWriteCache(snapshot, this.apiRouter.Ccurl().Platform),
+				this.apiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
+
+			this.jobs[i].ccurl = ccurl
+			statedb := eth.NewImplStateDB(ccurl)       // Eth state DB
+			statedb.Prepare([32]byte{}, [32]byte{}, i) // tx hash , block hash and tx index
 
 			eu := cceu.NewEU(
 				params.MainnetChainConfig,
 				vm.Config{},
 				statedb,
-				this.apiRouter.New(evmcommon.Hash{}, 0, this.apiRouter.Ccurl()), // Call the function
+				this.apiRouter.New(evmcommon.Hash{}, 0, ccurl), // Call the function
 			)
 
-			config := cceu.NewConfig()
 			this.jobs[i].accesses, this.jobs[i].transitions, this.jobs[i].receipt, this.jobs[i].result, this.jobs[i].prechkErr =
 				eu.Run(evmcommon.Hash{}, i, &this.jobs[i].message, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(this.jobs[i].message))
 		}
 	}
-	common.ParallelWorker(len(this.jobs), this.threads, processor)
+	common.ParallelWorker(len(this.jobs), 16, executor)
+	fmt.Println("Run: ", time.Since(t0))
 
-	// Detect potential conflicts
-	arbitrator := indexer.NewArbitratorSlow()
-	// accesses := common.ConcateFrom(this.jobs, func(v Job) []ccurlcommon.UnivalueInterface { return v.accesses })
+	// Put all the access records together
+	length := 0
+	common.Foreach(this.jobs, func(job **Job) { length += len((*(*job)).accesses) }) // For pre-allocation
 
-	accesseVec := []ccurlcommon.UnivalueInterface{}
-	common.Foreach(this.jobs, func(job *Job) { accesseVec = append(accesseVec, job.accesses...) })
-	arbitrator.Detect(accesseVec)
+	accesseVec := make([]ccurlcommon.UnivalueInterface, 0, length)
+	common.Foreach(this.jobs, func(job **Job) { accesseVec = append(accesseVec, (*(*job)).accesses...) })
+
+	// Detect potential conflicts}
+	_, conflicTxs := indexer.NewArbitratorSlow().Detect(accesseVec)
+	fmt.Println(conflicTxs)
+
+	// Clear up conflicting txs and their state changes
+	common.SetIndices(&this.jobs, conflicTxs, func(job *Job) *Job { return nil })
+
+	//Merge the transitions back to the main thread
+	t0 = time.Now()
+	this.WriteBack(this.apiRouter.Ccurl().WriteCache(), this.jobs) // Merge back to the main write cache
+	fmt.Println("Commit: ", time.Since(t0))
+	return true
 }
 
-// Merge all the transitions
-func (this *JobManager) Commit(getter func(v interface{}) []ccurlcommon.UnivalueInterface) {
+// Merge all the transitions back to the main cache
+func (this *JobManager) WriteBack(mainCache *indexer.WriteCache, jobs []*Job) {
 	for i := 0; i < len(this.jobs); i++ {
-		this.apiRouter.Ccurl().Indexer().MergeFrom(this.jobs[i].ccurl.Indexer())
+		mainCache.MergeFrom(jobs[i].ccurl.WriteCache())
 	}
 }
 
@@ -147,49 +160,3 @@ func (this *JobManager) Clear() uint64 {
 	this.jobs = this.jobs[:0]
 	return uint64(length)
 }
-
-// func MainTestConfig() *cceu.Config {
-// 	vmConfig := vm.Config{}
-// 	cfg := &cceu.Config{
-// 		ChainConfig: params.MainnetChainConfig,
-// 		VMConfig:    &vmConfig,
-// 		BlockNumber: big.NewInt(0),
-// 		ParentHash:  evmcommon.Hash{},
-// 		Time:        big.NewInt(0),
-// 		Coinbase:    &eucommon.Coinbase,
-// 		GasLimit:    math.MaxUint64, // Should come from the message
-// 		Difficulty:  big.NewInt(0),
-// 	}
-// 	cfg.Chain = new(cceu.DummyChain)
-// 	return cfg
-// }
-
-// func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concurrenturl.ConcurrentUrl) {
-// 	persistentDB := cachedstorage.NewDataStore()
-// 	persistentDB.Inject((&concurrenturl.Platform{}).Eth10Account(), commutative.NewPath())
-// 	db := ccurlstorage.NewTransientDB(persistentDB)
-
-// 	url := concurrenturl.NewConcurrentUrl(db)
-// 	statedb := eth.NewImplStateDB(url)
-// 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
-// 	statedb.CreateAccount(eucommon.Coinbase)
-// 	statedb.CreateAccount(eucommon.User1)
-// 	statedb.AddBalance(eucommon.User1, new(big.Int).SetUint64(1e18))
-// 	_, transitions := url.ExportAll()
-// 	fmt.Println("\n" + eucommon.FormatTransitions(transitions))
-
-// 	// Deploy.
-// 	url = concurrenturl.NewConcurrentUrl(db)
-// 	url.Import(transitions)
-// 	url.PostImport()
-// 	url.Commit([]uint32{0})
-// 	api := ccapi.NewAPI(url)
-// 	statedb = eth.NewImplStateDB(url)
-
-// 	config := MainTestConfig()
-// 	config.Coinbase = &eucommon.Coinbase
-// 	config.BlockNumber = new(big.Int).SetUint64(10000000)
-// 	config.Time = new(big.Int).SetUint64(10000000)
-
-// 	return cceu.NewEU(config.ChainConfig, *config.VMConfig, statedb, api), config, db, url
-// }

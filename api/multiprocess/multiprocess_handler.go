@@ -3,7 +3,6 @@ package multiprocess
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"math"
 
 	"github.com/arcology-network/common-lib/codec"
@@ -33,8 +32,8 @@ func (this *MultiprocessHandler) Call(caller, callee evmcommon.Address, input []
 	signature := [4]byte{}
 	copy(signature[:], input)
 
-	fmt.Println(input)
-	fmt.Println("==============================")
+	// fmt.Println(input)
+	// fmt.Println("==============================")
 
 	switch signature { // bf 22 6c 78
 	case [4]byte{0xa4, 0x62, 0x12, 0x2d}: // a4 62 12 2d
@@ -96,9 +95,8 @@ func (this *MultiprocessHandler) unknow(caller, callee evmcommon.Address, input 
 	return []byte{}, false
 }
 
-func (this *MultiprocessHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-	this.jobManager.Run()
-	return []byte{}, true
+func (this *MultiprocessHandler) run(caller, callee evmcommon.Address, _ []byte) ([]byte, bool) {
+	return []byte{}, this.jobManager.Run()
 }
 
 func (this *MultiprocessHandler) delJob(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
@@ -117,7 +115,7 @@ func (this *MultiprocessHandler) addJob(caller, callee evmcommon.Address, input 
 		return []byte(errors.New("Error: Invalid input").Error()), false
 	}
 
-	fmt.Println(input)
+	// fmt.Println(input)
 	rawAddr, err := abi.DecodeTo(input, 0, [20]byte{}, 1, 32)
 	if err != nil {
 		return []byte(err.Error()), false

@@ -45,12 +45,8 @@ func TestBase(t *testing.T) {
 	// ================================== Call length() ==================================
 	url = concurrenturl.NewConcurrentUrl(db)
 	url.Import(transitions)
-	url.PostImport()
-	errs := url.Commit([]uint32{1})
-	if len(errs) != 0 {
-		t.Error(errs)
-		return
-	}
+	url.Sort()
+	url.Commit([]uint32{1})
 
 	statedb := eth.NewImplStateDB(url)
 	eu = cceu.NewEU(config.ChainConfig, *config.VMConfig, statedb, ccapi.NewAPI(url))

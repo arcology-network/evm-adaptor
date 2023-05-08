@@ -28,7 +28,7 @@ func Prepare(db ccurlcommon.DatastoreInterface, height uint64, transitions []ccu
 	url := concurrenturl.NewConcurrentUrl(db)
 	if transitions != nil && len(transitions) != 0 {
 		url.Import(transitions)
-		url.PostImport()
+		url.Sort()
 		url.Commit(txs)
 	}
 
@@ -107,7 +107,7 @@ func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concu
 	// Deploy.
 	url = concurrenturl.NewConcurrentUrl(db)
 	url.Import(transitions)
-	url.PostImport()
+	url.Sort()
 	url.Commit([]uint32{0})
 	api := ccapi.NewAPI(url)
 	statedb = eth.NewImplStateDB(url)

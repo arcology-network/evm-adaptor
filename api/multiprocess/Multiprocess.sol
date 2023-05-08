@@ -23,9 +23,9 @@ contract Multiprocess {
         return success;
     }
 
-    function run() public returns(bool, bool[] memory) {
+    function run() public returns(bool) {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("run()"));   
-        return (success, abi.decode(data, (bool[])));
+        return success;
     } 
 
     function clear() public returns(bool)  {

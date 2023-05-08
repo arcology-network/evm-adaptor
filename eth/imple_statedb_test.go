@@ -28,7 +28,7 @@ func TestStateDBV2GetNonexistBalance(t *testing.T) {
 	_, transitions := url.ExportAll()
 	fmt.Println("\n" + euCommon.FormatTransitions(transitions))
 	url.Import(transitions)
-	url.PostImport()
+	url.Sort()
 	url.Commit([]uint32{1})
 
 	url = concurrenturl.NewConcurrentUrl(db)
@@ -53,7 +53,7 @@ func TestStateDBV2GetNonexistCode(t *testing.T) {
 	_, transitions := url.ExportAll()
 	fmt.Println("\n" + euCommon.FormatTransitions(transitions))
 	url.Import(transitions)
-	url.PostImport()
+	url.Sort()
 	url.Commit([]uint32{1})
 
 	url = concurrenturl.NewConcurrentUrl(db)
@@ -78,7 +78,7 @@ func TestStateDBV2GetNonexistStorageState(t *testing.T) {
 	_, transitions := url.ExportAll()
 	fmt.Println("\n" + euCommon.FormatTransitions(transitions))
 	url.Import(transitions)
-	url.PostImport()
+	url.Sort()
 	url.Commit([]uint32{1})
 
 	url = concurrenturl.NewConcurrentUrl(db)
@@ -107,7 +107,7 @@ func TestStateDBV2(t *testing.T) {
 	fmt.Println("\n" + euCommon.FormatTransitions(accesses))
 	fmt.Println("\n" + euCommon.FormatTransitions(transitions))
 	url.Import(transitions)
-	url.PostImport()
+	url.Sort()
 	url.Commit([]uint32{1})
 
 	url1 := concurrenturl.NewConcurrentUrl(db)
@@ -135,7 +135,7 @@ func TestStateDBV2(t *testing.T) {
 	fmt.Println(flags)
 
 	url.Import(append(t1, t2...))
-	url.PostImport()
+	url.Sort()
 	url.Commit([]uint32{2, 3})
 	url = concurrenturl.NewConcurrentUrl(db)
 	statedb = NewImplStateDB(url)
@@ -161,7 +161,7 @@ func TestStateDBV2BalanceReadWriteConflict(t *testing.T) {
 
 	_, transitions := url.ExportAll()
 	url.Import(transitions)
-	url.PostImport()
+	url.Sort()
 	url.Commit([]uint32{1}) // Write balance 100 to the storage
 
 	url1 := concurrenturl.NewConcurrentUrl(db)
@@ -222,7 +222,7 @@ func TestStateDBV2NonceWrite(t *testing.T) {
 
 	_, transitions := url.ExportAll()
 	url.Import(transitions)
-	url.PostImport()
+	url.Sort()
 	url.Commit([]uint32{1})
 
 	url1 := concurrenturl.NewConcurrentUrl(db)
@@ -247,7 +247,7 @@ func TestStateDBV2NonceWrite(t *testing.T) {
 	fmt.Println(flags)
 
 	url.Import(append(t1, t2...))
-	url.PostImport()
+	url.Sort()
 	url.Commit([]uint32{2, 3})
 	url = concurrenturl.NewConcurrentUrl(db)
 	statedb = NewImplStateDB(url)
