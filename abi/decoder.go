@@ -3,6 +3,7 @@ package abi
 import (
 	"encoding/binary"
 	"errors"
+	"reflect"
 
 	"github.com/arcology-network/common-lib/common"
 	"github.com/holiman/uint256"
@@ -11,7 +12,9 @@ import (
 func DecodeTo[T any](raw []byte, idx int, typed T, depth uint8, maxLength int) (T, error) {
 	v, err := Decode(raw, idx, typed, depth, maxLength)
 	if err == nil {
-		return v.(T), err
+		if reflect.TypeOf(v) == reflect.TypeOf(typed) {
+			return v.(T), err
+		}
 	}
 	return typed, err
 }

@@ -18,7 +18,7 @@ import (
 )
 
 func TestBase(t *testing.T) {
-	eu, config, db, url := NewTestEU()
+	eu, config, db, url, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()

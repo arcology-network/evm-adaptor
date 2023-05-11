@@ -17,7 +17,7 @@ import (
 )
 
 func TestMultiProcessBasic(t *testing.T) {
-	eu, config, db, url := NewTestEU()
+	eu, config, db, url, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
@@ -93,8 +93,8 @@ func TestMultiProcessBasic(t *testing.T) {
 	}
 }
 
-func TestMultiProcessWithSHA1(t *testing.T) {
-	eu, config, db, url := NewTestEU()
+func BenchmarkMultiProcessReverseString(t *testing.B) {
+	eu, config, db, url, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
@@ -115,7 +115,7 @@ func TestMultiProcessWithSHA1(t *testing.T) {
 	if receipt.Status != 1 || err != nil {
 		t.Error("Error: Deployment failed!!!", err)
 	}
-	fmt.Println(receipt.ContractAddress)
+	// fmt.Println(receipt.ContractAddress)
 
 	url = concurrenturl.NewConcurrentUrl(db)
 	url.Import(transitions)

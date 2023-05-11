@@ -90,7 +90,7 @@ func MainTestConfig() *cceu.Config {
 	return cfg
 }
 
-func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concurrenturl.ConcurrentUrl) {
+func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concurrenturl.ConcurrentUrl, []ccurlcommon.UnivalueInterface) {
 	persistentDB := cachedstorage.NewDataStore()
 	persistentDB.Inject((&concurrenturl.Platform{}).Eth10Account(), commutative.NewPath())
 	db := ccurlstorage.NewTransientDB(persistentDB)
@@ -102,7 +102,7 @@ func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concu
 	statedb.CreateAccount(eucommon.User1)
 	statedb.AddBalance(eucommon.User1, new(big.Int).SetUint64(1e18))
 	_, transitions := url.ExportAll()
-	fmt.Println("\n" + eucommon.FormatTransitions(transitions))
+	// fmt.Println("\n" + eucommon.FormatTransitions(transitions))
 
 	// Deploy.
 	url = concurrenturl.NewConcurrentUrl(db)
@@ -117,7 +117,7 @@ func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concu
 	config.BlockNumber = new(big.Int).SetUint64(10000000)
 	config.Time = new(big.Int).SetUint64(10000000)
 
-	return cceu.NewEU(config.ChainConfig, *config.VMConfig, statedb, api), config, db, url
+	return cceu.NewEU(config.ChainConfig, *config.VMConfig, statedb, api), config, db, url, transitions
 }
 
 // func NewTestEUwithUrl(db ccurlcommon.DatastoreInterface, ccurl *concurrenturl.ConcurrentUrl) (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concurrenturl.ConcurrentUrl) {

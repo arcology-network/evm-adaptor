@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/arcology-network/common-lib/codec"
+	common "github.com/arcology-network/common-lib/common"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
@@ -31,9 +32,6 @@ func (this *MultiprocessHandler) Address() [20]byte {
 func (this *MultiprocessHandler) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
 	signature := [4]byte{}
 	copy(signature[:], input)
-
-	// fmt.Println(input)
-	// fmt.Println("==============================")
 
 	switch signature { // bf 22 6c 78
 	case [4]byte{0xa4, 0x62, 0x12, 0x2d}: // a4 62 12 2d
@@ -95,8 +93,12 @@ func (this *MultiprocessHandler) unknow(caller, callee evmcommon.Address, input 
 	return []byte{}, false
 }
 
-func (this *MultiprocessHandler) run(caller, callee evmcommon.Address, _ []byte) ([]byte, bool) {
-	return []byte{}, this.jobManager.Run()
+func (this *MultiprocessHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+	if threads, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
+		return []byte{}, this.jobManager.Run(uint8(common.Max(common.Min(threads, 1), math.MaxUint8)))
+	}
+
+	return []byte{}, this.jobManager.Run(1)
 }
 
 func (this *MultiprocessHandler) delJob(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {

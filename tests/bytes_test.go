@@ -15,7 +15,7 @@ import (
 )
 
 func TestContractBytes(t *testing.T) {
-	eu, config, _, _ := NewTestEU()
+	eu, config, _, _, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()

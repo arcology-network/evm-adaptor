@@ -98,7 +98,7 @@ func (this *JobManager) Snapshot(mainProcessCcurl *concurrenturl.ConcurrentUrl) 
 	return snapshot.Commit(nil).Importer().Store() // Commit these changes to the a transient DB
 }
 
-func (this *JobManager) Run() bool {
+func (this *JobManager) Run(threads uint8) bool {
 	snapshot := this.Snapshot(this.apiRouter.Ccurl())
 	t0 := time.Now()
 	config := cceu.NewConfig()
@@ -124,27 +124,27 @@ func (this *JobManager) Run() bool {
 				eu.Run(evmcommon.Hash{}, i, &this.jobs[i].message, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(this.jobs[i].message))
 		}
 	}
-	common.ParallelWorker(len(this.jobs), 16, executor)
+	common.ParallelWorker(len(this.jobs), int(threads), executor)
 	fmt.Println("Run: ", time.Since(t0))
 
 	// Put all the access records together
 	length := 0
-	common.Foreach(this.jobs, func(job **Job) { length += len((*(*job)).accesses) }) // For pre-allocation
+	common.Foreach(this.jobs, func(job **Job) { length += len((*(*job)).accesses) }) // Pre-allocation
 
 	accesseVec := make([]ccurlcommon.UnivalueInterface, 0, length)
 	common.Foreach(this.jobs, func(job **Job) { accesseVec = append(accesseVec, (*(*job)).accesses...) })
 
 	// Detect potential conflicts}
 	_, conflicTxs := indexer.NewArbitratorSlow().Detect(accesseVec)
-	fmt.Println(conflicTxs)
 
 	// Clear up conflicting txs and their state changes
 	common.SetIndices(&this.jobs, conflicTxs, func(job *Job) *Job { return nil })
+	common.RemoveIf(&this.jobs, func(job *Job) bool { return job == nil })
 
 	//Merge the transitions back to the main thread
-	t0 = time.Now()
+	// t0 = time.Now()
 	this.WriteBack(this.apiRouter.Ccurl().WriteCache(), this.jobs) // Merge back to the main write cache
-	fmt.Println("Commit: ", time.Since(t0))
+	// fmt.Println("Commit: ", time.Since(t0))
 	return true
 }
 

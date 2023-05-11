@@ -23,8 +23,8 @@ contract Multiprocess {
         return success;
     }
 
-    function run() public returns(bool) {
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("run()"));   
+    function run(uint8 threads) public returns(bool) {
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("run(uint8)"));   
         return success;
     } 
 

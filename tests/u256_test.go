@@ -15,7 +15,7 @@ import (
 )
 
 func TestU256Dynamic(t *testing.T) {
-	eu, config, _, _ := NewTestEU()
+	eu, config, _, _, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
@@ -50,7 +50,7 @@ func TestU256Dynamic(t *testing.T) {
 }
 
 func TestU256Fixed(t *testing.T) {
-	eu, config, _, _ := NewTestEU()
+	eu, config, _, _, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
@@ -84,7 +84,7 @@ func TestU256Fixed(t *testing.T) {
 }
 
 func TestCumulativeU256(t *testing.T) {
-	eu, config, _, _ := NewTestEU()
+	eu, config, _, _, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()

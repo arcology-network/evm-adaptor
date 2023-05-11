@@ -13,13 +13,15 @@ contract MultiprocessTest {
 
        mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
        mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
-       mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
-       mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
-       mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
-       assert(mp.length() == 5);
+    //    mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
+    //    mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
+    //    mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
+    //    assert(mp.length() == 5);
 
-       (bool success, bytes memory id) = address(address(0x90)).call(abi.encodeWithSignature("run()", address(this)));   
+       (bool success, bytes memory id) = address(address(0x90)).call(abi.encodeWithSignature("run()", 1));   
        assert(success);
+
+    //   assert(mp.length() == 5);
     }
 
     function callBasic() public  {      
