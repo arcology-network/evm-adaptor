@@ -13,7 +13,7 @@ func DecodeTo[T any](raw []byte, idx int, typed T, depth uint8, maxLength int) (
 	v, err := Decode(raw, idx, typed, depth, maxLength)
 	if err == nil {
 		if reflect.TypeOf(v) == reflect.TypeOf(typed) {
-			return v.(T), err
+			return v.(T), nil
 		}
 	}
 	return typed, err

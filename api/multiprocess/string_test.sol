@@ -17,7 +17,7 @@ contract String {
        
         Multiprocess mp = new Multiprocess();
         for (int i = 0; i < 1000; i ++) { 
-            mp.addJob(address(this), abi.encodeWithSignature("reverse(bytes)", address(this), message));
+            mp.add(address(this), abi.encodeWithSignature("reverse(bytes)", address(this), message));
         }
         mp.run(16);
     }

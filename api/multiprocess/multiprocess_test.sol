@@ -4,24 +4,26 @@ import "./Multiprocess.sol";
 
 contract MultiprocessTest {
     function call() public  { 
-        Multiprocess mp = new Multiprocess();
+       bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
 
-        bytes memory byteArray = new bytes(15);
-        for (uint  i = 0; i < byteArray.length; i ++) {
-            byteArray[i] = 0x52;
-        }
+       Multiprocess mp = new Multiprocess();
+       mp.add(address(this), abi.encodeWithSignature("hasher(bytes)", data));
+       mp.add(address(this), abi.encodeWithSignature("hasher(bytes)", data));
+       assert(mp.length() == 2);
 
-       mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
-       mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
-    //    mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
-    //    mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
-    //    mp.addJob(address(this), abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray));
-    //    assert(mp.length() == 5);
+       mp.del(0);
+       assert(mp.length() == 1);
 
-       (bool success, bytes memory id) = address(address(0x90)).call(abi.encodeWithSignature("run()", 1));   
+       (bool success,) = address(address(0x90)).call(abi.encodeWithSignature("run()", 1));   
        assert(success);
 
-    //   assert(mp.length() == 5);
+       (,bytes memory hash) = mp.get(0);
+       bytes32 hash32 = bytesToBytes32(hash); 
+       assert(hash32 == keccak256(data));
+
+       assert(mp.length() == 1);
+       mp.clear();
+       assert(mp.length() == 0);
     }
 
     function callBasic() public  {      
@@ -35,11 +37,11 @@ contract MultiprocessTest {
             byteArray[i] = 0x52;
         }
 
-       bytes memory callArg = abi.encodeWithSignature("jobExample(address,bytes)", address(this),byteArray);
-       (bool success0, bytes memory id) = address(this).call(callArg);
+       bytes memory callArg = abi.encodeWithSignature("hasher(address,bytes)", address(this),byteArray);
+       (bool success0,) = address(this).call(callArg);
        assert(success0);
 
-       (success0, id) = address(address(0x90)).call(abi.encodeWithSignature("run()", address(this), callArg));   
+       (success0,) = address(address(0x90)).call(abi.encodeWithSignature("run()", address(this), callArg));   
        assert(success0);
     }
 
@@ -56,15 +58,17 @@ contract MultiprocessTest {
         return (true, funcCall);
     }
 
-    // function jobExample() pure public returns(uint256){
-    //   return 112;
-    // }
-
-    function jobExample(address addr, bytes memory id1) pure public returns(uint256){
-      return 112;
+    function hasher(bytes memory data) pure public returns(bytes32){
+      return keccak256(data);
     }
 
-    function jobExample() pure public returns(uint256){
-      return 112;
+    function hasher() pure public {}
+
+    function bytesToBytes32(bytes memory b) private pure returns (bytes32) {
+        bytes32 out;
+        for (uint i = 0; i < 32; i++) {
+            out |= bytes32(b[i] & 0xFF) >> (i * 8);
+        }
+        return out;
     }
 }

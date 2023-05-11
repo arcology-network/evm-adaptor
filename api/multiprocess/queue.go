@@ -1,7 +1,6 @@
 package multiprocess
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -37,36 +36,32 @@ type Job struct {
 }
 
 // APIs under the concurrency namespace
-type JobManager struct {
+type Queue struct {
 	jobs       []*Job
-	threads    int
 	apiRouter  eucommon.ConcurrentApiRouterInterface
 	arbitrator *indexer.ArbitratorSlow
 }
 
-func NewJobManager(apiRouter eucommon.ConcurrentApiRouterInterface) *JobManager {
-	return &JobManager{
+func NewJobQueue(apiRouter eucommon.ConcurrentApiRouterInterface) *Queue {
+	return &Queue{
 		jobs:       []*Job{},
 		apiRouter:  apiRouter,
-		threads:    16, // 16 threads by default
 		arbitrator: indexer.NewArbitratorSlow(),
 	}
 }
 
-func (this *JobManager) Length() uint64 { return uint64(len(this.jobs)) }
+func (this *Queue) Length() uint64 { return uint64(len(this.jobs)) }
 
-func (this *JobManager) At(idx uint64) ([]byte, error) {
-	if idx >= uint64(len(this.jobs)) {
-		return []byte{}, errors.New("Access out of range")
-	}
-
-	if this.jobs[idx].result != nil {
-		return this.jobs[idx].result.ReturnData, this.jobs[idx].result.Err
-	}
-	return []byte{}, this.jobs[idx].prechkErr
+func (this *Queue) At(idx uint64) *Job {
+	return common.IfThenDo1st(idx < uint64(len(this.jobs)), func() *Job { return this.jobs[idx] }, nil)
 }
 
-func (this *JobManager) Add(calleeAddr evmcommon.Address, funCall []byte) int {
+func (this *Queue) Del(idx uint64) {
+	common.IfThenDo(idx < uint64(len(this.jobs)), func() { this.jobs[idx] = nil }, func() {})
+	common.RemoveIf(&this.jobs, func(job *Job) bool { return job == nil })
+}
+
+func (this *Queue) Add(calleeAddr evmcommon.Address, funCall []byte) int {
 	sender := this.apiRouter.From()
 	this.jobs = append(this.jobs,
 		&Job{
@@ -89,7 +84,7 @@ func (this *JobManager) Add(calleeAddr evmcommon.Address, funCall []byte) int {
 	return len(this.jobs) - 1
 }
 
-func (this *JobManager) Snapshot(mainProcessCcurl *concurrenturl.ConcurrentUrl) ccurlcommon.DatastoreInterface {
+func (this *Queue) Snapshot(mainProcessCcurl *concurrenturl.ConcurrentUrl) ccurlcommon.DatastoreInterface {
 	transitions := mainProcessCcurl.Export()                                                              // Get the all up-to-date transitions from the main thread
 	mainProcessTrans := univalue.Univalues(common.Clone(transitions)).To(univalue.TransitionFilters()...) // Filter out unwanted ones
 
@@ -98,7 +93,7 @@ func (this *JobManager) Snapshot(mainProcessCcurl *concurrenturl.ConcurrentUrl) 
 	return snapshot.Commit(nil).Importer().Store() // Commit these changes to the a transient DB
 }
 
-func (this *JobManager) Run(threads uint8) bool {
+func (this *Queue) Run(threads uint8) bool {
 	snapshot := this.Snapshot(this.apiRouter.Ccurl())
 	t0 := time.Now()
 	config := cceu.NewConfig()
@@ -138,24 +133,23 @@ func (this *JobManager) Run(threads uint8) bool {
 	_, conflicTxs := indexer.NewArbitratorSlow().Detect(accesseVec)
 
 	// Clear up conflicting txs and their state changes
-	common.SetIndices(&this.jobs, conflicTxs, func(job *Job) *Job { return nil })
-	common.RemoveIf(&this.jobs, func(job *Job) bool { return job == nil })
+	jobs := common.SetIndices(common.Clone(this.jobs), conflicTxs, func(job *Job) *Job { return nil })
+	common.RemoveIf(&jobs, func(job *Job) bool { return job == nil }) // Should not remove the jobs directly
 
-	//Merge the transitions back to the main thread
 	// t0 = time.Now()
-	this.WriteBack(this.apiRouter.Ccurl().WriteCache(), this.jobs) // Merge back to the main write cache
+	this.WriteBack(this.apiRouter.Ccurl().WriteCache(), jobs) // Merge back to the main write cache
 	// fmt.Println("Commit: ", time.Since(t0))
 	return true
 }
 
 // Merge all the transitions back to the main cache
-func (this *JobManager) WriteBack(mainCache *indexer.WriteCache, jobs []*Job) {
-	for i := 0; i < len(this.jobs); i++ {
+func (this *Queue) WriteBack(mainCache *indexer.WriteCache, jobs []*Job) {
+	for i := 0; i < len(jobs); i++ {
 		mainCache.MergeFrom(jobs[i].ccurl.WriteCache())
 	}
 }
 
-func (this *JobManager) Clear() uint64 {
+func (this *Queue) Clear() uint64 {
 	length := len(this.jobs)
 	this.jobs = this.jobs[:0]
 	return uint64(length)

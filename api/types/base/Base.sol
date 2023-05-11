@@ -29,7 +29,7 @@ contract Base {
     }
 
     function push(bytes memory encoded) public { //9e c6 69 25
-        (bool success, bytes memory data) = address(API).call(encoded);
+        (bool success,) = address(API).call(encoded);
         require(success);
     }   
 
@@ -40,7 +40,7 @@ contract Base {
     }
 
     function set(bytes memory encoded) public { // 7a fa 62 38
-        (bool success, bytes memory data) = address(API).call(encoded);
+        (bool success,) = address(API).call(encoded);
         require(success);
     }
     

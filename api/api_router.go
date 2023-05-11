@@ -44,7 +44,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	handlers := []apicommon.ConcurrentApiHandlerInterface{
 		base.NewBaseHandlers(api),
 		u256.NewU256CumulativeHandler(api),
-		mp.NewParallelHandler(api),
+		mp.NewMultiprocessHandler(api),
 	}
 
 	for i, v := range handlers {

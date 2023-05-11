@@ -66,7 +66,7 @@ func TestMultiProcessBasic(t *testing.T) {
 		t.Error("Error: Failed to call!!!", err)
 	}
 
-	data = crypto.Keccak256([]byte("jobExample()"))[:4]
+	data = crypto.Keccak256([]byte("hasher()"))[:4]
 	msg = types.NewMessage(
 		eucommon.User1,
 		&contractAddress,
