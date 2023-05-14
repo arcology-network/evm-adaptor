@@ -13,23 +13,23 @@ import (
 )
 
 // APIs under the concurrency namespace
-type MultiprocessHandler struct {
+type TheadingHandler struct {
 	api      eucommon.ConcurrentApiRouterInterface
 	jobQueue *Queue
 }
 
-func NewMultiprocessHandler(apiRounter eucommon.ConcurrentApiRouterInterface) *MultiprocessHandler {
-	return &MultiprocessHandler{
+func NewMultiprocessHandler(apiRounter eucommon.ConcurrentApiRouterInterface) *TheadingHandler {
+	return &TheadingHandler{
 		api:      apiRounter,
 		jobQueue: NewJobQueue(apiRounter),
 	}
 }
 
-func (this *MultiprocessHandler) Address() [20]byte {
+func (this *TheadingHandler) Address() [20]byte {
 	return [20]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x90}
 }
 
-func (this *MultiprocessHandler) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
+func (this *TheadingHandler) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
@@ -59,7 +59,7 @@ func (this *MultiprocessHandler) Call(caller, callee evmcommon.Address, input []
 	return this.unknow(caller, callee, input)
 }
 
-func (this *MultiprocessHandler) add(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *TheadingHandler) add(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	if len(input) < 4 {
 		return []byte(errors.New("Error: Invalid input").Error()), false
 	}
@@ -85,19 +85,19 @@ func (this *MultiprocessHandler) add(caller, callee evmcommon.Address, input []b
 	}
 }
 
-func (this *MultiprocessHandler) clear() ([]byte, bool) {
+func (this *TheadingHandler) clear() ([]byte, bool) {
 	buffer, err := abi.Encode(codec.Uint64(this.jobQueue.Clear()))
 	return buffer, err == nil
 }
 
-func (this *MultiprocessHandler) length() ([]byte, bool) {
+func (this *TheadingHandler) length() ([]byte, bool) {
 	if v, err := abi.Encode(this.jobQueue.Length()); err == nil {
 		return v, true
 	}
 	return []byte{}, false
 }
 
-func (this *MultiprocessHandler) error(input []byte) ([]byte, bool) {
+func (this *TheadingHandler) error(input []byte) ([]byte, bool) {
 	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
 		if item := this.jobQueue.At(idx); item != nil {
 			buffer, err := abi.Encode(codec.String(item.prechkErr.Error() + item.prechkErr.Error()).Clone().(codec.String).ToBytes())
@@ -107,7 +107,7 @@ func (this *MultiprocessHandler) error(input []byte) ([]byte, bool) {
 	return []byte{}, false
 }
 
-func (this *MultiprocessHandler) peek(input []byte) ([]byte, bool) {
+func (this *TheadingHandler) peek(input []byte) ([]byte, bool) {
 	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
 		if item := this.jobQueue.At(idx); item != nil {
 			return item.message.Data(), true
@@ -116,7 +116,7 @@ func (this *MultiprocessHandler) peek(input []byte) ([]byte, bool) {
 	return []byte{}, false
 }
 
-func (this *MultiprocessHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *TheadingHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	if threads, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
 		return []byte{}, this.jobQueue.Run(uint8(common.Min(common.Max(threads, 1), math.MaxUint8)))
 	}
@@ -124,7 +124,7 @@ func (this *MultiprocessHandler) run(caller, callee evmcommon.Address, input []b
 	return []byte{}, this.jobQueue.Run(1)
 }
 
-func (this *MultiprocessHandler) del(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *TheadingHandler) del(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	if idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {
 		this.jobQueue.Del(idx)
 		return []byte{}, true
@@ -132,7 +132,7 @@ func (this *MultiprocessHandler) del(caller, callee evmcommon.Address, input []b
 	return []byte{}, false
 }
 
-func (this *MultiprocessHandler) get(input []byte) ([]byte, bool) {
+func (this *TheadingHandler) get(input []byte) ([]byte, bool) {
 	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
 		if item := this.jobQueue.At(idx); item != nil {
 			return item.result.ReturnData, item.result.Err == nil
@@ -141,7 +141,7 @@ func (this *MultiprocessHandler) get(input []byte) ([]byte, bool) {
 	return []byte{}, false
 }
 
-func (this *MultiprocessHandler) unknow(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *TheadingHandler) unknow(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	this.api.AddLog("Unhandled function call in cumulative handler router", hex.EncodeToString(input))
 	return []byte{}, false
 }
