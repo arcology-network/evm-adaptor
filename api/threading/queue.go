@@ -77,7 +77,7 @@ func (this *Queue) Add(calleeAddr evmcommon.Address, funCall []byte) int {
 				new(big.Int).SetUint64(1),
 				funCall, //Need to a deepcopy
 				nil,
-				false, // Stop checking nonce
+				false, // Don't checking nonce
 			),
 		},
 	)
@@ -90,13 +90,13 @@ func (this *Queue) Snapshot(mainProcessCcurl *concurrenturl.ConcurrentUrl) ccurl
 
 	transientDB := ccurlstorage.NewTransientDB(this.apiRouter.Ccurl().WriteCache().Store()) // Should be the same as Importer().Store()
 	snapshot := concurrenturl.NewConcurrentUrl(transientDB).Import(mainProcessTrans).Sort()
-	return snapshot.Commit(nil).Importer().Store() // Commit these changes to the a transient DB
+	return snapshot.Commit([]uint32{this.apiRouter.TxIndex()}).Importer().Store() // Commit these changes to the a transient DB
 }
 
 func (this *Queue) Run(threads uint8) bool {
 	snapshot := this.Snapshot(this.apiRouter.Ccurl())
 	t0 := time.Now()
-	config := cceu.NewConfig()
+	config := cceu.NewConfig().SetCoinbase(this.apiRouter.Coinbase()) // Share the same coinbase as the main thread
 	executor := func(start, end, index int, args ...interface{}) {
 		for i := start; i < end; i++ {
 			// for i := 0; i < len(this.jobs); i++ {
@@ -116,7 +116,7 @@ func (this *Queue) Run(threads uint8) bool {
 			)
 
 			this.jobs[i].accesses, this.jobs[i].transitions, this.jobs[i].receipt, this.jobs[i].result, this.jobs[i].prechkErr =
-				eu.Run(evmcommon.Hash{}, i, &this.jobs[i].message, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(this.jobs[i].message))
+				eu.Run(this.apiRouter.TxHash(), i, &this.jobs[i].message, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(this.jobs[i].message))
 		}
 	}
 	common.ParallelWorker(len(this.jobs), int(threads), executor)
@@ -145,7 +145,7 @@ func (this *Queue) Run(threads uint8) bool {
 // Merge all the transitions back to the main cache
 func (this *Queue) WriteBack(mainCache *indexer.WriteCache, jobs []*Job) {
 	for i := 0; i < len(jobs); i++ {
-		mainCache.MergeFrom(jobs[i].ccurl.WriteCache())
+		mainCache.MergeFrom(jobs[i].ccurl.WriteCache(), this.apiRouter.TxIndex())
 	}
 }
 

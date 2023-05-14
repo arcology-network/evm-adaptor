@@ -16,7 +16,7 @@ import (
 	compiler "github.com/arcology-network/vm-adaptor/compiler"
 )
 
-func TestMultiProcessBasic(t *testing.T) {
+func TestThreadingBasic(t *testing.T) {
 	eu, config, db, url, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
@@ -24,7 +24,7 @@ func TestMultiProcessBasic(t *testing.T) {
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
 
-	code, err := compiler.CompileContracts(pyCompiler, project+"/api/multiprocess/multiprocess_test.sol", "MultiprocessTest")
+	code, err := compiler.CompileContracts(pyCompiler, project+"/api/threading/threading_test.sol", "ThreadingTest")
 
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")

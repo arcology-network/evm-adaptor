@@ -1,12 +1,12 @@
 pragma solidity ^0.5.0;
 
-import "./Multiprocess.sol";
+import "./Threading.sol";
 
-contract MultiprocessTest {
+contract ThreadingTest {
     function call() public  { 
        bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
 
-       Multiprocess mp = new Multiprocess();
+       Threading mp = new Threading();
        mp.add(address(this), abi.encodeWithSignature("hasher(bytes)", data));
        mp.add(address(this), abi.encodeWithSignature("hasher(bytes)", data));
        assert(mp.length() == 2);

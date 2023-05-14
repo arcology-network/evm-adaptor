@@ -33,6 +33,11 @@ type Config struct {
 	Difficulty  *big.Int // types.Header.Difficulty
 }
 
+func (this *Config) SetCoinbase(coinbase evmcommon.Address) *Config {
+	this.Coinbase = &coinbase
+	return this
+}
+
 func NewConfig() *Config {
 	cfg := &Config{
 		ChainConfig: params.MainnetChainConfig,

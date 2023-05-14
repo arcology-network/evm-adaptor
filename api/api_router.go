@@ -12,7 +12,7 @@ import (
 	"github.com/arcology-network/evm/core/vm"
 	cceu "github.com/arcology-network/vm-adaptor"
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
-	mp "github.com/arcology-network/vm-adaptor/api/multiprocess"
+	mp "github.com/arcology-network/vm-adaptor/api/threading"
 	base "github.com/arcology-network/vm-adaptor/api/types/base"
 	u256 "github.com/arcology-network/vm-adaptor/api/types/u256"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
@@ -64,6 +64,7 @@ func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl
 	return api
 }
 
+func (this *API) Coinbase() evmcommon.Address         { return this.eu.VM().Context.Coinbase }
 func (this *API) From() evmcommon.Address             { return this.eu.VM().TxContext.Origin }
 func (this *API) VM() *vm.EVM                         { return this.eu.VM() }
 func (this *API) SetEU(eu interface{})                { this.eu = eu.(*cceu.EU) }

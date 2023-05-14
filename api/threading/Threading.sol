@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-contract Multiprocess {
+contract Threading {
     address constant private API = address(0x90); 
 
     // Append a new task to the queue, the execution only starts when run() is called
@@ -23,7 +23,7 @@ contract Multiprocess {
 
     // Start processing all the parallel jobs in the queue by specifing the number of threads, the number is between [1, 255]
     function run(uint8 threads) public returns(bool) {
-        (bool success,) = address(API).call(abi.encodeWithSignature("run(uint8)"));   
+        (bool success,) = address(API).call(abi.encodeWithSignature("run(uint8)", threads));   
         return success;
     } 
     

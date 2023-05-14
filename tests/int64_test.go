@@ -23,11 +23,11 @@ func TestContractInt(t *testing.T) {
 	targetPath := project + "/api/types/"
 	baseFile := targetPath + "base/Base.sol"
 
-	if err := common.CopyFile(baseFile, targetPath+"int/Base.sol"); err != nil {
+	if err := common.CopyFile(baseFile, targetPath+"int64/Base.sol"); err != nil {
 		t.Error(err)
 	}
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"int/int_test.sol", "IntTest")
+	code, err := compiler.CompileContracts(pyCompiler, targetPath+"int64/int64_test.sol", "Int64Test")
 	os.Remove(targetPath + "/int/Base.sol")
 
 	if err != nil || len(code) == 0 {

@@ -29,6 +29,7 @@ type ConcurrentApiRouterInterface interface {
 	SUID() uint64
 
 	New(common.Hash, uint32, *concurrenturl.ConcurrentUrl) ConcurrentApiRouterInterface
+	Coinbase() ethcommon.Address
 }
 
 type ILog interface {

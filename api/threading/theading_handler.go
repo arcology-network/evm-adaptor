@@ -118,7 +118,7 @@ func (this *MultiprocessHandler) peek(input []byte) ([]byte, bool) {
 
 func (this *MultiprocessHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	if threads, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
-		return []byte{}, this.jobQueue.Run(uint8(common.Max(common.Min(threads, 1), math.MaxUint8)))
+		return []byte{}, this.jobQueue.Run(uint8(common.Min(common.Max(threads, 1), math.MaxUint8)))
 	}
 
 	return []byte{}, this.jobQueue.Run(1)
