@@ -25,7 +25,7 @@ type BaseHandlers struct {
 func NewBaseHandlers(api eucommon.ConcurrentApiRouterInterface) *BaseHandlers {
 	return &BaseHandlers{
 		api:       api,
-		connector: apicommon.NewCCurlConnector("/containers/", api.TxHash(), api.TxIndex(), api.Ccurl()),
+		connector: apicommon.NewCCurlConnector("/containers/", api, api.Ccurl()),
 	}
 }
 
@@ -66,8 +66,8 @@ func (this *BaseHandlers) unknow(caller evmcommon.Address, input []byte) ([]byte
 }
 
 func (this *BaseHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	id := this.api.GenUUID()                                                                                // Generate a uuid for the container
-	return id[:], this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id), 0) // Create a new container
+	id := this.api.GenUUID()                                                                             // Generate a uuid for the container
+	return id[:], this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) // Create a new container
 }
 
 // Get the number of elements in the container

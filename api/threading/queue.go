@@ -95,6 +95,9 @@ func (this *Queue) Snapshot(mainProcessCcurl *concurrenturl.ConcurrentUrl) ccurl
 
 func (this *Queue) Run(threads uint8) bool {
 	snapshot := this.Snapshot(this.apiRouter.Ccurl())
+	_, _1 := this.apiRouter.Ccurl().ExportAll()
+	univalue.Univalues(_1).Print()
+
 	t0 := time.Now()
 	config := cceu.NewConfig().SetCoinbase(this.apiRouter.Coinbase()) // Share the same coinbase as the main thread
 	executor := func(start, end, index int, args ...interface{}) {
@@ -104,6 +107,7 @@ func (this *Queue) Run(threads uint8) bool {
 				indexer.NewWriteCache(snapshot, this.apiRouter.Ccurl().Platform),
 				this.apiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
 
+			ccurl = this.apiRouter.Ccurl()
 			this.jobs[i].ccurl = ccurl
 			statedb := eth.NewImplStateDB(ccurl)       // Eth state DB
 			statedb.Prepare([32]byte{}, [32]byte{}, i) // tx hash , block hash and tx index
@@ -112,7 +116,7 @@ func (this *Queue) Run(threads uint8) bool {
 				params.MainnetChainConfig,
 				vm.Config{},
 				statedb,
-				this.apiRouter.New(evmcommon.Hash{}, 0, ccurl), // Call the function
+				this.apiRouter.New(evmcommon.Hash{}, uint32(i), ccurl), // Tx hash, tx id and url
 			)
 
 			this.jobs[i].accesses, this.jobs[i].transitions, this.jobs[i].receipt, this.jobs[i].result, this.jobs[i].prechkErr =

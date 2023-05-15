@@ -3,7 +3,7 @@ package common
 import (
 	commonlib "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/types"
-	ethCommon "github.com/arcology-network/evm/common"
+	"github.com/arcology-network/vm-adaptor/common"
 
 	"github.com/arcology-network/concurrenturl"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
@@ -11,37 +11,28 @@ import (
 
 // Ccurl connectors for Arcology APIs
 type CcurlConnector struct {
-	txHash  ethCommon.Hash
-	txIndex uint32
-	ccurl   *concurrenturl.ConcurrentUrl
-	subDir  string
+	Api    common.ConcurrentApiRouterInterface
+	ccurl  *concurrenturl.ConcurrentUrl
+	subDir string
 }
 
-func NewCCurlConnector(subDir string, txHash ethCommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
+func NewCCurlConnector(subDir string, api common.ConcurrentApiRouterInterface, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
 	return &CcurlConnector{
-		subDir:  subDir,
-		txHash:  txHash,
-		txIndex: txIndex,
-		ccurl:   ccurl,
+		subDir: subDir,
+		Api:    api,
+		ccurl:  ccurl,
 	}
 }
 
-func (this *CcurlConnector) TxHash() ethCommon.Hash              { return this.txHash }
-func (this *CcurlConnector) TxIndex() uint32                     { return this.txIndex }
-func (this *CcurlConnector) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }
+func (this *CcurlConnector) SetApi(api common.ConcurrentApiRouterInterface) { this.Api = api }
 
 // Make Arcology paths under the current account
-func (this *CcurlConnector) New(account types.Address, containerId string, keyType int) bool {
-	if !this.newStorageRoot(account, this.txIndex) { // Create the root path if has been created yet.
+func (this *CcurlConnector) New(account types.Address, containerId string) bool {
+	if !this.newStorageRoot(account, this.Api.TxIndex()) { // Create the root path if has been created yet.
 		return false
 	}
 
-	// Create the container path if has been created yet.
-	if !this.newContainerRoot(account, containerId[:], this.txIndex) {
-		return false
-	}
-
-	return true
+	return this.newContainerRoot(account, containerId[:], this.Api.TxIndex()) //
 }
 
 func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32) bool {
@@ -63,11 +54,7 @@ func (this *CcurlConnector) newContainerRoot(account types.Address, id string, t
 		return false
 	}
 
-	if err := this.ccurl.Write(txIndex, containerRoot, commutative.NewPath()); err != nil {
-		return false
-	}
-
-	return true
+	return this.ccurl.Write(txIndex, containerRoot, commutative.NewPath()) == nil
 }
 
 func (this *CcurlConnector) Key(account types.Address, id string) string { // container ID

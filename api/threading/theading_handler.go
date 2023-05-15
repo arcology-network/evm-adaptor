@@ -43,7 +43,7 @@ func (this *TheadingHandler) Call(caller, callee evmcommon.Address, input []byte
 	case [4]byte{0x1c, 0x82, 0xed, 0x4c}: // 1c 82 ed 4c
 		return this.del(caller, callee, input[4:])
 
-	case [4]byte{0xc0, 0x40, 0x62, 0x26}:
+	case [4]byte{0xc4, 0xe5, 0x55, 0x7a}: // c4 e5 55 7a
 		return this.run(caller, callee, input[4:])
 
 	case [4]byte{0x64, 0xf1, 0xbd, 0x63}:

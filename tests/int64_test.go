@@ -1,15 +1,19 @@
 package tests
 
 import (
+	"fmt"
 	"math/big"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/arcology-network/common-lib/common"
+	"github.com/arcology-network/concurrenturl/univalue"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/types"
+	"github.com/arcology-network/evm/crypto"
 	ccEu "github.com/arcology-network/vm-adaptor"
+	cceu "github.com/arcology-network/vm-adaptor"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	compiler "github.com/arcology-network/vm-adaptor/compiler"
 )
@@ -45,32 +49,43 @@ func TestContractInt(t *testing.T) {
 	if receipt.Status != 1 || err != nil {
 		t.Error("Error: Deployment failed!!!", err)
 	}
+}
 
-	// ================================== Call length() ==================================
-	// url = concurrenturl.NewConcurrentUrl(db)
-	// url.Import(transitions)
-	// url.PostImport()
-	// errs := url.Commit([]uint32{1})
-	// if len(errs) != 0 {
-	// 	t.Error(errs)
-	// 	return
-	// }
-	// api = ccApi.NewAPI(url)
-	// statedb = eth.NewImplStateDB(url)
-	// eu = ccEu.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api)
+func TestInt64Threading(t *testing.T) {
+	eu, config, _, _, _ := NewTestEU()
 
-	// config.BlockNumber = new(big.Int).SetUint64(10000001)
-	// config.Time = new(big.Int).SetUint64(10000001)
+	// ================================== Compile the contract ==================================
+	currentPath, _ := os.Getwd()
+	project := filepath.Dir(currentPath)
+	pyCompiler := project + "/compiler/compiler.py"
 
-	// data := crypto.Keccak256([]byte("length()"))[:4]
-	// data = append(data, evmcommon.BytesToHash(User1.Bytes()).Bytes()...)
-	// data = append(data, evmcommon.BytesToHash([]byte{0xcc}).Bytes()...)
-	// msg = types.NewMessage(eucommon.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, true)
-	// _, transitions, receipt, err = eu.Run(evmcommon.BytesToHash([]byte{2, 2, 2}), 2, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg))
-	// t.Log("\n" + FormatTransitions(transitions))
-	// t.Log(receipt)
-	// if receipt.Status != 1 {
-	// 	t.Error("Error: Failed to calll length()!!!", err)
-	// }
+	code, err := compiler.CompileContracts(pyCompiler, project+"/api/types/int64/int64_threading.sol", "ThreadingInt64")
 
+	if err != nil || len(code) == 0 {
+		t.Error("Error: ", err)
+	}
+	// ================================== Deploy the contract ==================================
+	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false)     // Build the message
+	_, transitions, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg)) // Execute it
+	// t.Log("\n" + eucommon.FormatTransitions(transitions))
+	univalue.Univalues(transitions).Print()
+	if receipt.Status != 1 || err != nil {
+		t.Error("Error: Deployment failed!!!", err)
+	}
+	fmt.Println(receipt.ContractAddress)
+
+	// // ================================== CallBasic() ==================================
+	data := crypto.Keccak256([]byte("call()"))[:4]
+	contractAddress := receipt.ContractAddress
+	msg = types.NewMessage(eucommon.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	_, transitions, receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	univalue.Univalues(transitions).Print()
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if execResult != nil && execResult.Err != nil {
+		t.Error(execResult.Err)
+	}
 }

@@ -64,10 +64,11 @@ func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl
 	return api
 }
 
-func (this *API) Coinbase() evmcommon.Address         { return this.eu.VM().Context.Coinbase }
-func (this *API) From() evmcommon.Address             { return this.eu.VM().TxContext.Origin }
-func (this *API) VM() *vm.EVM                         { return this.eu.VM() }
-func (this *API) SetEU(eu interface{})                { this.eu = eu.(*cceu.EU) }
+func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }
+func (this *API) From() evmcommon.Address     { return this.eu.VM().TxContext.Origin }
+func (this *API) VM() *vm.EVM                 { return this.eu.VM() }
+func (this *API) SetEU(eu interface{})        { this.eu = eu.(*cceu.EU) }
+
 func (this *API) TxHash() [32]byte                    { return this.txHash }
 func (this *API) TxIndex() uint32                     { return this.txIndex }
 func (this *API) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }

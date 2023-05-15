@@ -12,7 +12,7 @@ contract Int64 {
         return abi.decode(abi.decode(base.pop(), (bytes)), (int));  
     }
 
-    function push(int64 elem) public { //9e c6 69 25
+    function push(int64 elem) public{ //9e c6 69 25
        base.push(abi.encodeWithSignature("push(bytes,bytes)",  base.id(), abi.encode(elem)));
     }   
 

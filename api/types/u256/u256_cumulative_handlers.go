@@ -25,7 +25,7 @@ type u256Cumulative struct {
 func NewU256CumulativeHandler(api eucommon.ConcurrentApiRouterInterface) *u256Cumulative {
 	return &u256Cumulative{
 		api:       api,
-		connector: apicommon.NewCCurlConnector("/containers/", api.TxHash(), api.TxIndex(), api.Ccurl()),
+		connector: apicommon.NewCCurlConnector("/containers/", api, api.Ccurl()),
 	}
 }
 
@@ -60,7 +60,7 @@ func (this *u256Cumulative) Unknow(caller evmcommon.Address, input []byte) ([]by
 
 func (this *u256Cumulative) New(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	id := this.api.GenUUID()
-	if !this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id), 0) { // A new container
+	if !this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) { // A new container
 		return []byte{}, false
 	}
 
