@@ -24,7 +24,7 @@ func TestBase(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
-	targetPath := project + "/api/types/"
+	targetPath := project + "/api/noncommutative/"
 
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/base/base_test.sol", "BaseTest")
 	if err != nil || len(code) == 0 {

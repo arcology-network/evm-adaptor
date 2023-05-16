@@ -21,7 +21,7 @@ func TestU256Dynamic(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
-	targetPath := project + "/api/types/"
+	targetPath := project + "/api/noncommutative/"
 	baseFile := targetPath + "base/Base.sol"
 
 	if err := common.CopyFile(baseFile, targetPath+"/u256/Base.sol"); err != nil {
@@ -55,7 +55,7 @@ func TestU256Fixed(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
-	targetPath := project + "/api/types/"
+	targetPath := project + "/api/noncommutative/"
 	baseFile := targetPath + "base/Base.sol"
 
 	if err := common.CopyFile(baseFile, targetPath+"/u256/Base.sol"); err != nil {
@@ -88,7 +88,7 @@ func TestCumulativeU256(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
-	targetPath := project + "/api/types/"
+	targetPath := project + "/api/noncommutative/"
 	baseFile := targetPath + "base/Base.sol"
 
 	if err := common.CopyFile(baseFile, targetPath+"/u256/Base.sol"); err != nil {

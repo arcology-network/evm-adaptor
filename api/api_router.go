@@ -12,9 +12,9 @@ import (
 	"github.com/arcology-network/evm/core/vm"
 	cceu "github.com/arcology-network/vm-adaptor"
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
+	base "github.com/arcology-network/vm-adaptor/api/noncommutative"
+	u256 "github.com/arcology-network/vm-adaptor/api/noncommutative/u256"
 	mp "github.com/arcology-network/vm-adaptor/api/threading"
-	base "github.com/arcology-network/vm-adaptor/api/types/base"
-	u256 "github.com/arcology-network/vm-adaptor/api/types/u256"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
 

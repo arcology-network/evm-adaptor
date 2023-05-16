@@ -44,6 +44,9 @@ func (this *u256Cumulative) Call(caller, callee evmcommon.Address, input []byte,
 	case [4]byte{0x6d, 0x4c, 0xe6, 0x3c}:
 		return this.Get(caller, input[4:])
 
+	case [4]byte{0xc9, 0xef, 0xba, 0xb9}:
+		return this.set(caller, input[4:])
+
 	case [4]byte{0xaf, 0xc9, 0xfc, 0x46}:
 		return this.Add(caller, input[4:])
 
@@ -75,7 +78,6 @@ func (this *u256Cumulative) New(caller evmcommon.Address, input []byte) ([]byte,
 	// val, valErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
 	min, minErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
 	max, maxErr := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
-
 	if minErr != nil || maxErr != nil {
 		return []byte{}, false
 	}
@@ -132,6 +134,26 @@ func (this *u256Cumulative) Sub(caller evmcommon.Address, input []byte) ([]byte,
 	}
 
 	value := commutative.NewU256Delta(delta.(*uint256.Int), false)
+	return []byte{}, this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value) == nil
+}
+
+func (this *u256Cumulative) set(caller evmcommon.Address, input []byte) ([]byte, bool) {
+	path, err := this.buildPath(caller, input) // Build container path
+	if len(path) == 0 || err != nil {
+		return []byte{}, false
+	}
+
+	delta, err := abi.DecodeTo(input, 1, &uint256.Int{}, 1, 32)
+	if err != nil {
+		return []byte{}, false
+	}
+
+	sign, err := abi.DecodeTo(input, 1, bool(true), 1, 32)
+	if err != nil {
+		return []byte{}, false
+	}
+
+	value := commutative.NewU256Delta(delta, sign)
 	return []byte{}, this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value) == nil
 }
 

@@ -21,7 +21,7 @@ func TestContractBool(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
-	targetPath := project + "/api/types/"
+	targetPath := project + "/api/noncommutative/"
 	baseFile := targetPath + "base/Base.sol"
 
 	if err := common.CopyFile(baseFile, targetPath+"bool/Base.sol"); err != nil {

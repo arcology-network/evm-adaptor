@@ -23,7 +23,7 @@ func TestContractInt(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
-	targetPath := project + "/api/types/"
+	targetPath := project + "/api/noncommutative/"
 	baseFile := targetPath + "base/Base.sol"
 
 	if err := common.CopyFile(baseFile, targetPath+"int64/Base.sol"); err != nil {
@@ -57,7 +57,7 @@ func TestInt64Threading(t *testing.T) {
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
 
-	code, err := compiler.CompileContracts(pyCompiler, project+"/api/types/int64/int64_threading.sol", "ThreadingInt64")
+	code, err := compiler.CompileContracts(pyCompiler, project+"/api/noncommutative/int64/int64_threading.sol", "ThreadingInt64")
 
 	if err != nil || len(code) == 0 {
 		t.Error("Error: ", err)

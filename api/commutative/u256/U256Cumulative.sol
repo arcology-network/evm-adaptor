@@ -11,17 +11,22 @@ contract U256 {
     }
     
     function get() public returns(uint256) {  
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("get()", id));
+        (,bytes memory data) = address(API).call(abi.encodeWithSignature("get()", id));
         return abi.decode(data, (uint256));
     }
 
     function add(uint256 v) public returns(bool) { 
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("add(bytes, uint256)", id, v));
+        (bool success,) = address(API).call(abi.encodeWithSignature("add(bytes, uint256)", id, v));
         return success; 
     }
 
     function sub(uint256 v) public returns(bool) { 
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("sub(bytes, uint256)", id, v));
+        (bool success,) = address(API).call(abi.encodeWithSignature("sub(bytes, uint256)", id, v));
         return success;
     }   
+
+    function set(uint256 idx, uint256 v, bool isPositive) public  returns(bool){ // c9 ef ba b9
+        (bool success,) = address(API).call(abi.encodeWithSignature("set(bytes, uint256)", idx, v, isPositive));
+        return success;
+    }
 }

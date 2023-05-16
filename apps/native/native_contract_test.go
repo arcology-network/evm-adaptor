@@ -42,7 +42,7 @@ func TestNativeContractSameBlock(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(filepath.Dir(currentPath))
 	pyCompiler := project + "/compiler/compiler.py"
-	// targetPath := project + "/api/types/"
+	// targetPath := project + "/api/noncommutative/"
 
 	bytecode, err := compiler.CompileContracts(pyCompiler, currentPath+"/NativeStorage.sol", "NativeStorage")
 	if err != nil || len(bytecode) == 0 {
@@ -114,7 +114,7 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(filepath.Dir(currentPath))
 	pyCompiler := project + "/compiler/compiler.py"
-	// targetPath := project + "/api/types/"
+	// targetPath := project + "/api/noncommutative/"
 
 	bytecode, err := compiler.CompileContracts(pyCompiler, currentPath+"/NativeStorage.sol", "NativeStorage")
 	if err != nil || len(bytecode) == 0 {
