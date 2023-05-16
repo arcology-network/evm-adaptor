@@ -60,12 +60,12 @@ func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl
 	api := NewAPI(ccurl)
 	api.txHash = txHash
 	api.txIndex = txIndex
-	api.SetEU(this.eu)
+	// api.SetEU(this.eu)
 	return api
 }
 
 func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }
-func (this *API) From() evmcommon.Address     { return this.eu.VM().TxContext.Origin }
+func (this *API) Origin() evmcommon.Address   { return this.eu.VM().TxContext.Origin }
 func (this *API) VM() *vm.EVM                 { return this.eu.VM() }
 func (this *API) SetEU(eu interface{})        { this.eu = eu.(*cceu.EU) }
 
@@ -79,16 +79,16 @@ func (this *API) Prepare(txHash evmcommon.Hash, height *big.Int, txIndex uint32)
 	this.dc = nil
 }
 
-func (this *API) SUID() uint64 {
+func (this *API) GenElemUID() uint64 {
 	this.serial++
 	return this.serial
 }
 
 // Generate an UUID based on transaction hash and the counter
-func (this *API) GenUUID() []byte {
+func (this *API) GenCtrnUID() []byte {
 	this.seed++
 	id := codec.Bytes32(this.txHash).UUID(this.seed)
-	return id[:]
+	return id[:8]
 }
 
 func (this *API) AddLog(key, value string) {

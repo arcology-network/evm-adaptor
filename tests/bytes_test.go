@@ -29,7 +29,6 @@ func TestContractBytes(t *testing.T) {
 	}
 
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/bytes/bytes_test.sol", "ByteTest")
-	os.Remove(targetPath + "/bytes/Base.sol")
 
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")

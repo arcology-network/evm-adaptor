@@ -29,7 +29,6 @@ func TestU256Dynamic(t *testing.T) {
 	}
 
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256_test.sol", "U256DynamicTest")
-	os.Remove(targetPath + "/u256/Base.sol")
 
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
@@ -64,7 +63,6 @@ func TestU256Fixed(t *testing.T) {
 	}
 
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256Fixed_test.sol", "U256FixedTest")
-	os.Remove(targetPath + "/u256/Base.sol")
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)
@@ -98,7 +96,6 @@ func TestCumulativeU256(t *testing.T) {
 	}
 
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256Cumulative_test.sol", "CumulativeU256Test")
-	os.Remove(targetPath + "/u256/Base.sol")
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)

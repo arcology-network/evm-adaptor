@@ -21,7 +21,7 @@ type TheadingHandler struct {
 func NewMultiprocessHandler(apiRounter eucommon.ConcurrentApiRouterInterface) *TheadingHandler {
 	return &TheadingHandler{
 		api:      apiRounter,
-		jobQueue: NewJobQueue(apiRounter),
+		jobQueue: NewJobQueue(),
 	}
 }
 
@@ -76,7 +76,7 @@ func (this *TheadingHandler) add(caller, callee evmcommon.Address, input []byte)
 		return []byte(err.Error()), false
 	}
 
-	jobID := this.jobQueue.Add(calleeAddr, funCall)
+	jobID := this.jobQueue.Add(this.api.Origin(), calleeAddr, funCall)
 
 	if buffer, err := abi.Encode(uint64(jobID)); err != nil {
 		return []byte{}, false
@@ -118,10 +118,10 @@ func (this *TheadingHandler) peek(input []byte) ([]byte, bool) {
 
 func (this *TheadingHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	if threads, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
-		return []byte{}, this.jobQueue.Run(uint8(common.Min(common.Max(threads, 1), math.MaxUint8)))
+		return []byte{}, this.jobQueue.Run(uint8(common.Min(common.Max(threads, 1), math.MaxUint8)), this.api)
 	}
 
-	return []byte{}, this.jobQueue.Run(1)
+	return []byte{}, this.jobQueue.Run(1, this.api)
 }
 
 func (this *TheadingHandler) del(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {

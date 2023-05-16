@@ -29,7 +29,6 @@ func TestContractBytes32(t *testing.T) {
 	}
 
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"bytes32/bytes32_test.sol", "Bytes32Test")
-	os.Remove(targetPath + "bytes32/Base.sol")
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)

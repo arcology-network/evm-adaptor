@@ -3,6 +3,7 @@ package concurrentcontainer
 import (
 	"encoding/hex"
 	"math"
+	"strconv"
 
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/types"
@@ -66,7 +67,7 @@ func (this *BaseHandlers) unknow(caller evmcommon.Address, input []byte) ([]byte
 }
 
 func (this *BaseHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	id := this.api.GenUUID()                                                                             // Generate a uuid for the container
+	id := this.api.GenCtrnUID()                                                                          // Generate a uuid for the container
 	return id[:], this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) // Create a new container
 }
 
@@ -122,11 +123,10 @@ func (this *BaseHandlers) set(caller evmcommon.Address, input []byte) ([]byte, b
 
 // Push a new element into the container
 func (this *BaseHandlers) push(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
-	txHash := codec.Bytes32(this.api.TxHash()).Clone().(codec.Bytes32)
-	codec.Uint64(this.api.SUID()).EncodeToBuffer(txHash[len(txHash)-8:])
-
 	path := this.buildPath(caller, input) // BaseHandlers path
-	key := path + hex.EncodeToString(txHash[:])
+
+	txHash := this.api.TxHash()
+	key := path + hex.EncodeToString(txHash[:8]) + "-" + strconv.Itoa(int(this.api.GenElemUID()))
 
 	value, err := abi.Decode(input, 1, []byte{}, 2, math.MaxInt)
 	if value == nil || err != nil {

@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/arcology-network/common-lib/common"
-	"github.com/arcology-network/concurrenturl/univalue"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/crypto"
@@ -32,7 +31,6 @@ func TestContractInt(t *testing.T) {
 	}
 
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"int64/int64_test.sol", "Int64Test")
-	os.Remove(targetPath + "/int/Base.sol")
 
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
@@ -65,10 +63,10 @@ func TestInt64Threading(t *testing.T) {
 		t.Error("Error: ", err)
 	}
 	// ================================== Deploy the contract ==================================
-	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false)     // Build the message
-	_, transitions, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg)) // Execute it
+	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false) // Build the message
+	_, _, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))       // Execute it
 	// t.Log("\n" + eucommon.FormatTransitions(transitions))
-	univalue.Univalues(transitions).Print()
+	// univalue.Univalues(transitions).Print()
 	if receipt.Status != 1 || err != nil {
 		t.Error("Error: Deployment failed!!!", err)
 	}
@@ -78,8 +76,8 @@ func TestInt64Threading(t *testing.T) {
 	data := crypto.Keccak256([]byte("call()"))[:4]
 	contractAddress := receipt.ContractAddress
 	msg = types.NewMessage(eucommon.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-	_, transitions, receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
-	univalue.Univalues(transitions).Print()
+	_, _, receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	// univalue.Univalues(transitions).Print()
 
 	if err != nil {
 		t.Error(err)

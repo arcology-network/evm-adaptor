@@ -59,7 +59,7 @@ func (this *u256Cumulative) Unknow(caller evmcommon.Address, input []byte) ([]by
 }
 
 func (this *u256Cumulative) New(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	id := this.api.GenUUID()
+	id := this.api.GenCtrnUID()
 	if !this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) { // A new container
 		return []byte{}, false
 	}
@@ -70,7 +70,7 @@ func (this *u256Cumulative) New(caller evmcommon.Address, input []byte) ([]byte,
 	key := path + // Root
 		hex.EncodeToString(txHash[:8]) + "-" + // Tx hash to avoid conflict
 		strconv.Itoa(int(commutative.UINT256)) + "-" + // value type ID
-		strconv.Itoa(int(this.api.SUID())) // Element ID
+		strconv.Itoa(int(this.api.GenElemUID())) // Element ID
 
 	// val, valErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
 	min, minErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)

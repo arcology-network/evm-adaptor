@@ -29,7 +29,6 @@ func TestContractAddress(t *testing.T) {
 	}
 
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"address/address_test.sol", "AddressTest")
-	os.Remove(targetPath + "/address/Base.sol")
 	if err != nil || len(code) == 0 {
 		t.Error(err)
 	}

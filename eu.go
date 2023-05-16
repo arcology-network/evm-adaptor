@@ -37,7 +37,9 @@ func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.State
 	return eu
 }
 
-func (this *EU) VM() *vm.EVM { return this.evm }
+func (this *EU) VM() *vm.EVM                                { return this.evm }
+func (this *EU) Statedb() vm.StateDB                        { return this.statedb }
+func (this *EU) Api() eucommon.ConcurrentApiRouterInterface { return this.api }
 
 func (this *EU) SetContext(statedb vm.StateDB, api eucommon.ConcurrentApiRouterInterface) {
 	this.api = api
