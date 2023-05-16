@@ -8,9 +8,9 @@ import (
 )
 
 // APIs under the concurrency namespace
-type CumulativeU256 struct{}
+type U256Codec struct{}
 
-func (this *CumulativeU256) new(input []byte) (interface{}, error) {
+func (this *U256Codec) new(input []byte) (interface{}, error) {
 	min, minErr := abi.DecodeTo(input, 0, &uint256.Int{}, 1, 32)
 	max, maxErr := abi.DecodeTo(input, 1, &uint256.Int{}, 1, 32)
 	if minErr != nil || maxErr != nil {
@@ -19,7 +19,7 @@ func (this *CumulativeU256) new(input []byte) (interface{}, error) {
 	return commutative.NewU256(min, max), nil
 }
 
-func (this *u256Cumulative) delta(input []byte) (interface{}, error) {
+func (this *U256Codec) delta(input []byte) (interface{}, error) {
 	delta, err := abi.DecodeTo(input, 1, &uint256.Int{}, 1, 32)
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func (this *u256Cumulative) delta(input []byte) (interface{}, error) {
 	return commutative.NewU256Delta(delta, false), nil
 }
 
-func (this *u256Cumulative) encode(value interface{}) ([]byte, error) {
+func (this *U256Codec) encode(value interface{}) ([]byte, error) {
 	updated := value.(*uint256.Int)
 	if encoded, err := abi.Encode(updated); err == nil { // Encode the result
 		return encoded, err

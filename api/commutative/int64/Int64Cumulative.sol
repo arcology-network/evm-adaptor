@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-contract U256Commutative {
+contract Int64Cumulative {
     address constant public API = address(0x85);    
     bytes private id;
 

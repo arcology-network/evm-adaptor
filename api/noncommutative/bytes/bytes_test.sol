@@ -7,45 +7,25 @@ contract ByteTest {
     
     constructor() public {     
         require(container.length() == 0); 
-        bytes memory byteArray = new bytes(75);
-        for (uint  i = 0; i < 75; i ++) {
-            byteArray[i] = 0x41;
-        }
+ 
+        bytes memory arr1 = '0x1000000000000000000000000000000000000000000000000000000000000001';
+        bytes memory arr2 = '0x2000000000000000000000000000000000000000000000000000000000000002';
 
-        container.push(byteArray);  
-        container.push(byteArray); 
+        container.push(arr1);  
+        container.push(arr1); 
+
         require(container.length() == 2); 
 
-        bytes memory stored = container.get(1);
-        require(stored.length == byteArray.length);
-        for (uint  i = 0; i < byteArray.length; i ++) {
-            require(stored[i] == byteArray[i]);
-        }
 
-        bytes memory elems = new bytes(5);
-        for (uint  i = 0; i < elems.length; i ++) {
-            elems[i] = 0xaa;
-        }
-        container.set(1, elems);
-       
-        stored = container.get(0);
-        require(stored.length == byteArray.length);
-        for (uint  i = 0; i < byteArray.length; i ++) {
-            require(stored[i] == byteArray[i]);
-        }
+        require(keccak256(container.get(1)) == keccak256(arr1));
 
-        stored = container.get(1);
-        require(stored.length == elems.length); 
-        for (uint  i = 0; i < elems.length; i ++) {
-            require(stored[i] == elems[i]);
-        }
+        container.set(1, arr2);       
 
-        stored = container.pop();
-        for (uint  i = 0; i < elems.length; i ++) {
-            require(stored[i] == elems[i]);
-        }
+        require(keccak256(container.get(0)) == keccak256(arr1));
+        require(keccak256(container.get(1)) == keccak256(arr2));
+        require(keccak256(container.pop()) == keccak256(arr2));
 
-        stored = container.pop();
+        container.pop();
         require(container.length() == 0); 
     }
 }

@@ -1,0 +1,32 @@
+pragma solidity ^0.5.0;
+
+import "./Bytes32Fixed.sol";
+
+contract Bytes32FixedTest {
+    Bytes32Fixed container;
+
+    constructor() public {    
+        bytes32 arr1 = keccak256(abi.encodePacked("0"));
+        bytes32 arr2 = keccak256(abi.encodePacked("1"));
+        bytes32 arr3 = keccak256(abi.encodePacked("2"));
+        bytes32 arr4 = keccak256(abi.encodePacked("3"));
+
+        container = new Bytes32Fixed(4, arr1);
+        require(container.length() == 4); 
+        
+        require((container.get(0)) == (arr1));
+        require((container.get(1)) == (arr1));
+        require((container.get(2)) == (arr1));
+        require((container.get(3)) == (arr1));
+
+        container.set(0, arr4);
+        container.set(1, arr3);
+        container.set(2, arr2);
+        container.set(3, arr1);
+
+        require((container.get(0)) == (arr4));
+        require((container.get(1)) == (arr3));
+        require((container.get(2)) == (arr2));
+        require((container.get(3)) == (arr1));    
+    }
+}

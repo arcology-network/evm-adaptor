@@ -1,12 +1,12 @@
 pragma solidity ^0.5.0;
 
-import "./U256Cumulative.sol";
+import "./Int64Cumulative.sol";
 
-contract CumulativeU256Test {
-    U256Cumulative cumulative ;
+contract Int64CumulativeTest {
+    Int64Cumulative cumulative ;
 
     constructor() public {    
-        cumulative = new U256Cumulative(1, 100);  // [1, 100]
+        cumulative = new Int64Cumulative(1, 100);  // [1, 100]
         require(cumulative.add(99));
         cumulative.sub(99);
         require(cumulative.get() == 99);
@@ -21,7 +21,7 @@ contract CumulativeU256Test {
         require(cumulative.get() == 1);
 
 
-        cumulative = new U256Cumulative(0, 100);  // [1, 100]
+        cumulative = new Int64Cumulative(0, 100);  // [1, 100]
         require(cumulative.get() == 0);
 
         require(cumulative.add(99));
