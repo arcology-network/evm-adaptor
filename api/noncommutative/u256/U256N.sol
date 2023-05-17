@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./U256.sol";
 
-contract U256Fixed {
+contract U256N {
     U256 array;
     constructor  (uint length, uint256 value) public {  
         array = new U256(); 

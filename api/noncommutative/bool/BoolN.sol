@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./Bool.sol";
 
-contract BoolFixed {
+contract BoolN {
     Bool array;
     constructor  (uint length, bool initialV) public {  
         array = new Bool(); 

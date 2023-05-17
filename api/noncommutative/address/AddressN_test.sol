@@ -1,9 +1,9 @@
 pragma solidity ^0.5.0;
 
-import "./AddressFixed.sol";
+import "./AddressN.sol";
 
-contract U256FixedTest {
-    AddressFixed container;
+contract U256NTest {
+    AddressN container;
 
     constructor() public {    
         address addr1 = 0x1111111110123456789012345678901234567890;
@@ -11,7 +11,7 @@ contract U256FixedTest {
         address addr3 = 0x3333337890123456789012345678901234567890;
         address addr4 = 0x4444444890123456789012345678901234567890;
 
-        container = new AddressFixed(4, addr1);
+        container = new AddressN(4, addr1);
         require(container.length() == 4); 
 
         require(container.get(0) == addr1);

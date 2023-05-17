@@ -1,17 +1,17 @@
 pragma solidity ^0.5.0;
 
-import "./Int64Fixed.sol";
+import "./Int256N.sol";
 
-contract Int64FixedTest {
-    Int64Fixed container;
+contract Int64NTest {
+    Int256N container;
 
     constructor() public {    
-        int64 num1 = 0;
-        int64 num2 = 1;
-        int64 num3 = 2;
-        int64 num4 = 3;
+        int256 num1 = 0;
+        int256 num2 = 1;
+        int256 num3 = 2;
+        int256 num4 = 3;
 
-        container = new Int64Fixed(4, num1);
+        container = new Int256N(4, num1);
         require(container.length() == 4); 
         
         require((container.get(0)) == (num1));

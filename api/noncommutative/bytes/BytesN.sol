@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./Bytes.sol";
 
-contract BytesFixed {
+contract BytesN {
     Bytes array = new Bytes();
     constructor  (uint length, bytes memory initialV) public {  
         for (uint i = 0; i < length; i ++) {

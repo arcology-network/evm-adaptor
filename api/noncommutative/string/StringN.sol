@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./String.sol";
 
-contract StringFixed {
+contract StringN {
     String array = new String();
     constructor  (uint length, string memory initialV) public {  
         for (uint i = 0; i < length; i ++) {

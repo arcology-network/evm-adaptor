@@ -18,23 +18,23 @@ import (
 )
 
 // APIs under the concurrency namespace
-type NoncommutativeHandlers struct {
+type NoncommutativeBytesHandlers struct {
 	api       eucommon.ConcurrentApiRouterInterface
 	connector *apicommon.CcurlConnector
 }
 
-func NewNoncommutativeHandlers(api eucommon.ConcurrentApiRouterInterface) *NoncommutativeHandlers {
-	return &NoncommutativeHandlers{
+func NewNoncommutativeBytesHandlers(api eucommon.ConcurrentApiRouterInterface) *NoncommutativeBytesHandlers {
+	return &NoncommutativeBytesHandlers{
 		api:       api,
 		connector: apicommon.NewCCurlConnector("/containers/", api, api.Ccurl()),
 	}
 }
 
-func (this *NoncommutativeHandlers) Address() [20]byte {
+func (this *NoncommutativeBytesHandlers) Address() [20]byte {
 	return [20]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x84}
 }
 
-func (this *NoncommutativeHandlers) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
+func (this *NoncommutativeBytesHandlers) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
@@ -61,19 +61,19 @@ func (this *NoncommutativeHandlers) Call(caller, callee evmcommon.Address, input
 	return this.unknow(caller, input)
 }
 
-func (this *NoncommutativeHandlers) unknow(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *NoncommutativeBytesHandlers) unknow(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	this.api.AddLog("Unhandled function call", hex.EncodeToString(input))
 	return []byte{}, false
 }
 
-func (this *NoncommutativeHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *NoncommutativeBytesHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	id := this.api.GenCtrnUID()                                                                          // Generate a uuid for the container
 	return id[:], this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) // Create a new container
 }
 
 // Get the number of elements in the container
-func (this *NoncommutativeHandlers) length(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	path := this.buildPath(caller, input) // NoncommutativeHandlers path
+func (this *NoncommutativeBytesHandlers) length(caller evmcommon.Address, input []byte) ([]byte, bool) {
+	path := this.buildPath(caller, input) // NoncommutativeBytesHandlers path
 	if path, err := this.api.Ccurl().Read(this.api.TxIndex(), path); err == nil && path != nil {
 		if encoded, err := abi.Encode(uint256.NewInt(uint64(len(path.([]string))))); err == nil {
 			return encoded, true
@@ -82,7 +82,7 @@ func (this *NoncommutativeHandlers) length(caller evmcommon.Address, input []byt
 	return []byte{}, false
 }
 
-func (this *NoncommutativeHandlers) get(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *NoncommutativeBytesHandlers) get(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32)
 	if err != nil {
 		return []byte{}, false
@@ -102,7 +102,7 @@ func (this *NoncommutativeHandlers) get(caller evmcommon.Address, input []byte) 
 	return []byte{}, false
 }
 
-func (this *NoncommutativeHandlers) set(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *NoncommutativeBytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32)
 	if err != nil {
 		return []byte{}, false
@@ -122,8 +122,8 @@ func (this *NoncommutativeHandlers) set(caller evmcommon.Address, input []byte) 
 }
 
 // Push a new element into the container
-func (this *NoncommutativeHandlers) push(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
-	path := this.buildPath(caller, input) // NoncommutativeHandlers path
+func (this *NoncommutativeBytesHandlers) push(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
+	path := this.buildPath(caller, input) // NoncommutativeBytesHandlers path
 
 	txHash := this.api.TxHash()
 	key := path + hex.EncodeToString(txHash[:8]) + "-" + strconv.Itoa(int(this.api.GenElemUID()))
@@ -137,7 +137,7 @@ func (this *NoncommutativeHandlers) push(caller evmcommon.Address, input []byte,
 	return []byte{}, err == nil
 }
 
-func (this *NoncommutativeHandlers) pop(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *NoncommutativeBytesHandlers) pop(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path := this.buildPath(caller, input) // Build container path
 	if value, err := this.api.Ccurl().PopBack(this.api.TxIndex(), path); err != nil {
 		return []byte{}, false
@@ -155,7 +155,7 @@ func (this *NoncommutativeHandlers) pop(caller evmcommon.Address, input []byte) 
 }
 
 // Build the container path
-func (this *NoncommutativeHandlers) buildPath(caller evmcommon.Address, input []byte) string {
+func (this *NoncommutativeBytesHandlers) buildPath(caller evmcommon.Address, input []byte) string {
 	id, _ := abi.Decode(input, 0, []byte{}, 2, 32)                                                         // max 32 bytes                                                                          // container ID
 	return this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id.([]byte))) // unique ID
 }

@@ -1,9 +1,9 @@
 pragma solidity ^0.5.0;
 
-import "./Int64.sol";
+import "./Int256.sol";
 
-contract Int64Test {
-    Int64 container = new Int64();
+contract Int256Test {
+    Int256 container = new Int256();
     
     constructor() public {     
        require(container.length() == 0); 

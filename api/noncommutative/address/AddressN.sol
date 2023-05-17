@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./Address.sol";
 
-contract AddressFixed {
+contract AddressN {
     Address array;
     constructor  (uint length, address initialV) public {  
         array = new Address(); 

@@ -18,7 +18,7 @@ type TheadingHandler struct {
 	jobQueue *Queue
 }
 
-func NewMultiprocessHandler(apiRounter eucommon.ConcurrentApiRouterInterface) *TheadingHandler {
+func NewThreadingHandler(apiRounter eucommon.ConcurrentApiRouterInterface) *TheadingHandler {
 	return &TheadingHandler{
 		api:      apiRounter,
 		jobQueue: NewJobQueue(),

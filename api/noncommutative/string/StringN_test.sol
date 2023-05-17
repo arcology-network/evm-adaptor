@@ -1,9 +1,9 @@
 pragma solidity ^0.5.0;
 
-import "./StringFixed.sol";
+import "./StringN.sol";
 
-contract Int64FixedTest {
-    StringFixed container;
+contract Int64NTest {
+    StringN container;
 
     constructor() public {    
         string memory _1 = "1111";
@@ -11,7 +11,7 @@ contract Int64FixedTest {
         string memory _3 = "3333";
         string memory _4 = "4444";
 
-        container = new StringFixed(4, _1);
+        container = new StringN(4, _1);
         require(container.length() == 4); 
         
         require(keccak256(bytes(container.get(0))) == keccak256(bytes(_1)));

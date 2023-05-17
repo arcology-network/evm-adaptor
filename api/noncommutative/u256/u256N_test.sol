@@ -1,12 +1,12 @@
 pragma solidity ^0.5.0;
 
-import "./U256Fixed.sol";
+import "./U256N.sol";
 
-contract U256FixedTest {
-    U256Fixed container;
+contract U256NTest {
+    U256N container;
 
     constructor() public {    
-        container = new U256Fixed(4, 0);
+        container = new U256N(4, 0);
         require(container.length() == 4); 
 
         require(container.get(0) == uint256(0));

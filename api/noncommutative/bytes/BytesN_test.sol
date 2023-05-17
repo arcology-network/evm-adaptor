@@ -1,9 +1,9 @@
 pragma solidity ^0.5.0;
 
-import "./BytesFixed.sol";
+import "./BytesN.sol";
 
-contract BytesFixedTest {
-    BytesFixed container;
+contract BytesNTest {
+    BytesN container;
 
     constructor() public {    
         bytes memory arr1 = '0x1000000000000000000000000000000000000000000000000000000000000001';
@@ -11,7 +11,7 @@ contract BytesFixedTest {
         bytes memory arr3 = '0x3000000000000000000000000000000000000000000000000000000000000003';
         bytes memory arr4 = '0x4000000000000000000000000000000000000000000000000000000000000004';
 
-        container = new BytesFixed(4, arr1);
+        container = new BytesN(4, arr1);
         require(container.length() == 4); 
         
         require(keccak256(container.get(0)) == keccak256(arr1));

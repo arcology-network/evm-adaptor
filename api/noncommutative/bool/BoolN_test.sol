@@ -1,12 +1,12 @@
 pragma solidity ^0.5.0;
 
-import "./BoolFixed.sol";
+import "./BoolN.sol";
 
-contract BoolFixedTest {
-    BoolFixed container;
+contract BoolNTest {
+    BoolN container;
 
     constructor() public {    
-        container = new BoolFixed(4, true);
+        container = new BoolN(4, true);
         require(container.length() == 4); 
 
         require(container.get(0) == true);

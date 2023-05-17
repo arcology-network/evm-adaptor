@@ -1,9 +1,9 @@
 pragma solidity ^0.5.0;
 
-import "./Bytes32Fixed.sol";
+import "./Bytes32N.sol";
 
-contract Bytes32FixedTest {
-    Bytes32Fixed container;
+contract Bytes32NTest {
+    Bytes32N container;
 
     constructor() public {    
         bytes32 arr1 = keccak256(abi.encodePacked("0"));
@@ -11,7 +11,7 @@ contract Bytes32FixedTest {
         bytes32 arr3 = keccak256(abi.encodePacked("2"));
         bytes32 arr4 = keccak256(abi.encodePacked("3"));
 
-        container = new Bytes32Fixed(4, arr1);
+        container = new Bytes32N(4, arr1);
         require(container.length() == 4); 
         
         require((container.get(0)) == (arr1));

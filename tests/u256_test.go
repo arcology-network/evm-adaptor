@@ -14,7 +14,7 @@ import (
 	compiler "github.com/arcology-network/vm-adaptor/compiler"
 )
 
-func TestU256Dynamic(t *testing.T) {
+func TestNoncommutativeU256Dynamic(t *testing.T) {
 	eu, config, _, _, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
@@ -48,7 +48,7 @@ func TestU256Dynamic(t *testing.T) {
 	}
 }
 
-func TestU256Fixed(t *testing.T) {
+func TestConcommutativeU256N(t *testing.T) {
 	eu, config, _, _, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
@@ -62,7 +62,7 @@ func TestU256Fixed(t *testing.T) {
 		t.Error(err)
 	}
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256Fixed_test.sol", "U256FixedTest")
+	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256N_test.sol", "U256NTest")
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)
@@ -88,12 +88,7 @@ func TestCumulativeU256(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
-	targetPath := project + "/api/noncommutative/"
-	baseFile := targetPath + "base/Base.sol"
-
-	if err := common.CopyFile(baseFile, targetPath+"/u256/Base.sol"); err != nil {
-		t.Error(err)
-	}
+	targetPath := project + "/api/commutative/"
 
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256Cumulative_test.sol", "CumulativeU256Test")
 
@@ -113,5 +108,4 @@ func TestCumulativeU256(t *testing.T) {
 	if receipt.Status != 1 || err != nil {
 		t.Error("Error: Deployment failed!!!", err)
 	}
-
 }
