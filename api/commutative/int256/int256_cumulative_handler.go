@@ -17,51 +17,48 @@ import (
 )
 
 // APIs under the concurrency namespace
-type Int64CumulativeHandlers struct {
+type Int256CumulativeHandlers struct {
 	api       eucommon.ConcurrentApiRouterInterface
 	connector *apicommon.CcurlConnector
 }
 
-func NewInt64CumulativeHandlers(api eucommon.ConcurrentApiRouterInterface) *Int64CumulativeHandlers {
-	return &Int64CumulativeHandlers{
+func NewInt256CumulativeHandlers(api eucommon.ConcurrentApiRouterInterface) *Int256CumulativeHandlers {
+	return &Int256CumulativeHandlers{
 		api:       api,
 		connector: apicommon.NewCCurlConnector("/containers/", api, api.Ccurl()),
 	}
 }
 
-func (this *Int64CumulativeHandlers) Address() [20]byte {
-	return [20]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x85}
+func (this *Int256CumulativeHandlers) Address() [20]byte {
+	return [20]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x86}
 }
 
-func (this *Int64CumulativeHandlers) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
+func (this *Int256CumulativeHandlers) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
 	switch signature {
-	case [4]byte{0x1c, 0x64, 0x49, 0x9c}:
-		return this.New(caller, input[4:])
+	case [4]byte{0x90, 0x54, 0xce, 0x5f}:
+		return this.new(caller, input[4:])
 
 	case [4]byte{0x6d, 0x4c, 0xe6, 0x3c}:
-		return this.Get(caller, input[4:])
+		return this.get(caller, input[4:])
 
-	case [4]byte{0xc9, 0xef, 0xba, 0xb9}:
-		return this.set(caller, input[4:])
+	case [4]byte{0xa4, 0xc6, 0xa7, 0x68}:
+		return this.add(caller, input[4:])
 
-	case [4]byte{0xaf, 0xc9, 0xfc, 0x46}:
-		return this.Add(caller, input[4:])
-
-	case [4]byte{0xd8, 0x94, 0x8b, 0x09}:
-		return this.Sub(caller, input[4:])
+	case [4]byte{0xc8, 0xda, 0xaa, 0xab}:
+		return this.sub(caller, input[4:])
 	}
 	return this.Unknow(caller, input)
 }
 
-func (this *Int64CumulativeHandlers) Unknow(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Int256CumulativeHandlers) Unknow(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	this.api.AddLog("Unhandled function call in cumulative handler router", hex.EncodeToString(input))
 	return []byte{}, false
 }
 
-func (this *Int64CumulativeHandlers) New(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Int256CumulativeHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	id := this.api.GenCtrnUID()
 	if !this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) { // A new container
 		return []byte{}, false
@@ -88,7 +85,7 @@ func (this *Int64CumulativeHandlers) New(caller evmcommon.Address, input []byte)
 	return id, true
 }
 
-func (this *Int64CumulativeHandlers) Get(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Int256CumulativeHandlers) get(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false
@@ -106,7 +103,7 @@ func (this *Int64CumulativeHandlers) Get(caller evmcommon.Address, input []byte)
 	return []byte{}, false
 }
 
-func (this *Int64CumulativeHandlers) Add(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Int256CumulativeHandlers) add(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false
@@ -121,7 +118,7 @@ func (this *Int64CumulativeHandlers) Add(caller evmcommon.Address, input []byte)
 	return []byte{}, this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value) == nil
 }
 
-func (this *Int64CumulativeHandlers) Sub(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Int256CumulativeHandlers) sub(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false
@@ -136,7 +133,7 @@ func (this *Int64CumulativeHandlers) Sub(caller evmcommon.Address, input []byte)
 	return []byte{}, this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value) == nil
 }
 
-func (this *Int64CumulativeHandlers) set(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Int256CumulativeHandlers) set(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false
@@ -157,7 +154,7 @@ func (this *Int64CumulativeHandlers) set(caller evmcommon.Address, input []byte)
 }
 
 // Build the container path
-func (this *Int64CumulativeHandlers) buildPath(caller evmcommon.Address, input []byte) (string, error) {
+func (this *Int256CumulativeHandlers) buildPath(caller evmcommon.Address, input []byte) (string, error) {
 	id, err := abi.Decode(input, 0, []byte{}, 2, 32) // max 32 bytes
 	if err != nil {
 		return "", nil

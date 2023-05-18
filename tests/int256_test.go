@@ -79,34 +79,34 @@ func TestNoncommutativeInt256N(t *testing.T) {
 	}
 }
 
-// func TestCumulativeInt256(t *testing.T) {
-// 	eu, config, _, _, _ := NewTestEU()
+func TestCumulativeInt256(t *testing.T) {
+	eu, config, _, _, _ := NewTestEU()
 
-// 	// ================================== Compile the contract ==================================
-// 	currentPath, _ := os.Getwd()
-// 	project := filepath.Dir(currentPath)
-// 	pyCompiler := project + "/compiler/compiler.py"
-// 	targetPath := project + "/api/commutative/"
+	// ================================== Compile the contract ==================================
+	currentPath, _ := os.Getwd()
+	project := filepath.Dir(currentPath)
+	pyCompiler := project + "/compiler/compiler.py"
+	targetPath := project + "/api/commutative/"
 
-// 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/int256/int256Cumulative_test.sol", "Int256CumulativeTest")
+	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/int256/int256Cumulative_test.sol", "Int256CumulativeTest")
 
-// 	if err != nil || len(code) == 0 {
-// 		t.Error(err)
-// 	}
+	if err != nil || len(code) == 0 {
+		t.Error(err)
+	}
 
-// 	// ================================== Deploy the contract ==================================
-// 	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)      // Build the message
-// 	_, transitions, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg)) // Execute it
-// 	// ---------------
+	// ================================== Deploy the contract ==================================
+	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)      // Build the message
+	_, transitions, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg)) // Execute it
+	// ---------------
 
-// 	// t.Log("\n" + FormatTransitions(accesses))
-// 	t.Log("\n" + eucommon.FormatTransitions(transitions))
-// 	t.Log(receipt)
-// 	// contractAddress := receipt.ContractAddress
-// 	if receipt.Status != 1 || err != nil {
-// 		t.Error("Error: Deployment failed!!!", err)
-// 	}
-// }
+	// t.Log("\n" + FormatTransitions(accesses))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	t.Log(receipt)
+	// contractAddress := receipt.ContractAddress
+	if receipt.Status != 1 || err != nil {
+		t.Error("Error: Deployment failed!!!", err)
+	}
+}
 
 // func TestInt64Threading(t *testing.T) {
 // 	eu, config, _, _, _ := NewTestEU()

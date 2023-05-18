@@ -93,8 +93,6 @@ func (this *Queue) Snapshot(mainApiRouter eucommon.ConcurrentApiRouterInterface)
 
 func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouterInterface) bool {
 	snapshot := this.Snapshot(mainApiRouter)
-	// _, _1 := this.apiRouter.Ccurl().ExportAll()
-	// univalue.Univalues(_1).Print()
 
 	// t0 := time.Now()
 	config := cceu.NewConfig().SetCoinbase(mainApiRouter.Coinbase()) // Share the same coinbase as the main thread
@@ -139,7 +137,7 @@ func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouter
 
 	// Clear up conflicting txs and their state changes
 	jobs := common.SetIndices(common.Clone(this.jobs), conflicTxs, func(job *Job) *Job { return nil })
-	common.RemoveIf(&jobs, func(job *Job) bool { return job == nil }) // Should not remove the jobs directly
+	common.RemoveIf(&jobs, func(job *Job) bool { return job == nil }) // Shour mark the conflict jobs
 
 	// t0 = time.Now()
 	this.WriteBack(mainApiRouter, jobs) // Merge back to the main write cache
@@ -149,8 +147,19 @@ func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouter
 
 // Merge all the transitions back to the main cache
 func (this *Queue) WriteBack(mainApiRouter eucommon.ConcurrentApiRouterInterface, jobs []*Job) {
-	for i := 0; i < len(jobs); i++ {
-		mainApiRouter.Ccurl().WriteCache().MergeFrom(jobs[i].ccurl.WriteCache(), mainApiRouter.TxIndex())
+	for i := 0; i < len(this.jobs); i++ { // transitt
+		for j, trans := range this.jobs[i].transitions {
+			if ccurlcommon.IsPath(*trans.GetPath()) && !trans.Preexist() {
+				trans.WriteTo(mainApiRouter.Ccurl().WriteCache()) // Write the path creation first
+				this.jobs[i].transitions[j] = nil                 // Remove to avoid dupilicate writes
+			}
+		}
+		common.RemoveIf(&this.jobs[i].transitions, func(trans ccurlcommon.UnivalueInterface) bool { return trans == nil }) // Remove to avoid dupilicate writes
+
+		// Write the rest to cache
+		for _, trans := range this.jobs[i].transitions {
+			trans.WriteTo(mainApiRouter.Ccurl().WriteCache()) // Write the new paths first
+		}
 	}
 }
 
