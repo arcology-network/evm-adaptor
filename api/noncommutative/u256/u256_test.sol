@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "./U256.sol";
+import "./Threading.sol";
 
 contract U256DynamicTest {
     U256 container = new U256();
@@ -80,5 +81,32 @@ contract U256DynamicTest {
         require(_1.pop() == uint256(112));
         require(_1.pop() == uint256(111));
         require(_1.length() == 0); 
+    }
+}
+
+contract ThreadingTest {
+    U256 container = new U256();
+
+    function call() public  { 
+        // require(container.length() == 0); 
+    
+        container.push(uint256(10));
+        container.push(uint256(20));
+        container.push(uint256(30));
+        assert(container.length() == 3);
+
+        Threading mp = new Threading();
+        mp.add(address(this), abi.encodeWithSignature("push(uint256)", 11));
+        mp.add(address(this), abi.encodeWithSignature("push(uint256)", 21));
+        assert(mp.length() == 2);
+        assert(container.length() == 3);
+
+        mp.run(1);
+        assert(mp.length() == 2);
+        assert(container.length() == 5);
+    }
+
+    function push(uint256 v) public{
+        container.push(v);
     }
 }

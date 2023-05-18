@@ -25,14 +25,12 @@ func TestThreadingBasic(t *testing.T) {
 	pyCompiler := project + "/compiler/compiler.py"
 
 	code, err := compiler.CompileContracts(pyCompiler, project+"/api/threading/threading_test.sol", "ThreadingTest")
-
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}
 	// ================================== Deploy the contract ==================================
 	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false)     // Build the message
 	_, transitions, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg)) // Execute it
-	// t.Log("\n" + eucommon.FormatTransitions(transitions))
 
 	contractAddress := receipt.ContractAddress
 	if receipt.Status != 1 || err != nil {
@@ -65,35 +63,9 @@ func TestThreadingBasic(t *testing.T) {
 	if receipt.Status != 1 || err != nil {
 		t.Error("Error: Failed to call!!!", err)
 	}
-
-	data = crypto.Keccak256([]byte("hasher()"))[:4]
-	msg = types.NewMessage(
-		eucommon.User1,
-		&contractAddress,
-		1,
-		new(big.Int).SetUint64(0),
-		1e15,
-		new(big.Int).SetUint64(1),
-		data,
-		nil,
-		false,
-	)
-	_, transitions, receipt, execResult, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
-
-	if err != nil {
-		t.Error(err)
-	}
-
-	if execResult != nil && execResult.Err != nil {
-		t.Error(execResult.Err)
-	}
-
-	if receipt.Status != 1 || err != nil {
-		t.Error("Error: Failed to call!!!", err)
-	}
 }
 
-func BenchmarkMultiProcessReverseString(t *testing.B) {
+func BenchmarkThreadingReverseString(t *testing.B) {
 	eu, config, db, url, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
@@ -101,8 +73,7 @@ func BenchmarkMultiProcessReverseString(t *testing.B) {
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
 
-	code, err := compiler.CompileContracts(pyCompiler, project+"/api/multiprocess/string_test.sol", "String")
-
+	code, err := compiler.CompileContracts(pyCompiler, project+"/api/threading/threading_test.sol", "Benchmarking")
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}
