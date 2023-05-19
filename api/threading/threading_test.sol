@@ -14,7 +14,7 @@ contract ThreadingTest {
        mp.del(0);
        assert(mp.length() == 1);
 
-       (bool success,) = address(address(0x90)).call(abi.encodeWithSignature("run(uint8)", 1));   
+       (bool success,) = address(address(0x90)).call(abi.encodeWithSignature("run(uint256)", 2));   
        assert(success);
 
        (,bytes memory hash) = mp.get(0);

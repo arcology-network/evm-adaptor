@@ -28,6 +28,10 @@ func TestContractString(t *testing.T) {
 		t.Error(err)
 	}
 
+	if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/string/Threading.sol"); err != nil {
+		t.Error(err)
+	}
+
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/string/string_test.sol", "StringTest")
 
 	if err != nil || len(code) == 0 {

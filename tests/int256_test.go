@@ -27,6 +27,10 @@ func TestContractNoncommutativeInt256(t *testing.T) {
 		t.Error(err)
 	}
 
+	if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/int256/Threading.sol"); err != nil {
+		t.Error(err)
+	}
+
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"int256/int256_test.sol", "Int256Test")
 
 	if err != nil || len(code) == 0 {
@@ -57,6 +61,14 @@ func TestNoncommutativeInt256N(t *testing.T) {
 	baseFile := targetPath + "base/Base.sol"
 
 	if err := common.CopyFile(baseFile, targetPath+"/int256/Base.sol"); err != nil {
+		t.Error(err)
+	}
+
+	if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/int256/Threading.sol"); err != nil {
+		t.Error(err)
+	}
+
+	if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/int256/Threading.sol"); err != nil {
 		t.Error(err)
 	}
 

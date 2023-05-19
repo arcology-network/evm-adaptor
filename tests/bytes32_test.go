@@ -28,6 +28,10 @@ func TestContractBytes32(t *testing.T) {
 		t.Error(err)
 	}
 
+	if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/bytes/Threading.sol"); err != nil {
+		t.Error(err)
+	}
+
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"bytes32/bytes32_test.sol", "Bytes32Test")
 
 	if err != nil || len(code) == 0 {

@@ -41,7 +41,7 @@ contract ThreadingCumulativeU256 {
       mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));   
       mp.add(address(this), abi.encodeWithSignature("add(uint256)", 1));
       mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));    
-      mp.run(1);
+      mp.run(2);
 
       assert(cumulative.get() == 6);
     }

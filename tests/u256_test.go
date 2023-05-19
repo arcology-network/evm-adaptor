@@ -25,9 +25,12 @@ func TestNoncommutativeU256Dynamic(t *testing.T) {
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/noncommutative/"
-	baseFile := targetPath + "base/Base.sol"
 
-	if err := common.CopyFile(baseFile, targetPath+"/u256/Base.sol"); err != nil {
+	if err := common.CopyFile(targetPath+"base/Base.sol", targetPath+"/u256/Base.sol"); err != nil {
+		t.Error(err)
+	}
+
+	if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/u256/Threading.sol"); err != nil {
 		t.Error(err)
 	}
 
@@ -62,6 +65,10 @@ func TestConcommutativeU256N(t *testing.T) {
 	baseFile := targetPath + "base/Base.sol"
 
 	if err := common.CopyFile(baseFile, targetPath+"/u256/Base.sol"); err != nil {
+		t.Error(err)
+	}
+
+	if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/u256/Threading.sol"); err != nil {
 		t.Error(err)
 	}
 

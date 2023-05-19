@@ -40,13 +40,13 @@ func (this *TheadingHandler) Call(caller, callee evmcommon.Address, input []byte
 	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}:
 		return this.length()
 
-	case [4]byte{0x1c, 0x82, 0xed, 0x4c}: // 1c 82 ed 4c
+	case [4]byte{0x57, 0x77, 0x1a, 0x23}: // 57 77 1a 23
 		return this.del(caller, callee, input[4:])
 
-	case [4]byte{0xc4, 0xe5, 0x55, 0x7a}: // c4 e5 55 7a
+	case [4]byte{0xa4, 0x44, 0xf5, 0xe9}: // a4 44 f5 e9
 		return this.run(caller, callee, input[4:])
 
-	case [4]byte{0x64, 0xf1, 0xbd, 0x63}:
+	case [4]byte{0x95, 0x07, 0xd3, 0x9a}: // 95 07 d3 9a
 		return this.get(input[4:])
 
 	case [4]byte{0x52, 0xef, 0xea, 0x6e}:
@@ -98,7 +98,7 @@ func (this *TheadingHandler) length() ([]byte, bool) {
 }
 
 func (this *TheadingHandler) error(input []byte) ([]byte, bool) {
-	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
+	if idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {
 		if item := this.jobQueue.At(idx); item != nil {
 			buffer, err := abi.Encode(codec.String(item.prechkErr.Error() + item.prechkErr.Error()).Clone().(codec.String).ToBytes())
 			return buffer, err == nil
@@ -107,17 +107,8 @@ func (this *TheadingHandler) error(input []byte) ([]byte, bool) {
 	return []byte{}, false
 }
 
-func (this *TheadingHandler) peek(input []byte) ([]byte, bool) {
-	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
-		if item := this.jobQueue.At(idx); item != nil {
-			return item.message.Data(), true
-		}
-	}
-	return []byte{}, false
-}
-
 func (this *TheadingHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-	if threads, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
+	if threads, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {
 		return []byte{}, this.jobQueue.Run(uint8(common.Min(common.Max(threads, 1), math.MaxUint8)), this.api)
 	}
 
@@ -133,7 +124,7 @@ func (this *TheadingHandler) del(caller, callee evmcommon.Address, input []byte)
 }
 
 func (this *TheadingHandler) get(input []byte) ([]byte, bool) {
-	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
+	if idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {
 		if item := this.jobQueue.At(idx); item != nil {
 			return item.result.ReturnData, item.result.Err == nil
 		}

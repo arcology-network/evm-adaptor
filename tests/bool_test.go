@@ -28,6 +28,10 @@ func TestContractBool(t *testing.T) {
 		t.Error(err)
 	}
 
+	if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/bool/Threading.sol"); err != nil {
+		t.Error(err)
+	}
+
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/bool/bool_test.sol", "BoolTest")
 	if err != nil || len(code) == 0 {
 		t.Error(err)

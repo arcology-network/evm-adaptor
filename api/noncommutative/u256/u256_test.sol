@@ -88,25 +88,59 @@ contract ThreadingTest {
     U256 container = new U256();
 
     function call() public  { 
-        // require(container.length() == 0); 
+        require(container.length() == 0); 
     
         container.push(uint256(10));
         container.push(uint256(20));
         container.push(uint256(30));
-        assert(container.length() == 3);
+        require(container.length() == 3);
 
         Threading mp = new Threading();
-        mp.add(address(this), abi.encodeWithSignature("push(uint256)", 11));
-        mp.add(address(this), abi.encodeWithSignature("push(uint256)", 21));
-        assert(mp.length() == 2);
-        assert(container.length() == 3);
+        mp.add(address(this), abi.encodeWithSignature("push(uint256)", 41));
+        mp.add(address(this), abi.encodeWithSignature("push(uint256)", 51));
+        require(mp.length() == 2);
+        require(container.length() == 3);
 
         mp.run(1);
-        assert(mp.length() == 2);
-        assert(container.length() == 5);
+        require(mp.length() == 2);
+        require(container.length() == 5);
+
+        require(container.get(0) == uint256(10));
+        require(container.get(1) == uint256(20));
+        require(container.get(2) == uint256(30));
+        require(container.get(3) == uint256(41));   
+        require(container.get(4) == uint256(51));  
+ 
+        require(container.pop() == uint256(51));  
+        require(container.length() == 4);
+
+
+        mp.clear();
+        mp.add(address(this), abi.encodeWithSignature("get(uint256)", 0));
+        mp.add(address(this), abi.encodeWithSignature("get(uint256)", 1));
+        require(mp.length() == 2);
+        mp.run(1);
+
+        (bool success, bytes memory data) = mp.get(1);
+        require(success && abi.decode(data, (uint256)) == 20);
+
+        // (success, data) = mp.get(1);
+        // require(success && abi.decode(data, (uint256)) == 10);
     }
 
     function push(uint256 v) public{
         container.push(v);
+    }
+
+    function get(uint256 idx) public returns(uint256){
+        return container.get(idx);  
+    }
+
+    function set(uint256 idx, uint256 v) public {
+        return container.set(idx, v);  
+    }
+
+    function pop() public returns(uint256){
+        return container.pop();  
     }
 }

@@ -28,6 +28,10 @@ func TestContractAddress(t *testing.T) {
 		t.Error(err)
 	}
 
+	if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/address/Threading.sol"); err != nil {
+		t.Error(err)
+	}
+
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"address/address_test.sol", "AddressTest")
 	if err != nil || len(code) == 0 {
 		t.Error(err)
