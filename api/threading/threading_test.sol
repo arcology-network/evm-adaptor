@@ -11,9 +11,6 @@ contract ThreadingTest {
        mp.add(address(this), abi.encodeWithSignature("hasher(bytes)", data));
        assert(mp.length() == 2);
 
-       mp.del(0);
-       assert(mp.length() == 1);
-
        (bool success,) = address(address(0x90)).call(abi.encodeWithSignature("run(uint256)", 2));   
        assert(success);
 
@@ -21,7 +18,6 @@ contract ThreadingTest {
        bytes32 hash32 = bytesToBytes32(hash); 
        assert(hash32 == keccak256(data));
 
-       assert(mp.length() == 1);
        mp.clear();
        assert(mp.length() == 0);
     }

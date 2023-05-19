@@ -39,19 +39,19 @@ func (this *U256CumulativeHandlers) Call(caller, callee evmcommon.Address, input
 
 	switch signature {
 	case [4]byte{0x1c, 0x64, 0x49, 0x9c}:
-		return this.New(caller, input[4:])
+		return this.new(caller, input[4:])
 
 	case [4]byte{0x6d, 0x4c, 0xe6, 0x3c}:
-		return this.Get(caller, input[4:])
+		return this.get(caller, input[4:])
 
-	case [4]byte{0xc9, 0xef, 0xba, 0xb9}:
-		return this.set(caller, input[4:])
+	// case [4]byte{0xc9, 0xef, 0xba, 0xb9}:
+	// 	return this.set(caller, input[4:])
 
 	case [4]byte{0xaf, 0xc9, 0xfc, 0x46}:
-		return this.Add(caller, input[4:])
+		return this.add(caller, input[4:])
 
 	case [4]byte{0xd8, 0x94, 0x8b, 0x09}:
-		return this.Sub(caller, input[4:])
+		return this.sub(caller, input[4:])
 	}
 	return this.Unknow(caller, input)
 }
@@ -61,7 +61,7 @@ func (this *U256CumulativeHandlers) Unknow(caller evmcommon.Address, input []byt
 	return []byte{}, false
 }
 
-func (this *U256CumulativeHandlers) New(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *U256CumulativeHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	id := this.api.GenCtrnUID()
 	if !this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) { // A new container
 		return []byte{}, false
@@ -88,7 +88,7 @@ func (this *U256CumulativeHandlers) New(caller evmcommon.Address, input []byte) 
 	return id, true
 }
 
-func (this *U256CumulativeHandlers) Get(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *U256CumulativeHandlers) get(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false
@@ -106,7 +106,15 @@ func (this *U256CumulativeHandlers) Get(caller evmcommon.Address, input []byte) 
 	return []byte{}, false
 }
 
-func (this *U256CumulativeHandlers) Add(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *U256CumulativeHandlers) add(caller evmcommon.Address, input []byte) ([]byte, bool) {
+	return this.set(caller, input, true)
+}
+
+func (this *U256CumulativeHandlers) sub(caller evmcommon.Address, input []byte) ([]byte, bool) {
+	return this.set(caller, input, false)
+}
+
+func (this *U256CumulativeHandlers) set(caller evmcommon.Address, input []byte, isPositive bool) ([]byte, bool) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false
@@ -117,42 +125,7 @@ func (this *U256CumulativeHandlers) Add(caller evmcommon.Address, input []byte) 
 		return []byte{}, false
 	}
 
-	value := commutative.NewU256Delta(delta.(*uint256.Int), true)
-	return []byte{}, this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value) == nil
-}
-
-func (this *U256CumulativeHandlers) Sub(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	path, err := this.buildPath(caller, input) // Build container path
-	if len(path) == 0 || err != nil {
-		return []byte{}, false
-	}
-
-	delta, err := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
-	if err != nil {
-		return []byte{}, false
-	}
-
-	value := commutative.NewU256Delta(delta.(*uint256.Int), false)
-	return []byte{}, this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value) == nil
-}
-
-func (this *U256CumulativeHandlers) set(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	path, err := this.buildPath(caller, input) // Build container path
-	if len(path) == 0 || err != nil {
-		return []byte{}, false
-	}
-
-	delta, err := abi.DecodeTo(input, 1, &uint256.Int{}, 1, 32)
-	if err != nil {
-		return []byte{}, false
-	}
-
-	sign, err := abi.DecodeTo(input, 1, bool(true), 1, 32)
-	if err != nil {
-		return []byte{}, false
-	}
-
-	value := commutative.NewU256Delta(delta, sign)
+	value := commutative.NewU256Delta(delta.(*uint256.Int), isPositive)
 	return []byte{}, this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value) == nil
 }
 

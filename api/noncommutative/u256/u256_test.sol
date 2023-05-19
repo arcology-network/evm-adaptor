@@ -170,11 +170,8 @@ contract ArrayThreadingTest {
 
     function call() public  {
         Threading mp = new Threading();
-// 
         push(0, 11);
         push(0, 12);
-        // require(array[0].length() == 2);
-
 
         mp.add(address(this), abi.encodeWithSignature("push(uint256,uint256)", 0, 13));
         mp.add(address(this), abi.encodeWithSignature("push(uint256,uint256)", 0, 14));
