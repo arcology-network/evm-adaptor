@@ -147,19 +147,19 @@ func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouter
 
 // Merge all the transitions back to the main cache
 func (this *Queue) WriteBack(mainApiRouter eucommon.ConcurrentApiRouterInterface, jobs []*Job) {
-	for i := 0; i < len(this.jobs); i++ { // transitt
-		for j, trans := range this.jobs[i].transitions {
+	for i := 0; i < len(jobs); i++ { // transitt
+		for j, trans := range jobs[i].transitions {
 			if ccurlcommon.IsPath(*trans.GetPath()) { // Remove path entries
 				if !trans.Preexist() {
 					trans.WriteTo(mainApiRouter.Ccurl().WriteCache()) // Write the path creation first
 				}
-				this.jobs[i].transitions[j] = nil // Remove to avoid dupilicate writes
+				jobs[i].transitions[j] = nil // Remove to avoid dupilicate writes
 			}
 		}
-		common.RemoveIf(&this.jobs[i].transitions, func(trans ccurlcommon.UnivalueInterface) bool { return trans == nil }) // Remove to avoid dupilicate writes
+		common.RemoveIf(&jobs[i].transitions, func(trans ccurlcommon.UnivalueInterface) bool { return trans == nil }) // Remove to avoid dupilicate writes
 
 		// Write the rest to the cache
-		for _, trans := range this.jobs[i].transitions {
+		for _, trans := range jobs[i].transitions {
 			trans.WriteTo(mainApiRouter.Ccurl().WriteCache()) // Write the new paths first
 		}
 	}

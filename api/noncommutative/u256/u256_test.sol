@@ -102,9 +102,6 @@ contract ThreadingTest {
         require(container.length() == 3);
 
         mp.run(1);
-        require(mp.length() == 2);
-        require(container.length() == 5);
-
         require(container.get(0) == uint256(10));
         require(container.get(1) == uint256(20));
         require(container.get(2) == uint256(30));
@@ -124,8 +121,20 @@ contract ThreadingTest {
         (bool success, bytes memory data) = mp.get(1);
         require(success && abi.decode(data, (uint256)) == 20);
 
-        // (success, data) = mp.get(1);
-        // require(success && abi.decode(data, (uint256)) == 10);
+        (success, data) = mp.get(0);
+        require(success && abi.decode(data, (uint256)) == 10);
+
+        pop();
+        require(container.length() == 3);
+
+        // Here should be one conflict
+        mp.clear();
+        mp.add(address(this), abi.encodeWithSignature("pop()"));
+        mp.add(address(this), abi.encodeWithSignature("pop()"));
+        require(mp.length() == 2);
+        mp.run(1);
+
+        require(container.length() == 2);  // Only one transaction went through, so only one pop() took effect
     }
 
     function push(uint256 v) public{
@@ -140,7 +149,7 @@ contract ThreadingTest {
         return container.set(idx, v);  
     }
 
-    function pop() public returns(uint256){
-        return container.pop();  
+    function pop() public {
+        container.pop();  
     }
 }
