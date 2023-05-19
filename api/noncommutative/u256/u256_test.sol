@@ -38,13 +38,18 @@ contract U256DynamicTest {
         require(container.length() == 0); 
         
         // Nested array
-        U256 container0 = new U256();
-        U256 container1 = new U256();
-        U256 container2 = new U256();
+        // U256 container0 = new U256();
+        // U256 container1 = new U256();
+        // U256 container2 = new U256();
 
-        array.push(container0);
-        array.push(container1);
-        array.push(container2);
+        array = new U256[](3);
+        array[0] = new U256();
+        array[1] = new U256();
+        array[2] = new U256();
+
+        // array.push(container0);
+        // array.push(container1);
+        // array.push(container2);
 
         U256 _0 = array[0];
         _0.push(101);
@@ -151,5 +156,58 @@ contract ThreadingTest {
 
     function pop() public {
         container.pop();  
+    }
+}
+
+contract ArrayThreadingTest {
+    U256[] array; 
+
+    constructor() public {
+        array = new U256[](2);
+        array[0] = new U256();
+        array[1] = new U256();
+    }
+
+    function call() public  {
+        Threading mp = new Threading();
+// 
+        push(0, 11);
+        push(0, 12);
+        // require(array[0].length() == 2);
+
+
+        mp.add(address(this), abi.encodeWithSignature("push(uint256,uint256)", 0, 13));
+        mp.add(address(this), abi.encodeWithSignature("push(uint256,uint256)", 0, 14));
+        mp.add(address(this), abi.encodeWithSignature("push(uint256,uint256)", 1, 51));
+        mp.add(address(this), abi.encodeWithSignature("push(uint256,uint256)", 1, 52));
+        require(mp.length() == 4);
+        mp.run(1);
+
+        require(array[0].length() == 4);
+        require(array[1].length() == 2);
+
+        require(array[0].get(0) == 11);
+        require(array[0].get(1) == 12);
+        require(array[0].get(2) == 13);
+        require(array[0].get(3) == 14);
+
+        require(array[1].get(0) == 51);
+        require(array[1].get(1) == 52);
+    }
+
+    function push(uint256 id, uint256 v) public{
+        array[id].push(v);
+    }
+
+    function get(uint256 id, uint256 idx) public returns(uint256){
+        return array[id].get(idx);  
+    }
+
+    function set(uint256 id, uint256 idx, uint256 v) public {
+        return array[id].set(idx, v);  
+    }
+
+    function pop(uint256 id) public {
+        array[id].pop();  
     }
 }

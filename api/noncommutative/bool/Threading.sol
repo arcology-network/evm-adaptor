@@ -15,12 +15,6 @@ contract Threading {
         return abi.decode(data, (uint256));
     }
 
-    // Remove an item from the queue. Returns true if successful and false otherwise
-    function del(uint256 jobID) public returns(bool)  {
-        (bool success,) = address(API).call(abi.encodeWithSignature("del(uint256)", jobID));   
-        return success;
-    }
-
     // Start processing all the parallel jobs in the queue by specifing the number of threads, the number is between [1, 255]
     function run(uint256 threads) public returns(bool) {
         (bool success,) = address(API).call(abi.encodeWithSignature("run(uint256)", threads));   
