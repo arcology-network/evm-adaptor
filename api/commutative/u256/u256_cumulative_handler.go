@@ -14,6 +14,8 @@ import (
 
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
+
+	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 )
 
 // APIs under the concurrency namespace
@@ -44,8 +46,11 @@ func (this *U256CumulativeHandlers) Call(caller, callee evmcommon.Address, input
 	case [4]byte{0x6d, 0x4c, 0xe6, 0x3c}:
 		return this.get(caller, input[4:])
 
-	// case [4]byte{0xc9, 0xef, 0xba, 0xb9}:
-	// 	return this.set(caller, input[4:])
+	case [4]byte{0x65, 0x83, 0x52, 0x0e}:
+		return this.min(caller, input[4:])
+
+	case [4]byte{0xaa, 0x11, 0xc9, 0x26}:
+		return this.max(caller, input[4:])
 
 	case [4]byte{0xaf, 0xc9, 0xfc, 0x46}:
 		return this.add(caller, input[4:])
@@ -97,7 +102,6 @@ func (this *U256CumulativeHandlers) get(caller evmcommon.Address, input []byte) 
 	if value, err := this.api.Ccurl().ReadAt(this.api.TxIndex(), path, 0); value == nil || err != nil {
 		return []byte{}, false
 	} else {
-
 		updated := value.(*uint256.Int)
 		if encoded, err := abi.Encode(updated); err == nil { // Encode the result
 			return encoded, true
@@ -127,6 +131,44 @@ func (this *U256CumulativeHandlers) set(caller evmcommon.Address, input []byte, 
 
 	value := commutative.NewU256Delta(delta.(*uint256.Int), isPositive)
 	return []byte{}, this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value) == nil
+}
+
+func (this *U256CumulativeHandlers) min(caller evmcommon.Address, input []byte) ([]byte, bool) {
+	path, err := this.buildPath(caller, input) // Build container path
+	if len(path) == 0 || err != nil {
+		return []byte{}, false
+	}
+
+	value, err := this.api.Ccurl().DoAt(this.api.TxIndex(), path, 0, func(v interface{}) interface{} {
+		return []interface{}{uint32(1), uint32(0), uint32(0), v.(ccurlcommon.UnivalueInterface).Value()}
+	})
+
+	if value != nil && err == nil {
+		minv := value.(*commutative.U256).Min().(*codec.Uint256)
+		if encoded, err := abi.Encode((*uint256.Int)(minv)); err == nil { // Encode the result
+			return encoded, true
+		}
+	}
+	return []byte{}, false
+}
+
+func (this *U256CumulativeHandlers) max(caller evmcommon.Address, input []byte) ([]byte, bool) {
+	path, err := this.buildPath(caller, input) // Build container path
+	if len(path) == 0 || err != nil {
+		return []byte{}, false
+	}
+
+	value, err := this.api.Ccurl().DoAt(this.api.TxIndex(), path, 0, func(v interface{}) interface{} {
+		return []interface{}{uint32(1), uint32(0), uint32(0), v.(ccurlcommon.UnivalueInterface).Value()}
+	})
+
+	if value != nil && err == nil {
+		minv := value.(*commutative.U256).Max().(*codec.Uint256)
+		if encoded, err := abi.Encode((*uint256.Int)(minv)); err == nil { // Encode the result
+			return encoded, true
+		}
+	}
+	return []byte{}, false
 }
 
 // Build the container path

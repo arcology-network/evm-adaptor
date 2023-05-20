@@ -8,9 +8,14 @@ contract CumulativeU256Test {
 
     constructor() public {    
         cumulative = new U256Cumulative(1, 100);  // [1, 100]
+        require(cumulative.min() == 1);
+        require(cumulative.max() == 100);
+
         require(cumulative.add(99));
+        
         cumulative.sub(99);
         require(cumulative.get() == 99);
+
 
         cumulative.add(1);
         require(cumulative.get() == 100);
@@ -21,14 +26,17 @@ contract CumulativeU256Test {
         cumulative.sub(99);
         require(cumulative.get() == 1);
 
-
-        cumulative = new U256Cumulative(0, 100);  // [1, 100]
+        cumulative = new U256Cumulative(0, 100);  // [0, 100]
         require(cumulative.get() == 0);
 
         require(cumulative.add(99));
         require(cumulative.get() == 99);
+        
         require(cumulative.sub(99));
         require(cumulative.get() == 0);
+
+        require(cumulative.min() == 0);
+        require(cumulative.max() == 100);
     }
 }
 

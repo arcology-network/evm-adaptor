@@ -24,4 +24,14 @@ contract U256Cumulative {
         (bool success,) = address(API).call(abi.encodeWithSignature("sub(bytes, uint256)", id, v));
         return success;
     }   
+
+    function min() public returns(uint256) { 
+        (, bytes memory data) = address(API).call(abi.encodeWithSignature("min(bytes)", id));
+        return abi.decode(data, (uint256));
+    }  
+
+    function max() public returns(uint256) { 
+        (, bytes memory data) = address(API).call(abi.encodeWithSignature("max(bytes)", id));
+        return abi.decode(data, (uint256));
+    }    
 }
