@@ -49,7 +49,9 @@ func Deploy(eu *cceu.EU, config *cceu.Config, owner evmcommon.Address, nonce uin
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
 	}
 	msg := evmtypes.NewMessage(owner, nil, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-	_, transitions, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{byte(nonce + 1), byte(nonce + 1), byte(nonce + 1)}), int(nonce+1), &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{byte(nonce + 1), byte(nonce + 1), byte(nonce + 1)}), int(nonce+1), &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	_, transitions := eu.Api().Ccurl().ExportAll()
+
 	return transitions, receipt, err
 }
 
@@ -59,7 +61,8 @@ func CallFunc(eu *cceu.EU, config *cceu.Config, from, to *evmcommon.Address, non
 		data = append(data, arg...)
 	}
 	msg := evmtypes.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
-	accesses, transitions, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	accesses, transitions := eu.Api().Ccurl().ExportAll()
 	return accesses, transitions, receipt, err
 }
 

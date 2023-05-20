@@ -63,29 +63,29 @@ func TestNativeContractSameBlock(t *testing.T) {
 	}
 
 	// Increment x by one
-	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
+	if receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
 		t.Error("Error: Failed to call incrementX() 1!!!", err)
 	}
 
-	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
+	if receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
 		t.Error("Error: Failed to call incrementX() 2!!!", err)
 	}
 
-	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
+	if receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
 		t.Error("Error: Failed to call incrementX() 3!!!", err)
 	}
 
 	encoded, _ := abi.Encode(uint64(102))
-	if _, _, receipt, err := tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkY(uint256)", encoded); receipt.Status != 1 || err != nil {
+	if receipt, err := tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkY(uint256)", encoded); receipt.Status != 1 || err != nil {
 		t.Error("Error: Failed to check checkY() 1!!!", err)
 	}
 
-	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "incrementY()"); receipt.Status != 1 {
+	if receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "incrementY()"); receipt.Status != 1 {
 		t.Error("Error: Failed to call incrementY() 1!!!", err)
 	}
 
 	encoded, _ = abi.Encode(uint64(104))
-	if _, _, receipt, err := tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkY(uint256)", encoded); receipt.Status != 1 || err != nil {
+	if receipt, err := tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkY(uint256)", encoded); receipt.Status != 1 || err != nil {
 		t.Error("Error: Failed to check checkY() 2!!!", err)
 	}
 }

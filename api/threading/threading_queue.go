@@ -83,8 +83,16 @@ func (this *Queue) Add(origin, calleeAddr evmcommon.Address, funCall []byte) int
 }
 
 func (this *Queue) Snapshot(mainApiRouter eucommon.ConcurrentApiRouterInterface) ccurlcommon.DatastoreInterface {
-	transitions := mainApiRouter.Ccurl().Export()                                                         // Get the all up-to-date transitions from the main thread
-	mainProcessTrans := univalue.Univalues(common.Clone(transitions)).To(univalue.TransitionFilters()...) // Filter out unwanted ones
+	transitions := mainApiRouter.Ccurl().Export() // Get the all up-to-date transitions from the main thread
+	univalue.Univalues(transitions).Print()
+
+	mainProcessTrans := univalue.Univalues(common.Clone(transitions)).To(
+		univalue.RemoveReadOnly,
+		univalue.DelNonExist,
+		univalue.CloneValue,
+	)
+
+	univalue.Univalues(mainProcessTrans).Print()
 
 	transientDB := ccurlstorage.NewTransientDB(mainApiRouter.Ccurl().WriteCache().Store()) // Should be the same as Importer().Store()
 	snapshot := concurrenturl.NewConcurrentUrl(transientDB).Import(mainProcessTrans).Sort()
@@ -117,14 +125,14 @@ func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouter
 			apiRounter, // Tx hash, tx id and url
 		)
 
-		_, _, this.jobs[i].receipt, this.jobs[i].result, this.jobs[i].prechkErr =
+		this.jobs[i].receipt, this.jobs[i].result, this.jobs[i].prechkErr =
 			eu.Run(eu.Api().TxHash(), int(eu.Api().TxIndex()), &this.jobs[i].message, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(this.jobs[i].message))
 
 		// all := eu.Api().Ccurl().Export()
 		all := common.Clone(eu.Api().Ccurl().Export()) // Export all the transitions
 		univalue.Univalues(all).Print()
 
-		this.jobs[i].accesses = univalue.Univalues(all).To(univalue.AccessFilters()...)
+		this.jobs[i].accesses = univalue.Univalues(all).To(univalue.AccessCodecFilterSet()...)
 		this.jobs[i].transitions = univalue.Univalues(all).To(
 			univalue.RemoveReadOnly,
 			univalue.DelNonExist,
@@ -163,6 +171,7 @@ func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouter
 func (this *Queue) WriteBack(mainApiRouter eucommon.ConcurrentApiRouterInterface, jobs []*Job) {
 	for i := 0; i < len(jobs); i++ { // transitt
 		for j, trans := range jobs[i].transitions {
+			trans.SetTx(mainApiRouter.TxIndex())      // Replace the tx number
 			if ccurlcommon.IsPath(*trans.GetPath()) { // Remove path entries
 				if !trans.Preexist() {
 					trans.WriteTo(mainApiRouter.Ccurl().WriteCache()) // Write the path creation first

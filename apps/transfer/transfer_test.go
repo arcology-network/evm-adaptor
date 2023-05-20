@@ -47,7 +47,9 @@ func TestTransfer(t *testing.T) {
 	config.Time = new(big.Int).SetUint64(10000000)
 
 	msg := types.NewMessage(tests.User1, &tests.User2, 0, new(big.Int).SetUint64(100), 1e15, new(big.Int).SetUint64(1), nil, nil, true)
-	accesses, transitions, receipt, _, err := eu.Run(common.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg))
+	receipt, _, err := eu.Run(common.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg))
+	accesses, transitions := eu.Api().Ccurl().ExportAll()
+
 	t.Log("\n" + tests.FormatTransitions(accesses))
 	t.Log("\n" + tests.FormatTransitions(transitions))
 	t.Log(receipt)

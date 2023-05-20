@@ -32,8 +32,9 @@ func TestBase(t *testing.T) {
 	}
 
 	// ================================== Deploy the contract ==================================
-	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)      // Build the message
-	_, transitions, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg)) // Execute it
+	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
+	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))            // Execute it
+	_, transitions := eu.Api().Ccurl().ExportAll()
 
 	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	// t.Log(receipt)
@@ -58,7 +59,9 @@ func TestBase(t *testing.T) {
 	data = append(data, evmcommon.BytesToHash(eucommon.User1.Bytes()).Bytes()...)
 	data = append(data, evmcommon.BytesToHash([]byte{0xcc}).Bytes()...)
 	msg = types.NewMessage(eucommon.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, true)
-	_, transitions, receipt, _, err = eu.Run(evmcommon.BytesToHash([]byte{2, 2, 2}), 2, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	receipt, _, err = eu.Run(evmcommon.BytesToHash([]byte{2, 2, 2}), 2, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	_, transitions = eu.Api().Ccurl().ExportAll()
+
 	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	if receipt.Status != 1 {

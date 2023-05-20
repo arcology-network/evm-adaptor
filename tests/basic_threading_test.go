@@ -30,7 +30,7 @@ func TestThreadingBasic(t *testing.T) {
 	}
 	// ================================== Deploy the contract ==================================
 	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false) // Build the message
-	_, _, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))       // Execute it
+	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))             // Execute it
 	_, transitions := eu.Api().Ccurl().ExportAll()
 
 	contractAddress := receipt.ContractAddress
@@ -45,14 +45,18 @@ func TestThreadingBasic(t *testing.T) {
 	url.Commit([]uint32{1})
 
 	// ================================== CallBasic() ==================================
-	_, transitions, receipt, _, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	receipt, _, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	_, transitions = eu.Api().Ccurl().ExportAll()
+
 	if err != nil {
 		fmt.Print(err)
 	}
 
 	data := crypto.Keccak256([]byte("call()"))[:4]
 	msg = types.NewMessage(eucommon.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-	_, transitions, receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	_, transitions = eu.Api().Ccurl().ExportAll()
+
 	if err != nil {
 		t.Error(err)
 	}
@@ -79,8 +83,10 @@ func BenchmarkThreadingReverseString(t *testing.B) {
 		t.Error("Error: Failed to generate the byte code")
 	}
 	// ================================== Deploy the contract ==================================
-	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false)     // Build the message
-	_, transitions, receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg)) // Execute it
+	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false) // Build the message
+	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))             // Execute it
+	_, transitions := eu.Api().Ccurl().ExportAll()
+
 	// t.Log("\n" + eucommon.FormatTransitions(transitions))
 
 	contractAddress := receipt.ContractAddress
@@ -95,14 +101,18 @@ func BenchmarkThreadingReverseString(t *testing.B) {
 	url.Commit([]uint32{1})
 
 	// ================================== Test SHA1() ==================================
-	_, transitions, receipt, _, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	receipt, _, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	_, transitions = eu.Api().Ccurl().ExportAll()
+
 	if err != nil {
 		fmt.Print(err)
 	}
 
 	data := crypto.Keccak256([]byte("testReverseString10k()"))[:4]
 	msg = types.NewMessage(eucommon.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-	_, transitions, receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	_, transitions = eu.Api().Ccurl().ExportAll()
+
 	fmt.Println()
 	if err != nil {
 		t.Error(err)

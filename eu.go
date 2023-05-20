@@ -6,7 +6,6 @@ import (
 	"math"
 	"math/big"
 
-	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	ethCommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/core/types"
@@ -48,8 +47,7 @@ func (this *EU) SetContext(statedb vm.StateDB, api eucommon.ConcurrentApiRouterI
 	this.evm.SetApi(api)
 }
 
-func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, blockContext vm.BlockContext, txContext vm.TxContext) (
-	[]ccurlcommon.UnivalueInterface, []ccurlcommon.UnivalueInterface, *types.Receipt, *core.ExecutionResult, error) {
+func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, blockContext vm.BlockContext, txContext vm.TxContext) (*types.Receipt, *core.ExecutionResult, error) {
 	this.statedb.(*eth.ImplStateDB).Prepare(txHash, ethCommon.Hash{}, txIndex)
 	this.api.Prepare(txHash, blockContext.BlockNumber, uint32(txIndex))
 	this.evm.Context = blockContext
@@ -59,7 +57,7 @@ func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, bloc
 
 	result, err := core.ApplyMessage(this.evm, *msg, &gasPool) // Execute the transcation
 	if err != nil {
-		return []ccurlcommon.UnivalueInterface{}, []ccurlcommon.UnivalueInterface{}, nil, nil, err // Failed in Precheck before tx execution started
+		return nil, nil, err // Failed in Precheck before tx execution started
 	}
 
 	assertLog := GetAssertion(result.ReturnData) // Get the assertion
@@ -82,7 +80,7 @@ func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, bloc
 	}
 	receipt.Logs = this.statedb.(*eth.ImplStateDB).GetLogs(txHash)
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
-	accesses, transitions := this.api.Ccurl().ExportAll()
+	// accesses, transitions := this.api.Ccurl().ExportAll()
 
 	// if result.Failed() { // Failed
 	// 	accesses = accesses[:0]
@@ -92,7 +90,7 @@ func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, bloc
 	// 	})
 	// }
 
-	return accesses, transitions, receipt, result, err
+	return receipt, result, err
 }
 
 // Get the assertion info from the execution result
