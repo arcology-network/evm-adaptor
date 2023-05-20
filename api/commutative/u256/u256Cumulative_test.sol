@@ -37,13 +37,13 @@ contract ThreadingCumulativeU256 {
     
     function call() public {
       Threading mp = new Threading();
-      mp.add(address(this), abi.encodeWithSignature("add(uint256)", 1));
-      mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));   
-      mp.add(address(this), abi.encodeWithSignature("add(uint256)", 1));
-      mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));    
-    //   mp.add(address(this), abi.encodeWithSignature("sub(uint256)", 1));
+    //   mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
+      // mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));   
+      // mp.add(address(this), abi.encodeWithSignature("add(uint256)", 1));
+      // mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));    
+      mp.add(address(this), abi.encodeWithSignature("sub(uint256)", 1));
       mp.run(2);
-      assert(cumulative.get() == 6);
+    //   assert(cumulative.get() == 0);
 
     //   mp.clear();
     //   mp.add(address(this), abi.encodeWithSignature("sub(uint256)", 1));

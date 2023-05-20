@@ -86,7 +86,7 @@ func (this *TheadingHandler) add(caller, callee evmcommon.Address, input []byte)
 }
 
 func (this *TheadingHandler) clear() ([]byte, bool) {
-	buffer, err := abi.Encode(codec.Uint64(this.jobQueue.Clear()))
+	buffer, err := abi.Encode(uint64(this.jobQueue.Clear()))
 	return buffer, err == nil
 }
 

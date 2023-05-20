@@ -6,7 +6,6 @@ import (
 	"math"
 	"math/big"
 
-	common "github.com/arcology-network/common-lib/common"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	ethCommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core"
@@ -85,13 +84,13 @@ func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, bloc
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 	accesses, transitions := this.api.Ccurl().ExportAll()
 
-	if result.Failed() { // Failed
-		accesses = accesses[:0]
-		common.RemoveIf(&transitions, func(val ccurlcommon.UnivalueInterface) bool {
-			path := val.GetPath()
-			return len(*path) <= 5 || (*path)[len(*path)-5:] != "nonce" // Keep nonce transitions only, nonce needs to increment anyway.
-		})
-	}
+	// if result.Failed() { // Failed
+	// 	accesses = accesses[:0]
+	// 	common.RemoveIf(&transitions, func(val ccurlcommon.UnivalueInterface) bool {
+	// 		path := val.GetPath()
+	// 		return len(*path) <= 5 || (*path)[len(*path)-5:] != "nonce" // Keep nonce transitions only, nonce needs to increment anyway.
+	// 	})
+	// }
 
 	return accesses, transitions, receipt, result, err
 }

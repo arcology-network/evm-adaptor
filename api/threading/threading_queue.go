@@ -117,26 +117,40 @@ func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouter
 			apiRounter, // Tx hash, tx id and url
 		)
 
-		this.jobs[i].accesses, this.jobs[i].transitions, this.jobs[i].receipt, this.jobs[i].result, this.jobs[i].prechkErr =
+		_, _, this.jobs[i].receipt, this.jobs[i].result, this.jobs[i].prechkErr =
 			eu.Run(eu.Api().TxHash(), int(eu.Api().TxIndex()), &this.jobs[i].message, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(this.jobs[i].message))
+
+		// all := eu.Api().Ccurl().Export()
+		all := common.Clone(eu.Api().Ccurl().Export()) // Export all the transitions
+		univalue.Univalues(all).Print()
+
+		this.jobs[i].accesses = univalue.Univalues(all).To(univalue.AccessFilters()...)
+		this.jobs[i].transitions = univalue.Univalues(all).To(
+			univalue.RemoveReadOnly,
+			univalue.DelNonExist,
+			univalue.RemoveNonce, // Threading doesn't increment the nonce
+		)
 	}
 	// }
 	// common.ParallelWorker(len(this.jobs), int(threads), executor)
 	// fmt.Println("Run: ", time.Since(t0))
 
+	jobs := common.Clone(this.jobs)
+	jobs = common.RemoveIf(&jobs, func(job *Job) bool { return job.prechkErr != nil || job.receipt.Status != 1 }) // Only select the successful jobs
+
 	// Put all the access records together
 	length := 0
-	common.Foreach(this.jobs, func(job **Job) { length += len((*(*job)).accesses) }) // Pre-allocation
+	common.Foreach(jobs, func(job **Job) { length += len((*(*job)).accesses) }) // Pre-allocation
 
 	accesseVec := make([]ccurlcommon.UnivalueInterface, 0, length)
-	common.Foreach(this.jobs, func(job **Job) { accesseVec = append(accesseVec, (*(*job)).accesses...) })
+	common.Foreach(jobs, func(job **Job) { accesseVec = append(accesseVec, (*(*job)).accesses...) })
 
 	// Detect potential conflicts}
 	_, conflicTxs := indexer.NewArbitratorSlow().Detect(accesseVec)
 	univalue.Univalues(accesseVec).Print()
 
 	// Clear up conflicting txs and their state changes
-	jobs := common.SetIndices(common.Clone(this.jobs), conflicTxs, func(job *Job) *Job { return nil })
+	jobs = common.SetIndices(jobs, conflicTxs, func(job *Job) *Job { return nil })
 	common.RemoveIf(&jobs, func(job *Job) bool { return job == nil }) // Shour mark the conflict jobs
 
 	// t0 = time.Now()
