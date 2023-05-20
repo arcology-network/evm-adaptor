@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	common "github.com/arcology-network/common-lib/common"
+	ccurlcommon "github.com/arcology-network/concurrenturl/common"
+	"github.com/arcology-network/concurrenturl/univalue"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/crypto"
@@ -142,11 +144,19 @@ func TestCumulativeU256Threading(t *testing.T) {
 	// ================================== Deploy the contract ==================================
 	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
 	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg))            // Execute it
-	_, transitions := eu.Api().Ccurl().ExportAll()
-	// ---------------
+	all := eu.Api().Ccurl().Export()
 
-	// t.Log("\n" + FormatTransitions(accesses))
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	all = univalue.Univalues(all).To(
+		univalue.RemoveReadOnly,
+		univalue.DelNonExist,
+	)
+
+	transitions := common.RemoveIf(&all, func(trans ccurlcommon.UnivalueInterface) bool { return trans == nil }) // Remove to avoid dupilicate writes
+	eu.Api().Ccurl().Import(transitions)
+	eu.Api().Ccurl().Sort()
+	eu.Api().Ccurl().Commit([]uint32{1})
+
+	// ---------------
 	t.Log(receipt)
 	contractAddress := receipt.ContractAddress
 	if receipt.Status != 1 || err != nil {
@@ -166,7 +176,7 @@ func TestCumulativeU256Threading(t *testing.T) {
 	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	_, transitions = eu.Api().Ccurl().ExportAll()
 
-	if err != nil {
+	if receipt.Status != 1 || err != nil {
 		t.Error(err)
 	}
 
@@ -174,8 +184,28 @@ func TestCumulativeU256Threading(t *testing.T) {
 		t.Error(execResult.Err)
 	}
 
+	// ================================== Call Again ==================================
+	all = univalue.Univalues(eu.Api().Ccurl().Export()).To(
+		univalue.RemoveReadOnly,
+		univalue.DelNonExist,
+	)
+
+	eu1, config, _, _, _ := NewTestEU()
+	transitions = common.RemoveIf(&all, func(trans ccurlcommon.UnivalueInterface) bool { return trans == nil }) // Remove to avoid dupilicate writes
+	eu1.Api().Ccurl().Import(transitions)
+	eu1.Api().Ccurl().Sort()
+	eu1.Api().Ccurl().Commit([]uint32{1})
+
+	data = crypto.Keccak256([]byte("call2()"))[:4]
+	msg = types.NewMessage(eucommon.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	receipt, execResult, err = eu1.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+
 	if receipt.Status != 1 || err != nil {
-		t.Error("Error: Failed to call!!!", err)
+		t.Error(err)
+	}
+
+	if execResult != nil && execResult.Err != nil {
+		t.Error(execResult.Err)
 	}
 }
 
@@ -277,7 +307,7 @@ func TestNestedArrayThreading(t *testing.T) {
 	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	_, transitions = eu.Api().Ccurl().ExportAll()
 
-	if err != nil {
+	if receipt.Status != 1 || err != nil {
 		t.Error(err)
 	}
 
@@ -285,7 +315,4 @@ func TestNestedArrayThreading(t *testing.T) {
 		t.Error(execResult.Err)
 	}
 
-	if receipt.Status != 1 || err != nil {
-		t.Error("Error: Failed to call!!!", err)
-	}
 }
