@@ -102,8 +102,7 @@ func (this *Queue) Snapshot(mainApiRouter eucommon.ConcurrentApiRouterInterface)
 
 func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouterInterface) bool {
 	if mainApiRouter.Depth() > apicommon.MAX_RECURSIION_DEPTH {
-		//, errors.New("Error: Execeeds the max recursion depth")
-		return false
+		return false //, errors.New("Error: Execeeds the max recursion depth")
 	}
 
 	snapshot := this.Snapshot(mainApiRouter)

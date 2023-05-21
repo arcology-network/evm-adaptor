@@ -31,21 +31,21 @@ func NewImplStateDB(url *concurrenturl.ConcurrentUrl) *ImplStateDB {
 	}
 }
 
-func (state *ImplStateDB) CreateAccount(addr evmcommon.Address) {
-	createAccount(state.url, addr, state.tid)
+func (this *ImplStateDB) CreateAccount(addr evmcommon.Address) {
+	createAccount(this.url, addr, this.tid)
 }
 
-func (state *ImplStateDB) SubBalance(addr evmcommon.Address, amount *big.Int) {
-	state.AddBalance(addr, new(big.Int).Neg(amount))
+func (this *ImplStateDB) SubBalance(addr evmcommon.Address, amount *big.Int) {
+	this.AddBalance(addr, new(big.Int).Neg(amount))
 }
 
-func (state *ImplStateDB) AddBalance(addr evmcommon.Address, amount *big.Int) {
-	if !accountExist(state.url, addr, state.tid) {
-		createAccount(state.url, addr, state.tid)
+func (this *ImplStateDB) AddBalance(addr evmcommon.Address, amount *big.Int) {
+	if !accountExist(this.url, addr, this.tid) {
+		createAccount(this.url, addr, this.tid)
 	}
 
 	if delta, ok := commutative.NewU256DeltaFromBigInt(amount); ok {
-		if err := state.url.Write(state.tid, getBalancePath(state.url, addr), delta); err != nil {
+		if err := this.url.Write(this.tid, getBalancePath(this.url, addr), delta); err != nil {
 			panic(err) //should not just panic
 		}
 		return
@@ -53,24 +53,24 @@ func (state *ImplStateDB) AddBalance(addr evmcommon.Address, amount *big.Int) {
 	panic("Error: Failed to call AddBalance()")
 }
 
-func (state *ImplStateDB) GetBalance(addr evmcommon.Address) *big.Int {
-	if !accountExist(state.url, addr, state.tid) {
+func (this *ImplStateDB) GetBalance(addr evmcommon.Address) *big.Int {
+	if !accountExist(this.url, addr, this.tid) {
 		return new(big.Int)
 	}
 
-	if value, err := state.url.Read(state.tid, getBalancePath(state.url, addr)); err != nil {
+	if value, err := this.url.Read(this.tid, getBalancePath(this.url, addr)); err != nil {
 		panic(err)
 	} else {
 		return (*(value.(*uint256.Int))).ToBig() // v.(*commutative.U256).Value().(*big.Int)
 	}
 }
 
-func (state *ImplStateDB) PeekBalance(addr evmcommon.Address) *big.Int {
-	if !accountExist(state.url, addr, state.tid) {
+func (this *ImplStateDB) PeekBalance(addr evmcommon.Address) *big.Int {
+	if !accountExist(this.url, addr, this.tid) {
 		return new(big.Int)
 	}
 
-	if value, err := state.url.Peek(getBalancePath(state.url, addr)); err != nil {
+	if value, err := this.url.Peek(getBalancePath(this.url, addr)); err != nil {
 		panic(err)
 	} else {
 		// return value.(*urltype.Univalue).Value().(*commutative.U256).Value().(*big.Int)
@@ -79,17 +79,17 @@ func (state *ImplStateDB) PeekBalance(addr evmcommon.Address) *big.Int {
 	}
 }
 
-func (state *ImplStateDB) SetBalance(addr evmcommon.Address, amount *big.Int) {
-	origin := state.PeekBalance(addr)
-	state.AddBalance(addr, new(big.Int).Sub(amount, origin))
+func (this *ImplStateDB) SetBalance(addr evmcommon.Address, amount *big.Int) {
+	origin := this.PeekBalance(addr)
+	this.AddBalance(addr, new(big.Int).Sub(amount, origin))
 }
 
-func (state *ImplStateDB) GetNonce(addr evmcommon.Address) uint64 {
-	if !accountExist(state.url, addr, state.tid) {
+func (this *ImplStateDB) GetNonce(addr evmcommon.Address) uint64 {
+	if !accountExist(this.url, addr, this.tid) {
 		return 0
 	}
 
-	if value, err := state.url.Peek(getNoncePath(state.url, addr)); err != nil {
+	if value, err := this.url.Peek(getNoncePath(this.url, addr)); err != nil {
 		panic(err)
 	} else {
 		v, _, _ := value.(*commutative.Uint64).Get()
@@ -97,18 +97,18 @@ func (state *ImplStateDB) GetNonce(addr evmcommon.Address) uint64 {
 	}
 }
 
-func (state *ImplStateDB) SetNonce(addr evmcommon.Address, nonce uint64) {
-	if !accountExist(state.url, addr, state.tid) {
-		createAccount(state.url, addr, state.tid)
+func (this *ImplStateDB) SetNonce(addr evmcommon.Address, nonce uint64) {
+	if !accountExist(this.url, addr, this.tid) {
+		createAccount(this.url, addr, this.tid)
 	}
 
-	if err := state.url.Write(state.tid, getNoncePath(state.url, addr), commutative.NewUint64Delta(1)); err != nil {
+	if err := this.url.Write(this.tid, getNoncePath(this.url, addr), commutative.NewUint64Delta(1)); err != nil {
 		panic(err)
 	}
 }
 
-func (state *ImplStateDB) GetCodeHash(addr evmcommon.Address) evmcommon.Hash {
-	code := state.GetCode(addr)
+func (this *ImplStateDB) GetCodeHash(addr evmcommon.Address) evmcommon.Hash {
+	code := this.GetCode(addr)
 	if len(code) == 0 {
 		return evmcommon.Hash{}
 	} else {
@@ -116,11 +116,11 @@ func (state *ImplStateDB) GetCodeHash(addr evmcommon.Address) evmcommon.Hash {
 	}
 }
 
-func (state *ImplStateDB) GetCode(addr evmcommon.Address) []byte {
-	if !accountExist(state.url, addr, state.tid) {
+func (this *ImplStateDB) GetCode(addr evmcommon.Address) []byte {
+	if !accountExist(this.url, addr, this.tid) {
 		return nil
 	}
-	if value, err := state.url.Read(state.tid, getCodePath(state.url, addr)); err != nil {
+	if value, err := this.url.Read(this.tid, getCodePath(this.url, addr)); err != nil {
 		panic(err)
 	} else {
 		return value.([]byte)
@@ -137,21 +137,17 @@ func (this *ImplStateDB) SetCode(addr evmcommon.Address, code []byte) {
 	}
 }
 
-func (this *ImplStateDB) GetCodeSize(addr evmcommon.Address) int {
-	return len(this.GetCode(addr))
-}
-
-func (this *ImplStateDB) AddRefund(amount uint64) {
-	this.refund += amount
-}
-
-func (this *ImplStateDB) SubRefund(amount uint64) {
-	this.refund -= amount
-}
-
-func (this *ImplStateDB) GetRefund() uint64 {
-	return this.refund
-}
+func (this *ImplStateDB) GetCodeSize(addr evmcommon.Address) int                          { return len(this.GetCode(addr)) }
+func (this *ImplStateDB) AddRefund(amount uint64)                                         { this.refund += amount }
+func (this *ImplStateDB) SubRefund(amount uint64)                                         { this.refund -= amount }
+func (this *ImplStateDB) GetRefund() uint64                                               { return this.refund }
+func (this *ImplStateDB) Suicide(addr evmcommon.Address) bool                             { return true }
+func (this *ImplStateDB) HasSuicided(addr evmcommon.Address) bool                         { return false }
+func (this *ImplStateDB) RevertToSnapshot(id int)                                         {}
+func (this *ImplStateDB) Snapshot() int                                                   { return 0 }
+func (this *ImplStateDB) AddPreimage(hash evmcommon.Hash, preimage []byte)                {}
+func (this *ImplStateDB) AddAddressToAccessList(addr evmcommon.Address)                   {} // Do nothing.
+func (this *ImplStateDB) AddSlotToAccessList(addr evmcommon.Address, slot evmcommon.Hash) {}
 
 // Get from DB directly, bypassing ccurl since it make have some temporary states
 func (this *ImplStateDB) GetCommittedState(addr evmcommon.Address, key evmcommon.Hash) evmcommon.Hash {
@@ -163,8 +159,8 @@ func (this *ImplStateDB) GetCommittedState(addr evmcommon.Address, key evmcommon
 	}
 }
 
-func (state *ImplStateDB) GetState(addr evmcommon.Address, key evmcommon.Hash) evmcommon.Hash {
-	if value, err := state.url.Read(state.tid, getStorageKeyPath(state.url, addr, key)); err != nil {
+func (this *ImplStateDB) GetState(addr evmcommon.Address, key evmcommon.Hash) evmcommon.Hash {
+	if value, err := this.url.Read(this.tid, getStorageKeyPath(this.url, addr, key)); err != nil {
 		panic(err)
 	} else if value == nil {
 		return evmcommon.Hash{}
@@ -183,24 +179,16 @@ func (this *ImplStateDB) SetState(addr evmcommon.Address, key, value evmcommon.H
 	}
 }
 
-func (state *ImplStateDB) Suicide(addr evmcommon.Address) bool {
-	return true
+func (this *ImplStateDB) Exist(addr evmcommon.Address) bool {
+	return accountExist(this.url, addr, this.tid)
 }
 
-func (state *ImplStateDB) HasSuicided(addr evmcommon.Address) bool {
-	return false
-}
-
-func (state *ImplStateDB) Exist(addr evmcommon.Address) bool {
-	return accountExist(state.url, addr, state.tid)
-}
-
-func (state *ImplStateDB) Empty(addr evmcommon.Address) bool {
-	if !accountExist(state.url, addr, state.tid) {
+func (this *ImplStateDB) Empty(addr evmcommon.Address) bool {
+	if !accountExist(this.url, addr, this.tid) {
 		return true
 	}
 
-	if value, err := state.url.Peek(getBalancePath(state.url, addr)); err != nil {
+	if value, err := this.url.Peek(getBalancePath(this.url, addr)); err != nil {
 		panic(err)
 	} else {
 		v, _, _ := value.(*commutative.U256).Get()
@@ -209,7 +197,7 @@ func (state *ImplStateDB) Empty(addr evmcommon.Address) bool {
 		}
 	}
 
-	if value, err := state.url.Peek(getNoncePath(state.url, addr)); err != nil {
+	if value, err := this.url.Peek(getNoncePath(this.url, addr)); err != nil {
 		panic(err)
 	} else {
 		v, _, _ := value.(*commutative.Uint64).Get()
@@ -218,74 +206,52 @@ func (state *ImplStateDB) Empty(addr evmcommon.Address) bool {
 		}
 	}
 
-	if value, err := state.url.Peek(getCodePath(state.url, addr)); err != nil {
+	if value, err := this.url.Peek(getCodePath(this.url, addr)); err != nil {
 		panic(err)
 	} else {
 		return len(value.(*noncommutative.Bytes).Value().(codec.Bytes)) == 0
 	}
 }
 
-func (state *ImplStateDB) RevertToSnapshot(id int) {
-	// Do nothing.
+func (this *ImplStateDB) AddLog(log *evmtypes.Log) {
+	this.logs[this.txHash] = append(this.logs[this.txHash], log)
 }
 
-func (state *ImplStateDB) Snapshot() int {
-	return 0
-}
-
-func (state *ImplStateDB) AddLog(log *evmtypes.Log) {
-	state.logs[state.txHash] = append(state.logs[state.txHash], log)
-}
-
-func (state *ImplStateDB) AddPreimage(hash evmcommon.Hash, preimage []byte) {
-	// Do nothing.
-}
-
-func (state *ImplStateDB) ForEachStorage(addr evmcommon.Address, f func(evmcommon.Hash, evmcommon.Hash) bool) error {
+func (this *ImplStateDB) ForEachStorage(addr evmcommon.Address, f func(evmcommon.Hash, evmcommon.Hash) bool) error {
 	return nil
 }
 
-func (state *ImplStateDB) PrepareAccessList(sender evmcommon.Address, dest *evmcommon.Address, precompiles []evmcommon.Address, txAccesses evmtypes.AccessList) {
+func (this *ImplStateDB) PrepareAccessList(sender evmcommon.Address, dest *evmcommon.Address, precompiles []evmcommon.Address, txAccesses evmtypes.AccessList) {
 	// Do nothing.
 }
 
-func (state *ImplStateDB) AddressInAccessList(addr evmcommon.Address) bool {
-	return true
-}
+func (this *ImplStateDB) AddressInAccessList(addr evmcommon.Address) bool { return true }
 
-func (state *ImplStateDB) SlotInAccessList(addr evmcommon.Address, slot evmcommon.Hash) (addressOk bool, slotOk bool) {
+func (this *ImplStateDB) SlotInAccessList(addr evmcommon.Address, slot evmcommon.Hash) (addressOk bool, slotOk bool) {
 	return true, true
 }
 
-func (state *ImplStateDB) AddAddressToAccessList(addr evmcommon.Address) {
-	// Do nothing.
+func (this *ImplStateDB) Prepare(txHash, bhash evmcommon.Hash, ti int) {
+	this.refund = 0
+	this.txHash = txHash
+	this.tid = uint32(ti)
+	this.logs = make(map[evmcommon.Hash][]*evmtypes.Log)
 }
 
-func (state *ImplStateDB) AddSlotToAccessList(addr evmcommon.Address, slot evmcommon.Hash) {
-	// Do nothing.
+func (this *ImplStateDB) GetLogs(hash evmcommon.Hash) []*evmtypes.Log {
+	return this.logs[hash]
 }
 
-func (state *ImplStateDB) Prepare(txHash, bhash evmcommon.Hash, ti int) {
-	state.refund = 0
-	state.txHash = txHash
-	state.tid = uint32(ti)
-	state.logs = make(map[evmcommon.Hash][]*evmtypes.Log)
-}
-
-func (state *ImplStateDB) GetLogs(hash evmcommon.Hash) []*evmtypes.Log {
-	return state.logs[hash]
-}
-
-func (state *ImplStateDB) Copy() *ImplStateDB {
+func (this *ImplStateDB) Copy() *ImplStateDB {
 	return &ImplStateDB{
 		logs: make(map[evmcommon.Hash][]*evmtypes.Log),
-		// kapi: state.kapi,
-		// db:   state.db,
-		url: state.url,
+		// kapi: this.kapi,
+		// db:   this.db,
+		url: this.url,
 	}
 }
 
-func (state *ImplStateDB) Set(eac EthAccountCache, esc EthStorageCache) {
+func (this *ImplStateDB) Set(eac EthAccountCache, esc EthStorageCache) {
 	// TODO
 }
 
@@ -302,13 +268,13 @@ func GetAccountPathSize(url *concurrenturl.ConcurrentUrl) int {
 // 	gasPrice *big.Int,
 // ) ([]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface) {
 // 	url := concurrenturl.NewConcurrentUrl(db)
-// 	state := NewImplStateDB(nil, db, url)
-// 	state.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
+// 	this := NewImplStateDB(nil, db, url)
+// 	this.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
 
 // 	// Chage the tranasction fees
-// 	state.AddBalance(coinbase, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
-// 	state.SubBalance(from, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
-// 	//	state.SetNonce(from, 0) don't increase if the transcation failes.
+// 	this.AddBalance(coinbase, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
+// 	this.SubBalance(from, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
+// 	//	this.SetNonce(from, 0) don't increase if the transcation failes.
 // 	return url.Export(false)
 // }
 
@@ -319,11 +285,11 @@ func GetAccountPathSize(url *concurrenturl.ConcurrentUrl) int {
 // 	gasUsed uint64, gasPrice *big.Int,
 // ) ([][]byte, [][]byte) {
 // 	url := concurrenturl.NewConcurrentUrl(db)
-// 	state := NewImplStateDB(nil, db, url)
-// 	state.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
-// 	state.AddBalance(coinbase, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
-// 	state.SubBalance(from, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
-// 	// state.SetNonce(from, 0)
+// 	this := NewImplStateDB(nil, db, url)
+// 	this.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
+// 	this.AddBalance(coinbase, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
+// 	this.SubBalance(from, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
+// 	// this.SetNonce(from, 0)
 // 	return url.ExportEncoded(nil)
 // }
 
@@ -333,9 +299,9 @@ func GetAccountPathSize(url *concurrenturl.ConcurrentUrl) int {
 // 	from evmcommon.Address,
 // ) ([]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface) {
 // 	url := concurrenturl.NewConcurrentUrl(db)
-// 	state := NewImplStateDB(nil, db, url)
-// 	state.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
-// 	state.SetNonce(from, 0)
+// 	this := NewImplStateDB(nil, db, url)
+// 	this.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
+// 	this.SetNonce(from, 0)
 // 	return url.ExportAll()
 // }
 
@@ -345,9 +311,9 @@ func GetAccountPathSize(url *concurrenturl.ConcurrentUrl) int {
 // 	from evmcommon.Address,
 // ) ([][]byte, [][]byte) {
 // 	url := concurrenturl.NewConcurrentUrl(db)
-// 	state := NewImplStateDB(nil, db, url)
-// 	state.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
-// 	state.SetNonce(from, 0)
+// 	this := NewImplStateDB(nil, db, url)
+// 	this.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
+// 	this.SetNonce(from, 0)
 // 	return url.ExportEncoded(func(accesses, transitions []urlcommon.UnivalueInterface) ([]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface) {
 // 		for _, t := range transitions {
 // 			t.SetTransitionType(urlcommon.INVARIATE_TRANSITIONS)
