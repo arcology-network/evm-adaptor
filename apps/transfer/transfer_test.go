@@ -28,8 +28,8 @@ func TestTransfer(t *testing.T) {
 	statedb := eth.NewImplStateDB(url)
 	statedb.Prepare(common.Hash{}, common.Hash{}, 0)
 	statedb.CreateAccount(tests.Coinbase)
-	statedb.CreateAccount(tests.User1)
-	statedb.AddBalance(tests.User1, new(big.Int).SetUint64(1e18))
+	statedb.CreateAccount(tests.Alice)
+	statedb.AddBalance(tests.Alice, new(big.Int).SetUint64(1e18))
 	_, transitions := url.ExportAll()
 	t.Log("\n" + tests.FormatTransitions(transitions))
 
@@ -46,7 +46,7 @@ func TestTransfer(t *testing.T) {
 	config.BlockNumber = new(big.Int).SetUint64(10000000)
 	config.Time = new(big.Int).SetUint64(10000000)
 
-	msg := types.NewMessage(tests.User1, &tests.User2, 0, new(big.Int).SetUint64(100), 1e15, new(big.Int).SetUint64(1), nil, nil, true)
+	msg := types.NewMessage(tests.Alice, &tests.Bob, 0, new(big.Int).SetUint64(100), 1e15, new(big.Int).SetUint64(1), nil, nil, true)
 	receipt, _, err := eu.Run(common.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg))
 	accesses, transitions := eu.Api().Ccurl().ExportAll()
 

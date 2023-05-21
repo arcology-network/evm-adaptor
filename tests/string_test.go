@@ -38,7 +38,7 @@ func TestContractString(t *testing.T) {
 		t.Error("Error: Failed to generate the byte code")
 	}
 	// ================================== Deploy the contract ==================================
-	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)    // Build the message
+	msg := types.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)    // Build the message
 	receipt, executionResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg)) // Execute it
 	_, transitions := eu.Api().Ccurl().ExportAll()
 	// ---------------

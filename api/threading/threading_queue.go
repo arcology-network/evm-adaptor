@@ -19,6 +19,7 @@ import (
 
 	cceu "github.com/arcology-network/vm-adaptor"
 
+	apicommon "github.com/arcology-network/vm-adaptor/api/common"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/eth"
 )
@@ -100,10 +101,16 @@ func (this *Queue) Snapshot(mainApiRouter eucommon.ConcurrentApiRouterInterface)
 }
 
 func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouterInterface) bool {
+	if mainApiRouter.Depth() > apicommon.MAX_RECURSIION_DEPTH {
+		//, errors.New("Error: Execeeds the max recursion depth")
+		return false
+	}
+
 	snapshot := this.Snapshot(mainApiRouter)
 
 	// t0 := time.Now()
 	config := cceu.NewConfig().SetCoinbase(mainApiRouter.Coinbase()) // Share the same coinbase as the main thread
+
 	// executor := func(start, end, index int, args ...interface{}) {
 	// for i := start; i < end; i++ {
 	for i := 0; i < len(this.jobs); i++ {
@@ -117,7 +124,7 @@ func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouter
 		statedb := eth.NewImplStateDB(ccurl)   // Eth state DB
 		statedb.Prepare(txHash, [32]byte{}, i) // tx hash , block hash and tx index
 
-		apiRounter := mainApiRouter.New(txHash, uint32(i), ccurl)
+		apiRounter := mainApiRouter.New(txHash, uint32(i), ccurl, mainApiRouter.Depth()+1)
 		eu := cceu.NewEU(
 			params.MainnetChainConfig,
 			vm.Config{},

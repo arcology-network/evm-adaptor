@@ -28,6 +28,7 @@ type API struct {
 
 	seed   uint64 // for uuid generation
 	serial uint64
+	depth  uint8
 	// deferCall *concurrentlib.DeferCall
 
 	eu          *cceu.EU
@@ -40,6 +41,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 		eu:          nil,
 		ccurl:       ccurl,
 		handlerDict: make(map[[20]byte]apicommon.ConcurrentApiHandlerInterface),
+		depth:       0,
 	}
 
 	handlers := []apicommon.ConcurrentApiHandlerInterface{
@@ -58,14 +60,16 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	return api
 }
 
-func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl) eucommon.ConcurrentApiRouterInterface {
+func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl, depth uint8) eucommon.ConcurrentApiRouterInterface {
 	api := NewAPI(ccurl)
 	api.txHash = txHash
 	api.txIndex = txIndex
+	api.depth = depth
 	// api.SetEU(this.eu)
 	return api
 }
 
+func (this *API) Depth() uint8                { return this.depth }
 func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }
 func (this *API) Origin() evmcommon.Address   { return this.eu.VM().TxContext.Origin }
 func (this *API) VM() *vm.EVM                 { return this.eu.VM() }

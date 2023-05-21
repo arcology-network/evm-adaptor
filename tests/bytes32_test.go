@@ -38,7 +38,7 @@ func TestContractBytes32(t *testing.T) {
 		t.Error(err)
 	}
 	// ================================== Deploy the contract ==================================
-	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
+	msg := types.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
 	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))            // Execute it
 	_, transitions := eu.Api().Ccurl().ExportAll()
 	// ---------------

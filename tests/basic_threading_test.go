@@ -29,7 +29,7 @@ func TestThreadingBasic(t *testing.T) {
 		t.Error("Error: Failed to generate the byte code")
 	}
 	// ================================== Deploy the contract ==================================
-	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false) // Build the message
+	msg := types.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false) // Build the message
 	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))             // Execute it
 	_, transitions := eu.Api().Ccurl().ExportAll()
 
@@ -53,7 +53,7 @@ func TestThreadingBasic(t *testing.T) {
 	}
 
 	data := crypto.Keccak256([]byte("call()"))[:4]
-	msg = types.NewMessage(eucommon.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	msg = types.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
 	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	_, transitions = eu.Api().Ccurl().ExportAll()
 
@@ -83,7 +83,7 @@ func BenchmarkThreadingReverseString(t *testing.B) {
 		t.Error("Error: Failed to generate the byte code")
 	}
 	// ================================== Deploy the contract ==================================
-	msg := types.NewMessage(eucommon.User1, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false) // Build the message
+	msg := types.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false) // Build the message
 	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))             // Execute it
 	_, transitions := eu.Api().Ccurl().ExportAll()
 
@@ -109,7 +109,7 @@ func BenchmarkThreadingReverseString(t *testing.B) {
 	}
 
 	data := crypto.Keccak256([]byte("testReverseString10k()"))[:4]
-	msg = types.NewMessage(eucommon.User1, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	msg = types.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
 	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	_, transitions = eu.Api().Ccurl().ExportAll()
 

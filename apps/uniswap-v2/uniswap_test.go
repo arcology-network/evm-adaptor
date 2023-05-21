@@ -85,7 +85,7 @@ func TestUniswapFunctionTest(t *testing.T) {
 	// t.Log("\n" + FormatTransitions(transitions))
 	t.Log(receipt)
 
-	// User1 approve UniswapV2Router02 to call transferFrom.
+	// Alice approve UniswapV2Router02 to call transferFrom.
 	// This is the preparation for calling addLiquidity.
 	eu, config = prepare(db, 10000007, transitions, []uint32{7})
 	transitions, receipt = run(eu, config, &user1, &token1Address, 0, true, "approve(address,uint256)", routerAddress.Bytes(), []byte{1, 0, 0, 0})
@@ -97,7 +97,7 @@ func TestUniswapFunctionTest(t *testing.T) {
 	// t.Log("\n" + FormatTransitions(transitions))
 	t.Log(receipt)
 
-	// User1 call addLiquidity.
+	// Alice call addLiquidity.
 	eu, config = prepare(db, 10000009, transitions, []uint32{2})
 	transitions, receipt = run(
 		eu, config, &user1, &routerAddress, 2, true,
@@ -139,14 +139,14 @@ func TestUniswapFunctionTest(t *testing.T) {
 	// t.Log("\n" + FormatTransitions(transitions))
 	t.Log(receipt)
 
-	// User2 approve UniswapV2Router02 to call transferFrom.
+	// Bob approve UniswapV2Router02 to call transferFrom.
 	// This is the preparation for calling swap.
 	eu, config = prepare(db, 10000011, transitions, []uint32{8})
 	transitions, receipt = run(eu, config, &user2, &token1Address, 0, true, "approve(address,uint256)", routerAddress.Bytes(), []byte{1, 0})
 	// t.Log("\n" + FormatTransitions(transitions))
 	t.Log(receipt)
 
-	// User2 call swapExactTokensForTokens.
+	// Bob call swapExactTokensForTokens.
 	eu, config = prepare(db, 10000012, transitions, []uint32{1})
 	transitions, receipt = run(
 		eu, config, &user2, &routerAddress, 1, true,

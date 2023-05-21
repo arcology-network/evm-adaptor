@@ -29,11 +29,11 @@ func TestNativeContractSameBlock(t *testing.T) {
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(eucommon.Coinbase)
 	// User 1
-	statedb.CreateAccount(eucommon.User1)
-	statedb.AddBalance(eucommon.User1, new(big.Int).SetUint64(1e18))
+	statedb.CreateAccount(eucommon.Alice)
+	statedb.AddBalance(eucommon.Alice, new(big.Int).SetUint64(1e18))
 	// user2
-	statedb.CreateAccount(eucommon.User2)
-	statedb.AddBalance(eucommon.User2, new(big.Int).SetUint64(1e18))
+	statedb.CreateAccount(eucommon.Bob)
+	statedb.AddBalance(eucommon.Bob, new(big.Int).SetUint64(1e18))
 	// Contract owner
 	statedb.CreateAccount(eucommon.Owner)
 	statedb.AddBalance(eucommon.Owner, new(big.Int).SetUint64(1e18))
@@ -63,29 +63,29 @@ func TestNativeContractSameBlock(t *testing.T) {
 	}
 
 	// Increment x by one
-	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
+	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
 		t.Error("Error: Failed to call incrementX() 1!!!", err)
 	}
 
-	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
+	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
 		t.Error("Error: Failed to call incrementX() 2!!!", err)
 	}
 
-	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
+	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
 		t.Error("Error: Failed to call incrementX() 3!!!", err)
 	}
 
 	encoded, _ := abi.Encode(uint64(102))
-	if _, _, receipt, err := tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkY(uint256)", encoded); receipt.Status != 1 || err != nil {
+	if _, _, receipt, err := tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "checkY(uint256)", encoded); receipt.Status != 1 || err != nil {
 		t.Error("Error: Failed to check checkY() 1!!!", err)
 	}
 
-	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "incrementY()"); receipt.Status != 1 {
+	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "incrementY()"); receipt.Status != 1 {
 		t.Error("Error: Failed to call incrementY() 1!!!", err)
 	}
 
 	encoded, _ = abi.Encode(uint64(104))
-	if _, _, receipt, err := tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkY(uint256)", encoded); receipt.Status != 1 || err != nil {
+	if _, _, receipt, err := tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "checkY(uint256)", encoded); receipt.Status != 1 || err != nil {
 		t.Error("Error: Failed to check checkY() 2!!!", err)
 	}
 }
@@ -101,11 +101,11 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(eucommon.Coinbase)
 	// User 1
-	statedb.CreateAccount(eucommon.User1)
-	statedb.AddBalance(eucommon.User1, new(big.Int).SetUint64(1e18))
+	statedb.CreateAccount(eucommon.Alice)
+	statedb.AddBalance(eucommon.Alice, new(big.Int).SetUint64(1e18))
 	// user2
-	statedb.CreateAccount(eucommon.User2)
-	statedb.AddBalance(eucommon.User2, new(big.Int).SetUint64(1e18))
+	statedb.CreateAccount(eucommon.Bob)
+	statedb.AddBalance(eucommon.Bob, new(big.Int).SetUint64(1e18))
 	// Contract owner
 	statedb.CreateAccount(eucommon.Owner)
 	statedb.AddBalance(eucommon.Owner, new(big.Int).SetUint64(1e18))
@@ -134,7 +134,7 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 
 	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{1})
 	// encoded, _ := abi.Encode(uint64(2))
-	_, transitions, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "incrementX()")
+	_, transitions, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "incrementX()")
 	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	if receipt.Status != 1 || err != nil {
@@ -143,7 +143,7 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 
 	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{0})
 	encodedInput, _ := abi.Encode(uint64(3))
-	acc, transitions, receipt, err := tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkX(uint256)", encodedInput)
+	acc, transitions, receipt, err := tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "checkX(uint256)", encodedInput)
 	t.Log("\n" + eucommon.FormatTransitions(acc))
 	t.Log(receipt)
 	if receipt.Status != 1 {
@@ -152,7 +152,7 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 
 	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{0})
 	encodedInput, _ = abi.Encode(uint64(102))
-	acc, transitions, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkY(uint256)", encodedInput)
+	acc, transitions, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "checkY(uint256)", encodedInput)
 	t.Log("\n" + eucommon.FormatTransitions(acc))
 	t.Log(receipt)
 	if receipt.Status != 1 {
@@ -161,7 +161,7 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 
 	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{0})
 	encodedInput, _ = abi.Encode(uint64(3))
-	acc, _, receipt, err = tests.CallFunc(eu, config, &eucommon.User1, &address, 0, true, "checkX(uint256)", encodedInput)
+	acc, _, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "checkX(uint256)", encodedInput)
 	t.Log("\n" + eucommon.FormatTransitions(acc))
 	t.Log(receipt)
 	if receipt.Status != 1 || err != nil {

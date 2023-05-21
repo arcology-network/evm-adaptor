@@ -15,6 +15,8 @@ import (
 type ConcurrentApiRouterInterface interface {
 	Origin() ethcommon.Address
 
+	Depth() uint8
+
 	SetEU(interface{})
 	VM() *vm.EVM
 	AddLog(key, value string)
@@ -28,7 +30,7 @@ type ConcurrentApiRouterInterface interface {
 	GenCtrnUID() []byte
 	GenElemUID() uint64
 
-	New(common.Hash, uint32, *concurrenturl.ConcurrentUrl) ConcurrentApiRouterInterface
+	New(common.Hash, uint32, *concurrenturl.ConcurrentUrl, uint8) ConcurrentApiRouterInterface
 	Coinbase() ethcommon.Address
 }
 

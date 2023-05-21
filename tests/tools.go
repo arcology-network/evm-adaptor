@@ -102,8 +102,8 @@ func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concu
 	statedb := eth.NewImplStateDB(url)
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(eucommon.Coinbase)
-	statedb.CreateAccount(eucommon.User1)
-	statedb.AddBalance(eucommon.User1, new(big.Int).SetUint64(1e18))
+	statedb.CreateAccount(eucommon.Alice)
+	statedb.AddBalance(eucommon.Alice, new(big.Int).SetUint64(1e18))
 	_, transitions := url.ExportAll()
 	// fmt.Println("\n" + eucommon.FormatTransitions(transitions))
 
