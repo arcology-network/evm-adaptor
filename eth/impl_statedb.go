@@ -174,9 +174,11 @@ func (this *ImplStateDB) SetState(addr evmcommon.Address, key, value evmcommon.H
 		createAccount(this.url, addr, this.tid)
 	}
 
-	if err := this.url.Write(this.tid, getStorageKeyPath(this.url, addr, key), noncommutative.NewBytes(value.Bytes())); err != nil {
+	path := getStorageKeyPath(this.url, addr, key)
+	if err := this.url.Write(this.tid, path, noncommutative.NewBytes(value.Bytes())); err != nil {
 		panic(err)
 	}
+	this.url.LatestKey(path)
 }
 
 func (this *ImplStateDB) Exist(addr evmcommon.Address) bool {

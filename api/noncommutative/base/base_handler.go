@@ -54,6 +54,9 @@ func (this *NoncommutativeBytesHandlers) Call(caller, callee evmcommon.Address, 
 	case [4]byte{0xa4, 0xec, 0xe5, 0x2c}: // a4 ec e5 2c
 		return this.pop(caller, input[4:])
 
+	case [4]byte{0x5e, 0x1d, 0x05, 0x4d}: // 5e 1d 05 4d
+		return this.clear(caller, input[4:])
+
 	case [4]byte{0x4c, 0x51, 0xa8, 0x8f}: // 4c51a88f
 		return this.set(caller, input[4:])
 	}
@@ -149,6 +152,15 @@ func (this *NoncommutativeBytesHandlers) pop(caller evmcommon.Address, input []b
 			offset[len(offset)-1] = uint8(len(offset))
 			encoded = append(offset[:], encoded...)
 			return encoded, err == nil
+		}
+	}
+	return []byte{}, true
+}
+
+func (this *NoncommutativeBytesHandlers) clear(caller evmcommon.Address, input []byte) ([]byte, bool) {
+	for {
+		if _, ok := this.pop(caller, input); !ok {
+			break
 		}
 	}
 	return []byte{}, true

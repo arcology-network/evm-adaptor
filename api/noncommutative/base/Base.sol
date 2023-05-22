@@ -44,11 +44,10 @@ contract Base {
         require(success);
     }
 
-    // Delete the whole array
-    // function del() public returns(bool)  {
-    //     (bool success,) = address(API).call(abi.encodeWithSignature("del(bytes)", ctrn));   
-    //     return success;
-    // }
+    // Clear the data
+    function clear() public {
+        address(API).call(abi.encodeWithSignature("clear(bytes)", ctrn));       
+    }
     
     function log(bytes memory elem) public { // 7a fa 62 38
         address(API).call(abi.encodeWithSignature("log(bytes)", id(), elem));     

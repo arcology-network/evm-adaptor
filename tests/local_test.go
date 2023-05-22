@@ -1,6 +1,28 @@
 package tests
 
+import (
+	"fmt"
+	"testing"
+
+	"github.com/holiman/uint256"
+	sha3 "golang.org/x/crypto/sha3"
+)
+
+func TestSlot(t *testing.T) {
+	_4 := uint256.NewInt(4).Bytes32()
+	_1 := uint256.NewInt(2).Bytes32()
+
+	hash := sha3.NewLegacyKeccak256()
+	hash.Write(append(_4[:], _1[:]...))
+	fmt.Println(hash.Sum(nil))
+
+	_12 := uint256.NewInt(0).Bytes32()
+	hash.Write(append(_4[:], _12[:]...))
+	fmt.Println(hash.Sum(nil))
+}
+
 // func TestLocalStructure(t *testing.T) {
+
 // 	eu, config, _, _, _ := NewTestEU()
 
 // 	// ================================== Compile the contract ==================================
