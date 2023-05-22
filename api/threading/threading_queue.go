@@ -120,10 +120,10 @@ func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouter
 		txHash := sha256.Sum256(codec.Uint64(i).Encode())
 
 		this.jobs[i].ccurl = ccurl
-		statedb := eth.NewImplStateDB(ccurl)   // Eth state DB
-		statedb.Prepare(txHash, [32]byte{}, i) // tx hash , block hash and tx index
-
 		apiRounter := mainApiRouter.New(txHash, uint32(i), ccurl, mainApiRouter.Depth()+1)
+
+		statedb := eth.NewImplStateDB(apiRounter) // Eth state DB
+		statedb.Prepare(txHash, [32]byte{}, i)    // tx hash , block hash and tx index
 		eu := cceu.NewEU(
 			params.MainnetChainConfig,
 			vm.Config{},
@@ -152,6 +152,7 @@ func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouter
 	jobs := common.Clone(this.jobs)
 	jobs = common.RemoveIf(&jobs, func(job *Job) bool { return job.prechkErr != nil || job.receipt.Status != 1 }) // Only select the successful jobs
 
+	mainApiRouter.VM()
 	// Put all the access records together
 	length := 0
 	common.Foreach(jobs, func(job **Job) { length += len((*(*job)).accesses) }) // Pre-allocation

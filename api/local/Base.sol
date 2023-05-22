@@ -45,11 +45,12 @@ contract Base {
     }
 
     // Clear the data
-    function clear() public {
-        address(API).call(abi.encodeWithSignature("clear(bytes)", ctrn));       
+    function clear() public returns(bool) {
+        (bool success,) = address(API).call(abi.encodeWithSignature("clear(bytes)", ctrn));
+        require(success);       
     }
     
-    function log(bytes memory elem) public { // 7a fa 62 38
-        address(API).call(abi.encodeWithSignature("log(bytes)", id(), elem));     
-    }
-}
+//     function log(bytes memory elem) public { // 7a fa 62 38
+//         address(API).call(abi.encodeWithSignature("log(bytes)", id(), elem));     
+//     }
+// }

@@ -218,7 +218,7 @@ func TestU256Threading(t *testing.T) {
 	pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/noncommutative/"
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256_test.sol", "ThreadingTest")
+	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256_test.sol", "U256ThreadingTest")
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)

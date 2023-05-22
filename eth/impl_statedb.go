@@ -12,6 +12,8 @@ import (
 	evmcommon "github.com/arcology-network/evm/common"
 	evmtypes "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/crypto"
+
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
 
 // Arcology implementation of Eth ImplStateDB interfaces.
@@ -22,12 +24,14 @@ type ImplStateDB struct {
 	logs   map[evmcommon.Hash][]*evmtypes.Log
 
 	url *concurrenturl.ConcurrentUrl
+	api eucommon.ConcurrentApiRouterInterface
 }
 
-func NewImplStateDB(url *concurrenturl.ConcurrentUrl) *ImplStateDB {
+func NewImplStateDB(api eucommon.ConcurrentApiRouterInterface) *ImplStateDB {
 	return &ImplStateDB{
 		logs: make(map[evmcommon.Hash][]*evmtypes.Log),
-		url:  url,
+		url:  api.Ccurl(),
+		api:  api,
 	}
 }
 

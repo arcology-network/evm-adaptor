@@ -10,6 +10,7 @@ import (
 	"github.com/arcology-network/concurrenturl"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/vm"
+	corevm "github.com/arcology-network/evm/core/vm"
 	cceu "github.com/arcology-network/vm-adaptor"
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
 	cumulativei256 "github.com/arcology-network/vm-adaptor/api/commutative/int256"
@@ -31,7 +32,9 @@ type API struct {
 	depth  uint8
 	// deferCall *concurrentlib.DeferCall
 
-	eu          *cceu.EU
+	eu           *cceu.EU
+	callContextg *corevm.ScopeContext
+
 	handlerDict map[[20]byte]apicommon.ConcurrentApiHandlerInterface // APIs under the concurrency namespace
 	ccurl       *concurrenturl.ConcurrentUrl
 }
@@ -73,7 +76,12 @@ func (this *API) Depth() uint8                { return this.depth }
 func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }
 func (this *API) Origin() evmcommon.Address   { return this.eu.VM().TxContext.Origin }
 func (this *API) VM() *vm.EVM                 { return this.eu.VM() }
-func (this *API) SetEU(eu interface{})        { this.eu = eu.(*cceu.EU) }
+
+func (this *API) SetCallContext(Context interface{}) {
+	this.callContextg = Context.(*corevm.ScopeContext) // Runtime context
+}
+
+func (this *API) SetEU(eu interface{}) { this.eu = eu.(*cceu.EU) }
 
 func (this *API) TxHash() [32]byte                    { return this.txHash }
 func (this *API) TxIndex() uint32                     { return this.txIndex }

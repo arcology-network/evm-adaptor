@@ -49,8 +49,9 @@ func TestBase(t *testing.T) {
 	url.Sort()
 	url.Commit([]uint32{1})
 
-	statedb := eth.NewImplStateDB(url)
-	eu = cceu.NewEU(config.ChainConfig, *config.VMConfig, statedb, ccapi.NewAPI(url))
+	api := ccapi.NewAPI(url)
+	statedb := eth.NewImplStateDB(api)
+	eu = cceu.NewEU(config.ChainConfig, *config.VMConfig, statedb, api)
 
 	config.BlockNumber = new(big.Int).SetUint64(10000001)
 	config.Time = new(big.Int).SetUint64(10000001)

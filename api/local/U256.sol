@@ -17,8 +17,9 @@ contract U256 {
        base.push(abi.encodeWithSignature("push(bytes,bytes)",  base.id(), abi.encode(elem)));
     }   
 
-    function get(uint256 idx) public returns(uint256)  { // 31 fe 88 d0
-        return abi.decode(abi.decode(base.get(idx), (bytes)), (uint256));
+    function get(uint256 idx) public returns(bool, uint256)  { // 31 fe 88 d0
+        (bool success, bytes memory data) = base.get(idx);
+        return (success, abi.decode(abi.decode(base.get(idx), (bytes)), (uint256)));
     }
 
     function set(uint256 idx, uint256 elem) public { // 7a fa 62 38

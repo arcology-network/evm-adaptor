@@ -10,6 +10,7 @@ import (
 	"github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/core/vm"
+	corevm "github.com/arcology-network/evm/core/vm"
 	"github.com/arcology-network/evm/crypto"
 	"github.com/arcology-network/evm/params"
 
@@ -18,9 +19,10 @@ import (
 )
 
 type EU struct {
-	evm     *vm.EVM                               // Original ETH EVM
-	statedb vm.StateDB                            // Arcology Implementation of Eth StateDB
-	api     eucommon.ConcurrentApiRouterInterface // Arcology API calls
+	evm          *vm.EVM                               // Original ETH EVM
+	statedb      vm.StateDB                            // Arcology Implementation of Eth StateDB
+	api          eucommon.ConcurrentApiRouterInterface // Arcology API calls
+	scopeContext *corevm.ScopeContext
 }
 
 func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.StateDB, api eucommon.ConcurrentApiRouterInterface) *EU {

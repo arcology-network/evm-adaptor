@@ -33,7 +33,7 @@ func Prepare(db ccurlcommon.DatastoreInterface, height uint64, transitions []ccu
 	}
 
 	api := ccapi.NewAPI(url)
-	statedb := cceueth.NewImplStateDB(url)
+	statedb := cceueth.NewImplStateDB(api)
 
 	config := MainTestConfig()
 	config.Coinbase = &eucommon.Coinbase
@@ -99,7 +99,9 @@ func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concu
 	db := ccurlstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	statedb := eth.NewImplStateDB(url)
+	api := ccapi.NewAPI(url)
+
+	statedb := eth.NewImplStateDB(api)
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(eucommon.Coinbase)
 	statedb.CreateAccount(eucommon.Alice)
@@ -112,8 +114,8 @@ func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concu
 	url.Import(transitions)
 	url.Sort()
 	url.Commit([]uint32{0})
-	api := ccapi.NewAPI(url)
-	statedb = eth.NewImplStateDB(url)
+	api = ccapi.NewAPI(url)
+	statedb = eth.NewImplStateDB(api)
 
 	config := MainTestConfig()
 	config.Coinbase = &eucommon.Coinbase

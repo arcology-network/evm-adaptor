@@ -69,10 +69,6 @@ func TestNoncommutativeInt256N(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/int256/Threading.sol"); err != nil {
-		t.Error(err)
-	}
-
 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/int256/int256N_test.sol", "Int64NTest")
 
 	if err != nil || len(code) == 0 {

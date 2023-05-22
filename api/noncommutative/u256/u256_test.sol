@@ -89,7 +89,7 @@ contract U256DynamicTest {
     }
 }
 
-contract ThreadingTest {
+contract U256ThreadingTest {
     U256 container = new U256();
 
     function call() public  { 
