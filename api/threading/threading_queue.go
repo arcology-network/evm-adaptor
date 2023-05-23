@@ -83,7 +83,7 @@ func (this *Queue) Add(origin, calleeAddr evmcommon.Address, funCall []byte) int
 	return len(this.jobs) - 1
 }
 
-func (this *Queue) Snapshot(mainApiRouter eucommon.ConcurrentApiRouterInterface) ccurlcommon.DatastoreInterface {
+func (this *Queue) snapshot(mainApiRouter eucommon.ConcurrentApiRouterInterface) ccurlcommon.DatastoreInterface {
 	transitions := mainApiRouter.Ccurl().Export() // Get the all up-to-date transitions from the main thread
 	univalue.Univalues(transitions).Print()
 
@@ -100,27 +100,27 @@ func (this *Queue) Snapshot(mainApiRouter eucommon.ConcurrentApiRouterInterface)
 	return snapshot.Commit([]uint32{mainApiRouter.TxIndex()}).Importer().Store() // Commit these changes to the a transient DB
 }
 
-func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouterInterface) bool {
-	if mainApiRouter.Depth() > apicommon.MAX_RECURSIION_DEPTH {
+func (this *Queue) Run(threads uint8, parentApiRouter eucommon.ConcurrentApiRouterInterface) bool {
+	if parentApiRouter.Depth() > apicommon.MAX_RECURSIION_DEPTH {
 		return false //, errors.New("Error: Execeeds the max recursion depth")
 	}
 
-	snapshot := this.Snapshot(mainApiRouter)
+	snapshot := this.snapshot(parentApiRouter)
 
 	// t0 := time.Now()
-	config := cceu.NewConfig().SetCoinbase(mainApiRouter.Coinbase()) // Share the same coinbase as the main thread
+	config := cceu.NewConfig().SetCoinbase(parentApiRouter.Coinbase()) // Share the same coinbase as the main thread
 
 	// executor := func(start, end, index int, args ...interface{}) {
 	// for i := start; i < end; i++ {
 	for i := 0; i < len(this.jobs); i++ {
 		ccurl := (&concurrenturl.ConcurrentUrl{}).New(
-			indexer.NewWriteCache(snapshot, mainApiRouter.Ccurl().Platform),
-			mainApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
+			indexer.NewWriteCache(snapshot, parentApiRouter.Ccurl().Platform),
+			parentApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
 
 		txHash := sha256.Sum256(codec.Uint64(i).Encode())
 
 		this.jobs[i].ccurl = ccurl
-		apiRounter := mainApiRouter.New(txHash, uint32(i), ccurl, mainApiRouter.Depth()+1)
+		apiRounter := parentApiRouter.New(txHash, uint32(i), ccurl)
 
 		statedb := eth.NewImplStateDB(apiRounter) // Eth state DB
 		statedb.Prepare(txHash, [32]byte{}, i)    // tx hash , block hash and tx index
@@ -152,7 +152,6 @@ func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouter
 	jobs := common.Clone(this.jobs)
 	jobs = common.RemoveIf(&jobs, func(job *Job) bool { return job.prechkErr != nil || job.receipt.Status != 1 }) // Only select the successful jobs
 
-	mainApiRouter.VM()
 	// Put all the access records together
 	length := 0
 	common.Foreach(jobs, func(job **Job) { length += len((*(*job)).accesses) }) // Pre-allocation
@@ -169,7 +168,7 @@ func (this *Queue) Run(threads uint8, mainApiRouter eucommon.ConcurrentApiRouter
 	common.RemoveIf(&jobs, func(job *Job) bool { return job == nil }) // Shour mark the conflict jobs
 
 	// t0 = time.Now()
-	this.WriteBack(mainApiRouter, jobs) // Merge back to the main write cache
+	this.WriteBack(parentApiRouter, jobs) // Merge back to the main write cache
 	// fmt.Println("Commit: ", time.Since(t0))
 	return true
 }

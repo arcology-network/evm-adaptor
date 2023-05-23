@@ -15,16 +15,20 @@ import (
 type ConcurrentApiRouterInterface interface {
 	Origin() ethcommon.Address
 	Ccurl() *concurrenturl.ConcurrentUrl
-	New(common.Hash, uint32, *concurrenturl.ConcurrentUrl, uint8) ConcurrentApiRouterInterface
+	New(common.Hash, uint32, *concurrenturl.ConcurrentUrl) ConcurrentApiRouterInterface
 	Coinbase() ethcommon.Address
 
-	Depth() uint8
 	SetEU(interface{})
+	GetEU() interface{}
 	VM() *vm.EVM
+
+	Depth() uint8
 	AddLog(key, value string)
 	Call(caller, callee ethcommon.Address, input []byte, origin ethcommon.Address, nonce uint64, blockhash ethcommon.Hash) (bool, []byte, bool)
 	Prepare(ethcommon.Hash, *big.Int, uint32)
+
 	SetCallContext(interface{})
+	GetCallContext() interface{}
 
 	TxIndex() uint32
 	TxHash() [32]byte

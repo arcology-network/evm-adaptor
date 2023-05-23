@@ -32,11 +32,13 @@ type API struct {
 	depth  uint8
 	// deferCall *concurrentlib.DeferCall
 
-	eu           *cceu.EU
-	callContextg *corevm.ScopeContext
+	eu          *cceu.EU
+	callContext *corevm.ScopeContext
 
 	handlerDict map[[20]byte]apicommon.ConcurrentApiHandlerInterface // APIs under the concurrency namespace
 	ccurl       *concurrenturl.ConcurrentUrl
+
+	parentRouter *API
 }
 
 func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
@@ -63,11 +65,11 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	return api
 }
 
-func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl, depth uint8) eucommon.ConcurrentApiRouterInterface {
+func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl) eucommon.ConcurrentApiRouterInterface {
 	api := NewAPI(ccurl)
 	api.txHash = txHash
 	api.txIndex = txIndex
-	api.depth = depth
+	api.parentRouter = this
 	// api.SetEU(this.eu)
 	return api
 }
@@ -76,9 +78,14 @@ func (this *API) Depth() uint8                { return this.depth }
 func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }
 func (this *API) Origin() evmcommon.Address   { return this.eu.VM().TxContext.Origin }
 func (this *API) VM() *vm.EVM                 { return this.eu.VM() }
+func (this *API) GetEU() interface{}          { return this.eu }
 
 func (this *API) SetCallContext(Context interface{}) {
-	this.callContextg = Context.(*corevm.ScopeContext) // Runtime context
+	this.callContext = Context.(*corevm.ScopeContext) // Runtime context
+}
+
+func (this *API) GetCallContext() interface{} {
+	return this.callContext // Runtime context
 }
 
 func (this *API) SetEU(eu interface{}) { this.eu = eu.(*cceu.EU) }

@@ -115,13 +115,13 @@ func (this *TheadingHandler) run(caller, callee evmcommon.Address, input []byte)
 	return []byte{}, this.jobQueue.Run(1, this.api)
 }
 
-func (this *TheadingHandler) del(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-	if idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {
-		this.jobQueue.Del(idx)
-		return []byte{}, true
-	}
-	return []byte{}, false
-}
+// func (this *TheadingHandler) del(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+// 	if idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {
+// 		this.jobQueue.Del(idx)
+// 		return []byte{}, true
+// 	}
+// 	return []byte{}, false
+// }
 
 func (this *TheadingHandler) get(input []byte) ([]byte, bool) {
 	if idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {

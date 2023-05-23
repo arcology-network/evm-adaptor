@@ -21,7 +21,8 @@ pragma solidity ^0.5.0;
 contract LocalTest { 
     mapping(uint256 => uint256) public data;
     constructor() public { 
-        data[11] = 10; 
-        data[3] = 5;        
+        data[11] = 10;   
+         data[12] = 10;   
+         data[152] = 10;   
     }
 }

@@ -19,10 +19,10 @@ import (
 )
 
 type EU struct {
-	evm          *vm.EVM                               // Original ETH EVM
-	statedb      vm.StateDB                            // Arcology Implementation of Eth StateDB
-	api          eucommon.ConcurrentApiRouterInterface // Arcology API calls
-	scopeContext *corevm.ScopeContext
+	evm         *vm.EVM                               // Original ETH EVM
+	statedb     vm.StateDB                            // Arcology Implementation of Eth StateDB
+	api         eucommon.ConcurrentApiRouterInterface // Arcology API calls
+	CallContext *corevm.ScopeContext                  // Arcology API calls
 }
 
 func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.StateDB, api eucommon.ConcurrentApiRouterInterface) *EU {
@@ -40,6 +40,8 @@ func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.State
 func (this *EU) VM() *vm.EVM                                { return this.evm }
 func (this *EU) Statedb() vm.StateDB                        { return this.statedb }
 func (this *EU) Api() eucommon.ConcurrentApiRouterInterface { return this.api }
+
+// func (this *EU) Depth() uint8                               { return this.depth }
 
 func (this *EU) SetContext(statedb vm.StateDB, api eucommon.ConcurrentApiRouterInterface) {
 	this.api = api
