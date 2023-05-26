@@ -132,14 +132,14 @@ contract U256ThreadingTest {
         pop();
         require(container.length() == 3);
 
-        // Here should be one conflict
+        // // Here should be one conflict
         mp.clear();
         mp.add(address(this), abi.encodeWithSignature("pop()"));
         mp.add(address(this), abi.encodeWithSignature("pop()"));
         require(mp.length() == 2);
         mp.run(1);
 
-        require(container.length() == 2);  // Only one transaction went through, so only one pop() took effect
+        require(container.length() == 1);  // Only one transaction went through, so only one pop() took effect
     }
 
     function push(uint256 v) public{

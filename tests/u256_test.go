@@ -264,7 +264,7 @@ func TestU256Threading(t *testing.T) {
 	}
 }
 
-func TestNestedArrayThreading(t *testing.T) {
+func TestArrayThreading(t *testing.T) {
 	eu, config, _, _, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================

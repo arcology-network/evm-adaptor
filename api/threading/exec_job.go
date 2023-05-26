@@ -1,7 +1,6 @@
 package multiprocess
 
 import (
-	"encoding/hex"
 	"strings"
 
 	common "github.com/arcology-network/common-lib/common"
@@ -30,15 +29,16 @@ type Job struct {
 }
 
 func (this *Job) CalcualteRefund() uint64 { //
+	amount := uint64(0)
 	for _, v := range *this.apiRounter.Ccurl().WriteCache().Cache() {
 		typed := v.Value().(ccurlcommon.TypeInterface)
-		return (uint64(typed.Size()) / 32) * uint64(v.Reads())
-		common.IfThen(
+		amount += common.IfThen(
 			!v.Preexist(),
 			(uint64(typed.Size())/32)*uint64(v.Writes())*ethparams.SstoreSetGas,
 			(uint64(typed.Size())/32)*uint64(v.Writes()),
 		)
 	}
+	return amount
 }
 
 func (this *Job) RefundTo(payer, recipent ccurlcommon.UnivalueInterface, amount uint64) uint64 {
@@ -69,18 +69,19 @@ func (this *Job) FilteredTransitions() []ccurlcommon.UnivalueInterface {
 		})
 	}
 
-	if this.hasConflict { // Transaction has conflicts, refund some gas to the sender
-		_, recipent := common.FindFirstIf(this.apiRounter.Ccurl().Export(), func(v ccurlcommon.UnivalueInterface) bool {
-			return strings.HasSuffix(*v.GetPath(), "/balance") && strings.Index(*v.GetPath(), hex.EncodeToString(this.sender[:])) > 0
-		})
+	// transitions := this.apiRounter.Ccurl().Export()
+	// if this.hasConflict { // Transaction has conflicts, refund some gas to the sender
+	// 	_, recipent := common.FindFirstIf(common.Clone(transitions), func(v ccurlcommon.UnivalueInterface) bool {
+	// 		return strings.HasSuffix(*v.GetPath(), "/balance") && strings.Index(*v.GetPath(), hex.EncodeToString(this.sender[:])) > 0
+	// 	})
 
-		_, payer := common.FindFirstIf(this.apiRounter.Ccurl().Export(), func(v ccurlcommon.UnivalueInterface) bool {
-			coinbase := this.apiRounter.Coinbase()
-			return strings.HasSuffix(*v.GetPath(), "/balance") && strings.Index(*v.GetPath(), hex.EncodeToString(coinbase[:])) > 0
-		})
+	// 	_, payer := common.FindFirstIf(transitions, func(v ccurlcommon.UnivalueInterface) bool {
+	// 		coinbase := this.apiRounter.Coinbase()
+	// 		return strings.HasSuffix(*v.GetPath(), "/balance") && strings.Index(*v.GetPath(), hex.EncodeToString(coinbase[:])) > 0
+	// 	})
 
-		this.RefundTo(*payer, *recipent, 0)
-	}
+	// 	// this.RefundTo(*payer, *recipent, 0)
+	// }
 
 	return univalue.Univalues(this.apiRounter.Ccurl().Export()).To(
 		univalue.RemoveReadOnly,
