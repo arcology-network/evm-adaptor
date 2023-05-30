@@ -8,10 +8,10 @@ import (
 	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
 	concurrenturl "github.com/arcology-network/concurrenturl"
-	ccurlcommon "github.com/arcology-network/concurrenturl/common"
+	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
+	interfaces "github.com/arcology-network/concurrenturl/interfaces"
 	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
-	"github.com/arcology-network/concurrenturl/univalue"
 	evmcommon "github.com/arcology-network/evm/common"
 	types "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/core/vm"
@@ -27,13 +27,13 @@ import (
 // APIs under the concurrency namespace
 type Queue struct {
 	jobs       []*Job
-	arbitrator *indexer.Arbitrator
+	arbitrator *arbitrator.Arbitrator
 }
 
 func NewJobQueue() *Queue {
 	return &Queue{
 		jobs:       []*Job{},
-		arbitrator: &indexer.Arbitrator{},
+		arbitrator: &arbitrator.Arbitrator{},
 	}
 }
 
@@ -70,28 +70,30 @@ func (this *Queue) Add(origin, calleeAddr evmcommon.Address, funCall []byte) int
 	return len(this.jobs) - 1
 }
 
-func (this *Queue) FilteredAccesses() []ccurlcommon.UnivalueInterface {
-	accesseVec := make([]ccurlcommon.UnivalueInterface, 0, len(this.jobs)*10) // Pre-allocation
-	common.Foreach(this.jobs, func(job **Job) {
+func (this *Queue) ExportWriteCaches(jobs []*Job) []interfaces.Univalue {
+	infoVec := make([]interfaces.Univalue, 0, len(jobs)*10) // Pre-allocation
+	common.Foreach(jobs, func(job **Job) {
 		if (**job).prechkErr == nil && (**job).receipt.Status == 1 {
-			accesseVec = append(accesseVec, (*(*job)).FilteredAccesses()...)
+			infoVec = append(infoVec, (*(*job)).apiRounter.Ccurl().Export()...)
 		}
 	})
-	univalue.Univalues(accesseVec).Print()
+	return infoVec
+}
+
+func (this *Queue) FilterAccesses() []interfaces.Univalue {
+	infoVec := this.ExportWriteCaches(this.jobs)
+
+	accesseVec := indexer.Univalues(infoVec).To(indexer.IPCAccess{})
+	indexer.Univalues(accesseVec).Print()
 	return accesseVec
 }
 
-func (this *Queue) snapshot(mainApiRouter eucommon.ConcurrentApiRouterInterface) ccurlcommon.DatastoreInterface {
+func (this *Queue) snapshot(mainApiRouter eucommon.ConcurrentApiRouterInterface) interfaces.Datastore {
 	transitions := mainApiRouter.Ccurl().Export() // Get the all up-to-date transitions from the main thread
-	univalue.Univalues(transitions).Print()
+	indexer.Univalues(transitions).Print()
 
-	mainProcessTrans := univalue.Univalues(common.Clone(transitions)).To(
-		univalue.RemoveReadOnly,
-		univalue.DelNonExist,
-		univalue.CloneValue,
-	)
-
-	univalue.Univalues(mainProcessTrans).Print()
+	mainProcessTrans := indexer.Univalues(common.Clone(transitions)).To(indexer.ITCTransition{})
+	// indexer.Univalues(mainProcessTrans).Print()
 
 	transientDB := ccurlstorage.NewTransientDB(mainApiRouter.Ccurl().WriteCache().Store()) // Should be the same as Importer().Store()
 	snapshot := concurrenturl.NewConcurrentUrl(transientDB).Import(mainProcessTrans).Sort()
@@ -133,8 +135,8 @@ func (this *Queue) Run(threads uint8, parentApiRouter eucommon.ConcurrentApiRout
 	// fmt.Println("Run: ", time.Since(t0))
 
 	// t0 = time.Now()
-	tx := (&indexer.Arbitrator{}).Detect(this.FilteredAccesses()) // Detect potential conflicts
-	this.LableJobs(indexer.Conflicts(tx).TxIDs())
+	tx := (&arbitrator.Arbitrator{}).Detect(this.FilterAccesses()) // Detect potential conflicts
+	this.LableJobs(arbitrator.Conflicts(tx).TxIDs())
 	this.WriteBack(parentApiRouter, this.jobs) // Merge back to the main write cache
 	// fmt.Println("Commit: ", time.Since(t0))
 	return true
@@ -150,17 +152,17 @@ func (this *Queue) LableJobs(conflicTxs []uint32) {
 
 // Merge all the transitions back to the main cache
 func (this *Queue) WriteBack(parentApiRouter eucommon.ConcurrentApiRouterInterface, jobs []*Job) {
-	for i := 0; i < len(jobs); i++ { // transitt
-		transitions := this.jobs[i].FilteredTransitions()
-		common.RemoveIf(&transitions, func(v ccurlcommon.UnivalueInterface) bool {
-			return strings.HasSuffix(*v.GetPath(), "/nonce") || ccurlcommon.IsPath(*v.GetPath())
-		})
+	infoVec := this.ExportWriteCaches(this.jobs)
+	transitions := []interfaces.Univalue(indexer.Univalues(infoVec).To(indexer.IPCTransition{}))
 
-		common.Foreach(transitions, func(v *ccurlcommon.UnivalueInterface) {
-			(*v).SetTx(parentApiRouter.TxIndex())
-			(*v).WriteTo(parentApiRouter.Ccurl().WriteCache()) // Write the path creation first
-		})
-	}
+	common.RemoveIf(&transitions, func(v interfaces.Univalue) bool {
+		return strings.HasSuffix(*v.GetPath(), "/nonce") || common.IsPath(*v.GetPath()) // paths will be created as the elements inserted, but wow about empty paths
+	})
+
+	common.Foreach(transitions, func(v *interfaces.Univalue) {
+		(*v).SetTx(parentApiRouter.TxIndex())
+		(*v).WriteTo(parentApiRouter.Ccurl().WriteCache()) // Write the path creation first
+	})
 }
 
 func (this *Queue) Clear() uint64 {

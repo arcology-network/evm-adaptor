@@ -88,7 +88,7 @@ func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, bloc
 
 	// if result.Failed() { // Failed
 	// 	accesses = accesses[:0]
-	// 	common.RemoveIf(&transitions, func(val ccurlcommon.UnivalueInterface) bool {
+	// 	common.RemoveIf(&transitions, func(val interfaces.Univalue) bool {
 	// 		path := val.GetPath()
 	// 		return len(*path) <= 5 || (*path)[len(*path)-5:] != "nonce" // Keep nonce transitions only, nonce needs to increment anyway.
 	// 	})

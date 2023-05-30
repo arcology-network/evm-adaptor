@@ -9,6 +9,7 @@ import (
 	"github.com/arcology-network/concurrenturl"
 	urlcommon "github.com/arcology-network/concurrenturl/common"
 	"github.com/arcology-network/concurrenturl/commutative"
+	"github.com/arcology-network/concurrenturl/interfaces"
 	curstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
 	evmtypes "github.com/arcology-network/evm/core/types"
@@ -180,7 +181,7 @@ func TestUniswapFunctionTest(t *testing.T) {
 	}
 }
 
-func prepare(db urlcommon.DatastoreInterface, height uint64, transitions []urlcommon.UnivalueInterface, txs []uint32) (*adaptor.EU, *adaptor.Config) {
+func prepare(db urlcommon.DatastoreInterface, height uint64, transitions []interfaces.Univalue, txs []uint32) (*adaptor.EU, *adaptor.Config) {
 	url := concurrenturl.NewConcurrentUrl(db)
 	url.Import(transitions)
 	url.PostImport()
@@ -196,7 +197,7 @@ func prepare(db urlcommon.DatastoreInterface, height uint64, transitions []urlco
 	return adaptor.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url), config
 }
 
-func deploy(eu *adaptor.EU, config *adaptor.Config, owner evmcommon.Address, nonce uint64, code string, args ...[]byte) ([]urlcommon.UnivalueInterface, *evmtypes.Receipt) {
+func deploy(eu *adaptor.EU, config *adaptor.Config, owner evmcommon.Address, nonce uint64, code string, args ...[]byte) ([]interfaces.Univalue, *evmtypes.Receipt) {
 	data := evmcommon.Hex2Bytes(code)
 	for _, arg := range args {
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
@@ -208,7 +209,7 @@ func deploy(eu *adaptor.EU, config *adaptor.Config, owner evmcommon.Address, non
 	return transitions, receipt
 }
 
-func run(eu *adaptor.EU, config *adaptor.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]urlcommon.UnivalueInterface, *evmtypes.Receipt) {
+func run(eu *adaptor.EU, config *adaptor.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]interfaces.Univalue, *evmtypes.Receipt) {
 	data := crypto.Keccak256([]byte(function))[:4]
 	for _, arg := range args {
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
@@ -220,7 +221,7 @@ func run(eu *adaptor.EU, config *adaptor.Config, from, to *evmcommon.Address, no
 	return transitions, receipt
 }
 
-func runEx(eu *adaptor.EU, config *adaptor.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]urlcommon.UnivalueInterface, []urlcommon.UnivalueInterface, *evmtypes.Receipt) {
+func runEx(eu *adaptor.EU, config *adaptor.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]interfaces.Univalue, []interfaces.Univalue, *evmtypes.Receipt) {
 	data := crypto.Keccak256([]byte(function))[:4]
 	for _, arg := range args {
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)

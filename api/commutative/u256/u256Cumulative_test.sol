@@ -56,17 +56,30 @@ contract ThreadingCumulativeU256 {
         mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
         mp.add(address(this), abi.encodeWithSignature("sub(uint256)", 2));
         mp.run(2);
-        require(cumulative.get() == 6);
+        require(cumulative.get() == 10);
 
         mp.clear();
         mp.add(address(this), abi.encodeWithSignature("sub(uint256)", 1));
         mp.run(2);
-        require(cumulative.get() == 5);
+        require(cumulative.get() == 11);
+    }
+
+    function call1() public {
+        Threading mp = new Threading();
+        mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
+        // mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
+        mp.run(2);
+        require(cumulative.get() == 2);   
+
+        mp.clear();
+        mp.add(address(this), abi.encodeWithSignature("sub(uint256)", 1));
+        mp.run(2);
+        require(cumulative.get() == 1);   
     }
 
 
     function call2() public {
-        require(cumulative.get() == 5);
+        require(cumulative.get() == 1);
     }
 
     function add(uint256 elem) public { //9e c6 69 25

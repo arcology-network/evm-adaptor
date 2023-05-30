@@ -77,7 +77,7 @@ func (this *NoncommutativeBytesHandlers) new(caller evmcommon.Address, input []b
 // Get the number of elements in the container
 func (this *NoncommutativeBytesHandlers) length(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path := this.buildPath(caller, input) // NoncommutativeBytesHandlers path
-	if path, err := this.api.Ccurl().Read(this.api.TxIndex(), path); err == nil && path != nil {
+	if path, _ := this.api.Ccurl().Read(this.api.TxIndex(), path); path != nil {
 		if encoded, err := abi.Encode(uint256.NewInt(uint64(len(path.([]string))))); err == nil {
 			return encoded, true
 		}
@@ -92,7 +92,7 @@ func (this *NoncommutativeBytesHandlers) get(caller evmcommon.Address, input []b
 	}
 
 	path := this.buildPath(caller, input) // Build container path
-	if value, err := this.api.Ccurl().ReadAt(this.api.TxIndex(), path, idx); value == nil || err != nil {
+	if value, _, err := this.api.Ccurl().ReadAt(this.api.TxIndex(), path, idx); err != nil && value == nil {
 		return []byte{}, false
 	} else {
 		if encoded, err := abi.Encode(value.([]byte)); err == nil { // Encode the result
@@ -118,7 +118,7 @@ func (this *NoncommutativeBytesHandlers) set(caller evmcommon.Address, input []b
 
 	path := this.buildPath(caller, input) // Build container path
 	value := noncommutative.NewBytes(bytes.([]byte))
-	if err := this.api.Ccurl().WriteAt(this.api.TxIndex(), path, idx, value); err == nil {
+	if _, err := this.api.Ccurl().WriteAt(this.api.TxIndex(), path, idx, value); err == nil {
 		return []byte{}, true
 	}
 	return []byte{}, false
@@ -136,13 +136,13 @@ func (this *NoncommutativeBytesHandlers) push(caller evmcommon.Address, input []
 		return []byte{}, false
 	}
 
-	err = this.api.Ccurl().Write(this.api.TxIndex(), key, noncommutative.NewBytes(value.([]byte)))
+	_, err = this.api.Ccurl().Write(this.api.TxIndex(), key, noncommutative.NewBytes(value.([]byte)))
 	return []byte{}, err == nil
 }
 
 func (this *NoncommutativeBytesHandlers) pop(caller evmcommon.Address, input []byte) ([]byte, bool) {
 	path := this.buildPath(caller, input) // Build container path
-	if value, err := this.api.Ccurl().PopBack(this.api.TxIndex(), path); err != nil {
+	if value, _, err := this.api.Ccurl().PopBack(this.api.TxIndex(), path); err != nil {
 		return []byte{}, false
 	} else {
 		if value != nil {

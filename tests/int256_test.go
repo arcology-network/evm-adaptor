@@ -136,7 +136,7 @@ func TestCumulativeInt256(t *testing.T) {
 // 	msg := types.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false) // Build the message
 // 	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))       // Execute it
 // 	// t.Log("\n" + eucommon.FormatTransitions(transitions))
-// 	// univalue.Univalues(transitions).Print()
+// 	// indexer.Univalues(transitions).Print()
 // 	if receipt.Status != 1 || err != nil {
 // 		t.Error("Error: Deployment failed!!!", err)
 // 	}
@@ -147,7 +147,7 @@ func TestCumulativeInt256(t *testing.T) {
 // 	contractAddress := receipt.ContractAddress
 // 	msg = types.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
 // 	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
-// 	// univalue.Univalues(transitions).Print()
+// 	// indexer.Univalues(transitions).Print()
 
 // 	if err != nil {
 // 		t.Error(err)

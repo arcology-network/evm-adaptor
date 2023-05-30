@@ -31,30 +31,25 @@ func (this *CcurlConnector) New(account types.Address, containerId string) bool 
 	if !this.newStorageRoot(account, this.Api.TxIndex()) { // Create the root path if has been created yet.
 		return false
 	}
-
 	return this.newContainerRoot(account, containerId[:], this.Api.TxIndex()) //
 }
 
 func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32) bool {
 	accountRoot := commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/")
-	if value, err := this.ccurl.Peek(accountRoot); err != nil {
-		return false
-	} else if value == nil { // The account didn't exist.
-		if err := this.ccurl.CreateAccount(txIndex, this.ccurl.Platform.Eth10(), string(account)); err != nil {
-			return false
-		}
+	if value, _ := this.ccurl.Peek(accountRoot); value == nil {
+		return this.ccurl.CreateAccount(txIndex, this.ccurl.Platform.Eth10(), string(account)) != nil // Create a new account
 	}
-
-	return true
+	return true // ALready exists
 }
 
 func (this *CcurlConnector) newContainerRoot(account types.Address, id string, txIndex uint32) bool {
 	containerRoot := this.Key(account, id)
-	if value, err := this.ccurl.Peek(containerRoot); err != nil || value != nil {
-		return false
+	if value, _ := this.ccurl.Peek(containerRoot); value == nil {
+		_, err := this.ccurl.Write(txIndex, containerRoot, commutative.NewPath()) // Create a new container
+		return err == nil
 	}
+	return true // Already exists
 
-	return this.ccurl.Write(txIndex, containerRoot, commutative.NewPath()) == nil
 }
 
 func (this *CcurlConnector) Key(account types.Address, id string) string { // container ID

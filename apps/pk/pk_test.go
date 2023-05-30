@@ -10,8 +10,8 @@ import (
 	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
 	commonlib "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl"
-	urlcommon "github.com/arcology-network/concurrenturl/common"
 	"github.com/arcology-network/concurrenturl/commutative"
+	"github.com/arcology-network/concurrenturl/interfaces"
 	curstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
 	arbitrator "github.com/arcology-network/urlarbitrator-engine/go-wrapper"
@@ -73,7 +73,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 	geneAddress := receipt.ContractAddress
 	t.Log(geneAddress)
 
-	var accesses []urlcommon.UnivalueInterface
+	var accesses []interfaces.Univalue
 
 	// Call setSaleAuctionAddress.
 	eu, config = prepare(db, 10000004, transitions, []uint32{4})
@@ -130,8 +130,8 @@ func TestParallelKittiesPerf(t *testing.T) {
 	url.Import(transitions)
 	url.PostImport()
 	url.Commit([]uint32{10})
-	totalTransitions := []urlcommon.UnivalueInterface{}
-	totalAccesses := []urlcommon.UnivalueInterface{}
+	totalTransitions := []interfaces.Univalue{}
+	totalAccesses := []interfaces.Univalue{}
 	txs := []uint32{}
 	begin := time.Now()
 
@@ -163,7 +163,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 		}
 
 		bs, _ := commonlib.GobEncode(transitions)
-		var ts []urlcommon.UnivalueInterface
+		var ts []interfaces.Univalue
 		commonlib.GobDecode(bs, &ts)
 		totalTransitions = append(totalTransitions, ts...)
 		// if i == 0 || i == 256 {
@@ -182,7 +182,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 			// begin = time.Now()
 			// for j := 0; j < 100; j++ {
 			// 	bs, _ := commonlib.GobEncode(totalTransitions[j*500 : (j+1)*500])
-			// 	var ts []urlcommon.UnivalueInterface
+			// 	var ts []interfaces.Univalue
 			// 	commonlib.GobDecode(bs, ts)
 			// }
 			// t.Log("time for codec: ", time.Since(begin))
@@ -202,8 +202,8 @@ func TestParallelKittiesPerf(t *testing.T) {
 			url.Commit(txs)
 			t.Log("time for commit: ", time.Since(begin))
 			begin = time.Now()
-			totalTransitions = []urlcommon.UnivalueInterface{}
-			totalAccesses = []urlcommon.UnivalueInterface{}
+			totalTransitions = []interfaces.Univalue{}
+			totalAccesses = []interfaces.Univalue{}
 			txs = []uint32{}
 			PrintMemUsage()
 		}

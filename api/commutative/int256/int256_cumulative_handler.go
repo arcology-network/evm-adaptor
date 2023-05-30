@@ -79,7 +79,7 @@ func (this *Int256CumulativeHandlers) new(caller evmcommon.Address, input []byte
 	}
 
 	newU256 := commutative.NewU256(min.(*uint256.Int), max.(*uint256.Int))
-	if err := this.api.Ccurl().Write(this.api.TxIndex(), key, newU256); err != nil {
+	if _, err := this.api.Ccurl().Write(this.api.TxIndex(), key, newU256); err != nil {
 		return []byte{}, false
 	}
 	return id, true
@@ -91,7 +91,7 @@ func (this *Int256CumulativeHandlers) get(caller evmcommon.Address, input []byte
 		return []byte{}, false
 	}
 
-	if value, err := this.api.Ccurl().ReadAt(this.api.TxIndex(), path, 0); value == nil || err != nil {
+	if value, _, err := this.api.Ccurl().ReadAt(this.api.TxIndex(), path, 0); value == nil || err != nil {
 		return []byte{}, false
 	} else {
 
@@ -115,7 +115,8 @@ func (this *Int256CumulativeHandlers) add(caller evmcommon.Address, input []byte
 	}
 
 	value := commutative.NewU256Delta(delta.(*uint256.Int), true)
-	return []byte{}, this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value) == nil
+	_, err = this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value)
+	return []byte{}, err == nil
 }
 
 func (this *Int256CumulativeHandlers) sub(caller evmcommon.Address, input []byte) ([]byte, bool) {
@@ -130,7 +131,8 @@ func (this *Int256CumulativeHandlers) sub(caller evmcommon.Address, input []byte
 	}
 
 	value := commutative.NewU256Delta(delta.(*uint256.Int), false)
-	return []byte{}, this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value) == nil
+	_, err = this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value)
+	return []byte{}, err == nil
 }
 
 func (this *Int256CumulativeHandlers) set(caller evmcommon.Address, input []byte) ([]byte, bool) {
@@ -150,7 +152,8 @@ func (this *Int256CumulativeHandlers) set(caller evmcommon.Address, input []byte
 	}
 
 	value := commutative.NewU256Delta(delta, sign)
-	return []byte{}, this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value) == nil
+	_, err = this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value)
+	return []byte{}, err == nil
 }
 
 // Build the container path

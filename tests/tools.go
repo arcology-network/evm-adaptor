@@ -7,8 +7,8 @@ import (
 
 	"github.com/arcology-network/common-lib/cachedstorage"
 	concurrenturl "github.com/arcology-network/concurrenturl"
-	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	"github.com/arcology-network/concurrenturl/commutative"
+	"github.com/arcology-network/concurrenturl/interfaces"
 	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
 
@@ -24,7 +24,7 @@ import (
 	cceueth "github.com/arcology-network/vm-adaptor/eth"
 )
 
-func Prepare(db ccurlcommon.DatastoreInterface, height uint64, transitions []ccurlcommon.UnivalueInterface, txs []uint32) (*cceu.EU, *cceu.Config) {
+func Prepare(db interfaces.Datastore, height uint64, transitions []interfaces.Univalue, txs []uint32) (*cceu.EU, *cceu.Config) {
 	url := concurrenturl.NewConcurrentUrl(db)
 	if transitions != nil && len(transitions) != 0 {
 		url.Import(transitions)
@@ -43,7 +43,7 @@ func Prepare(db ccurlcommon.DatastoreInterface, height uint64, transitions []ccu
 	return cceu.NewEU(config.ChainConfig, *config.VMConfig, statedb, api), config
 }
 
-func Deploy(eu *cceu.EU, config *cceu.Config, owner evmcommon.Address, nonce uint64, code string, args ...[]byte) ([]ccurlcommon.UnivalueInterface, *evmtypes.Receipt, error) {
+func Deploy(eu *cceu.EU, config *cceu.Config, owner evmcommon.Address, nonce uint64, code string, args ...[]byte) ([]interfaces.Univalue, *evmtypes.Receipt, error) {
 	data := evmcommon.Hex2Bytes(code)
 	for _, arg := range args {
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
@@ -55,7 +55,7 @@ func Deploy(eu *cceu.EU, config *cceu.Config, owner evmcommon.Address, nonce uin
 	return transitions, receipt, err
 }
 
-func CallFunc(eu *cceu.EU, config *cceu.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, encodedArgs ...[]byte) ([]ccurlcommon.UnivalueInterface, []ccurlcommon.UnivalueInterface, *evmtypes.Receipt, error) {
+func CallFunc(eu *cceu.EU, config *cceu.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, encodedArgs ...[]byte) ([]interfaces.Univalue, []interfaces.Univalue, *evmtypes.Receipt, error) {
 	data := crypto.Keccak256([]byte(function))[:4]
 	for _, arg := range encodedArgs {
 		data = append(data, arg...)
@@ -93,7 +93,7 @@ func MainTestConfig() *cceu.Config {
 	return cfg
 }
 
-func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concurrenturl.ConcurrentUrl, []ccurlcommon.UnivalueInterface) {
+func NewTestEU() (*cceu.EU, *cceu.Config, interfaces.Datastore, *concurrenturl.ConcurrentUrl, []interfaces.Univalue) {
 	persistentDB := cachedstorage.NewDataStore()
 	persistentDB.Inject((&concurrenturl.Platform{}).Eth10Account(), commutative.NewPath())
 	db := ccurlstorage.NewTransientDB(persistentDB)
@@ -106,6 +106,7 @@ func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concu
 	statedb.CreateAccount(eucommon.Coinbase)
 	statedb.CreateAccount(eucommon.Alice)
 	statedb.AddBalance(eucommon.Alice, new(big.Int).SetUint64(1e18))
+	// transitions := url.Export()
 	_, transitions := url.ExportAll()
 	// fmt.Println("\n" + eucommon.FormatTransitions(transitions))
 
@@ -125,7 +126,7 @@ func NewTestEU() (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concu
 	return cceu.NewEU(config.ChainConfig, *config.VMConfig, statedb, api), config, db, url, transitions
 }
 
-// func NewTestEUwithUrl(db ccurlcommon.DatastoreInterface, ccurl *concurrenturl.ConcurrentUrl) (*cceu.EU, *cceu.Config, ccurlcommon.DatastoreInterface, *concurrenturl.ConcurrentUrl) {
+// func NewTestEUwithUrl(db interfaces.Datastore, ccurl *concurrenturl.ConcurrentUrl) (*cceu.EU, *cceu.Config, interfaces.Datastore, *concurrenturl.ConcurrentUrl) {
 // 	// Deploy.
 // 	ccurl = concurrenturl.NewConcurrentUrl(db)
 // 	ccurl.Import(transitions)

@@ -271,7 +271,7 @@ func TestStateDBV2GetNonexistStorageState(t *testing.T) {
 // 	db.Inject((&concurrenturl.Platform{}).Eth10Account(), meta)
 
 // 	begin := time.Now()
-// 	var transitions []urlcommon.UnivalueInterface
+// 	var transitions []interfaces.Univalue
 // 	for i := 0; i < 1000; i++ {
 // 		url := concurrenturl.NewConcurrentUrl(db)
 // 		statedb := eth.NewImplStateDB(url)
@@ -313,7 +313,7 @@ func TestStateDBV2GetNonexistStorageState(t *testing.T) {
 // 	b.Log(time.Duration(time.Since(begin)))
 // 	b.ResetTimer()
 
-// 	var transitions []urlcommon.UnivalueInterface
+// 	var transitions []interfaces.Univalue
 // 	for i := 0; i < b.N; i++ {
 // 		begin = time.Now()
 // 		_, transitions = url.ExportAll()

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 
-	urlcommon "github.com/arcology-network/concurrenturl/common"
 	"github.com/arcology-network/concurrenturl/commutative"
+	"github.com/arcology-network/concurrenturl/interfaces"
 	urltype "github.com/arcology-network/concurrenturl/univalue"
 	arbitrator "github.com/arcology-network/urlarbitrator-engine/go-wrapper"
 )
@@ -71,7 +71,7 @@ func FormatValue(value interface{}) string {
 	return ""
 }
 
-func FormatTransitions(transitions []urlcommon.UnivalueInterface) string {
+func FormatTransitions(transitions []interfaces.Univalue) string {
 	var str string
 	for _, t := range transitions {
 		str += fmt.Sprintf("%v%v%v%v%v%v%v%v%v%v%v%v%v%v",
@@ -86,7 +86,7 @@ func FormatTransitions(transitions []urlcommon.UnivalueInterface) string {
 	return str
 }
 
-func DetectConflict(transitions []urlcommon.UnivalueInterface) ([]uint32, []uint32, []bool) {
+func DetectConflict(transitions []interfaces.Univalue) ([]uint32, []uint32, []bool) {
 	length := len(transitions)
 	txs := make([]uint32, length)
 	paths := make([]string, length)

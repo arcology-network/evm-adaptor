@@ -17,7 +17,7 @@ import (
 	sha3 "golang.org/x/crypto/sha3"
 )
 
-func TestSlot(t *testing.T) {
+func TestSlotHash(t *testing.T) {
 	_ctrn := uint256.NewInt(0).Bytes32()
 	_elem := uint256.NewInt(2).Bytes32()
 
@@ -26,7 +26,7 @@ func TestSlot(t *testing.T) {
 	fmt.Println(hash.Sum(nil))
 }
 
-func TestLocalStructure(t *testing.T) {
+func TestStorageSlot(t *testing.T) {
 	eu, config, _, _, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
@@ -44,7 +44,7 @@ func TestLocalStructure(t *testing.T) {
 		t.Error(err)
 	}
 
-	code, err := compiler.CompileContracts(pyCompiler, project+"/api/local/local_test.sol", "LocalTest")
+	code, err := compiler.CompileContracts(pyCompiler, project+"/api/slot/local_test.sol", "LocalTest")
 	if err != nil || len(code) == 0 {
 		t.Error(err)
 	}
