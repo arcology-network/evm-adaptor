@@ -14,8 +14,6 @@ import (
 	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
 	types "github.com/arcology-network/evm/core/types"
-	"github.com/arcology-network/evm/core/vm"
-	"github.com/arcology-network/evm/params"
 
 	cceu "github.com/arcology-network/vm-adaptor"
 
@@ -120,15 +118,7 @@ func (this *Queue) Run(threads uint8, parentApiRouter eucommon.ConcurrentApiRout
 
 		statedb := eth.NewImplStateDB(this.jobs[i].apiRounter) // Eth state DB
 		statedb.Prepare(txHash, [32]byte{}, i)                 // tx hash , block hash and tx index
-		eu := cceu.NewEU(
-			params.MainnetChainConfig,
-			vm.Config{},
-			statedb,
-			this.jobs[i].apiRounter, // Tx hash, tx id and url
-		)
-
-		this.jobs[i].receipt, this.jobs[i].result, this.jobs[i].prechkErr =
-			eu.Run(eu.Api().TxHash(), int(eu.Api().TxIndex()), &this.jobs[i].message, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(this.jobs[i].message))
+		this.jobs[i].Run(config, statedb)
 	}
 	// }
 	// common.ParallelWorker(len(this.jobs), int(threads), executor)
@@ -136,14 +126,15 @@ func (this *Queue) Run(threads uint8, parentApiRouter eucommon.ConcurrentApiRout
 
 	// t0 = time.Now()
 	tx := (&arbitrator.Arbitrator{}).Detect(this.FilterAccesses()) // Detect potential conflicts
-	this.LableJobs(arbitrator.Conflicts(tx).TxIDs())
+
+	this.LableConflicts(arbitrator.Conflicts(tx).TxIDs())
 	this.WriteBack(parentApiRouter, this.jobs) // Merge back to the main write cache
 	// fmt.Println("Commit: ", time.Since(t0))
 	return true
 }
 
 // Merge all the transitions back to the main cache
-func (this *Queue) LableJobs(conflicTxs []uint32) {
+func (this *Queue) LableConflicts(conflicTxs []uint32) {
 	dict := common.MapFromArray(conflicTxs, true)
 	common.Foreach(this.jobs, func(job **Job) {
 		_, (**job).hasConflict = (*dict)[(**job).apiRounter.TxIndex()] // Label conflicts

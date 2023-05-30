@@ -2,6 +2,13 @@ pragma solidity ^0.5.0;
 
 contract Threading {
     address constant private API = address(0x90); 
+    bytes private id;
+
+    // constructor (uint256 numJobs, uint256 numThreads) public {
+    //     (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("new(uint256,uint256)", numJobs, numThreads));
+    //     id = data; 
+    //     require(success);
+    // }
 
     // Append a new task to the queue, the execution only starts when run() is called
     function add(address addr, bytes memory args) public returns(bool, uint256)  {
