@@ -95,34 +95,30 @@ contract ThreadingCumulativeU256 {
     }  
 }
 
-// contract ThreadingCumulativeU256Multi {
-//     U256Cumulative cumulative = new U256Cumulative(0, 100);     
-//     function testCase1() public {
-//                 Threading mp1 = new Threading();
-// mp1.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
+contract ThreadingCumulativeU256Multi {
+    U256Cumulative cumulative = new U256Cumulative(0, 100);     
+    function testCase1() public {
+        Threading mp1 = new Threading(1);
+        mp1.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
+        mp1.run();
 
-//         Threading mp = new Threading(1);
-//         mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
-//         mp.run();    
+        Threading mp2 = new Threading(1);
+        mp2.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
+        mp2.run();    
 
-//         add(2);
-//         require(cumulative.get() == 6);
+        add(2);
+        require(cumulative.get() == 6);
+    }
 
-//         // Threading mp2 = new Threading();
-//         // mp2.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
-//         // mp2.run(2);
-//         // require(cumulative.get() == 6);
-//     }
+    function call2() public {
+        require(cumulative.get() == 1);
+    }
 
-//     function call2() public {
-//         require(cumulative.get() == 1);
-//     }
+    function add(uint256 elem) public { //9e c6 69 25
+        cumulative.add(elem);
+    }  
 
-//     function add(uint256 elem) public { //9e c6 69 25
-//         cumulative.add(elem);
-//     }  
-
-//     function sub(uint256 elem) public { //9e c6 69 25
-//         cumulative.sub(elem);
-//     }  
-// }
+    function sub(uint256 elem) public { //9e c6 69 25
+        cumulative.sub(elem);
+    }  
+}

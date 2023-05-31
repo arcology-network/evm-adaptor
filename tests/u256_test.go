@@ -202,57 +202,57 @@ func TestCumulativeU256Case2(t *testing.T) {
 	}
 }
 
-// func TestCumulativeU256ThreadingMulti(t *testing.T) {
-// 	eu, config, _, _, _ := NewTestEU()
+func TestCumulativeU256ThreadingMulti(t *testing.T) {
+	eu, config, _, _, _ := NewTestEU()
 
-// 	// ================================== Compile the contract ==================================
-// 	currentPath, _ := os.Getwd()
-// 	project := filepath.Dir(currentPath)
-// 	pyCompiler := project + "/compiler/compiler.py"
-// 	targetPath := project + "/api/commutative/"
+	// ================================== Compile the contract ==================================
+	currentPath, _ := os.Getwd()
+	project := filepath.Dir(currentPath)
+	pyCompiler := project + "/compiler/compiler.py"
+	targetPath := project + "/api/commutative/"
 
-// 	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256Cumulative_test.sol", "ThreadingCumulativeU256Multi")
+	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256Cumulative_test.sol", "ThreadingCumulativeU256Multi")
 
-// 	if err != nil || len(code) == 0 {
-// 		t.Error(err)
-// 	}
+	if err != nil || len(code) == 0 {
+		t.Error(err)
+	}
 
-// 	// ================================== Deploy the contract ==================================
-// 	msg := types.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
-// 	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg))            // Execute it
+	// ================================== Deploy the contract ==================================
+	msg := types.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
+	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg))            // Execute it
 
-// 	_, transitions := eu.Api().Ccurl().ExportAll()
-// 	eu.Api().Ccurl().Import(transitions)
-// 	eu.Api().Ccurl().Sort()
-// 	eu.Api().Ccurl().Commit([]uint32{1})
+	_, transitions := eu.Api().Ccurl().ExportAll()
+	eu.Api().Ccurl().Import(transitions)
+	eu.Api().Ccurl().Sort()
+	eu.Api().Ccurl().Commit([]uint32{1})
 
-// 	// ---------------
-// 	t.Log(receipt)
-// 	contractAddress := receipt.ContractAddress
-// 	if receipt.Status != 1 || err != nil {
-// 		t.Error("Error: Deployment failed!!!", err)
-// 	}
+	// ---------------
+	t.Log(receipt)
+	contractAddress := receipt.ContractAddress
+	if receipt.Status != 1 || err != nil {
+		t.Error("Error: Deployment failed!!!", err)
+	}
 
-// 	// ================================== CallBasic() ==================================
-// 	receipt, _, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
-// 	_, transitions = eu.Api().Ccurl().ExportAll()
-// 	if err != nil {
-// 		fmt.Print(err)
-// 	}
+	// ================================== CallBasic() ==================================
+	receipt, _, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	_, transitions = eu.Api().Ccurl().ExportAll()
+	if err != nil {
+		fmt.Print(err)
+	}
 
-// 	data := crypto.Keccak256([]byte("testCase1()"))[:4]
-// 	msg = types.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-// 	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
-// 	_, transitions = eu.Api().Ccurl().ExportAll()
+	data := crypto.Keccak256([]byte("testCase1()"))[:4]
+	msg = types.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	_, transitions = eu.Api().Ccurl().ExportAll()
 
-// 	if receipt.Status != 1 || err != nil {
-// 		t.Error(err)
-// 	}
+	if receipt.Status != 1 || err != nil {
+		t.Error(err)
+	}
 
-// 	if execResult != nil && execResult.Err != nil {
-// 		t.Error(execResult.Err)
-// 	}
-// }
+	if execResult != nil && execResult.Err != nil {
+		t.Error(execResult.Err)
+	}
+}
 
 func TestU256Threading(t *testing.T) {
 	eu, config, _, _, _ := NewTestEU()
