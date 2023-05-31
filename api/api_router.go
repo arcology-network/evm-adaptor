@@ -2,6 +2,7 @@ package api
 
 import (
 	"math/big"
+	"strconv"
 
 	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
@@ -12,44 +13,43 @@ import (
 	"github.com/arcology-network/evm/core/vm"
 	corevm "github.com/arcology-network/evm/core/vm"
 	cceu "github.com/arcology-network/vm-adaptor"
-	apicommon "github.com/arcology-network/vm-adaptor/api/common"
 	cumulativei256 "github.com/arcology-network/vm-adaptor/api/commutative/int256"
 	cumulativeu256 "github.com/arcology-network/vm-adaptor/api/commutative/u256"
 	noncommutativeBytes "github.com/arcology-network/vm-adaptor/api/noncommutative/base"
 	threading "github.com/arcology-network/vm-adaptor/api/threading"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 )
 
 type API struct {
-	logs         []eucommon.ILog
+	logs         []interfaces.ILog
 	txHash       evmcommon.Hash // Tx hash
 	txIndex      uint32         // Tx index in the block
 	dc           *types.DeferCall
 	predecessors []evmcommon.Hash
 
-	seed   uint64 // for uuid generation
-	serial uint64
-	depth  uint8
+	ccUID    uint64 // for uuid generation
+	ccElemID uint64
+	depth    uint8
 	// deferCall *concurrentlib.DeferCall
 
 	eu          *cceu.EU
 	callContext *corevm.ScopeContext
 
-	handlerDict map[[20]byte]apicommon.ConcurrentApiHandlerInterface // APIs under the concurrency namespace
+	handlerDict map[[20]byte]interfaces.ApiHandler // APIs under the concurrency namespace
 	ccurl       *concurrenturl.ConcurrentUrl
 
-	parentRouter *API
+	parentApiRouter interfaces.ApiRouter
 }
 
 func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	api := &API{
 		eu:          nil,
 		ccurl:       ccurl,
-		handlerDict: make(map[[20]byte]apicommon.ConcurrentApiHandlerInterface),
+		handlerDict: make(map[[20]byte]interfaces.ApiHandler),
 		depth:       0,
 	}
 
-	handlers := []apicommon.ConcurrentApiHandlerInterface{
+	handlers := []interfaces.ApiHandler{
 		noncommutativeBytes.NewNoncommutativeBytesHandlers(api),
 		cumulativeu256.NewU256CumulativeHandlers(api),
 		cumulativei256.NewInt256CumulativeHandlers(api),
@@ -65,12 +65,11 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	return api
 }
 
-func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl) eucommon.ConcurrentApiRouterInterface {
+func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl, parentApiRouter interfaces.ApiRouter) interfaces.ApiRouter {
 	api := NewAPI(ccurl)
 	api.txHash = txHash
 	api.txIndex = txIndex
-	api.parentRouter = this
-	// api.SetEU(this.eu)
+	api.parentApiRouter = parentApiRouter
 	return api
 }
 
@@ -100,16 +99,19 @@ func (this *API) Prepare(txHash evmcommon.Hash, height *big.Int, txIndex uint32)
 	this.dc = nil
 }
 
-func (this *API) GenElemUID() uint64 {
-	this.serial++
-	return this.serial
+func (this *API) GenCcElemUID() []byte {
+
+	this.ccElemID++
+	return []byte(strconv.Itoa(int(this.ccElemID)))
 }
 
 // Generate an UUID based on transaction hash and the counter
-func (this *API) GenCtrnUID() []byte {
-	this.seed++
-	id := codec.Bytes32(this.txHash).UUID(this.seed)
-	return id[:8]
+func (this *API) GenCCUID() []byte {
+	this.ccUID++
+	// id := codec.Bytes32(this.txHash).UUID(this.ccUID)
+	// return id[:8]
+
+	return append(append(this.txHash[:8], '-'), []byte(strconv.Itoa(int(this.ccUID)))...)
 }
 
 func (this *API) AddLog(key, value string) {
@@ -119,7 +121,7 @@ func (this *API) AddLog(key, value string) {
 	})
 }
 
-func (this *API) GetLogs() []eucommon.ILog {
+func (this *API) GetLogs() []interfaces.ILog {
 	return this.logs
 }
 

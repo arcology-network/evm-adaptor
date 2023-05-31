@@ -10,10 +10,11 @@ import (
 	concurrenturl "github.com/arcology-network/concurrenturl"
 	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
-	interfaces "github.com/arcology-network/concurrenturl/interfaces"
+	ccinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
 	types "github.com/arcology-network/evm/core/types"
+	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 
 	cceu "github.com/arcology-network/vm-adaptor"
 
@@ -73,8 +74,8 @@ func (this *Queue) Add(origin, calleeAddr evmcommon.Address, funCall []byte) boo
 	return true
 }
 
-func (this *Queue) ExportWriteCaches(jobs []*Job) []interfaces.Univalue {
-	infoVec := make([]interfaces.Univalue, 0, len(jobs)*10) // Pre-allocation
+func (this *Queue) ExportWriteCaches(jobs []*Job) []ccinterfaces.Univalue {
+	infoVec := make([]ccinterfaces.Univalue, 0, len(jobs)*10) // Pre-allocation
 	common.Foreach(jobs, func(job **Job) {
 		if (**job).prechkErr == nil && (**job).receipt.Status == 1 {
 			infoVec = append(infoVec, (*(*job)).apiRounter.Ccurl().Export()...)
@@ -83,7 +84,7 @@ func (this *Queue) ExportWriteCaches(jobs []*Job) []interfaces.Univalue {
 	return infoVec
 }
 
-func (this *Queue) FilterAccesses() []interfaces.Univalue {
+func (this *Queue) FilterAccesses() []ccinterfaces.Univalue {
 	infoVec := this.ExportWriteCaches(this.jobs)
 
 	accesseVec := indexer.Univalues(infoVec).To(indexer.IPCAccess{})
@@ -91,7 +92,7 @@ func (this *Queue) FilterAccesses() []interfaces.Univalue {
 	return accesseVec
 }
 
-func (this *Queue) snapshot(mainApiRouter eucommon.ConcurrentApiRouterInterface) interfaces.Datastore {
+func (this *Queue) snapshot(mainApiRouter interfaces.ApiRouter) ccinterfaces.Datastore {
 	transitions := mainApiRouter.Ccurl().Export() // Get the all up-to-date transitions from the main thread
 	indexer.Univalues(transitions).Print()
 
@@ -103,7 +104,7 @@ func (this *Queue) snapshot(mainApiRouter eucommon.ConcurrentApiRouterInterface)
 	return snapshot.Commit([]uint32{mainApiRouter.TxIndex()}).Importer().Store() // Commit these changes to the a transient DB
 }
 
-func (this *Queue) Run(parentApiRouter eucommon.ConcurrentApiRouterInterface) bool {
+func (this *Queue) Run(parentApiRouter interfaces.ApiRouter) bool {
 	if parentApiRouter.Depth() > eucommon.MAX_RECURSIION_DEPTH {
 		return false //, errors.New("Error: Execeeds the max recursion depth")
 	}
@@ -119,7 +120,7 @@ func (this *Queue) Run(parentApiRouter eucommon.ConcurrentApiRouterInterface) bo
 			parentApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
 
 		txHash := sha256.Sum256(codec.Uint64(i).Encode()) // A temp tx number, which will be replaced later
-		this.jobs[i].apiRounter = parentApiRouter.New(txHash, uint32(i), ccurl)
+		this.jobs[i].apiRounter = parentApiRouter.New(txHash, uint32(i), ccurl, parentApiRouter)
 
 		statedb := eth.NewImplStateDB(this.jobs[i].apiRounter) // Eth state DB
 		statedb.Prepare(txHash, [32]byte{}, i)                 // tx hash , block hash and tx index
@@ -147,15 +148,15 @@ func (this *Queue) LableConflicts(conflicTxs []uint32) {
 }
 
 // Merge all the transitions back to the main cache
-func (this *Queue) WriteBack(parentApiRouter eucommon.ConcurrentApiRouterInterface, jobs []*Job) {
+func (this *Queue) WriteBack(parentApiRouter interfaces.ApiRouter, jobs []*Job) {
 	infoVec := this.ExportWriteCaches(this.jobs)
-	transitions := []interfaces.Univalue(indexer.Univalues(infoVec).To(indexer.IPCTransition{}))
+	transitions := []ccinterfaces.Univalue(indexer.Univalues(infoVec).To(indexer.IPCTransition{}))
 
-	common.RemoveIf(&transitions, func(v interfaces.Univalue) bool {
+	common.RemoveIf(&transitions, func(v ccinterfaces.Univalue) bool {
 		return strings.HasSuffix(*v.GetPath(), "/nonce") || common.IsPath(*v.GetPath()) // paths will be created as the elements inserted, but wow about empty paths
 	})
 
-	common.Foreach(transitions, func(v *interfaces.Univalue) {
+	common.Foreach(transitions, func(v *ccinterfaces.Univalue) {
 		(*v).SetTx(parentApiRouter.TxIndex())
 		(*v).WriteTo(parentApiRouter.Ccurl().WriteCache()) // Write the path creation first
 	})

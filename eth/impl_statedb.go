@@ -3,8 +3,6 @@ package eth
 import (
 	"math/big"
 
-	uint256 "github.com/holiman/uint256"
-
 	codec "github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/concurrenturl"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
@@ -12,8 +10,8 @@ import (
 	evmcommon "github.com/arcology-network/evm/common"
 	evmtypes "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/crypto"
-
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
+	uint256 "github.com/holiman/uint256"
 )
 
 // Arcology implementation of Eth ImplStateDB interfaces.
@@ -23,10 +21,10 @@ type ImplStateDB struct {
 	tid    uint32 // tx id
 	logs   map[evmcommon.Hash][]*evmtypes.Log
 
-	api eucommon.ConcurrentApiRouterInterface
+	api interfaces.ApiRouter
 }
 
-func NewImplStateDB(api eucommon.ConcurrentApiRouterInterface) *ImplStateDB {
+func NewImplStateDB(api interfaces.ApiRouter) *ImplStateDB {
 	return &ImplStateDB{
 		logs: make(map[evmcommon.Hash][]*evmtypes.Log),
 		api:  api,

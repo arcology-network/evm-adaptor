@@ -6,16 +6,16 @@ import (
 	"github.com/arcology-network/common-lib/codec"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 )
 
 // APIs under the concurrency namespace
 type TheadingHandler struct {
-	api       eucommon.ConcurrentApiRouterInterface
+	api       interfaces.ApiRouter
 	jobQueues map[string]*Queue
 }
 
-func NewThreadingHandler(apiRounter eucommon.ConcurrentApiRouterInterface) *TheadingHandler {
+func NewThreadingHandler(apiRounter interfaces.ApiRouter) *TheadingHandler {
 	return &TheadingHandler{
 		api:       apiRounter,
 		jobQueues: map[string]*Queue{},
@@ -64,7 +64,7 @@ func (this *TheadingHandler) new(caller, callee evmcommon.Address, input []byte)
 		return []byte{}, false
 	}
 
-	id := this.api.GenCtrnUID()
+	id := this.api.GenCCUID()
 	this.jobQueues[string(id)] = NewJobQueue(threads)
 	return id, true // Create a new container
 }

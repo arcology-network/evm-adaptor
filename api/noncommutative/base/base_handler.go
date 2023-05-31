@@ -3,7 +3,6 @@ package concurrentcontainer
 import (
 	"encoding/hex"
 	"math"
-	"strconv"
 
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/types"
@@ -11,19 +10,19 @@ import (
 	"github.com/arcology-network/concurrenturl/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
+	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/holiman/uint256"
 )
 
 // APIs under the concurrency namespace
 type BytesHandlers struct {
-	api       eucommon.ConcurrentApiRouterInterface
+	api       interfaces.ApiRouter
 	connector *apicommon.CcurlConnector
 }
 
-func NewNoncommutativeBytesHandlers(api eucommon.ConcurrentApiRouterInterface) *BytesHandlers {
+func NewNoncommutativeBytesHandlers(api interfaces.ApiRouter) *BytesHandlers {
 	return &BytesHandlers{
 		api:       api,
 		connector: apicommon.NewCCurlConnector("/containers/", api, api.Ccurl()),
@@ -70,7 +69,7 @@ func (this *BytesHandlers) unknow(caller evmcommon.Address, input []byte) ([]byt
 }
 
 func (this *BytesHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	id := this.api.GenCtrnUID()                                                                          // Generate a uuid for the container
+	id := this.api.GenCCUID()                                                                            // Generate a uuid for the container
 	return id[:], this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) // Create a new container
 }
 
@@ -129,7 +128,7 @@ func (this *BytesHandlers) push(caller evmcommon.Address, input []byte, origin e
 	path := this.buildPath(caller, input) // BytesHandlers path
 
 	txHash := this.api.TxHash()
-	key := path + hex.EncodeToString(txHash[:8]) + "-" + strconv.Itoa(int(this.api.GenElemUID()))
+	key := path + hex.EncodeToString(txHash[:8]) + "-" + string(this.api.GenCcElemUID())
 
 	value, err := abi.Decode(input, 1, []byte{}, 2, math.MaxInt)
 	if value == nil || err != nil {

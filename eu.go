@@ -13,19 +13,18 @@ import (
 	corevm "github.com/arcology-network/evm/core/vm"
 	"github.com/arcology-network/evm/crypto"
 	"github.com/arcology-network/evm/params"
-
-	eucommon "github.com/arcology-network/vm-adaptor/common"
 	eth "github.com/arcology-network/vm-adaptor/eth"
+	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 )
 
 type EU struct {
-	evm         *vm.EVM                               // Original ETH EVM
-	statedb     vm.StateDB                            // Arcology Implementation of Eth StateDB
-	api         eucommon.ConcurrentApiRouterInterface // Arcology API calls
-	CallContext *corevm.ScopeContext                  // Arcology API calls
+	evm         *vm.EVM              // Original ETH EVM
+	statedb     vm.StateDB           // Arcology Implementation of Eth StateDB
+	api         interfaces.ApiRouter // Arcology API calls
+	CallContext *corevm.ScopeContext // Arcology API calls
 }
 
-func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.StateDB, api eucommon.ConcurrentApiRouterInterface) *EU {
+func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.StateDB, api interfaces.ApiRouter) *EU {
 	eu := &EU{
 		evm:     vm.NewEVM(vm.BlockContext{BlockNumber: new(big.Int).SetUint64(100000000)}, vm.TxContext{}, statedb, chainConfig, vmConfig),
 		statedb: statedb,
@@ -37,13 +36,13 @@ func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.State
 	return eu
 }
 
-func (this *EU) VM() *vm.EVM                                { return this.evm }
-func (this *EU) Statedb() vm.StateDB                        { return this.statedb }
-func (this *EU) Api() eucommon.ConcurrentApiRouterInterface { return this.api }
+func (this *EU) VM() *vm.EVM               { return this.evm }
+func (this *EU) Statedb() vm.StateDB       { return this.statedb }
+func (this *EU) Api() interfaces.ApiRouter { return this.api }
 
 // func (this *EU) Depth() uint8                               { return this.depth }
 
-func (this *EU) SetContext(statedb vm.StateDB, api eucommon.ConcurrentApiRouterInterface) {
+func (this *EU) SetContext(statedb vm.StateDB, api interfaces.ApiRouter) {
 	this.api = api
 	this.statedb = statedb
 

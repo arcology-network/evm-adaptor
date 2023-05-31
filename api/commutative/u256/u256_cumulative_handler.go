@@ -2,28 +2,26 @@ package u256
 
 import (
 	"encoding/hex"
-	"strconv"
 
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/types"
 	"github.com/holiman/uint256"
 
 	"github.com/arcology-network/concurrenturl/commutative"
-	"github.com/arcology-network/concurrenturl/interfaces"
+	ccinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
-
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 )
 
 // APIs under the concurrency namespace
 type U256CumulativeHandlers struct {
-	api       eucommon.ConcurrentApiRouterInterface
+	api       interfaces.ApiRouter
 	connector *apicommon.CcurlConnector
 }
 
-func NewU256CumulativeHandlers(api eucommon.ConcurrentApiRouterInterface) *U256CumulativeHandlers {
+func NewU256CumulativeHandlers(api interfaces.ApiRouter) *U256CumulativeHandlers {
 	return &U256CumulativeHandlers{
 		api:       api,
 		connector: apicommon.NewCCurlConnector("/containers/", api, api.Ccurl()),
@@ -66,7 +64,7 @@ func (this *U256CumulativeHandlers) Unknow(caller evmcommon.Address, input []byt
 }
 
 func (this *U256CumulativeHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	id := this.api.GenCtrnUID()
+	id := this.api.GenCCUID()
 	if !this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) { // A new container
 		return []byte{}, false
 	}
@@ -76,7 +74,7 @@ func (this *U256CumulativeHandlers) new(caller evmcommon.Address, input []byte) 
 
 	key := path +
 		hex.EncodeToString(txHash[:8]) + "-" + // Tx hash to avoid conflict
-		strconv.Itoa(int(this.api.GenElemUID())) // Element ID
+		string(this.api.GenCcElemUID()) // Element ID
 
 	// val, valErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
 	min, minErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
@@ -141,7 +139,7 @@ func (this *U256CumulativeHandlers) min(caller evmcommon.Address, input []byte) 
 	}
 
 	value, _, err := this.api.Ccurl().DoAt(this.api.TxIndex(), path, 0, func(v interface{}) interface{} {
-		return []interface{}{uint32(1), uint32(0), uint32(0), v.(interfaces.Univalue).Value()}
+		return []interface{}{uint32(1), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()}
 	})
 
 	if value != nil && err == nil {
@@ -160,7 +158,7 @@ func (this *U256CumulativeHandlers) max(caller evmcommon.Address, input []byte) 
 	}
 
 	value, _, err := this.api.Ccurl().DoAt(this.api.TxIndex(), path, 0, func(v interface{}) interface{} {
-		return []interface{}{uint32(1), uint32(0), uint32(0), v.(interfaces.Univalue).Value()}
+		return []interface{}{uint32(1), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()}
 	})
 
 	if value != nil && err == nil {

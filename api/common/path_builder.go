@@ -3,7 +3,7 @@ package common
 import (
 	commonlib "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/types"
-	"github.com/arcology-network/vm-adaptor/common"
+	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 
 	"github.com/arcology-network/concurrenturl"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
@@ -11,12 +11,12 @@ import (
 
 // Ccurl connectors for Arcology APIs
 type CcurlConnector struct {
-	Api    common.ConcurrentApiRouterInterface
+	Api    interfaces.ApiRouter
 	ccurl  *concurrenturl.ConcurrentUrl
 	subDir string
 }
 
-func NewCCurlConnector(subDir string, api common.ConcurrentApiRouterInterface, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
+func NewCCurlConnector(subDir string, api interfaces.ApiRouter, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
 	return &CcurlConnector{
 		subDir: subDir,
 		Api:    api,
@@ -24,7 +24,7 @@ func NewCCurlConnector(subDir string, api common.ConcurrentApiRouterInterface, c
 	}
 }
 
-func (this *CcurlConnector) SetApi(api common.ConcurrentApiRouterInterface) { this.Api = api }
+func (this *CcurlConnector) SetApi(api interfaces.ApiRouter) { this.Api = api }
 
 // Make Arcology paths under the current account
 func (this *CcurlConnector) New(account types.Address, containerId string) bool {
