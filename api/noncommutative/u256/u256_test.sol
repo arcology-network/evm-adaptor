@@ -100,13 +100,13 @@ contract U256ThreadingTest {
         container.push(uint256(30));
         require(container.length() == 3);
 
-        Threading mp = new Threading();
+        Threading mp = new Threading(1);
         mp.add(address(this), abi.encodeWithSignature("push(uint256)", 41));
         mp.add(address(this), abi.encodeWithSignature("push(uint256)", 51));
         require(mp.length() == 2);
         require(container.length() == 3);
 
-        mp.run(1);
+        mp.run();
         require(container.get(0) == uint256(10));
         require(container.get(1) == uint256(20));
         require(container.get(2) == uint256(30));
@@ -121,7 +121,7 @@ contract U256ThreadingTest {
         mp.add(address(this), abi.encodeWithSignature("get(uint256)", 0));
         mp.add(address(this), abi.encodeWithSignature("get(uint256)", 1));
         require(mp.length() == 2);
-        mp.run(1);
+        mp.run();
 
         (bool success, bytes memory data) = mp.get(1);
         require(success && abi.decode(data, (uint256)) == 20);
@@ -137,7 +137,7 @@ contract U256ThreadingTest {
         mp.add(address(this), abi.encodeWithSignature("pop()"));
         mp.add(address(this), abi.encodeWithSignature("pop()"));
         require(mp.length() == 2);
-        mp.run(1);
+        mp.run();
 
         require(container.length() == 1);  // Only one transaction went through, so only one pop() took effect
     }
@@ -169,7 +169,7 @@ contract ArrayThreadingTest {
     }
 
     function call() public  {
-        Threading mp = new Threading();
+        Threading mp = new Threading(1);
         push(0, 11);
         push(0, 12);
 
@@ -178,7 +178,7 @@ contract ArrayThreadingTest {
         mp.add(address(this), abi.encodeWithSignature("push(uint256,uint256)", 1, 51));
         mp.add(address(this), abi.encodeWithSignature("push(uint256,uint256)", 1, 52));
         require(mp.length() == 4);
-        mp.run(1);
+        mp.run();
 
         require(array[0].length() == 4);
         require(array[1].length() == 2);

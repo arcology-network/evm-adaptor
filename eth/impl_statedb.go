@@ -47,10 +47,9 @@ func (this *ImplStateDB) AddBalance(addr evmcommon.Address, amount *big.Int) {
 	}
 
 	if delta, ok := commutative.NewU256DeltaFromBigInt(amount); ok {
-		if _, err := this.api.Ccurl().Write(this.tid, getBalancePath(this.api.Ccurl(), addr), delta); err != nil {
-			panic(err) //should not just panic
+		if _, err := this.api.Ccurl().Write(this.tid, getBalancePath(this.api.Ccurl(), addr), delta); err == nil {
+			return
 		}
-		return
 	}
 	panic("Error: Failed to call AddBalance()")
 }

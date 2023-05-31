@@ -1,12 +1,9 @@
-package multiprocess
+package threading
 
 import (
-	"encoding/hex"
-	"errors"
 	"math"
 
 	"github.com/arcology-network/common-lib/codec"
-	common "github.com/arcology-network/common-lib/common"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
@@ -14,14 +11,14 @@ import (
 
 // APIs under the concurrency namespace
 type TheadingHandler struct {
-	api      eucommon.ConcurrentApiRouterInterface
-	jobQueue *Queue
+	api       eucommon.ConcurrentApiRouterInterface
+	jobQueues map[string]*Queue
 }
 
 func NewThreadingHandler(apiRounter eucommon.ConcurrentApiRouterInterface) *TheadingHandler {
 	return &TheadingHandler{
-		api:      apiRounter,
-		jobQueue: NewJobQueue(),
+		api:       apiRounter,
+		jobQueues: map[string]*Queue{},
 	}
 }
 
@@ -34,72 +31,97 @@ func (this *TheadingHandler) Call(caller, callee evmcommon.Address, input []byte
 	copy(signature[:], input)
 
 	switch signature { // bf 22 6c 78
-	case [4]byte{0x0b, 0x2a, 0xcb, 0x3f}: // 0b 2a cb 3f
+
+	case [4]byte{0x58, 0x16, 0xc4, 0x25}:
+		return this.new(caller, callee, input[4:])
+
+	case [4]byte{0x9b, 0xb5, 0x52, 0xd1}:
 		return this.add(caller, callee, input[4:])
 
-	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}:
-		return this.length()
+	case [4]byte{0x84, 0x67, 0x3c, 0xc9}:
+		return this.length(input[4:])
 
-	// case [4]byte{0x57, 0x77, 0x1a, 0x23}: // 57 77 1a 23
-	// 	return this.del(caller, callee, input[4:])
-
-	case [4]byte{0xa4, 0x44, 0xf5, 0xe9}: // a4 44 f5 e9
+	case [4]byte{0x3a, 0x27, 0x65, 0x23}: //3a 27 65 23
 		return this.run(caller, callee, input[4:])
 
-	case [4]byte{0x95, 0x07, 0xd3, 0x9a}: // 95 07 d3 9a
+	case [4]byte{0x4d, 0xd4, 0x9a, 0xb4}: // 4d d4 9a b4
 		return this.get(input[4:])
 
-	case [4]byte{0x52, 0xef, 0xea, 0x6e}:
-		return this.clear()
+	case [4]byte{0x5e, 0x1d, 0x05, 0x4d}: // 5e 1d 05 4d
+		return this.clear(input[4:])
 
-	case [4]byte{0xb4, 0x8f, 0xb6, 0xcf}:
-		return this.error(input[4:])
+		// case [4]byte{0xb4, 0x8f, 0xb6, 0xcf}:
+		// 	return this.error(input[4:])
 
 	}
-	return this.unknow(caller, callee, input)
+
+	return []byte{}, false
+}
+
+func (this *TheadingHandler) new(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+	threads, err := abi.DecodeTo(input, 0, uint8(1), 1, 32)
+	if err != nil {
+		return []byte{}, false
+	}
+
+	id := this.api.GenCtrnUID()
+	this.jobQueues[string(id)] = NewJobQueue(threads)
+	return id, true // Create a new container
 }
 
 func (this *TheadingHandler) add(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	if len(input) < 4 {
-		return []byte(errors.New("Error: Invalid input").Error()), false
+		return []byte{}, false
+	}
+
+	id := this.ParseID(input)
+	if len(id) == 0 || this.jobQueues[id] == nil {
+		return []byte{}, false
 	}
 
 	// fmt.Println(input)
-	rawAddr, err := abi.DecodeTo(input, 0, [20]byte{}, 1, 32)
+	rawAddr, err := abi.DecodeTo(input, 1, [20]byte{}, 1, 32)
 	if err != nil {
-		return []byte(err.Error()), false
+		return []byte{}, false
 	}
 	calleeAddr := evmcommon.BytesToAddress(rawAddr[:]) // Callee contract
 
-	funCall, err := abi.DecodeTo(input, 1, []byte{}, 2, math.MaxUint32)
+	funCall, err := abi.DecodeTo(input, 2, []byte{}, 2, math.MaxUint32)
 	if err != nil {
-		return []byte(err.Error()), false
-	}
-
-	jobID := this.jobQueue.Add(this.api.Origin(), calleeAddr, funCall)
-
-	if buffer, err := abi.Encode(uint64(jobID)); err != nil {
 		return []byte{}, false
-	} else {
-		return buffer, true
 	}
+
+	return []byte{}, this.jobQueues[id].Add(this.api.Origin(), calleeAddr, funCall)
 }
 
-func (this *TheadingHandler) clear() ([]byte, bool) {
-	buffer, err := abi.Encode(uint64(this.jobQueue.Clear()))
-	return buffer, err == nil
+func (this *TheadingHandler) clear(input []byte) ([]byte, bool) {
+	id := this.ParseID(input)
+	if len(id) == 0 || this.jobQueues[id] == nil {
+		return []byte{}, false
+	}
+
+	this.jobQueues[id].Clear()
+	return []byte{}, true
 }
 
-func (this *TheadingHandler) length() ([]byte, bool) {
-	if v, err := abi.Encode(this.jobQueue.Length()); err == nil {
-		return v, true
+func (this *TheadingHandler) length(input []byte) ([]byte, bool) {
+	id := this.ParseID(input)
+	if len(id) == 0 || this.jobQueues[id] == nil {
+		return []byte{}, false
 	}
-	return []byte{}, false
+
+	v, err := abi.Encode(this.jobQueues[id].Length())
+	return v, err == nil
 }
 
 func (this *TheadingHandler) error(input []byte) ([]byte, bool) {
-	if idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {
-		if item := this.jobQueue.At(idx); item != nil {
+	id := this.ParseID(input)
+	if len(id) == 0 || this.jobQueues[id] == nil {
+		return []byte{}, false
+	}
+
+	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
+		if item := this.jobQueues[id].At(idx); item != nil {
 			buffer, err := abi.Encode(codec.String(item.prechkErr.Error() + item.prechkErr.Error()).Clone().(codec.String).ToBytes())
 			return buffer, err == nil
 		}
@@ -108,31 +130,30 @@ func (this *TheadingHandler) error(input []byte) ([]byte, bool) {
 }
 
 func (this *TheadingHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-	if threads, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {
-		return []byte{}, this.jobQueue.Run(uint8(common.Min(common.Max(threads, 1), math.MaxUint8)), this.api)
+	id := this.ParseID(input)
+	if len(id) == 0 || this.jobQueues[id] == nil {
+		return []byte{}, false
 	}
 
-	return []byte{}, this.jobQueue.Run(1, this.api)
+	return []byte{}, this.jobQueues[id].Run(this.api)
 }
 
-// func (this *TheadingHandler) del(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-// 	if idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {
-// 		this.jobQueue.Del(idx)
-// 		return []byte{}, true
-// 	}
-// 	return []byte{}, false
-// }
-
 func (this *TheadingHandler) get(input []byte) ([]byte, bool) {
-	if idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {
-		if item := this.jobQueue.At(idx); item != nil {
+	id := this.ParseID(input)
+	if len(id) == 0 || this.jobQueues[id] == nil {
+		return []byte{}, false
+	}
+
+	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
+		if item := this.jobQueues[id].At(idx); item != nil {
 			return item.result.ReturnData, item.result.Err == nil
 		}
 	}
 	return []byte{}, false
 }
 
-func (this *TheadingHandler) unknow(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-	this.api.AddLog("Unhandled function call in cumulative handler router", hex.EncodeToString(input))
-	return []byte{}, false
+// Build the container path
+func (this *TheadingHandler) ParseID(input []byte) string {
+	id, _ := abi.DecodeTo(input, 0, []byte{}, 2, 32) // max 32 bytes                                                                          // container ID
+	return string(id)                                // unique ID
 }

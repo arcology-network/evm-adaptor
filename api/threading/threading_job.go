@@ -1,4 +1,4 @@
-package multiprocess
+package threading
 
 import (
 	"strings"

@@ -1,4 +1,4 @@
-package multiprocess
+package threading
 
 import (
 	"crypto/sha256"
@@ -17,19 +17,20 @@ import (
 
 	cceu "github.com/arcology-network/vm-adaptor"
 
-	apicommon "github.com/arcology-network/vm-adaptor/api/common"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/eth"
 )
 
 // APIs under the concurrency namespace
 type Queue struct {
+	numThreads uint8
 	jobs       []*Job
 	arbitrator *arbitrator.Arbitrator
 }
 
-func NewJobQueue() *Queue {
+func NewJobQueue(numThreads uint8) *Queue {
 	return &Queue{
+		numThreads: numThreads,
 		jobs:       []*Job{},
 		arbitrator: &arbitrator.Arbitrator{},
 	}
@@ -46,7 +47,11 @@ func (this *Queue) Del(idx uint64) {
 	common.RemoveIf(&this.jobs, func(job *Job) bool { return job == nil })
 }
 
-func (this *Queue) Add(origin, calleeAddr evmcommon.Address, funCall []byte) int {
+func (this *Queue) Add(origin, calleeAddr evmcommon.Address, funCall []byte) bool {
+	if uint32(len(this.jobs)) >= eucommon.MAX_NUMBER_THREADS {
+		return false
+	}
+
 	this.jobs = append(this.jobs,
 		&Job{
 			sender: origin,
@@ -65,7 +70,7 @@ func (this *Queue) Add(origin, calleeAddr evmcommon.Address, funCall []byte) int
 			),
 		},
 	)
-	return len(this.jobs) - 1
+	return true
 }
 
 func (this *Queue) ExportWriteCaches(jobs []*Job) []interfaces.Univalue {
@@ -98,8 +103,8 @@ func (this *Queue) snapshot(mainApiRouter eucommon.ConcurrentApiRouterInterface)
 	return snapshot.Commit([]uint32{mainApiRouter.TxIndex()}).Importer().Store() // Commit these changes to the a transient DB
 }
 
-func (this *Queue) Run(threads uint8, parentApiRouter eucommon.ConcurrentApiRouterInterface) bool {
-	if parentApiRouter.Depth() > apicommon.MAX_RECURSIION_DEPTH {
+func (this *Queue) Run(parentApiRouter eucommon.ConcurrentApiRouterInterface) bool {
+	if parentApiRouter.Depth() > eucommon.MAX_RECURSIION_DEPTH {
 		return false //, errors.New("Error: Execeeds the max recursion depth")
 	}
 	snapshot := this.snapshot(parentApiRouter)
@@ -121,7 +126,7 @@ func (this *Queue) Run(threads uint8, parentApiRouter eucommon.ConcurrentApiRout
 		this.jobs[i].Run(config, statedb)
 	}
 	// }
-	// common.ParallelWorker(len(this.jobs), int(threads), executor)
+	// common.ParallelWorker(len(this.jobs), int(this.numThreads), executor)
 	// fmt.Println("Run: ", time.Since(t0))
 
 	// t0 = time.Now()

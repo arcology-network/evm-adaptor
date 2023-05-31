@@ -7,13 +7,13 @@ contract ThreadingInt64 {
     Int256Cumulative container = new Int256Cumulative(0, 100);
 
    //  function call() public {
-   //     Threading mp = new Threading();
+   //     Threading mp = new Threading(1);
    //     mp.add(address(this), abi.encodeWithSignature("add(int64)", 1));
    //     mp.add(address(this), abi.encodeWithSignature("add(int64)", 2));      
        
 
 
-   //     mp.run(1);
+   //     mp.run();
    //     assert(container.length() == 1 ); 
    //  }
 

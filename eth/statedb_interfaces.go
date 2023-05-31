@@ -16,7 +16,7 @@ type StateDB interface {
 	GetBalance(common.Address) *big.Int
 	SetBalance(common.Address, *big.Int)
 
-	PeekBalance(common.Address) *big.Int
+	PeekBalance(common.Address) *big.Int // For Arcology
 
 	GetNonce(common.Address) uint64
 	SetNonce(common.Address, uint64)
