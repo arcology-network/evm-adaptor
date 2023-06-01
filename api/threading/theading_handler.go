@@ -2,10 +2,12 @@ package threading
 
 import (
 	"math"
+	"strconv"
 
 	"github.com/arcology-network/common-lib/codec"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 )
 
@@ -59,14 +61,18 @@ func (this *TheadingHandler) Call(caller, callee evmcommon.Address, input []byte
 }
 
 func (this *TheadingHandler) new(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+	if this.api.Depth() >= eucommon.MAX_RECURSIION_DEPTH {
+		return []byte{}, false // Execeeds the max recursion depth
+	}
+
 	threads, err := abi.DecodeTo(input, 0, uint8(1), 1, 32)
 	if err != nil {
 		return []byte{}, false
 	}
 
-	id := this.api.GenCCUID()
-	this.jobQueues[string(id)] = NewJobQueue(threads)
-	return id, true // Create a new container
+	id := strconv.Itoa(len(this.jobQueues))
+	this.jobQueues[id] = NewJobQueue(threads)
+	return []byte(id), true // Create a new container
 }
 
 func (this *TheadingHandler) add(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {

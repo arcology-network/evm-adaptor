@@ -16,7 +16,7 @@ import (
 type ApiRouter interface {
 	Origin() evmCommon.Address
 	Ccurl() *concurrenturl.ConcurrentUrl
-	New(common.Hash, uint32, *concurrenturl.ConcurrentUrl, ApiRouter) ApiRouter
+	New(common.Hash, uint32, uint8, *concurrenturl.ConcurrentUrl) ApiRouter
 	Coinbase() evmCommon.Address
 
 	SetEU(interface{})

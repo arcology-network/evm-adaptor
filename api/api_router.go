@@ -65,11 +65,15 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	return api
 }
 
-func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl, parentApiRouter interfaces.ApiRouter) interfaces.ApiRouter {
+func (this *API) New(txHash evmcommon.Hash, txIndex uint32, parentDepth uint8, ccurl *concurrenturl.ConcurrentUrl) interfaces.ApiRouter {
 	api := NewAPI(ccurl)
+
 	api.txHash = txHash
 	api.txIndex = txIndex
-	api.parentApiRouter = parentApiRouter
+	api.ccUID = 0
+	api.ccElemID = 0
+	api.depth = parentDepth + 1
+
 	return api
 }
 
@@ -100,7 +104,6 @@ func (this *API) Prepare(txHash evmcommon.Hash, height *big.Int, txIndex uint32)
 }
 
 func (this *API) GenCcElemUID() []byte {
-
 	this.ccElemID++
 	return []byte(strconv.Itoa(int(this.ccElemID)))
 }
@@ -108,10 +111,8 @@ func (this *API) GenCcElemUID() []byte {
 // Generate an UUID based on transaction hash and the counter
 func (this *API) GenCCUID() []byte {
 	this.ccUID++
-	// id := codec.Bytes32(this.txHash).UUID(this.ccUID)
-	// return id[:8]
-
-	return append(append(this.txHash[:8], '-'), []byte(strconv.Itoa(int(this.ccUID)))...)
+	id := codec.Bytes32(this.txHash).UUID(this.ccUID)
+	return id[:8]
 }
 
 func (this *API) AddLog(key, value string) {
