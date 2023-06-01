@@ -131,9 +131,18 @@ func (this *Queue) WriteBack(conflicTxs []uint32, parentApiRouter interfaces.Api
 		return strings.HasSuffix(*v.GetPath(), "/nonce") || common.IsPath(*v.GetPath()) // paths will be created as the elements inserted, but wow about empty paths
 	})
 
+	newPathTrans := common.MoveIf(&transitions, func(v ccinterfaces.Univalue) bool {
+		return common.IsPath(*v.GetPath()) && !v.Preexist()
+	})
+
+	common.Foreach(newPathTrans, func(v *ccinterfaces.Univalue) {
+		(*v).SetTx(parentApiRouter.TxIndex())              // use the parent tx index instead
+		(*v).WriteTo(parentApiRouter.Ccurl().WriteCache()) // Write back to the parent writecache
+	})
+
 	common.Foreach(transitions, func(v *ccinterfaces.Univalue) {
-		(*v).SetTx(parentApiRouter.TxIndex())
-		(*v).WriteTo(parentApiRouter.Ccurl().WriteCache()) // Write the path creation first
+		(*v).SetTx(parentApiRouter.TxIndex())              // use the parent tx index instead
+		(*v).WriteTo(parentApiRouter.Ccurl().WriteCache()) // Write back to the parent writecache
 	})
 }
 
