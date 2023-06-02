@@ -11,7 +11,7 @@ import (
 	"github.com/arcology-network/evm/core/types"
 	cceu "github.com/arcology-network/vm-adaptor"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
-	compiler "github.com/arcology-network/vm-adaptor/compiler"
+	"github.com/arcology-network/vm-adaptor/compilers"
 )
 
 func TestBase(t *testing.T) {
@@ -20,10 +20,11 @@ func TestBase(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/noncommutative/"
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/base/base_test.sol", "BaseTest")
+	code, err := compilers.CompileContracts(targetPath+"base", "base_test.sol", "0.5.0", "BaseTest", false)
+	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"/base/base_test.sol", "BaseTest")
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}

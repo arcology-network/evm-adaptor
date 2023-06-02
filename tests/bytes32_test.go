@@ -11,7 +11,7 @@ import (
 	"github.com/arcology-network/evm/core/types"
 	cceu "github.com/arcology-network/vm-adaptor"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
-	compiler "github.com/arcology-network/vm-adaptor/compiler"
+	"github.com/arcology-network/vm-adaptor/compilers"
 )
 
 func TestContractBytes32(t *testing.T) {
@@ -20,7 +20,7 @@ func TestContractBytes32(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/noncommutative/"
 	baseFile := targetPath + "base/Base.sol"
 
@@ -31,8 +31,8 @@ func TestContractBytes32(t *testing.T) {
 	if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/bytes/Threading.sol"); err != nil {
 		t.Error(err)
 	}
-
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"bytes32/bytes32_test.sol", "Bytes32Test")
+	code, err := compilers.CompileContracts(targetPath+"bytes32", "bytes32_test.sol", "0.5.0", "Bytes32Test", false)
+	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"bytes32/bytes32_test.sol", "Bytes32Test")
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)

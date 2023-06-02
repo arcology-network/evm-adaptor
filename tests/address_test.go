@@ -11,7 +11,7 @@ import (
 	"github.com/arcology-network/evm/core/types"
 	ccEu "github.com/arcology-network/vm-adaptor"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
-	compiler "github.com/arcology-network/vm-adaptor/compiler"
+	"github.com/arcology-network/vm-adaptor/compilers"
 )
 
 func TestContractAddress(t *testing.T) {
@@ -20,7 +20,7 @@ func TestContractAddress(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/noncommutative/"
 	baseFile := targetPath + "base/Base.sol"
 
@@ -32,7 +32,9 @@ func TestContractAddress(t *testing.T) {
 		t.Error(err)
 	}
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"address/address_test.sol", "AddressTest")
+	code, err := compilers.CompileContracts(targetPath+"address", "address_test.sol", "stable", "AddressTest", true)
+
+	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"address/address_test.sol", "AddressTest")
 	if err != nil || len(code) == 0 {
 		t.Error(err)
 	}

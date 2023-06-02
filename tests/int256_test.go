@@ -11,7 +11,7 @@ import (
 	"github.com/arcology-network/evm/core/types"
 	ccEu "github.com/arcology-network/vm-adaptor"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
-	compiler "github.com/arcology-network/vm-adaptor/compiler"
+	"github.com/arcology-network/vm-adaptor/compilers"
 )
 
 func TestContractNoncommutativeInt256(t *testing.T) {
@@ -19,7 +19,7 @@ func TestContractNoncommutativeInt256(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/noncommutative/"
 	baseFile := targetPath + "base/Base.sol"
 
@@ -30,8 +30,8 @@ func TestContractNoncommutativeInt256(t *testing.T) {
 	if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/int256/Threading.sol"); err != nil {
 		t.Error(err)
 	}
-
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"int256/int256_test.sol", "Int256Test")
+	code, err := compilers.CompileContracts(targetPath+"int256", "int256_test.sol", "0.5.0", "Int256Test", false)
+	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"int256/int256_test.sol", "Int256Test")
 
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
@@ -57,7 +57,7 @@ func TestNoncommutativeInt256N(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/noncommutative/"
 	baseFile := targetPath + "base/Base.sol"
 
@@ -69,7 +69,8 @@ func TestNoncommutativeInt256N(t *testing.T) {
 		t.Error(err)
 	}
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/int256/int256N_test.sol", "Int64NTest")
+	code, err := compilers.CompileContracts(targetPath+"int256", "int256N_test.sol", "0.5.0", "Int64NTest", false)
+	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"/int256/int256N_test.sol", "Int64NTest")
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)
@@ -95,10 +96,11 @@ func TestCumulativeInt256(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/commutative/"
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/int256/int256Cumulative_test.sol", "Int256CumulativeTest")
+	code, err := compilers.CompileContracts(targetPath+"int256", "int256Cumulative_test.sol", "0.5.0", "Int256CumulativeTest", false)
+	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"/int256/int256Cumulative_test.sol", "Int256CumulativeTest")
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)

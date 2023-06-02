@@ -50,7 +50,7 @@ func (this *EU) SetContext(statedb vm.StateDB, api interfaces.ApiRouter) {
 	this.evm.SetApi(api)
 }
 
-func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, blockContext vm.BlockContext, txContext vm.TxContext) (*types.Receipt, *core.ExecutionResult, error) {
+func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *core.Message, blockContext vm.BlockContext, txContext vm.TxContext) (*types.Receipt, *core.ExecutionResult, error) {
 	this.statedb.(*eth.ImplStateDB).Prepare(txHash, ethCommon.Hash{}, txIndex)
 	this.api.Prepare(txHash, blockContext.BlockNumber, uint32(txIndex))
 	this.evm.Context = blockContext
@@ -58,7 +58,7 @@ func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, bloc
 
 	gasPool := core.GasPool(math.MaxUint64)
 
-	result, err := core.ApplyMessage(this.evm, *msg, &gasPool) // Execute the transcation
+	result, err := core.ApplyMessage(this.evm, msg, &gasPool) // Execute the transcation
 	if err != nil {
 		return nil, nil, err // Failed in Precheck before tx execution started
 	}
@@ -74,8 +74,8 @@ func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, bloc
 	receipt.GasUsed = result.UsedGas
 
 	// Check the newly created address
-	if msg.To() == nil {
-		userSpecifiedAddress := crypto.CreateAddress(this.evm.Origin, msg.Nonce())
+	if msg.To == nil {
+		userSpecifiedAddress := crypto.CreateAddress(this.evm.Origin, msg.Nonce)
 		receipt.ContractAddress = result.ContractAddress
 		if !bytes.Equal(userSpecifiedAddress.Bytes(), result.ContractAddress.Bytes()) {
 			this.api.AddLog("ContractAddressWarning", fmt.Sprintf("user specified address = %v, inner address = %v", userSpecifiedAddress, result.ContractAddress))

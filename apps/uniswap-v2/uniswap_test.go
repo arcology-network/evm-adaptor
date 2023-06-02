@@ -14,7 +14,7 @@ import (
 	evmcommon "github.com/arcology-network/evm/common"
 	evmtypes "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/crypto"
-	adaptor "github.com/arcology-network/vm-adaptor/evm"
+	// adaptor "github.com/arcology-network/vm-adaptor/evm"
 )
 
 func TestUniswapFunctionTest(t *testing.T) {

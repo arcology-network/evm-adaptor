@@ -11,7 +11,7 @@ import (
 	"github.com/arcology-network/evm/core/types"
 	ccEu "github.com/arcology-network/vm-adaptor"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
-	compiler "github.com/arcology-network/vm-adaptor/compiler"
+	"github.com/arcology-network/vm-adaptor/compilers"
 )
 
 func TestContractBytes(t *testing.T) {
@@ -20,7 +20,7 @@ func TestContractBytes(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/noncommutative/"
 	baseFile := targetPath + "base/Base.sol"
 
@@ -32,7 +32,8 @@ func TestContractBytes(t *testing.T) {
 		t.Error(err)
 	}
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/bytes/bytes_test.sol", "ByteTest")
+	code, err := compilers.CompileContracts(targetPath+"bytes", "bytes_test.sol", "0.5.0", "ByteTest", false)
+	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"/bytes/bytes_test.sol", "ByteTest")
 
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")

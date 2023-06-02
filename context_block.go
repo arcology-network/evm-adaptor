@@ -17,7 +17,7 @@ func NewEVMBlockContext(cfg *Config) vm.BlockContext {
 		Coinbase:    *cfg.Coinbase,
 		GasLimit:    cfg.GasLimit,
 		BlockNumber: new(big.Int).Set(cfg.BlockNumber),
-		Time:        new(big.Int).Set(cfg.Time),
+		Time:        cfg.Time.Uint64(),
 		Difficulty:  new(big.Int).Set(cfg.Difficulty),
 	}
 }

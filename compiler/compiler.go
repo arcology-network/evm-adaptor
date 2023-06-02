@@ -20,7 +20,7 @@ func CompileContracts(compiler, file, contract string) (string, error) {
 
 	currentPath, _ := os.Getwd()
 	fmt.Println(currentPath)
-	if code, err := exec.Command("python", compiler, file, contract).Output(); err == nil && len(code) > 0 {
+	if code, err := exec.Command("python3", compiler, file, contract).Output(); err == nil && len(code) > 0 {
 		return string(code), nil
 	} else {
 		return "", (err)

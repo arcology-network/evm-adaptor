@@ -16,7 +16,7 @@ import (
 	evmcommon "github.com/arcology-network/evm/common"
 	arbitrator "github.com/arcology-network/urlarbitrator-engine/go-wrapper"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
-	adaptor "github.com/arcology-network/vm-adaptor/evm"
+	// adaptor "github.com/arcology-network/vm-adaptor/evm"
 )
 
 func TestParallelKittiesPerf(t *testing.T) {

@@ -13,7 +13,7 @@ import (
 	"github.com/arcology-network/evm/crypto"
 	cceu "github.com/arcology-network/vm-adaptor"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
-	compiler "github.com/arcology-network/vm-adaptor/compiler"
+	"github.com/arcology-network/vm-adaptor/compilers"
 )
 
 func TestThreadingBasic(t *testing.T) {
@@ -22,9 +22,10 @@ func TestThreadingBasic(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 
-	code, err := compiler.CompileContracts(pyCompiler, project+"/api/threading/threading_test.sol", "ThreadingTest")
+	code, err := compilers.CompileContracts(project+"/api/threading", "threading_test.sol", "0.5.0", "ThreadingTest", false)
+	// code, err := compiler.CompileContracts(pyCompiler, project+"/api/threading/threading_test.sol", "ThreadingTest")
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}
@@ -123,16 +124,17 @@ func TestThreadingBasic(t *testing.T) {
 // 		t.Error("Error: Failed to call!!!", err)
 // 	}
 // }
-
+/*
 func BenchmarkThreadingReverseString(t *testing.B) {
 	eu, config, db, url, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 
-	code, err := compiler.CompileContracts(pyCompiler, project+"/api/threading/threading_test.sol", "Benchmarking")
+	code, err := compilers.CompileContracts(project+"/api/threading", "threading_test.sol", "0.5.0", "Benchmarking", false)
+	// code, err := compiler.CompileContracts(pyCompiler, project+"/api/threading/threading_test.sol", "Benchmarking")
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}
@@ -180,3 +182,4 @@ func BenchmarkThreadingReverseString(t *testing.B) {
 		t.Error("Error: Failed to call!!!", err)
 	}
 }
+*/

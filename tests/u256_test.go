@@ -14,7 +14,7 @@ import (
 	ccEu "github.com/arcology-network/vm-adaptor"
 	cceu "github.com/arcology-network/vm-adaptor"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
-	compiler "github.com/arcology-network/vm-adaptor/compiler"
+	"github.com/arcology-network/vm-adaptor/compilers"
 )
 
 func TestNoncommutativeU256Dynamic(t *testing.T) {
@@ -23,7 +23,7 @@ func TestNoncommutativeU256Dynamic(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/noncommutative/"
 
 	if err := common.CopyFile(targetPath+"base/Base.sol", targetPath+"/u256/Base.sol"); err != nil {
@@ -34,7 +34,8 @@ func TestNoncommutativeU256Dynamic(t *testing.T) {
 		t.Error(err)
 	}
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256_test.sol", "U256DynamicTest")
+	code, err := compilers.CompileContracts(targetPath+"/u256", "u256_test.sol", "0.5.0", "U256DynamicTest", false)
+	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256_test.sol", "U256DynamicTest")
 
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
@@ -62,7 +63,7 @@ func TestNoncommutative256N(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/noncommutative/"
 	baseFile := targetPath + "base/Base.sol"
 
@@ -74,7 +75,8 @@ func TestNoncommutative256N(t *testing.T) {
 		t.Error(err)
 	}
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256N_test.sol", "U256NTest")
+	code, err := compilers.CompileContracts(targetPath+"/u256", "u256N_test.sol", "0.5.0", "U256NTest", false)
+	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256N_test.sol", "U256NTest")
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)
@@ -100,14 +102,15 @@ func TestCumulativeU256Case1(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/commutative/"
 
 	if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/u256/Threading.sol"); err != nil {
 		t.Error(err)
 	}
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256Cumulative_test.sol", "ThreadingCumulativeU256")
+	code, err := compilers.CompileContracts(targetPath+"/u256", "u256Cumulative_test.sol", "0.5.0", "ThreadingCumulativeU256", false)
+	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256Cumulative_test.sol", "ThreadingCumulativeU256")
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)
@@ -156,10 +159,11 @@ func TestCumulativeU256Case2(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/commutative/"
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256Cumulative_test.sol", "ThreadingCumulativeU256")
+	code, err := compilers.CompileContracts(targetPath+"/u256", "u256Cumulative_test.sol", "0.5.0", "ThreadingCumulativeU256", false)
+	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256Cumulative_test.sol", "ThreadingCumulativeU256")
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)
@@ -208,10 +212,11 @@ func TestCumulativeU256ThreadingMulti(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/commutative/"
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256Cumulative_test.sol", "ThreadingCumulativeU256Multi")
+	code, err := compilers.CompileContracts(targetPath+"/u256", "u256Cumulative_test.sol", "0.5.0", "ThreadingCumulativeU256Multi", false)
+	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256Cumulative_test.sol", "ThreadingCumulativeU256Multi")
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)
@@ -260,10 +265,11 @@ func TestU256Threading(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/noncommutative/"
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256_test.sol", "U256ThreadingTest")
+	code, err := compilers.CompileContracts(targetPath+"/u256", "u256_test.sol", "0.5.0", "U256ThreadingTest", false)
+	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256_test.sol", "U256ThreadingTest")
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)
@@ -315,10 +321,11 @@ func TestArrayThreading(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	pyCompiler := project + "/compiler/compiler.py"
+	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/noncommutative/"
 
-	code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256_test.sol", "ArrayThreadingTest")
+	code, err := compilers.CompileContracts(targetPath+"/u256", "u256_test.sol", "0.5.0", "ArrayThreadingTest", false)
+	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"/u256/u256_test.sol", "ArrayThreadingTest")
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)
