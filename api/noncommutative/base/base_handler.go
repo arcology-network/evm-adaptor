@@ -69,7 +69,7 @@ func (this *BytesHandlers) unknow(caller evmcommon.Address, input []byte) ([]byt
 }
 
 func (this *BytesHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	id := this.api.GenCCUID()                                                                            // Generate a uuid for the container
+	id := this.api.GenCcObjID()                                                                          // Generate a uuid for the container
 	return id[:], this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) // Create a new container
 }
 

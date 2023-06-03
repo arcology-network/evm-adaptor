@@ -18,7 +18,7 @@ contract Threading {
 
     // Return the size of the queue
     function length() public returns(uint256)  {
-        (, bytes memory data) = address(API).call(abi.encodeWithSignature("length(bytes)", id));   
+        (,bytes memory data) = address(API).call(abi.encodeWithSignature("length(bytes)", id));   
         return abi.decode(data, (uint256));
     }
 

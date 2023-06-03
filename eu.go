@@ -32,7 +32,7 @@ func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.State
 	}
 
 	eu.api.SetEU(eu)
-	eu.evm.SetApi(api)
+	eu.evm.ArcologyNetworkAPIs.SetApiRouter(api)
 	return eu
 }
 
@@ -47,7 +47,7 @@ func (this *EU) SetContext(statedb vm.StateDB, api interfaces.ApiRouter) {
 	this.statedb = statedb
 
 	this.evm.StateDB = this.statedb
-	this.evm.SetApi(api)
+	this.evm.ArcologyNetworkAPIs.SetApiRouter(api)
 }
 
 func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *types.Message, blockContext vm.BlockContext, txContext vm.TxContext) (*types.Receipt, *core.ExecutionResult, error) {

@@ -58,7 +58,7 @@ func (this *Int256CumulativeHandlers) Unknow(caller evmcommon.Address, input []b
 }
 
 func (this *Int256CumulativeHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	id := this.api.GenCCUID()
+	id := this.api.GenCcObjID()
 	if !this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) { // A new container
 		return []byte{}, false
 	}

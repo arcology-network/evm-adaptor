@@ -100,7 +100,9 @@ func TestStateDBV2GetNonexistStorageState(t *testing.T) {
 // 	url := concurrenturl.NewConcurrentUrl(db)
 
 // 	account := evmcommon.BytesToAddress([]byte{201, 202, 203, 204, 205})
-// 	statedb := eth.NewImplStateDB(url)
+
+// 	api := ccapi.NewAPI(url)
+// 	statedb := eth.NewImplStateDB(api)
 // 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 1)
 // 	statedb.CreateAccount(account)
 // 	statedb.AddBalance(account, new(big.Int).SetUint64(100))
@@ -113,12 +115,13 @@ func TestStateDBV2GetNonexistStorageState(t *testing.T) {
 // 	url.Sort()
 // 	url.Commit([]uint32{1})
 
+// 	api2 := ccapi.NewAPI(url)
 // 	url1 := concurrenturl.NewConcurrentUrl(db)
-// 	statedb1 := eth.NewImplStateDB(url1)
+// 	statedb1 := eth.NewImplStateDB(api2)
 // 	statedb1.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 2)
 
 // 	url2 := concurrenturl.NewConcurrentUrl(db)
-// 	statedb2 := eth.NewImplStateDB(url2)
+// 	statedb2 := eth.NewImplStateDB(api2)
 // 	statedb2.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 3)
 
 // 	statedb1.AddBalance(account, new(big.Int).SetUint64(200)) // + 200 + 90
@@ -132,16 +135,16 @@ func TestStateDBV2GetNonexistStorageState(t *testing.T) {
 // 	fmt.Println("\n" + euCommon.FormatTransitions(ar2))
 // 	fmt.Println("\n" + euCommon.FormatTransitions(t2))
 
-// 	txs, groups, flags := euCommon.DetectConflict(append(ar1, ar2...))
-// 	fmt.Println(txs)
-// 	fmt.Println(groups)
-// 	fmt.Println(flags)
+// 	// txs, groups, flags := euCommon.DetectConflict(append(ar1, ar2...))
+// 	// fmt.Println(txs)
+// 	// fmt.Println(groups)
+// 	// fmt.Println(flags)
 
 // 	url.Import(append(t1, t2...))
 // 	url.Sort()
 // 	url.Commit([]uint32{2, 3})
 // 	url = concurrenturl.NewConcurrentUrl(db)
-// 	statedb = eth.NewImplStateDB(url)
+// 	statedb = eth.NewImplStateDB(api)
 // 	balance := statedb.GetBalance(account)
 // 	fmt.Println(balance)
 

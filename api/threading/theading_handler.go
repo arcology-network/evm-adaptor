@@ -12,23 +12,23 @@ import (
 )
 
 // APIs under the concurrency namespace
-type TheadingHandler struct {
+type ThreadingHandler struct {
 	api       interfaces.ApiRouter
 	jobQueues map[string]*Queue
 }
 
-func NewThreadingHandler(apiRounter interfaces.ApiRouter) *TheadingHandler {
-	return &TheadingHandler{
+func NewThreadingHandler(apiRounter interfaces.ApiRouter) *ThreadingHandler {
+	return &ThreadingHandler{
 		api:       apiRounter,
 		jobQueues: map[string]*Queue{},
 	}
 }
 
-func (this *TheadingHandler) Address() [20]byte {
+func (this *ThreadingHandler) Address() [20]byte {
 	return [20]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x90}
 }
 
-func (this *TheadingHandler) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
+func (this *ThreadingHandler) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
@@ -60,7 +60,7 @@ func (this *TheadingHandler) Call(caller, callee evmcommon.Address, input []byte
 	return []byte{}, false
 }
 
-func (this *TheadingHandler) new(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	if this.api.Depth() >= eucommon.MAX_RECURSIION_DEPTH {
 		return []byte{}, false // Execeeds the max recursion depth
 	}
@@ -75,7 +75,7 @@ func (this *TheadingHandler) new(caller, callee evmcommon.Address, input []byte)
 	return []byte(id), true // Create a new container
 }
 
-func (this *TheadingHandler) add(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) add(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	if len(input) < 4 {
 		return []byte{}, false
 	}
@@ -100,7 +100,7 @@ func (this *TheadingHandler) add(caller, callee evmcommon.Address, input []byte)
 	return []byte{}, this.jobQueues[id].Add(this.api.Origin(), calleeAddr, funCall)
 }
 
-func (this *TheadingHandler) clear(input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) clear(input []byte) ([]byte, bool) {
 	id := this.ParseID(input)
 	if len(id) == 0 || this.jobQueues[id] == nil {
 		return []byte{}, false
@@ -110,7 +110,7 @@ func (this *TheadingHandler) clear(input []byte) ([]byte, bool) {
 	return []byte{}, true
 }
 
-func (this *TheadingHandler) length(input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) length(input []byte) ([]byte, bool) {
 	id := this.ParseID(input)
 	if len(id) == 0 || this.jobQueues[id] == nil {
 		return []byte{}, false
@@ -120,7 +120,7 @@ func (this *TheadingHandler) length(input []byte) ([]byte, bool) {
 	return v, err == nil
 }
 
-func (this *TheadingHandler) error(input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) error(input []byte) ([]byte, bool) {
 	id := this.ParseID(input)
 	if len(id) == 0 || this.jobQueues[id] == nil {
 		return []byte{}, false
@@ -135,7 +135,7 @@ func (this *TheadingHandler) error(input []byte) ([]byte, bool) {
 	return []byte{}, false
 }
 
-func (this *TheadingHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	id := this.ParseID(input)
 	if len(id) == 0 || this.jobQueues[id] == nil {
 		return []byte{}, false
@@ -144,7 +144,7 @@ func (this *TheadingHandler) run(caller, callee evmcommon.Address, input []byte)
 	return []byte{}, this.jobQueues[id].Run(this.api)
 }
 
-func (this *TheadingHandler) get(input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) get(input []byte) ([]byte, bool) {
 	id := this.ParseID(input)
 	if len(id) == 0 || this.jobQueues[id] == nil {
 		return []byte{}, false
@@ -159,7 +159,7 @@ func (this *TheadingHandler) get(input []byte) ([]byte, bool) {
 }
 
 // Build the container path
-func (this *TheadingHandler) ParseID(input []byte) string {
+func (this *ThreadingHandler) ParseID(input []byte) string {
 	id, _ := abi.DecodeTo(input, 0, []byte{}, 2, 32) // max 32 bytes                                                                          // container ID
 	return string(id)                                // unique ID
 }

@@ -24,7 +24,7 @@ import (
 // APIs under the concurrency namespace
 type Queue struct {
 	numThreads uint8
-	jobs       []*Job
+	jobs       []*Job // para jobs
 	arbitrator *arbitrator.Arbitrator
 }
 
@@ -44,7 +44,7 @@ func (this *Queue) At(idx uint64) *Job {
 
 func (this *Queue) Del(idx uint64) {
 	common.IfThenDo(idx < uint64(len(this.jobs)), func() { this.jobs[idx] = nil }, func() {})
-	common.RemoveIf(&this.jobs, func(job *Job) bool { return job == nil })
+	common.Remove(&this.jobs, nil)
 }
 
 func (this *Queue) Add(origin, calleeAddr evmcommon.Address, funCall []byte) bool {
@@ -85,7 +85,6 @@ func (this *Queue) ExportWriteCaches(jobs []*Job) []ccinterfaces.Univalue {
 
 func (this *Queue) Run(parentApiRouter interfaces.ApiRouter) bool {
 	snapshotUrl := parentApiRouter.Ccurl().Snapshot()
-	// snapshotUrl := this.snapshot(parentApiRouter)
 	config := cceu.NewConfig().SetCoinbase(parentApiRouter.Coinbase()) // Share the same coinbase as the main thread
 
 	// t0 := time.Now()

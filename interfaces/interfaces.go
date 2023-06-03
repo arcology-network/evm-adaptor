@@ -23,6 +23,9 @@ type ApiRouter interface {
 	GetEU() interface{}
 	VM() *vm.EVM
 
+	GetDeferred() []byte
+	SetDeferred([20]byte, []byte)
+
 	Depth() uint8
 	AddLog(key, value string)
 	Call(caller, callee evmCommon.Address, input []byte, origin evmCommon.Address, nonce uint64, blockhash evmCommon.Hash) (bool, []byte, bool)
@@ -34,8 +37,9 @@ type ApiRouter interface {
 	TxIndex() uint32
 	TxHash() [32]byte
 
-	GenCCUID() []byte
+	GenCcObjID() []byte
 	GenCcElemUID() []byte
+	GenUUID() []byte
 }
 
 type ILog interface {
@@ -48,7 +52,7 @@ type ChainContext interface {
 	GetHeader(common.Hash, uint64) *types.Header // GetHeader returns the hash corresponding to their hash.
 }
 
-type ApiHandler interface {
+type ApiCallHandler interface {
 	Address() [20]byte
 	Call(evmCommon.Address, evmCommon.Address, []byte, evmCommon.Address, uint64) ([]byte, bool)
 }
