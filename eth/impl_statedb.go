@@ -7,9 +7,12 @@ import (
 	"github.com/arcology-network/concurrenturl"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
 	noncommutative "github.com/arcology-network/concurrenturl/noncommutative"
+	"github.com/arcology-network/evm/common"
 	evmcommon "github.com/arcology-network/evm/common"
+	"github.com/arcology-network/evm/core/types"
 	evmtypes "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/crypto"
+	"github.com/arcology-network/evm/params"
 	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 	uint256 "github.com/holiman/uint256"
 )
@@ -22,12 +25,16 @@ type ImplStateDB struct {
 	logs   map[evmcommon.Hash][]*evmtypes.Log
 
 	api interfaces.ApiRouter
+
+	// Transient storage
+	transientStorage transientStorage
 }
 
 func NewImplStateDB(api interfaces.ApiRouter) *ImplStateDB {
 	return &ImplStateDB{
-		logs: make(map[evmcommon.Hash][]*evmtypes.Log),
-		api:  api,
+		logs:             make(map[evmcommon.Hash][]*evmtypes.Log),
+		api:              api,
+		transientStorage: newTransientStorage(),
 	}
 }
 
@@ -203,6 +210,31 @@ func (this *ImplStateDB) Empty(addr evmcommon.Address) bool {
 	return true
 }
 
+// SetTransientState sets transient storage for a given account. It
+// adds the change to the journal so that it can be rolled back
+// to its previous value if there is a revert.
+func (s *ImplStateDB) SetTransientState(addr evmcommon.Address, key, value evmcommon.Hash) {
+	prev := s.GetTransientState(addr, key)
+	if prev == value {
+		return
+	}
+	s.setTransientState(addr, key, value)
+}
+
+// setTransientState is a lower level setter for transient storage. It
+// is called during a revert to prevent modifications to the journal.
+func (s *ImplStateDB) setTransientState(addr evmcommon.Address, key, value evmcommon.Hash) {
+	s.transientStorage.Set(addr, key, value)
+}
+
+// GetTransientState gets transient storage for a given account.
+func (s *ImplStateDB) GetTransientState(addr evmcommon.Address, key evmcommon.Hash) evmcommon.Hash {
+	return s.transientStorage.Get(addr, key)
+}
+func (this *ImplStateDB) Prepare(rules params.Rules, sender, coinbase common.Address, dest *common.Address, precompiles []common.Address, txAccesses types.AccessList) {
+	//Do nothing
+}
+
 func (this *ImplStateDB) AddLog(log *evmtypes.Log) {
 	this.logs[this.txHash] = append(this.logs[this.txHash], log)
 }
@@ -221,7 +253,7 @@ func (this *ImplStateDB) SlotInAccessList(addr evmcommon.Address, slot evmcommon
 	return true, true
 }
 
-func (this *ImplStateDB) Prepare(txHash, bhash evmcommon.Hash, ti int) {
+func (this *ImplStateDB) PrepareFormer(txHash, bhash evmcommon.Hash, ti int) {
 	this.refund = 0
 	this.txHash = txHash
 	this.tid = uint32(ti)

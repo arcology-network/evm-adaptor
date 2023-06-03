@@ -5,6 +5,7 @@ import (
 
 	"github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/types"
+	"github.com/arcology-network/evm/params"
 	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 )
 
@@ -65,11 +66,13 @@ type StateDB interface {
 	// even if the feature/fork is not active yet
 	AddSlotToAccessList(addr common.Address, slot common.Hash)
 
-	Prepare(txHash, bhash common.Hash, ti int)
+	PrepareFormer(txHash, bhash common.Hash, ti int)
 	GetLogs(hash common.Hash) []*types.Log
 	Copy() StateDB
 
 	Set(eac EthAccountCache, esc EthStorageCache)
+
+	Prepare(rules params.Rules, sender, coinbase common.Address, dest *common.Address, precompiles []common.Address, txAccesses types.AccessList)
 }
 
 type Account interface {

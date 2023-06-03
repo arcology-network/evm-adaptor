@@ -1,7 +1,8 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.19;
 
 import "./Int64.sol";
-import "./Threading.sol";
+import "../../threading/Threading.sol";
 
 contract ThreadingInt64 {
     Int64 container = new Int64();

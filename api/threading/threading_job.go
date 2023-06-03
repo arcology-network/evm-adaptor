@@ -23,7 +23,7 @@ type Job struct {
 	sender      evmcommon.Address
 	caller      evmcommon.Address
 	callee      evmcommon.Address
-	message     ethtypes.Message
+	message     core.Message
 	receipt     *ethtypes.Receipt
 	result      *core.ExecutionResult
 	prechkErr   error

@@ -24,7 +24,7 @@ func TestStateDBV2GetNonexistBalance(t *testing.T) {
 	api := ccapi.NewAPI(url)
 	account := evmcommon.BytesToAddress([]byte{201, 202, 203, 204, 205})
 	statedb := eth.NewImplStateDB(api)
-	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 1)
+	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 1)
 	statedb.CreateAccount(account)
 	_, transitions := url.ExportAll()
 	fmt.Println("\n" + euCommon.FormatTransitions(transitions))
@@ -34,7 +34,7 @@ func TestStateDBV2GetNonexistBalance(t *testing.T) {
 
 	url = concurrenturl.NewConcurrentUrl(db)
 	statedb = eth.NewImplStateDB(api)
-	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 2)
+	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 2)
 	balance := statedb.GetBalance(account)
 	if balance == nil || balance.Cmp(new(big.Int)) != 0 {
 		t.Fail()
@@ -50,7 +50,7 @@ func TestStateDBV2GetNonexistCode(t *testing.T) {
 	api := ccapi.NewAPI(url)
 	account := evmcommon.BytesToAddress([]byte{201, 202, 203, 204, 205})
 	statedb := eth.NewImplStateDB(api)
-	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 1)
+	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 1)
 	statedb.CreateAccount(account)
 	_, transitions := url.ExportAll()
 	fmt.Println("\n" + euCommon.FormatTransitions(transitions))
@@ -60,7 +60,7 @@ func TestStateDBV2GetNonexistCode(t *testing.T) {
 
 	url = concurrenturl.NewConcurrentUrl(db)
 	statedb = eth.NewImplStateDB(api)
-	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 2)
+	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 2)
 	code := statedb.GetCode(account)
 	if code == nil || len(code) != 0 {
 		t.Fail()
@@ -76,7 +76,7 @@ func TestStateDBV2GetNonexistStorageState(t *testing.T) {
 	api := ccapi.NewAPI(url)
 	account := evmcommon.BytesToAddress([]byte{201, 202, 203, 204, 205})
 	statedb := eth.NewImplStateDB(api)
-	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 1)
+	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 1)
 	statedb.CreateAccount(account)
 	_, transitions := url.ExportAll()
 	fmt.Println("\n" + euCommon.FormatTransitions(transitions))
@@ -86,7 +86,7 @@ func TestStateDBV2GetNonexistStorageState(t *testing.T) {
 
 	url = concurrenturl.NewConcurrentUrl(db)
 	statedb = eth.NewImplStateDB(api)
-	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 2)
+	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 2)
 	state := statedb.GetState(account, evmcommon.Hash{})
 	if !bytes.Equal(state.Bytes(), evmcommon.Hash{}.Bytes()) {
 		t.Fail()

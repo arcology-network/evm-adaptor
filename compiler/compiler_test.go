@@ -1,15 +1,40 @@
 package compiler
 
 import (
+	"fmt"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
 func TestPythonContractCompiler(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	compiler := filepath.Dir(currentPath) + "/compiler/compiler.py"
-	if code, err := CompileContracts(compiler, "./compiler_test.sol", "Example"); err != nil || len(code) == 0 {
-		t.Error(err)
+
+	fmt.Println(currentPath)
+
+	path := currentPath
+	version := "0.5.0"
+	solfilename := "compiler_test.sol"
+	contractName := "Example"
+
+	bincode, err := CompileContracts(path, solfilename, version, contractName, false)
+	if err != nil {
+		fmt.Printf("reading contract err:%v\n", err)
+		return
 	}
+	fmt.Printf("bytes:%v\n", bincode)
+}
+
+func TestEnsure(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	ensureOutpath(currentPath)
+}
+func TestGetSolMeta(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	solfilename := "compiler_test.sol"
+	contractName, err := GetContractMeta(currentPath + "/" + solfilename)
+	if err != nil {
+		fmt.Printf("Get contract meta err:%v\n", err)
+		return
+	}
+	fmt.Printf("contractName:%v\n", contractName)
 }

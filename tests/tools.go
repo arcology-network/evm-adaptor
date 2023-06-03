@@ -11,6 +11,7 @@ import (
 	"github.com/arcology-network/concurrenturl/interfaces"
 	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
+	"github.com/arcology-network/evm/core"
 
 	evmtypes "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/core/vm"
@@ -48,7 +49,7 @@ func Deploy(eu *cceu.EU, config *cceu.Config, owner evmcommon.Address, nonce uin
 	for _, arg := range args {
 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
 	}
-	msg := evmtypes.NewMessage(owner, nil, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	msg := core.NewMessage(owner, nil, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
 	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{byte(nonce + 1), byte(nonce + 1), byte(nonce + 1)}), int(nonce+1), &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	_, transitions := eu.Api().Ccurl().ExportAll()
 
@@ -60,7 +61,7 @@ func CallFunc(eu *cceu.EU, config *cceu.Config, from, to *evmcommon.Address, non
 	for _, arg := range encodedArgs {
 		data = append(data, arg...)
 	}
-	msg := evmtypes.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
+	msg := core.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
 	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	accesses, transitions := eu.Api().Ccurl().ExportAll()
 	return accesses, transitions, receipt, err
@@ -102,7 +103,7 @@ func NewTestEU() (*cceu.EU, *cceu.Config, interfaces.Datastore, *concurrenturl.C
 	api := ccapi.NewAPI(url)
 
 	statedb := eth.NewImplStateDB(api)
-	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
+	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(eucommon.Coinbase)
 	statedb.CreateAccount(eucommon.Alice)
 	statedb.AddBalance(eucommon.Alice, new(big.Int).SetUint64(1e18))

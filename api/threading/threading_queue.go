@@ -13,7 +13,7 @@ import (
 	ccinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
-	types "github.com/arcology-network/evm/core/types"
+	"github.com/arcology-network/evm/core"
 	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 
 	cceu "github.com/arcology-network/vm-adaptor"
@@ -58,7 +58,7 @@ func (this *Queue) Add(origin, calleeAddr evmcommon.Address, funCall []byte) boo
 			sender: origin,
 			caller: evmcommon.Address{},
 			callee: calleeAddr,
-			message: types.NewMessage( // Build the message
+			message: core.NewMessage( // Build the message
 				origin,
 				&calleeAddr,
 				0,
@@ -123,7 +123,7 @@ func (this *Queue) Run(parentApiRouter interfaces.ApiRouter) bool {
 		this.jobs[i].apiRounter = parentApiRouter.New(txHash, uint32(i), ccurl, parentApiRouter)
 
 		statedb := eth.NewImplStateDB(this.jobs[i].apiRounter) // Eth state DB
-		statedb.Prepare(txHash, [32]byte{}, i)                 // tx hash , block hash and tx index
+		statedb.PrepareFormer(txHash, [32]byte{}, i)           // tx hash , block hash and tx index
 		this.jobs[i].Run(config, statedb)
 	}
 	// }
