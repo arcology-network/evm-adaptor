@@ -41,18 +41,18 @@ func GetContractMeta(file string) (contractName string, err error) {
 	return
 }
 
-func CompileContracts(path, solfilename, version, contractname string, outpathhold bool) (string, error) {
-	if !common.FileExists(path + "/" + solfilename) {
-		return "", errors.New("Error: The contract file doesn't exist in " + path + "/" + solfilename)
+func CompileContracts(dockerRootpath, solfilename, version, contractname string, outpathhold bool) (string, error) {
+	if !common.FileExists(dockerRootpath + "/" + solfilename) {
+		return "", errors.New("Error: The contract file doesn't exist in " + dockerRootpath + "/" + solfilename)
 	}
 
-	ensureOutpath(path)
+	ensureOutpath(dockerRootpath)
 
-	cmd := "docker run -v " + path + ":/sources ethereum/solc:" + version + " -o /sources/" + outpath + " --abi --bin /sources/" + solfilename
-	fmt.Printf("cmd:%v\n", cmd)
+	// cmd := "docker run -v " + dockerRootpath + ":/sources ethereum/solc:" + version + " -o /sources/" + outpath + " --abi --bin /sources/" + solfilename
+	// fmt.Printf("cmd:%v\n", cmd)
 	_, err := exec.Command(
 		"docker", "run",
-		"-v", path+":/sources",
+		"-v", dockerRootpath+":/sources",
 		"ethereum/solc:"+version,
 		"-o", "/sources/"+outpath,
 		"--abi", "--bin",
@@ -61,13 +61,13 @@ func CompileContracts(path, solfilename, version, contractname string, outpathho
 		fmt.Printf("compile contract err:%v\n", err)
 		return "", err
 	}
-	bytes, err := ioutil.ReadFile(path + "/" + outpath + "/" + contractname + ".bin")
+	bytes, err := ioutil.ReadFile(dockerRootpath + "/" + outpath + "/" + contractname + ".bin")
 	if err != nil {
 		fmt.Printf("reading contract err:%v\n", err)
 		return "", err
 	}
 	if !outpathhold {
-		removeOut(path)
+		removeOut(dockerRootpath)
 	}
 
 	return fmt.Sprintf("%s", bytes), nil
