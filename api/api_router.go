@@ -7,6 +7,7 @@ import (
 
 	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
+	"github.com/arcology-network/common-lib/types"
 	commontypes "github.com/arcology-network/common-lib/types"
 	"github.com/arcology-network/concurrenturl"
 	evmcommon "github.com/arcology-network/evm/common"
@@ -22,19 +23,18 @@ import (
 )
 
 type API struct {
-	logs          []interfaces.ILog
-	txHash        evmcommon.Hash // Tx hash
-	txIndex       uint32         // Tx index in the block
-	deferredCalls []*commontypes.DeferCall
+	logs    []interfaces.ILog
+	txHash  evmcommon.Hash // Tx hash
+	txIndex uint32         // Tx index in the block
 
 	uuid     uint64
 	ccUID    uint64 // for uuid generation
 	ccElemID uint64
 	depth    uint8
 
-	deferredFun []byte //Function signature
-	eu          *cceu.EU
-	callContext *corevm.ScopeContext
+	deferredFunc *types.DeferCall
+	eu           *cceu.EU
+	callContext  *corevm.ScopeContext
 
 	handlerDict map[[20]byte]interfaces.ApiCallHandler // APIs under the concurrency namespace
 	ccurl       *concurrenturl.ConcurrentUrl
@@ -79,13 +79,13 @@ func (this *API) New(txHash evmcommon.Hash, txIndex uint32, parentDepth uint8, c
 	return api
 }
 
-func (this *API) GetDeferred() []byte                        { return this.deferredFun }
-func (this *API) SetDeferred(addr [20]byte, deferred []byte) { this.deferredFun = deferred }
-func (this *API) Depth() uint8                               { return this.depth }
-func (this *API) Coinbase() evmcommon.Address                { return this.eu.VM().Context.Coinbase }
-func (this *API) Origin() evmcommon.Address                  { return this.eu.VM().TxContext.Origin }
-func (this *API) VM() *vm.EVM                                { return this.eu.VM() }
-func (this *API) GetEU() interface{}                         { return this.eu }
+func (this *API) GetDeferred() *types.DeferCall          { return this.deferredFunc }
+func (this *API) SetDeferred(deferCall *types.DeferCall) { this.deferredFunc = deferCall }
+func (this *API) Depth() uint8                           { return this.depth }
+func (this *API) Coinbase() evmcommon.Address            { return this.eu.VM().Context.Coinbase }
+func (this *API) Origin() evmcommon.Address              { return this.eu.VM().TxContext.Origin }
+func (this *API) VM() *vm.EVM                            { return this.eu.VM() }
+func (this *API) GetEU() interface{}                     { return this.eu }
 
 func (this *API) SetCallContext(Context interface{}) {
 	this.callContext = Context.(*corevm.ScopeContext) // Runtime context

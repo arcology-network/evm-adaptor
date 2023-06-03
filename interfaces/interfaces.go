@@ -4,6 +4,7 @@ package common
 import (
 	"math/big"
 
+	commontypes "github.com/arcology-network/common-lib/types"
 	"github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/evm/common"
 
@@ -23,8 +24,8 @@ type ApiRouter interface {
 	GetEU() interface{}
 	VM() *vm.EVM
 
-	GetDeferred() []byte
-	SetDeferred([20]byte, []byte)
+	GetDeferred() *commontypes.DeferCall
+	SetDeferred(*commontypes.DeferCall)
 
 	Depth() uint8
 	AddLog(key, value string)

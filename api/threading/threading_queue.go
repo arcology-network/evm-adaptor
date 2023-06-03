@@ -7,12 +7,13 @@ import (
 
 	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
+	commontypes "github.com/arcology-network/common-lib/types"
 	concurrenturl "github.com/arcology-network/concurrenturl"
 	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 	ccinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	evmcommon "github.com/arcology-network/evm/common"
-	types "github.com/arcology-network/evm/core/types"
+	"github.com/arcology-network/evm/core/types"
 	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 
 	cceu "github.com/arcology-network/vm-adaptor"
@@ -106,6 +107,10 @@ func (this *Queue) Run(parentApiRouter interfaces.ApiRouter) bool {
 	// }
 	// common.ParallelWorker(len(this.jobs), int(this.numThreads), executor)
 	// fmt.Println("Run: ", time.Since(t0))
+	calls := make([]*commontypes.DeferCall, 0)
+	common.Foreach(this.jobs, func(job **Job) {
+		calls = append(calls, (**job).apiRounter.GetDeferred())
+	})
 
 	// t0 = time.Now()
 	accesseVec := indexer.Univalues(this.ExportWriteCaches(this.jobs)).To(indexer.IPCAccess{})
