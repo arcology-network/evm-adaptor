@@ -4,6 +4,7 @@ package common
 import (
 	"math/big"
 
+	commontypes "github.com/arcology-network/common-lib/types"
 	"github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/evm/common"
 
@@ -16,12 +17,15 @@ import (
 type ApiRouter interface {
 	Origin() evmCommon.Address
 	Ccurl() *concurrenturl.ConcurrentUrl
-	New(common.Hash, uint32, *concurrenturl.ConcurrentUrl, ApiRouter) ApiRouter
+	New(common.Hash, uint32, uint8, *concurrenturl.ConcurrentUrl) ApiRouter
 	Coinbase() evmCommon.Address
 
 	SetEU(interface{})
 	GetEU() interface{}
 	VM() *vm.EVM
+
+	GetDeferred() *commontypes.DeferCall
+	SetDeferred(*commontypes.DeferCall)
 
 	Depth() uint8
 	AddLog(key, value string)
@@ -34,8 +38,9 @@ type ApiRouter interface {
 	TxIndex() uint32
 	TxHash() [32]byte
 
-	GenCCUID() []byte
+	GenCcObjID() []byte
 	GenCcElemUID() []byte
+	GenUUID() []byte
 }
 
 type ILog interface {
@@ -48,7 +53,7 @@ type ChainContext interface {
 	GetHeader(common.Hash, uint64) *types.Header // GetHeader returns the hash corresponding to their hash.
 }
 
-type ApiHandler interface {
+type ApiCallHandler interface {
 	Address() [20]byte
 	Call(evmCommon.Address, evmCommon.Address, []byte, evmCommon.Address, uint64) ([]byte, bool)
 }

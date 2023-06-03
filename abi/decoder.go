@@ -9,17 +9,17 @@ import (
 	"github.com/holiman/uint256"
 )
 
-func DecodeTo[T any](raw []byte, idx int, typed T, depth uint8, maxLength int) (T, error) {
-	v, err := Decode(raw, idx, typed, depth, maxLength)
+func DecodeTo[T any](raw []byte, idx int, initv T, depth uint8, maxLength int) (T, error) {
+	v, err := Decode(raw, idx, initv, depth, maxLength)
 	if err == nil {
-		if reflect.TypeOf(v) == reflect.TypeOf(typed) {
+		if reflect.TypeOf(v) == reflect.TypeOf(initv) {
 			return v.(T), nil
 		}
 	}
-	return typed, err
+	return initv, err
 }
 
-func Decode(raw []byte, idx int, typed interface{}, depth uint8, maxLength int) (interface{}, error) {
+func Decode(raw []byte, idx int, initv interface{}, depth uint8, maxLength int) (interface{}, error) {
 	if depth < 1 {
 		return nil, errors.New("Error: Can be 0 deep!!")
 	}
@@ -32,7 +32,7 @@ func Decode(raw []byte, idx int, typed interface{}, depth uint8, maxLength int) 
 		return nil, errors.New("Error: Access out of range")
 	}
 
-	switch typed.(type) {
+	switch initv.(type) {
 	case bool:
 		return raw[len(raw[idx*32:idx*32+32])-1] == 1, nil
 	case uint8:

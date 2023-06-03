@@ -1,13 +1,14 @@
 package api
 
 import (
+	"encoding/hex"
 	"math/big"
 	"strconv"
 
 	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/types"
-
+	commontypes "github.com/arcology-network/common-lib/types"
 	"github.com/arcology-network/concurrenturl"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/vm"
@@ -15,45 +16,44 @@ import (
 	cceu "github.com/arcology-network/vm-adaptor"
 	cumulativei256 "github.com/arcology-network/vm-adaptor/api/commutative/int256"
 	cumulativeu256 "github.com/arcology-network/vm-adaptor/api/commutative/u256"
+	"github.com/arcology-network/vm-adaptor/api/concurrency"
 	noncommutativeBytes "github.com/arcology-network/vm-adaptor/api/noncommutative/base"
 	threading "github.com/arcology-network/vm-adaptor/api/threading"
 	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 )
 
 type API struct {
-	logs         []interfaces.ILog
-	txHash       evmcommon.Hash // Tx hash
-	txIndex      uint32         // Tx index in the block
-	dc           *types.DeferCall
-	predecessors []evmcommon.Hash
+	logs    []interfaces.ILog
+	txHash  evmcommon.Hash // Tx hash
+	txIndex uint32         // Tx index in the block
 
+	uuid     uint64
 	ccUID    uint64 // for uuid generation
 	ccElemID uint64
 	depth    uint8
-	// deferCall *concurrentlib.DeferCall
 
-	eu          *cceu.EU
-	callContext *corevm.ScopeContext
+	deferredFunc *types.DeferCall
+	eu           *cceu.EU
+	callContext  *corevm.ScopeContext
 
-	handlerDict map[[20]byte]interfaces.ApiHandler // APIs under the concurrency namespace
+	handlerDict map[[20]byte]interfaces.ApiCallHandler // APIs under the concurrency namespace
 	ccurl       *concurrenturl.ConcurrentUrl
-
-	parentApiRouter interfaces.ApiRouter
 }
 
 func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	api := &API{
 		eu:          nil,
 		ccurl:       ccurl,
-		handlerDict: make(map[[20]byte]interfaces.ApiHandler),
+		handlerDict: make(map[[20]byte]interfaces.ApiCallHandler),
 		depth:       0,
 	}
 
-	handlers := []interfaces.ApiHandler{
+	handlers := []interfaces.ApiCallHandler{
 		noncommutativeBytes.NewNoncommutativeBytesHandlers(api),
 		cumulativeu256.NewU256CumulativeHandlers(api),
 		cumulativei256.NewInt256CumulativeHandlers(api),
 		threading.NewThreadingHandler(api),
+		concurrency.NewConcurrencyHandler(api),
 	}
 
 	for i, v := range handlers {
@@ -65,19 +65,27 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	return api
 }
 
-func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl, parentApiRouter interfaces.ApiRouter) interfaces.ApiRouter {
+func (this *API) New(txHash evmcommon.Hash, txIndex uint32, parentDepth uint8, ccurl *concurrenturl.ConcurrentUrl) interfaces.ApiRouter {
 	api := NewAPI(ccurl)
+
 	api.txHash = txHash
 	api.txIndex = txIndex
-	api.parentApiRouter = parentApiRouter
+
+	api.uuid = 0
+	api.ccUID = 0
+	api.ccElemID = 0
+
+	api.depth = parentDepth + 1
 	return api
 }
 
-func (this *API) Depth() uint8                { return this.depth }
-func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }
-func (this *API) Origin() evmcommon.Address   { return this.eu.VM().TxContext.Origin }
-func (this *API) VM() *vm.EVM                 { return this.eu.VM() }
-func (this *API) GetEU() interface{}          { return this.eu }
+func (this *API) GetDeferred() *types.DeferCall          { return this.deferredFunc }
+func (this *API) SetDeferred(deferCall *types.DeferCall) { this.deferredFunc = deferCall }
+func (this *API) Depth() uint8                           { return this.depth }
+func (this *API) Coinbase() evmcommon.Address            { return this.eu.VM().Context.Coinbase }
+func (this *API) Origin() evmcommon.Address              { return this.eu.VM().TxContext.Origin }
+func (this *API) VM() *vm.EVM                            { return this.eu.VM() }
+func (this *API) GetEU() interface{}                     { return this.eu }
 
 func (this *API) SetCallContext(Context interface{}) {
 	this.callContext = Context.(*corevm.ScopeContext) // Runtime context
@@ -96,26 +104,28 @@ func (this *API) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }
 func (this *API) Prepare(txHash evmcommon.Hash, height *big.Int, txIndex uint32) {
 	this.txHash = txHash
 	this.txIndex = txIndex
-	this.dc = nil
+}
+
+func (this *API) GenUUID() []byte {
+	this.uuid++
+	id := codec.Bytes32(this.txHash).UUID(this.uuid)
+	return id[:]
 }
 
 func (this *API) GenCcElemUID() []byte {
-
 	this.ccElemID++
-	return []byte(strconv.Itoa(int(this.ccElemID)))
+	return []byte(hex.EncodeToString(this.txHash[:8]) + "-" + strconv.Itoa(int(this.ccElemID)))
 }
 
 // Generate an UUID based on transaction hash and the counter
-func (this *API) GenCCUID() []byte {
+func (this *API) GenCcObjID() []byte {
 	this.ccUID++
-	// id := codec.Bytes32(this.txHash).UUID(this.ccUID)
-	// return id[:8]
-
-	return append(append(this.txHash[:8], '-'), []byte(strconv.Itoa(int(this.ccUID)))...)
+	id := codec.Bytes32(this.txHash).UUID(this.ccUID)
+	return id[:8]
 }
 
 func (this *API) AddLog(key, value string) {
-	this.logs = append(this.logs, &types.ExecutingLog{
+	this.logs = append(this.logs, &commontypes.ExecutingLog{
 		Key:   key,
 		Value: value,
 	})
@@ -141,30 +151,4 @@ func (this *API) Call(caller, callee evmcommon.Address, input []byte, origin evm
 		return true, result, successful
 	}
 	return false, []byte{}, false
-}
-
-// For defer call.
-func (this *API) SetDeferCall(contractAddress types.Address, deferID string) {
-	// sig := this.deferCall.GetSignature(contractAddress, deferID)
-	// if sig == "" {
-	// 	panic(fmt.Sprintf("unknown defer call on %s:%s", contractAddress, deferID))
-	// }
-
-	this.dc = &types.DeferCall{
-		DeferID:         deferID,
-		ContractAddress: contractAddress,
-		// Signature:       sig,
-	}
-}
-
-func (this *API) GetDeferCall() *types.DeferCall {
-	return this.dc
-}
-
-func (this *API) SetPredecessors(predecessors []evmcommon.Hash) {
-	this.predecessors = predecessors
-}
-
-func (this *API) IsInDeferCall() bool {
-	return len(this.predecessors) > 0
 }

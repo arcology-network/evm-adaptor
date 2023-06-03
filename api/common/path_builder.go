@@ -11,27 +11,25 @@ import (
 
 // Ccurl connectors for Arcology APIs
 type CcurlConnector struct {
-	Api    interfaces.ApiRouter
-	ccurl  *concurrenturl.ConcurrentUrl
-	subDir string
+	apiRouter interfaces.ApiRouter
+	ccurl     *concurrenturl.ConcurrentUrl
+	subDir    string
 }
 
 func NewCCurlConnector(subDir string, api interfaces.ApiRouter, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
 	return &CcurlConnector{
-		subDir: subDir,
-		Api:    api,
-		ccurl:  ccurl,
+		subDir:    subDir,
+		apiRouter: api,
+		ccurl:     ccurl,
 	}
 }
 
-func (this *CcurlConnector) SetApi(api interfaces.ApiRouter) { this.Api = api }
-
 // Make Arcology paths under the current account
 func (this *CcurlConnector) New(account types.Address, containerId string) bool {
-	if !this.newStorageRoot(account, this.Api.TxIndex()) { // Create the root path if has been created yet.
+	if !this.newStorageRoot(account, this.apiRouter.TxIndex()) { // Create the root path if has been created yet.
 		return false
 	}
-	return this.newContainerRoot(account, containerId[:], this.Api.TxIndex()) //
+	return this.newContainerRoot(account, containerId[:], this.apiRouter.TxIndex()) //
 }
 
 func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32) bool {
