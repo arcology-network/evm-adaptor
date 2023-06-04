@@ -1,7 +1,8 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.19;
 
 import "./Concurrency.sol";
-import "./Threading.sol";
+import "../threading/Threading.sol";
 
 
 contract ConcurrencyDeferredInThreadingTest {

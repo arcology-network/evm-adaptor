@@ -21,7 +21,7 @@ func TestContractAddress(t *testing.T) {
 	project := filepath.Dir(currentPath)
 	targetPath := project + "/api/noncommutative"
 
-	code, err := compiler.CompileContracts(targetPath, "address/address_test.sol", "0.8.19", "AddressTest", true)
+	code, err := compiler.CompileContracts(targetPath, "address/address_test.sol", "0.8.19", "AddressTest", false)
 
 	if err != nil || len(code) == 0 {
 		t.Error(err)

@@ -3,7 +3,6 @@ package concurrency
 import (
 	"github.com/arcology-network/common-lib/types"
 	evmcommon "github.com/arcology-network/evm/common"
-	"github.com/arcology-network/vm-adaptor/abi"
 	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 )
 
@@ -41,24 +40,24 @@ func (this *ConcurrencyHandler) deferred(caller, callee evmcommon.Address, input
 	if this.api.VM().ArcologyNetworkAPIs.Depth() > 2 {
 		return []byte{}, false
 	}
+	/*
+		targetAddr, err := abi.DecodeTo(input, 0, [20]byte{}, 1, 32)
+		if err != nil {
+			return []byte{}, false
+		}
 
-	targetAddr, err := abi.DecodeTo(input, 0, [20]byte{}, 1, 32)
-	if err != nil {
-		return []byte{}, false
-	}
-
-	targetSignature, err := abi.DecodeTo(input, 1, []byte{}, 2, 4) // Function signature only, won't take any input argument
-	if err != nil {
-		return []byte{}, false
-	}
-
+		targetSignature, err := abi.DecodeTo(input, 1, []byte{}, 2, 4) // Function signature only, won't take any input argument
+		if err != nil {
+			return []byte{}, false
+		}
+	*/
 	txHash := this.api.TxHash()
 	this.api.SetDeferred(
 		&types.DeferCall{
-			DeferID:    string(txHash[:]),
-			CallerAddr: types.Address(caller[:]),
-			TargetAddr: types.Address(targetAddr[:]),
-			TargetFunc: string(targetSignature),
+			DeferID: string(txHash[:]),
+			// CallerAddr: types.Address(caller[:]),
+			// TargetAddr: types.Address(targetAddr[:]),
+			// TargetFunc: string(targetSignature),
 		},
 	)
 	return []byte{}, true
