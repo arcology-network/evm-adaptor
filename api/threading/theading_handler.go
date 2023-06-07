@@ -4,7 +4,6 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/arcology-network/common-lib/codec"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
@@ -13,14 +12,14 @@ import (
 
 // APIs under the concurrency namespace
 type ThreadingHandler struct {
-	api       interfaces.ApiRouter
-	jobQueues map[string]*Queue
+	api       interfaces.EthApiRouter
+	jobQueues map[string]*ThreadingPool
 }
 
-func NewThreadingHandler(apiRounter interfaces.ApiRouter) *ThreadingHandler {
+func NewThreadingHandler(ethApiRounter interfaces.EthApiRouter) *ThreadingHandler {
 	return &ThreadingHandler{
-		api:       apiRounter,
-		jobQueues: map[string]*Queue{},
+		api:       ethApiRounter,
+		jobQueues: map[string]*ThreadingPool{},
 	}
 }
 
@@ -71,7 +70,7 @@ func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte
 	}
 
 	id := strconv.Itoa(len(this.jobQueues))
-	this.jobQueues[id] = NewJobQueue(threads)
+	this.jobQueues[id] = NewJobPool(threads)
 	return []byte(id), true // Create a new container
 }
 
@@ -128,7 +127,7 @@ func (this *ThreadingHandler) error(input []byte) ([]byte, bool) {
 
 	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
 		if item := this.jobQueues[id].At(idx); item != nil {
-			buffer, err := abi.Encode(codec.String(item.prechkErr.Error() + item.prechkErr.Error()).Clone().(codec.String).ToBytes())
+			buffer, err := abi.Encode(item.Err.Error())
 			return buffer, err == nil
 		}
 	}
@@ -152,7 +151,7 @@ func (this *ThreadingHandler) get(input []byte) ([]byte, bool) {
 
 	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
 		if item := this.jobQueues[id].At(idx); item != nil {
-			return item.result.ReturnData, item.result.Err == nil
+			return item.Result.ReturnData, item.Result.Err == nil
 		}
 	}
 	return []byte{}, false

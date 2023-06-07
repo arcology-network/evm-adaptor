@@ -3,8 +3,8 @@ pragma solidity ^0.5.0;
 import "./Concurrency.sol";
 import "./Threading.sol";
 
-
-contract ConcurrencyDeferredInThreadingTest {
+ // this should fail because the deferred call hasn't been processed yet. 
+contract ConcurrencyDeferredInThreadingTest {  
      function call() public  { 
        bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
 
@@ -18,11 +18,7 @@ contract ConcurrencyDeferredInThreadingTest {
        assert(bytesToBytes32(hash) == keccak256(data));
 
        mp.clear();
-       assert(mp.length() == 0);       
-    
-    
-      // this should fail because the deferred call hasn't been processed yet. 
-    
+       assert(mp.length() == 0);      
     }
 
     function hasher(bytes memory data)  public returns(bytes32){

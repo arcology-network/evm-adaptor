@@ -37,6 +37,9 @@ func Encode(typed interface{}) ([]byte, error) {
 		bytes := typed.(*uint256.Int).Bytes32()
 		return bytes[:], nil
 
+	case string:
+		return []byte(typed.(string)), nil
+
 	case []uint8:
 		binary.BigEndian.PutUint32(buffer[32-4:], uint32(len(typed.([]byte))))
 		if len(typed.([]byte))%32 == 0 {

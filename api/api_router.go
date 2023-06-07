@@ -7,19 +7,20 @@ import (
 
 	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
-	"github.com/arcology-network/common-lib/types"
 	commontypes "github.com/arcology-network/common-lib/types"
 	"github.com/arcology-network/concurrenturl"
 	evmcommon "github.com/arcology-network/evm/common"
+	evmcoretypes "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/core/vm"
-	corevm "github.com/arcology-network/evm/core/vm"
 	cceu "github.com/arcology-network/vm-adaptor"
 	cumulativei256 "github.com/arcology-network/vm-adaptor/api/commutative/int256"
 	cumulativeu256 "github.com/arcology-network/vm-adaptor/api/commutative/u256"
 	"github.com/arcology-network/vm-adaptor/api/concurrency"
+
 	noncommutativeBytes "github.com/arcology-network/vm-adaptor/api/noncommutative/base"
 	threading "github.com/arcology-network/vm-adaptor/api/threading"
 	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
+	types "github.com/arcology-network/vm-adaptor/types"
 )
 
 type API struct {
@@ -32,12 +33,13 @@ type API struct {
 	ccElemID uint64
 	depth    uint8
 
-	deferredFunc *types.DeferCall
-	eu           *cceu.EU
-	callContext  *corevm.ScopeContext
+	reserved interface{}
+	eu       *cceu.EU
 
 	handlerDict map[[20]byte]interfaces.ApiCallHandler // APIs under the concurrency namespace
 	ccurl       *concurrenturl.ConcurrentUrl
+
+	execResult *types.ExecutionResult
 }
 
 func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
@@ -46,6 +48,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 		ccurl:       ccurl,
 		handlerDict: make(map[[20]byte]interfaces.ApiCallHandler),
 		depth:       0,
+		execResult:  &types.ExecutionResult{},
 	}
 
 	handlers := []interfaces.ApiCallHandler{
@@ -65,7 +68,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	return api
 }
 
-func (this *API) New(txHash evmcommon.Hash, txIndex uint32, parentDepth uint8, ccurl *concurrenturl.ConcurrentUrl) interfaces.ApiRouter {
+func (this *API) New(txHash evmcommon.Hash, txIndex uint32, parentDepth uint8, ccurl *concurrenturl.ConcurrentUrl) interfaces.EthApiRouter {
 	api := NewAPI(ccurl)
 
 	api.txHash = txHash
@@ -79,29 +82,25 @@ func (this *API) New(txHash evmcommon.Hash, txIndex uint32, parentDepth uint8, c
 	return api
 }
 
-func (this *API) GetDeferred() *types.DeferCall          { return this.deferredFunc }
-func (this *API) SetDeferred(deferCall *types.DeferCall) { this.deferredFunc = deferCall }
-func (this *API) Depth() uint8                           { return this.depth }
-func (this *API) Coinbase() evmcommon.Address            { return this.eu.VM().Context.Coinbase }
-func (this *API) Origin() evmcommon.Address              { return this.eu.VM().TxContext.Origin }
-func (this *API) VM() *vm.EVM                            { return this.eu.VM() }
-func (this *API) GetEU() interface{}                     { return this.eu }
+func (this *API) GetReserved() interface{}         { return this.reserved }
+func (this *API) SetReserved(reserved interface{}) { this.reserved = reserved }
 
-func (this *API) SetCallContext(Context interface{}) {
-	this.callContext = Context.(*corevm.ScopeContext) // Runtime context
-}
+func (this *API) Depth() uint8                { return this.depth }
+func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }
+func (this *API) Origin() evmcommon.Address   { return this.eu.VM().TxContext.Origin }
 
-func (this *API) GetCallContext() interface{} {
-	return this.callContext // Runtime context
-}
+func (this *API) Message() *evmcoretypes.Message { return this.eu.Message() }
 
+func (this *API) VM() *vm.EVM { return this.eu.VM() }
+
+func (this *API) GetEU() interface{}   { return this.eu }
 func (this *API) SetEU(eu interface{}) { this.eu = eu.(*cceu.EU) }
 
 func (this *API) TxHash() [32]byte                    { return this.txHash }
 func (this *API) TxIndex() uint32                     { return this.txIndex }
 func (this *API) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }
 
-func (this *API) Prepare(txHash evmcommon.Hash, height *big.Int, txIndex uint32) {
+func (this *API) SetContext(txHash evmcommon.Hash, height *big.Int, txIndex uint32) {
 	this.txHash = txHash
 	this.txIndex = txIndex
 }

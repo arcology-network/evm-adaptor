@@ -11,12 +11,12 @@ import (
 
 // Ccurl connectors for Arcology APIs
 type CcurlConnector struct {
-	apiRouter interfaces.ApiRouter
+	apiRouter interfaces.EthApiRouter
 	ccurl     *concurrenturl.ConcurrentUrl
 	subDir    string
 }
 
-func NewCCurlConnector(subDir string, api interfaces.ApiRouter, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
+func NewCCurlConnector(subDir string, api interfaces.EthApiRouter, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
 	return &CcurlConnector{
 		subDir:    subDir,
 		apiRouter: api,

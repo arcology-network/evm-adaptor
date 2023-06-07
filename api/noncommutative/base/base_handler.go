@@ -18,11 +18,11 @@ import (
 
 // APIs under the concurrency namespace
 type BytesHandlers struct {
-	api       interfaces.ApiRouter
+	api       interfaces.EthApiRouter
 	connector *apicommon.CcurlConnector
 }
 
-func NewNoncommutativeBytesHandlers(api interfaces.ApiRouter) *BytesHandlers {
+func NewNoncommutativeBytesHandlers(api interfaces.EthApiRouter) *BytesHandlers {
 	return &BytesHandlers{
 		api:       api,
 		connector: apicommon.NewCCurlConnector("/containers/", api, api.Ccurl()),

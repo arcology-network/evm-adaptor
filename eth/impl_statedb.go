@@ -21,10 +21,10 @@ type ImplStateDB struct {
 	tid    uint32 // tx id
 	logs   map[evmcommon.Hash][]*evmtypes.Log
 
-	api interfaces.ApiRouter
+	api interfaces.EthApiRouter
 }
 
-func NewImplStateDB(api interfaces.ApiRouter) *ImplStateDB {
+func NewImplStateDB(api interfaces.EthApiRouter) *ImplStateDB {
 	return &ImplStateDB{
 		logs: make(map[evmcommon.Hash][]*evmtypes.Log),
 		api:  api,

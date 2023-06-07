@@ -17,11 +17,11 @@ import (
 
 // APIs under the concurrency namespace
 type U256CumulativeHandlers struct {
-	api       interfaces.ApiRouter
+	api       interfaces.EthApiRouter
 	connector *apicommon.CcurlConnector
 }
 
-func NewU256CumulativeHandlers(api interfaces.ApiRouter) *U256CumulativeHandlers {
+func NewU256CumulativeHandlers(api interfaces.EthApiRouter) *U256CumulativeHandlers {
 	return &U256CumulativeHandlers{
 		api:       api,
 		connector: apicommon.NewCCurlConnector("/containers/", api, api.Ccurl()),
