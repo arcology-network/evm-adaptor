@@ -10,7 +10,7 @@ import (
 	evmcommon "github.com/arcology-network/evm/common"
 	evmtypes "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/crypto"
-	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
+	"github.com/arcology-network/vm-adaptor/common"
 	uint256 "github.com/holiman/uint256"
 )
 
@@ -21,10 +21,10 @@ type ImplStateDB struct {
 	tid    uint32 // tx id
 	logs   map[evmcommon.Hash][]*evmtypes.Log
 
-	api interfaces.EthApiRouter
+	api common.EthApiRouter
 }
 
-func NewImplStateDB(api interfaces.EthApiRouter) *ImplStateDB {
+func NewImplStateDB(api common.EthApiRouter) *ImplStateDB {
 	return &ImplStateDB{
 		logs: make(map[evmcommon.Hash][]*evmtypes.Log),
 		api:  api,

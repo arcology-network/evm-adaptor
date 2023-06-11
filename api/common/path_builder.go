@@ -3,7 +3,7 @@ package common
 import (
 	commonlib "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/types"
-	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 
 	"github.com/arcology-network/concurrenturl"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
@@ -11,12 +11,12 @@ import (
 
 // Ccurl connectors for Arcology APIs
 type CcurlConnector struct {
-	apiRouter interfaces.EthApiRouter
+	apiRouter eucommon.EthApiRouter
 	ccurl     *concurrenturl.ConcurrentUrl
 	subDir    string
 }
 
-func NewCCurlConnector(subDir string, api interfaces.EthApiRouter, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
+func NewCCurlConnector(subDir string, api eucommon.EthApiRouter, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
 	return &CcurlConnector{
 		subDir:    subDir,
 		apiRouter: api,
@@ -35,7 +35,7 @@ func (this *CcurlConnector) New(account types.Address, containerId string) bool 
 func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32) bool {
 	accountRoot := commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/")
 	if value, _ := this.ccurl.Peek(accountRoot); value == nil {
-		return this.ccurl.CreateAccount(txIndex, this.ccurl.Platform.Eth10(), string(account)) != nil // Create a new account
+		return this.ccurl.NewAccount(txIndex, this.ccurl.Platform.Eth10(), string(account)) != nil // Create a new account
 	}
 	return true // ALready exists
 }

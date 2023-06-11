@@ -5,7 +5,7 @@ import (
 
 	"github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/types"
-	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
 
 type StateDB interface {
@@ -86,7 +86,7 @@ type EthStorageCache interface {
 
 type KernelAPI interface {
 	AddLog(key, value string)
-	GetLogs() []interfaces.ILog
+	GetLogs() []eucommon.ILog
 	ClearLogs()
 	Prepare(txHash common.Hash)
 	Call(caller, callee common.Address, input []byte, origin common.Address, nonce uint64, blockhash common.Hash) ([]byte, bool)

@@ -3,23 +3,27 @@ pragma solidity ^0.5.0;
 import "./Threading.sol";
 
 contract ThreadingTest {
+    bytes32[2] results;
     function call() public  { 
        bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
 
        Threading mp = new Threading(2);
-       mp.add(address(this), abi.encodeWithSignature("hasher(bytes)", data));
-       mp.add(address(this), abi.encodeWithSignature("hasher(bytes)", data));
+       mp.add(100000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 0,data));
+       mp.add(200000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 1,data));
        require(mp.length() == 2);
        mp.run();
 
        (,bytes memory hash) = mp.get(0);
        assert(bytesToBytes32(hash) == keccak256(data));
+       assert(bytesToBytes32(hash) == results[0]);
+       assert(bytesToBytes32(hash) == results[1]);
 
        mp.clear();
        assert(mp.length() == 0);       
     }
 
-    function hasher(bytes memory data) pure public returns(bytes32){
+    function hasher(uint256 idx, bytes memory data)  public returns(bytes32){
+      results[idx] = keccak256(data);
       return keccak256(data);
     }
 

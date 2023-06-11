@@ -17,20 +17,20 @@ import (
 	compiler "github.com/arcology-network/vm-adaptor/compiler"
 )
 
-func TestConcurrencyWithThreading(t *testing.T) {
+func TestAtomicWithThreading(t *testing.T) {
 	eu, config, db, url, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
 	pyCompiler := project + "/compiler/compiler.py"
-	targetPath := project + "/api/concurrency/"
+	targetPath := project + "/api/atomic/"
 
 	if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/Threading.sol"); err != nil {
 		t.Error(err)
 	}
 
-	code, err := compiler.CompileContracts(pyCompiler, project+"/api/concurrency/concurrency_test.sol", "ConcurrencyDeferredInThreadingTest")
+	code, err := compiler.CompileContracts(pyCompiler, project+"/api/atomic/atomic_test.sol", "AtomicDeferredInThreadingTest")
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}
@@ -60,6 +60,23 @@ func TestConcurrencyWithThreading(t *testing.T) {
 	data := crypto.Keccak256([]byte("call()"))[:4]
 	msg = types.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
 	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	_, transitions = eu.Api().Ccurl().ExportAll()
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if execResult != nil && execResult.Err != nil {
+		t.Error(execResult.Err)
+	}
+
+	if receipt.Status != 1 || err != nil {
+		t.Error("Error: Failed to call!!!", err)
+	}
+
+	data = crypto.Keccak256([]byte("PostCheck()"))[:4]
+	msg = types.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	receipt, execResult, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	_, transitions = eu.Api().Ccurl().ExportAll()
 
 	if err != nil {

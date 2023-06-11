@@ -10,18 +10,19 @@ import (
 	"github.com/arcology-network/concurrenturl/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
-	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
+	"github.com/arcology-network/vm-adaptor/common"
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
 )
 
 // APIs under the concurrency namespace
 type Int256CumulativeHandlers struct {
-	api       interfaces.EthApiRouter
+	api       eucommon.EthApiRouter
 	connector *apicommon.CcurlConnector
 }
 
-func NewInt256CumulativeHandlers(api interfaces.EthApiRouter) *Int256CumulativeHandlers {
+func NewInt256CumulativeHandlers(api eucommon.EthApiRouter) *Int256CumulativeHandlers {
 	return &Int256CumulativeHandlers{
 		api:       api,
 		connector: apicommon.NewCCurlConnector("/containers/", api, api.Ccurl()),
@@ -29,7 +30,7 @@ func NewInt256CumulativeHandlers(api interfaces.EthApiRouter) *Int256CumulativeH
 }
 
 func (this *Int256CumulativeHandlers) Address() [20]byte {
-	return [20]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x86}
+	return common.CUMULATIVE_I256_HANDLER
 }
 
 func (this *Int256CumulativeHandlers) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
