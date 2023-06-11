@@ -45,38 +45,38 @@ contract ThreadingCumulativeU256 {
     
     function call() public {
         Threading mp = new Threading(1);
-        mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
-        mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));   
-        mp.add(address(this), abi.encodeWithSignature("add(uint256)", 1));
+        mp.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 2));
+        mp.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 2));   
+        mp.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 1));
         mp.run();
         require(cumulative.get() == 5);
 
         mp.clear();
-        mp.add(address(this), abi.encodeWithSignature("add(uint256)", 1));
-        mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
-        mp.add(address(this), abi.encodeWithSignature("sub(uint256)", 2));
+        mp.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 1));
+        mp.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 2));
+        mp.add(200000, address(this), abi.encodeWithSignature("sub(uint256)", 2));
         mp.run();
         require(cumulative.get() == 6);
 
         mp.clear();
-        mp.add(address(this), abi.encodeWithSignature("sub(uint256)", 1));
+        mp.add(200000, address(this), abi.encodeWithSignature("sub(uint256)", 1));
         mp.run();
         require(cumulative.get() == 5);
 
         mp.clear();
-        mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
+        mp.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 2));
         mp.run();
         require(cumulative.get() == 7);      
     }
 
     function call1() public {
         Threading mp = new Threading(1);
-        mp.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
+        mp.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 2));
         mp.run();
         require(cumulative.get() == 2);   
 
         mp.clear();
-        mp.add(address(this), abi.encodeWithSignature("sub(uint256)", 1));
+        mp.add(200000, address(this), abi.encodeWithSignature("sub(uint256)", 1));
         mp.run();
         require(cumulative.get() == 1);   
     }
@@ -99,11 +99,11 @@ contract ThreadingCumulativeU256Multi {
     U256Cumulative cumulative = new U256Cumulative(0, 100);     
     function testCase1() public {
         Threading mp1 = new Threading(1);
-        mp1.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
+        mp1.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 2));
         mp1.run();
 
         Threading mp2 = new Threading(1);
-        mp2.add(address(this), abi.encodeWithSignature("add(uint256)", 2));
+        mp2.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 2));
         mp2.run();    
 
         add(2);
