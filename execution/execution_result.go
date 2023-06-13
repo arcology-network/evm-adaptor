@@ -45,6 +45,14 @@ func (this *Result) WriteTo(newTxIdx uint32, targetCache *indexer.WriteCache) {
 
 type Results []*Result
 
+func (this Results) Transitions() []ccurlinterfaces.Univalue {
+	all := []ccurlinterfaces.Univalue{}
+	common.Foreach(this, func(v **Result) {
+		all = append(all, (**v).Transitions...)
+	})
+	return all
+}
+
 func (this Results) DetectConflict() []*Result {
 	accesseVec := common.Concate(this, func(v *Result) []ccurlinterfaces.Univalue {
 		return common.IfThen(
@@ -92,9 +100,9 @@ func (this Results) ToSequence() *Sequence {
 }
 
 // This works with the deferred execution
-type ResultSet map[[32]byte][]*Result
+type ResultDict map[[32]byte][]*Result
 
-func (this *ResultSet) Categorize(results []*Result) [][]*Result {
+func (this *ResultDict) Categorize(results []*Result) [][]*Result {
 	if len(results) == 1 {
 		return [][]*Result{results}
 	}

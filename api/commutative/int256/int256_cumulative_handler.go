@@ -64,12 +64,8 @@ func (this *Int256CumulativeHandlers) new(caller evmcommon.Address, input []byte
 		return []byte{}, false
 	}
 
-	txHash := this.api.TxHash()
 	path := this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id))
-
-	key := path +
-		hex.EncodeToString(txHash[:8]) + "-" + // Tx hash to avoid conflict
-		string(this.api.GenCcElemUID()) // Element ID
+	key := path + string(this.api.GenCcElemUID()) // Element ID
 
 	// val, valErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
 	min, minErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)

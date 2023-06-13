@@ -127,9 +127,7 @@ func (this *BytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, 
 // Push a new element into the container
 func (this *BytesHandlers) push(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
 	path := this.buildPath(caller, input) // BytesHandlers path
-
-	txHash := this.api.TxHash()
-	key := path + hex.EncodeToString(txHash[:8]) + "-" + string(this.api.GenCcElemUID())
+	key := path + string(this.api.GenCcElemUID())
 
 	value, err := abi.Decode(input, 1, []byte{}, 2, math.MaxInt)
 	if value == nil || err != nil {
