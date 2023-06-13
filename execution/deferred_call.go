@@ -13,6 +13,7 @@ type DeferredCall struct {
 	FuncCallData []byte // function Signature
 	gasLimit     uint64
 	// gasPrice
+	Message *StandardMessage
 }
 
 func NewDeferredCall(gasLimit uint64, from, targetAddr [20]byte, input []byte, api eucommon.EthApiRouter) *DeferredCall {
@@ -25,5 +26,6 @@ func NewDeferredCall(gasLimit uint64, from, targetAddr [20]byte, input []byte, a
 		targetAddr,
 		input,
 		gasLimit,
+		nil,
 	}
 }

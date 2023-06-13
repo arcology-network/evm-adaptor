@@ -39,7 +39,7 @@ func NewJob(ID uint32, from, to evmcommon.Address, funCallData []byte, gaslimit 
 		0,
 		new(big.Int).SetUint64(0), // Amount to transfer
 		gaslimit,
-		parentApiRouter.Message().GasPrice(),
+		parentApiRouter.Message().GasPrice(), // gas price
 		funCallData,
 		nil,
 		false, // Don't checking nonce
