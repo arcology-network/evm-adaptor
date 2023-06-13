@@ -81,8 +81,12 @@ func (this *Job) Run(coinbase [20]byte, snapshotUrl ccurlinterfaces.Datastore) *
 	})
 
 	return &Result{
-		TxHash:      common.IfThenDo1st(this.Receipt != nil, func() evmcommon.Hash { return this.Receipt.TxHash }, evmcommon.Hash{}),
-		Deferred:    common.IfThenDo1st(this.ApiRouter.GetReserved() != nil, func() *DeferredCall { return this.ApiRouter.GetReserved().(*DeferredCall) }, nil),
+		TxHash: common.IfThenDo1st(this.Receipt != nil, func() evmcommon.Hash { return this.Receipt.TxHash }, evmcommon.Hash{}),
+		Deferred: common.IfThenDo1st(this.ApiRouter.GetReserved() != nil,
+			func() *StandardMessage {
+				return this.ApiRouter.GetReserved().(*StandardMessage)
+			},
+			nil),
 		Transitions: transitions, // Transitions + Accesses
 		Err:         common.IfThenDo1st(prechkErr == nil, func() error { return this.EvmResult.Err }, prechkErr),
 		GasUsed:     common.IfThenDo1st(this.Receipt != nil, func() uint64 { return this.Receipt.GasUsed }, 0),

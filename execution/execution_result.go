@@ -3,23 +3,18 @@ package execution
 import (
 	// "github.com/arcology-network/common-lib/codec"
 
-	"crypto/sha256"
 	"errors"
-	"math/big"
 
 	common "github.com/arcology-network/common-lib/common"
-	commontypes "github.com/arcology-network/common-lib/types"
 	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
-	evmcommon "github.com/arcology-network/evm/common"
-	evmcoretypes "github.com/arcology-network/evm/core/types"
 )
 
 type Result struct {
 	TxIndex     uint32
 	TxHash      [32]byte
-	Deferred    *DeferredCall
+	Deferred    *StandardMessage
 	Transitions []ccurlinterfaces.Univalue
 	Err         error
 	GasUsed     uint64
@@ -75,28 +70,28 @@ func (this Results) ToSequence() *Sequence {
 		return nil
 	}
 
-	to := evmcommon.Address(this[0].Deferred.Addr)
-	evmMsg := evmcoretypes.NewMessage(
-		this[0].Deferred.From, // From the system account
-		&to,
-		0,
-		big.NewInt(0),
-		1e15,
-		big.NewInt(1),
-		this[0].Deferred.FuncCallData,
-		nil,
-		false,
-	)
+	// to := evmcommon.Address(this[0].Deferred.Addr)
+	// evmMsg := evmcoretypes.NewMessage(
+	// 	this[0].Deferred.From, // From the system account
+	// 	&to,
+	// 	0,
+	// 	big.NewInt(0),
+	// 	1e15,
+	// 	big.NewInt(1),
+	// 	this[0].Deferred.FuncCallData,
+	// 	nil,
+	// 	false,
+	// )
 
 	predecessors := make([][32]byte, 0, len(this))
-	common.Foreach(this, func(v **Result) { predecessors = append(predecessors, (**v).TxHash) })
+	common.Foreach(this, func(v **Result) { predecessors = append(predecessors, (**v).Deferred.TxHash) })
 
-	msg := &StandardMessage{
-		TxHash: sha256.Sum256(this[0].Deferred.FuncCallData),
-		Native: &evmMsg,
-		Source: commontypes.TX_SOURCE_DEFERRED,
-	}
-	return NewSequence([32]byte{}, predecessors, []*StandardMessage{msg}, true)
+	// msg := &StandardMessage{
+	// 	TxHash: sha256.Sum256(this[0].Deferred.FuncCallData),
+	// 	Native: &evmMsg,
+	// 	Source: commontypes.TX_SOURCE_DEFERRED,
+	// }
+	return NewSequence([32]byte{}, predecessors, []*StandardMessage{this[0].Deferred}, true)
 }
 
 // This works with the deferred execution
@@ -112,11 +107,11 @@ func (this *ResultDict) Categorize(results []*Result) [][]*Result {
 			continue
 		}
 
-		vec := (*this)[v.Deferred.Signature]
+		vec := (*this)[v.Deferred.GroupBy]
 		if vec != nil {
 			vec = []*Result{}
 		}
-		(*this)[v.Deferred.Signature] = append(vec, v)
+		(*this)[v.Deferred.GroupBy] = append(vec, v)
 	}
 	return common.MapValues((map[[32]byte][]*Result)(*this))
 }

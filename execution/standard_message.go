@@ -9,9 +9,10 @@ const (
 )
 
 type StandardMessage struct {
-	TxHash [32]byte
-	Native *evmcoretypes.Message
-	Source uint8
+	TxHash  [32]byte
+	GroupBy [32]byte
+	Native  *evmcoretypes.Message
+	Source  uint8
 }
 
 // type StandardMessages []*StandardMessage

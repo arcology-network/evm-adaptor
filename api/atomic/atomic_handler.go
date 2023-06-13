@@ -1,13 +1,19 @@
 package concurrency
 
 import (
+	"crypto/sha256"
 	"math"
+	"math/big"
 
+	commonlibcommon "github.com/arcology-network/common-lib/common"
+	commonlibtypes "github.com/arcology-network/common-lib/types"
 	evmcommon "github.com/arcology-network/evm/common"
+	evmcoretypes "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/vm-adaptor/abi"
 	"github.com/arcology-network/vm-adaptor/common"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	execution "github.com/arcology-network/vm-adaptor/execution"
+	"golang.org/x/crypto/sha3"
 )
 
 // APIs under the concurrency namespace
@@ -60,7 +66,30 @@ func (this *AtomicHandler) deferred(caller evmcommon.Address, input []byte) ([]b
 		return []byte{}, false
 	}
 
-	this.api.SetReserved(execution.NewDeferredCall(gasLimit, common.ATOMIC_HANDLER, calleeAddr, funCallData, this.api)) // System address pays for it
+	hierarchy := this.api.VM().ArcologyNetworkAPIs.CallHierarchy()
+	groupBy := sha3.Sum256(commonlibcommon.Flatten(commonlibcommon.Reverse[[]byte](&hierarchy)))
+
+	addr := evmcommon.Address(calleeAddr)
+	evmMsg := evmcoretypes.NewMessage(
+		common.ATOMIC_HANDLER, // From the system account
+		&addr,
+		0,
+		big.NewInt(0),
+		gasLimit,
+		big.NewInt(1),
+		funCallData,
+		nil,
+		false,
+	)
+
+	msg := &execution.StandardMessage{
+		TxHash:  sha256.Sum256(funCallData),
+		GroupBy: groupBy,
+		Native:  &evmMsg,
+		Source:  commonlibtypes.TX_SOURCE_DEFERRED,
+	}
+
+	this.api.SetReserved(msg) // System address pays for it
 	return []byte{}, true
 }
 
