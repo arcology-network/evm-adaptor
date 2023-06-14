@@ -104,7 +104,6 @@ contract AtomicDeferredBoolContainerTest {
     }
 }
 
-
 contract AtomicMultiDeferredWithBoolContainerTest {  
      Bool container = new Bool();
      U256Cumulative u256Comulative = new U256Cumulative(0, 100);
@@ -112,23 +111,23 @@ contract AtomicMultiDeferredWithBoolContainerTest {
      bytes32[2] results;
      Atomic atomic = new Atomic(); 
      function call() public  { 
-       bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
+        bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
    
-       Threading mp = new Threading(2);
-       mp.add(100000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 0,data));
-       mp.add(200000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 1,data));
-       mp.add(200000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 2,data));
+        Threading mp = new Threading(2);
+        mp.add(100000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 0,data));
+        mp.add(200000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 1,data));
+        mp.add(200000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 2,data));
 
-       mp.add(400000, address(this), abi.encodeWithSignature("acculm(uint256)", 10));
-       mp.add(500000, address(this), abi.encodeWithSignature("acculm(uint256)", 22));
+        mp.add(400000, address(this), abi.encodeWithSignature("acculm(uint256)", 10));
+        mp.add(500000, address(this), abi.encodeWithSignature("acculm(uint256)", 22));
 
-       require(mp.length() == 5);
-       require(container.length() == 0);
+        require(mp.length() == 5);
+        require(container.length() == 0);
 
-       mp.run();      
-       require(container.length() == 8);       
-       assert(results[0] == keccak256("0"));
-       assert(results[1] == keccak256("1"));
+        mp.run();      
+        require(container.length() == 8);       
+        assert(results[0] == keccak256("0"));
+        assert(results[1] == keccak256("1"));
     }
 
     function acculm(uint256 amount) public {
@@ -167,7 +166,6 @@ contract AtomicMultiDeferredWithBoolContainerTest {
 
 contract AtomicMultiDeferreOneConflictTest {  
      Bool container = new Bool();
-     U256Cumulative u256Comulative = new U256Cumulative(0, 100);
 
      bytes32[2] results;
      Atomic atomic = new Atomic(); 
@@ -176,38 +174,26 @@ contract AtomicMultiDeferreOneConflictTest {
    
        Threading mp = new Threading(2);
        mp.add(100000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 0,data));
-    //    mp.add(200000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 1,data));
-    //    mp.add(200000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 2,data));
-
        mp.add(400000, address(this), abi.encodeWithSignature("acculm(uint256)", 10));
        mp.add(500000, address(this), abi.encodeWithSignature("acculm(uint256)", 22)); // 3 + 2 
-
-    //    require(mp.length() == 5);
        require(container.length() == 0);
-
        mp.run();      
-    //    require(container.length() == 10);       
+   
        assert(results[0] == keccak256("0"));
        assert(results[1] == keccak256("1"));
 
-    //    container.push(false);
-    //    container.push(false);
-    //    require(container.length() == 3); 
-    //    require(u256Comulative.get() == 32);
-
-    //    mp.clear();
-    //    assert(mp.length() == 0);      
+       container.push(false);
+       container.push(false);
+       require(container.length() == 19);    
     }
 
     function acculm(uint256 amount) public {
-    //    u256Comulative.add(amount);
        container.push(true);
        container.push(true);
        atomic.deferred(300000, address(this), abi.encodeWithSignature("acculmDeferred()"));
     }
 
     function acculmDeferred() public {
-        // u256Comulative.add(5);
         container.push(true);
         container.push(true);
         container.push(true);
@@ -224,22 +210,13 @@ contract AtomicMultiDeferreOneConflictTest {
          container.push(true);
          container.push(true);
          results[idx] = keccak256(data);
-      //  atomic.deferred(300000, address(this), abi.encodeWithSignature("hasherDeferred()"));
+         atomic.deferred(300000, address(this), abi.encodeWithSignature("hasherDeferred()"));
     }
 
     function hasherDeferred() public {
        container.push(true);
-       container.push(true);
-       container.push(true);
-        container.push(true);
        results[0] = keccak256("0");
        results[1] = keccak256("1");
-    }
-
-    function PostCheck() public  {
-        assert(results[0] == keccak256("0"));
-        assert(results[1] == keccak256("1"));
-        require(u256Comulative.get() == 32);
     }
 
     function bytesToBytes32(bytes memory b) private pure returns (bytes32) {
