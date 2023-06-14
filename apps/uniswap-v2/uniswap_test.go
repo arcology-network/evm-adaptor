@@ -7,26 +7,32 @@ import (
 
 	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
 	"github.com/arcology-network/concurrenturl"
-	urlcommon "github.com/arcology-network/concurrenturl/common"
 	"github.com/arcology-network/concurrenturl/commutative"
-	"github.com/arcology-network/concurrenturl/interfaces"
-	curstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
-	evmtypes "github.com/arcology-network/evm/core/types"
-	"github.com/arcology-network/evm/crypto"
+
 	// adaptor "github.com/arcology-network/vm-adaptor/evm"
+	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
+	ccapi "github.com/arcology-network/vm-adaptor/api"
+	vmcommon "github.com/arcology-network/vm-adaptor/common"
+	"github.com/arcology-network/vm-adaptor/eth"
+	"github.com/arcology-network/vm-adaptor/tests"
 )
 
 func TestUniswapFunctionTest(t *testing.T) {
+	coinbase := vmcommon.Coinbase
+	owner := vmcommon.Owner
+	user1 := vmcommon.Alice
+	user2 := vmcommon.Bob
+
 	persistentDB := cachedstorage.NewDataStore()
-	meta := commutative.NewPath()
-	persistentDB.Inject((&concurrenturl.Platform{}).Eth10Account(), meta)
-	db := curstorage.NewTransientDB(persistentDB)
+	persistentDB.Inject((&concurrenturl.Platform{}).Eth10Account(), commutative.NewPath())
+	db := ccurlstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	api := adaptor.NewAPI(db, url)
-	statedb := adaptor.NewStateDB(api, db, url)
-	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
+	api := ccapi.NewAPI(url)
+
+	statedb := eth.NewImplStateDB(api)
+	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(coinbase)
 	statedb.CreateAccount(owner)
 	statedb.AddBalance(owner, new(big.Int).SetUint64(1e18))
@@ -37,70 +43,70 @@ func TestUniswapFunctionTest(t *testing.T) {
 	_, transitions := url.ExportAll()
 
 	// Deploy UniswapV2Factory.
-	eu, config := prepare(db, 10000000, transitions, []uint32{0})
-	transitions, receipt := deploy(eu, config, owner, 0, uniswapFactoryCode, owner.Bytes())
+	eu, config := tests.Prepare(db, 10000000, transitions, []uint32{0})
+	transitions, receipt, _ := tests.Deploy(eu, config, owner, 0, uniswapFactoryCode, owner.Bytes())
 	// t.Log("\n" + FormatTransitions(transitions))
 	t.Log(receipt)
 	factoryAddress := receipt.ContractAddress
 	t.Log(factoryAddress)
 
 	// Deploy two tokens.
-	eu, config = prepare(db, 10000001, transitions, []uint32{1})
-	transitions, receipt = deploy(eu, config, owner, 1, erc20TokenCode, []byte("TKA"))
+	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{1})
+	transitions, receipt, _ = tests.Deploy(eu, config, owner, 1, erc20TokenCode, []byte("TKA"))
 	// t.Log("\n", FormatTransitions(transitions))
 	t.Log(receipt)
 	token1Address := receipt.ContractAddress
 	t.Log(token1Address)
 
-	eu, config = prepare(db, 10000002, transitions, []uint32{2})
-	transitions, receipt = deploy(eu, config, owner, 2, erc20TokenCode, []byte("TKB"))
+	eu, config = tests.Prepare(db, 10000002, transitions, []uint32{2})
+	transitions, receipt, _ = tests.Deploy(eu, config, owner, 2, erc20TokenCode, []byte("TKB"))
 	// t.Log("\n", FormatTransitions(transitions))
 	t.Log(receipt)
 	token2Address := receipt.ContractAddress
 	t.Log(token2Address)
 
 	// Call createPair.
-	eu, config = prepare(db, 10000003, transitions, []uint32{3})
-	transitions, receipt = run(eu, config, &owner, &factoryAddress, 3, true, "createPair(address,address)", token1Address.Bytes(), token2Address.Bytes())
+	eu, config = tests.Prepare(db, 10000003, transitions, []uint32{3})
+	transitions, receipt = tests.Run(eu, config, &owner, &factoryAddress, 3, true, "createPair(address,address)", token1Address.Bytes(), token2Address.Bytes())
 	// t.Log("\n" + FormatTransitions(transitions))
 	t.Log(receipt)
 	pairAddress := evmcommon.BytesToAddress(receipt.Logs[0].Data[12:32])
 	t.Log(pairAddress)
 
 	// Deploy UniswapV2Router02.
-	eu, config = prepare(db, 10000004, transitions, []uint32{4})
-	transitions, receipt = deploy(eu, config, owner, 4, uniswapRouterCode, factoryAddress.Bytes(), []byte{})
+	eu, config = tests.Prepare(db, 10000004, transitions, []uint32{4})
+	transitions, receipt, _ = tests.Deploy(eu, config, owner, 4, uniswapRouterCode, factoryAddress.Bytes(), []byte{})
 	// t.Log("\n", FormatTransitions(transitions))
 	t.Log(receipt)
 	routerAddress := receipt.ContractAddress
 	t.Log(routerAddress)
 
 	// Mint on TKA and TKB for user1.
-	eu, config = prepare(db, 10000005, transitions, []uint32{5})
-	transitions, receipt = run(eu, config, &owner, &token1Address, 5, true, "mint(address,uint256)", user1.Bytes(), []byte{1, 0, 0, 0, 0})
+	eu, config = tests.Prepare(db, 10000005, transitions, []uint32{5})
+	transitions, receipt = tests.Run(eu, config, &owner, &token1Address, 5, true, "mint(address,uint256)", user1.Bytes(), []byte{1, 0, 0, 0, 0})
 	// t.Log("\n" + FormatTransitions(transitions))
 	t.Log(receipt)
 
-	eu, config = prepare(db, 10000006, transitions, []uint32{6})
-	transitions, receipt = run(eu, config, &owner, &token2Address, 6, true, "mint(address,uint256)", user1.Bytes(), []byte{1, 0, 0, 0, 0})
+	eu, config = tests.Prepare(db, 10000006, transitions, []uint32{6})
+	transitions, receipt = tests.Run(eu, config, &owner, &token2Address, 6, true, "mint(address,uint256)", user1.Bytes(), []byte{1, 0, 0, 0, 0})
 	// t.Log("\n" + FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Alice approve UniswapV2Router02 to call transferFrom.
 	// This is the preparation for calling addLiquidity.
-	eu, config = prepare(db, 10000007, transitions, []uint32{7})
-	transitions, receipt = run(eu, config, &user1, &token1Address, 0, true, "approve(address,uint256)", routerAddress.Bytes(), []byte{1, 0, 0, 0})
+	eu, config = tests.Prepare(db, 10000007, transitions, []uint32{7})
+	transitions, receipt = tests.Run(eu, config, &user1, &token1Address, 0, true, "approve(address,uint256)", routerAddress.Bytes(), []byte{1, 0, 0, 0})
 	// t.Log("\n" + FormatTransitions(transitions))
 	t.Log(receipt)
 
-	eu, config = prepare(db, 10000008, transitions, []uint32{1})
-	transitions, receipt = run(eu, config, &user1, &token2Address, 1, true, "approve(address,uint256)", routerAddress.Bytes(), []byte{1, 0, 0, 0})
+	eu, config = tests.Prepare(db, 10000008, transitions, []uint32{1})
+	transitions, receipt = tests.Run(eu, config, &user1, &token2Address, 1, true, "approve(address,uint256)", routerAddress.Bytes(), []byte{1, 0, 0, 0})
 	// t.Log("\n" + FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Alice call addLiquidity.
-	eu, config = prepare(db, 10000009, transitions, []uint32{2})
-	transitions, receipt = run(
+	eu, config = tests.Prepare(db, 10000009, transitions, []uint32{2})
+	transitions, receipt = tests.Run(
 		eu, config, &user1, &routerAddress, 2, true,
 		"addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256)",
 		token1Address.Bytes(),
@@ -135,21 +141,21 @@ func TestUniswapFunctionTest(t *testing.T) {
 	}
 
 	// Mint on TKA for user2.
-	eu, config = prepare(db, 10000010, transitions, []uint32{3})
-	transitions, receipt = run(eu, config, &owner, &token1Address, 7, true, "mint(address,uint256)", user2.Bytes(), []byte{1, 0, 0, 0, 0})
+	eu, config = tests.Prepare(db, 10000010, transitions, []uint32{3})
+	transitions, receipt = tests.Run(eu, config, &owner, &token1Address, 7, true, "mint(address,uint256)", user2.Bytes(), []byte{1, 0, 0, 0, 0})
 	// t.Log("\n" + FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Bob approve UniswapV2Router02 to call transferFrom.
 	// This is the preparation for calling swap.
-	eu, config = prepare(db, 10000011, transitions, []uint32{8})
-	transitions, receipt = run(eu, config, &user2, &token1Address, 0, true, "approve(address,uint256)", routerAddress.Bytes(), []byte{1, 0})
+	eu, config = tests.Prepare(db, 10000011, transitions, []uint32{8})
+	transitions, receipt = tests.Run(eu, config, &user2, &token1Address, 0, true, "approve(address,uint256)", routerAddress.Bytes(), []byte{1, 0})
 	// t.Log("\n" + FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Bob call swapExactTokensForTokens.
-	eu, config = prepare(db, 10000012, transitions, []uint32{1})
-	transitions, receipt = run(
+	eu, config = tests.Prepare(db, 10000012, transitions, []uint32{1})
+	transitions, receipt = tests.Run(
 		eu, config, &user2, &routerAddress, 1, true,
 		"swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
 		[]byte{1, 0},
@@ -161,7 +167,7 @@ func TestUniswapFunctionTest(t *testing.T) {
 		token1Address.Bytes(),
 		token2Address.Bytes(),
 	)
-	t.Log("\n" + FormatTransitions(transitions))
+	t.Log("\n" + vmcommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	if !bytes.Equal(receipt.Logs[0].Topics[1][12:], user2.Bytes()) || // token1Address.Transfer(*from*, to, value)
 		!bytes.Equal(receipt.Logs[0].Topics[2][12:], pairAddress.Bytes()) || // token1Address.Transfer(from, *to*, value)
@@ -181,54 +187,41 @@ func TestUniswapFunctionTest(t *testing.T) {
 	}
 }
 
-func prepare(db urlcommon.DatastoreInterface, height uint64, transitions []interfaces.Univalue, txs []uint32) (*adaptor.EU, *adaptor.Config) {
-	url := concurrenturl.NewConcurrentUrl(db)
-	url.Import(transitions)
-	url.PostImport()
-	url.Commit(txs)
-	api := adaptor.NewAPI(db, url)
-	statedb := adaptor.NewStateDB(api, db, url)
+// func prepare(db interfaces.Datastore, height uint64, transitions []interfaces.Univalue, txs []uint32) (*vmadaptor.EU, *vmadaptor.Config) {
+// 	url := concurrenturl.NewConcurrentUrl(db)
+// 	url.Import(transitions)
+// 	url.Sort()
+// 	url.Commit(txs)
+// 	api := ccapi.NewAPI(url)
+// 	statedb := eth.NewImplStateDB(api)
 
-	config := MainTestConfig()
-	config.Coinbase = &coinbase
-	config.BlockNumber = new(big.Int).SetUint64(height)
-	config.Time = new(big.Int).SetUint64(height)
+// 	config := vmadaptor.NewConfig()
+// 	config.Coinbase = &vmcommon.Coinbase
+// 	config.BlockNumber = new(big.Int).SetUint64(height)
+// 	config.Time = new(big.Int).SetUint64(height)
+// 	return vmadaptor.NewEU(config.ChainConfig, *config.VMConfig, statedb, api), config
+// }
 
-	return adaptor.NewEU(config.ChainConfig, *config.VMConfig, config.Chain, statedb, api, db, url), config
-}
+// func deploy(eu *vmadaptor.EU, config *vmadaptor.Config, owner evmcommon.Address, nonce uint64, code string, args ...[]byte) ([]interfaces.Univalue, *evmtypes.Receipt) {
+// 	data := evmcommon.Hex2Bytes(code)
+// 	for _, arg := range args {
+// 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
+// 	}
+// 	msg := core.NewMessage(owner, nil, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+// 	receipt, _, _ := eu.Run(evmcommon.BytesToHash([]byte{byte(nonce + 1), byte(nonce + 1), byte(nonce + 1)}), int(nonce+1), &msg, vmadaptor.NewEVMBlockContext(config), vmadaptor.NewEVMTxContext(msg))
+// 	_, transitions := eu.Api().Ccurl().ExportAll()
 
-func deploy(eu *adaptor.EU, config *adaptor.Config, owner evmcommon.Address, nonce uint64, code string, args ...[]byte) ([]interfaces.Univalue, *evmtypes.Receipt) {
-	data := evmcommon.Hex2Bytes(code)
-	for _, arg := range args {
-		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
-	}
-	msg := evmtypes.NewMessage(owner, nil, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-	_, _, receipt := eu.Run(evmcommon.BytesToHash([]byte{byte(nonce + 1), byte(nonce + 1), byte(nonce + 1)}), int(nonce+1), &msg, adaptor.NewEVMBlockContext(config), adaptor.NewEVMTxContext(msg))
-	_, transitions := eu.Api().Ccurl().ExportAll()
+// 	return transitions, receipt
+// }
 
-	return transitions, receipt
-}
+// func run(eu *vmadaptor.EU, config *vmadaptor.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]interfaces.Univalue, *evmtypes.Receipt) {
+// 	data := crypto.Keccak256([]byte(function))[:4]
+// 	for _, arg := range args {
+// 		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
+// 	}
+// 	msg := core.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
+// 	receipt, _, _ := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, vmadaptor.NewEVMBlockContext(config), vmadaptor.NewEVMTxContext(msg))
+// 	_, transitions := eu.Api().Ccurl().ExportAll()
 
-func run(eu *adaptor.EU, config *adaptor.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]interfaces.Univalue, *evmtypes.Receipt) {
-	data := crypto.Keccak256([]byte(function))[:4]
-	for _, arg := range args {
-		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
-	}
-	msg := evmtypes.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
-	_, _, receipt := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, adaptor.NewEVMBlockContext(config), adaptor.NewEVMTxContext(msg))
-	_, transitions := eu.Api().Ccurl().ExportAll()
-
-	return transitions, receipt
-}
-
-func runEx(eu *adaptor.EU, config *adaptor.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]interfaces.Univalue, []interfaces.Univalue, *evmtypes.Receipt) {
-	data := crypto.Keccak256([]byte(function))[:4]
-	for _, arg := range args {
-		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
-	}
-	msg := evmtypes.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
-	_, _, receipt := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, adaptor.NewEVMBlockContext(config), adaptor.NewEVMTxContext(msg))
-	accesses, transitions := eu.Api().Ccurl().ExportAll()
-
-	return accesses, transitions, receipt
-}
+// 	return transitions, receipt
+// }

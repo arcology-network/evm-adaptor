@@ -12,6 +12,7 @@ import (
 	curstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
+	ccapi "github.com/arcology-network/vm-adaptor/api"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/compiler"
 	cceueth "github.com/arcology-network/vm-adaptor/eth"
@@ -25,8 +26,10 @@ func TestNativeContractSameBlock(t *testing.T) {
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	statedb := cceueth.NewImplStateDB(url)
-	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
+	api := ccapi.NewAPI(url)
+
+	statedb := cceueth.NewImplStateDB(api)
+	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(eucommon.Coinbase)
 	// User 1
 	statedb.CreateAccount(eucommon.Alice)
@@ -41,12 +44,12 @@ func TestNativeContractSameBlock(t *testing.T) {
 	// ================================== Compile ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(filepath.Dir(currentPath))
-	pyCompiler := project + "/compiler/compiler.py"
-	// targetPath := project + "/api/noncommutative/"
+	targetPath := project + "/apps/native"
 
-	bytecode, err := compiler.CompileContracts(pyCompiler, currentPath+"/NativeStorage.sol", "NativeStorage")
+	bytecode, err := compiler.CompileContracts(targetPath, "NativeStorage.sol", "0.8.19", "NativeStorage", false)
 	if err != nil || len(bytecode) == 0 {
 		t.Error("Error: Failed to generate the byte code")
+		return
 	}
 
 	// Compile
@@ -97,8 +100,9 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 	db := curstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	statedb := cceueth.NewImplStateDB(url)
-	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
+	api := ccapi.NewAPI(url)
+	statedb := cceueth.NewImplStateDB(api)
+	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(eucommon.Coinbase)
 	// User 1
 	statedb.CreateAccount(eucommon.Alice)
@@ -113,10 +117,9 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 	// // ================================== Compile ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(filepath.Dir(currentPath))
-	pyCompiler := project + "/compiler/compiler.py"
-	// targetPath := project + "/api/noncommutative/"
+	targetPath := project + "/apps/native"
 
-	bytecode, err := compiler.CompileContracts(pyCompiler, currentPath+"/NativeStorage.sol", "NativeStorage")
+	bytecode, err := compiler.CompileContracts(targetPath, "NativeStorage.sol", "0.8.19", "NativeStorage", false)
 	if err != nil || len(bytecode) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}

@@ -10,7 +10,6 @@ import (
 	"github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/core/vm"
-	corevm "github.com/arcology-network/evm/core/vm"
 	"github.com/arcology-network/evm/crypto"
 	"github.com/arcology-network/evm/params"
 	eth "github.com/arcology-network/vm-adaptor/eth"
@@ -21,7 +20,7 @@ type EU struct {
 	evm         *vm.EVM              // Original ETH EVM
 	statedb     vm.StateDB           // Arcology Implementation of Eth StateDB
 	api         interfaces.ApiRouter // Arcology API calls
-	CallContext *corevm.ScopeContext // Arcology API calls
+	CallContext *vm.ScopeContext     // Arcology API calls
 }
 
 func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.StateDB, api interfaces.ApiRouter) *EU {
@@ -59,8 +58,13 @@ func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *core.Message, block
 	gasPool := core.GasPool(math.MaxUint64)
 
 	result, err := core.ApplyMessage(this.evm, msg, &gasPool) // Execute the transcation
+	// if err != nil {
+	// 	return nil, nil, err // Failed in Precheck before tx execution started
+	// }
 	if err != nil {
-		return nil, nil, err // Failed in Precheck before tx execution started
+		result = &core.ExecutionResult{
+			Err: err,
+		}
 	}
 
 	assertLog := GetAssertion(result.ReturnData) // Get the assertion

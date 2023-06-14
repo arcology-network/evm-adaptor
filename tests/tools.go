@@ -22,7 +22,6 @@ import (
 	ccapi "github.com/arcology-network/vm-adaptor/api"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/eth"
-	cceueth "github.com/arcology-network/vm-adaptor/eth"
 )
 
 func Prepare(db interfaces.Datastore, height uint64, transitions []interfaces.Univalue, txs []uint32) (*cceu.EU, *cceu.Config) {
@@ -34,7 +33,7 @@ func Prepare(db interfaces.Datastore, height uint64, transitions []interfaces.Un
 	}
 
 	api := ccapi.NewAPI(url)
-	statedb := cceueth.NewImplStateDB(api)
+	statedb := eth.NewImplStateDB(api)
 
 	config := MainTestConfig()
 	config.Coinbase = &eucommon.Coinbase
@@ -125,6 +124,30 @@ func NewTestEU() (*cceu.EU, *cceu.Config, interfaces.Datastore, *concurrenturl.C
 	config.Time = new(big.Int).SetUint64(10000000)
 
 	return cceu.NewEU(config.ChainConfig, *config.VMConfig, statedb, api), config, db, url, transitions
+}
+
+func Run(eu *cceu.EU, config *cceu.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]interfaces.Univalue, *evmtypes.Receipt) {
+	data := crypto.Keccak256([]byte(function))[:4]
+	for _, arg := range args {
+		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
+	}
+	msg := core.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
+	receipt, _, _ := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	_, transitions := eu.Api().Ccurl().ExportAll()
+
+	return transitions, receipt
+}
+
+func RunEx(eu *cceu.EU, config *cceu.Config, from, to *evmcommon.Address, nonce uint64, checkNonce bool, function string, args ...[]byte) ([]interfaces.Univalue, []interfaces.Univalue, *evmtypes.Receipt) {
+	data := crypto.Keccak256([]byte(function))[:4]
+	for _, arg := range args {
+		data = append(data, evmcommon.BytesToHash(arg).Bytes()...)
+	}
+	msg := core.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
+	receipt, _, _ := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	accesses, transitions := eu.Api().Ccurl().ExportAll()
+
+	return accesses, transitions, receipt
 }
 
 // func NewTestEUwithUrl(db interfaces.Datastore, ccurl *concurrenturl.ConcurrentUrl) (*cceu.EU, *cceu.Config, interfaces.Datastore, *concurrenturl.ConcurrentUrl) {

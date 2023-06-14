@@ -113,3 +113,18 @@ func DetectConflict(transitions []interfaces.Univalue) ([]uint32, []uint32, []bo
 	arbitrator.Clear(engine)
 	return txs, groups, flags
 }
+
+// func prepare(db interfaces.Datastore, height uint64, transitions []interfaces.Univalue, txs []uint32) (*vmadaptor.EU, *vmadaptor.Config) {
+// 	url := concurrenturl.NewConcurrentUrl(db)
+// 	url.Import(transitions)
+// 	url.Sort()
+// 	url.Commit(txs)
+// 	api := ccapi.NewAPI(url)
+// 	statedb := eth.NewImplStateDB(api)
+
+// 	config := vmadaptor.NewConfig()
+// 	config.Coinbase = &Coinbase
+// 	config.BlockNumber = new(big.Int).SetUint64(height)
+// 	config.Time = new(big.Int).SetUint64(height)
+// 	return vmadaptor.NewEU(config.ChainConfig, *config.VMConfig, statedb, api), config
+// }
