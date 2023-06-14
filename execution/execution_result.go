@@ -4,6 +4,7 @@ import (
 	// "github.com/arcology-network/common-lib/codec"
 
 	"errors"
+	"fmt"
 
 	common "github.com/arcology-network/common-lib/common"
 	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
@@ -12,6 +13,7 @@ import (
 )
 
 type Result struct {
+	GroupID     uint32
 	TxIndex     uint32
 	TxHash      [32]byte
 	Deferred    *StandardMessage
@@ -48,21 +50,37 @@ func (this Results) Transitions() []ccurlinterfaces.Univalue {
 	return all
 }
 
-func (this Results) DetectConflict() []*Result {
-	accesseVec := common.Concate(this, func(v *Result) []ccurlinterfaces.Univalue {
-		return common.IfThen(
-			v.Err == nil,
-			indexer.Univalues(common.Clone(v.Transitions)).To(indexer.IPCAccess{}),
-			[]ccurlinterfaces.Univalue{})
+func (this Results) SetGroupIDs(GroupID uint32) {
+	common.Foreach(this, func(v **Result) {
+		(**v).GroupID = GroupID
 	})
-	dict := arbitrator.Conflicts((&arbitrator.Arbitrator{}).Detect(accesseVec)).ToDict()
+}
 
-	common.Foreach(this, func(result **Result) {
-		if _, conflict := (dict)[(**result).TxIndex]; conflict { // Label conflicts
-			(**result).Err = errors.New("Error: Conflicts detected in state accesses")
+func (this Results) DetectConflict() ([]*Result, int) {
+	groupIDs := []uint32{}
+	accesseVec := []ccurlinterfaces.Univalue{}
+	for _, v := range this {
+		if v.Err == nil {
+			groupIDs = append(groupIDs, common.Fill(make([]uint32, len(v.Transitions)), v.GroupID)...)
+			accesseVec = append(accesseVec, indexer.Univalues(common.Clone(v.Transitions)).To(indexer.IPCAccess{})...)
 		}
-	})
-	return this
+	}
+
+	conflicInfo := arbitrator.Conflicts((&arbitrator.Arbitrator{}).Detect(groupIDs, accesseVec))
+	dict := conflicInfo.ToDict()
+
+	if len(dict) > 0 {
+		fmt.Println("Conflict")
+	}
+
+	totalConflict := 0
+	for i := 0; i < len(this); i++ {
+		if _, conflict := (dict)[this[i].TxIndex]; conflict {
+			this[i].Err = errors.New("Error: Conflicts detected in state accesses")
+			totalConflict++
+		}
+	}
+	return this, totalConflict
 }
 
 func (this Results) ToSequence() *Sequence {
@@ -70,27 +88,8 @@ func (this Results) ToSequence() *Sequence {
 		return nil
 	}
 
-	// to := evmcommon.Address(this[0].Deferred.Addr)
-	// evmMsg := evmcoretypes.NewMessage(
-	// 	this[0].Deferred.From, // From the system account
-	// 	&to,
-	// 	0,
-	// 	big.NewInt(0),
-	// 	1e15,
-	// 	big.NewInt(1),
-	// 	this[0].Deferred.FuncCallData,
-	// 	nil,
-	// 	false,
-	// )
-
 	predecessors := make([][32]byte, 0, len(this))
 	common.Foreach(this, func(v **Result) { predecessors = append(predecessors, (**v).Deferred.TxHash) })
-
-	// msg := &StandardMessage{
-	// 	TxHash: sha256.Sum256(this[0].Deferred.FuncCallData),
-	// 	Native: &evmMsg,
-	// 	Source: commontypes.TX_SOURCE_DEFERRED,
-	// }
 	return NewSequence([32]byte{}, predecessors, []*StandardMessage{this[0].Deferred}, true)
 }
 

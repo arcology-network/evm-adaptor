@@ -23,16 +23,16 @@ import (
 )
 
 type Job struct {
-	ID           uint32
-	Prefix       []byte
+	ID           int
+	TxHash       [32]byte
 	Predecessors [][32]byte
-	Message      *evmcoretypes.Message
+	EvmMsg       *evmcoretypes.Message
 	ApiRouter    eucommon.EthApiRouter
 	Receipt      *evmcoretypes.Receipt
 	EvmResult    *evmcore.ExecutionResult
 }
 
-func NewJob(ID uint32, from, to evmcommon.Address, funCallData []byte, gaslimit uint64, parentApiRouter eucommon.EthApiRouter) *Job {
+func NewJob(ID int, Prefix []byte, from, to evmcommon.Address, funCallData []byte, gaslimit uint64, parentApiRouter eucommon.EthApiRouter) *Job {
 	msg := evmcoretypes.NewMessage( // Build the message
 		from,
 		&to,
@@ -45,17 +45,41 @@ func NewJob(ID uint32, from, to evmcommon.Address, funCallData []byte, gaslimit 
 		false, // Don't checking nonce
 	)
 
-	return &Job{
+	return NewJobFromNative(ID, Prefix, &msg, parentApiRouter)
+}
+
+func NewJobFromNative(ID int, Prefix []byte, nativeMsg *evmcoretypes.Message, parentApiRouter eucommon.EthApiRouter) *Job {
+	job := &Job{
 		ID:        ID,
-		Message:   &msg,
+		TxHash:    (&Job{ID: ID, EvmMsg: nativeMsg, ApiRouter: parentApiRouter}).Hash(Prefix),
+		EvmMsg:    nativeMsg,
 		ApiRouter: parentApiRouter,
 	}
+	job.TxHash = job.Hash(Prefix)
+	return job
+}
+
+func (this *Job) Hash(Prefix []byte) [32]byte {
+	return sha256.Sum256(common.Flatten([][]byte{
+		codec.Bytes32(this.ApiRouter.TxHash()).Encode(),
+		Prefix,
+		this.EvmMsg.Data()[:4],
+		codec.Uint32(this.ID).Encode(),
+	}))
+}
+
+func (this *Job) CaptureStates(snapshotUrl ccurlinterfaces.Datastore) eucommon.EthApiRouter {
+	ccurl := (&concurrenturl.ConcurrentUrl{}).New(
+		indexer.NewWriteCache(snapshotUrl, this.ApiRouter.Ccurl().Platform),
+		this.ApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
+
+	return this.ApiRouter.New(this.TxHash, uint32(this.ID), this.ApiRouter.Depth(), ccurl)
 }
 
 func (this *Job) Run(coinbase [20]byte, snapshotUrl ccurlinterfaces.Datastore) *Result { //
-	this.ApiRouter = this.CaptureStates(this.Prefix, snapshotUrl)
-	statedb := eth.NewImplStateDB(this.ApiRouter)                      // Eth state DB
-	statedb.Prepare(this.ApiRouter.TxHash(), [32]byte{}, int(this.ID)) // tx hash , block hash and tx index
+	this.ApiRouter = this.CaptureStates(snapshotUrl)
+	statedb := eth.NewImplStateDB(this.ApiRouter)     // Eth state DB
+	statedb.Prepare(this.TxHash, [32]byte{}, this.ID) // tx hash , block hash and tx index
 
 	config := cceu.NewConfig().SetCoinbase(coinbase) // Share the same coinbase as the main thread
 	eu := cceu.NewEU(
@@ -68,11 +92,11 @@ func (this *Job) Run(coinbase [20]byte, snapshotUrl ccurlinterfaces.Datastore) *
 	var prechkErr error
 	this.Receipt, this.EvmResult, prechkErr =
 		eu.Run(
-			eu.Api().TxHash(),
-			int(eu.Api().TxIndex()),
-			this.Message,
+			this.TxHash,
+			this.ID,
+			this.EvmMsg,
 			cceu.NewEVMBlockContext(config),
-			cceu.NewEVMTxContext(*this.Message),
+			cceu.NewEVMTxContext(*this.EvmMsg),
 		)
 
 	transitions := this.ApiRouter.Ccurl().Export()
@@ -81,7 +105,8 @@ func (this *Job) Run(coinbase [20]byte, snapshotUrl ccurlinterfaces.Datastore) *
 	})
 
 	return &Result{
-		TxHash: common.IfThenDo1st(this.Receipt != nil, func() evmcommon.Hash { return this.Receipt.TxHash }, evmcommon.Hash{}),
+		TxIndex: uint32(this.ID),
+		TxHash:  common.IfThenDo1st(this.Receipt != nil, func() evmcommon.Hash { return this.Receipt.TxHash }, evmcommon.Hash{}),
 		Deferred: common.IfThenDo1st(this.ApiRouter.GetReserved() != nil,
 			func() *StandardMessage {
 				return this.ApiRouter.GetReserved().(*StandardMessage)
@@ -91,21 +116,6 @@ func (this *Job) Run(coinbase [20]byte, snapshotUrl ccurlinterfaces.Datastore) *
 		Err:         common.IfThenDo1st(prechkErr == nil, func() error { return this.EvmResult.Err }, prechkErr),
 		GasUsed:     common.IfThenDo1st(this.Receipt != nil, func() uint64 { return this.Receipt.GasUsed }, 0),
 	}
-}
-
-func (this *Job) CaptureStates(prefix []byte, snapshotUrl ccurlinterfaces.Datastore) eucommon.EthApiRouter {
-	ccurl := (&concurrenturl.ConcurrentUrl{}).New(
-		indexer.NewWriteCache(snapshotUrl, this.ApiRouter.Ccurl().Platform),
-		this.ApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
-
-	// parentTxHash := parentApiRouter.TxHash()
-	txHash := sha256.Sum256(common.Flatten([][]byte{
-		codec.Bytes32(this.ApiRouter.TxHash()).Encode(),
-		prefix,
-		codec.Uint32(this.ID).Encode(),
-	}))
-
-	return this.ApiRouter.New(txHash, this.ID, this.ApiRouter.Depth(), ccurl)
 }
 
 func (this *Job) CalcualteRefund() uint64 {

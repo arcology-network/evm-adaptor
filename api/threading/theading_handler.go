@@ -71,7 +71,7 @@ func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte
 	}
 
 	id := strconv.Itoa(len(this.pools))
-	this.pools[id] = execution.NewJobs(uint32(len(this.pools)), threads, this.api, []*execution.Job{})
+	this.pools[id] = execution.NewJobs(len(this.pools), threads, this.api, []*execution.Job{})
 	return []byte(id), true // Create a new container
 }
 
@@ -102,7 +102,16 @@ func (this *ThreadingHandler) add(caller, callee evmcommon.Address, input []byte
 		return []byte{}, false
 	}
 
-	job := execution.NewJob(uint32(this.pools[id].Length()), this.api.Origin(), calleeAddr, funCall, gasLimit, this.api)
+	job := execution.NewJob(
+		int(this.pools[id].Length()),
+		this.pools[id].Prefix(),
+		this.api.Origin(),
+		calleeAddr,
+		funCall,
+		gasLimit,
+		this.api,
+	)
+
 	return []byte{}, this.pools[id].Add(job)
 }
 

@@ -5,7 +5,7 @@ import (
 )
 
 type Sequence struct {
-	ID              [32]byte
+	Hash            [32]byte
 	Predecessors    [][32]byte
 	PredecessorHash [32]byte
 	Msgs            []*StandardMessage
@@ -19,7 +19,7 @@ func NewSequence(ID [32]byte, predecessors [][32]byte, msgs []*StandardMessage, 
 	}
 
 	return &Sequence{
-		ID:              sha256.Sum256(buffer),
+		Hash:            sha256.Sum256(buffer),
 		Predecessors:    predecessors,
 		PredecessorHash: sha256.Sum256(buffer),
 		Msgs:            msgs,
