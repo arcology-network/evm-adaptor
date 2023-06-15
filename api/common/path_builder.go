@@ -35,7 +35,7 @@ func (this *CcurlConnector) New(account types.Address, containerId string) bool 
 func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32) bool {
 	accountRoot := commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/")
 	if value, _ := this.ccurl.Peek(accountRoot); value == nil {
-		return this.ccurl.CreateAccount(txIndex, this.ccurl.Platform.Eth10(), string(account)) != nil // Create a new account
+		return this.ccurl.NewAccount(txIndex, this.ccurl.Platform.Eth10(), string(account)) != nil // Create a new account
 	}
 	return true // ALready exists
 }

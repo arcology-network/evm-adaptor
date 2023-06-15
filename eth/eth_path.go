@@ -83,7 +83,7 @@ func accountExist(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, t
 }
 
 func createAccount(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, tid uint32) {
-	if err := url.CreateAccount(tid, url.Platform.Eth10(), codec.Bytes20(account).Hex()); err != nil {
+	if err := url.NewAccount(tid, url.Platform.Eth10(), codec.Bytes20(account).Hex()); err != nil {
 		panic(err)
 	}
 
