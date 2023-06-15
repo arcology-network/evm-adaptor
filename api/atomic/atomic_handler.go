@@ -47,9 +47,9 @@ func (this *AtomicHandler) Call(caller, callee evmcommon.Address, input []byte, 
 }
 
 func (this *AtomicHandler) deferred(caller evmcommon.Address, input []byte) ([]byte, bool) {
-	// if this.api.VM().ArcologyNetworkAPIs.Depth() > 2 {
-	// 	return []byte{}, false
-	// }
+	if this.api.VM().ArcologyNetworkAPIs.Depth() > 4 {
+		return []byte{}, false
+	}
 
 	gasLimit, err := abi.DecodeTo(input, 0, uint64(0), 1, 32)
 	if err != nil {

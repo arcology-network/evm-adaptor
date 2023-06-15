@@ -242,7 +242,7 @@ func TestAtomicMultiDeferredWithBoolContainer(t *testing.T) {
 	}
 }
 
-func TestAtomicMultiDeferreOneConflictTest(t *testing.T) {
+func TestConflictInThreads(t *testing.T) {
 	eu, config, db, url, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
@@ -255,7 +255,7 @@ func TestAtomicMultiDeferreOneConflictTest(t *testing.T) {
 		t.Error(err)
 	}
 
-	code, err := compiler.CompileContracts(pyCompiler, project+"/api/atomic/atomic_test.sol", "AtomicMultiDeferreOneConflictTest")
+	code, err := compiler.CompileContracts(pyCompiler, project+"/api/atomic/atomic_test.sol", "ConflictInThreadsFixedLengthTest")
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}

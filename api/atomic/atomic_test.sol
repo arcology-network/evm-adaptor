@@ -164,14 +164,13 @@ contract AtomicMultiDeferredWithBoolContainerTest {
     }
 }
 
-contract AtomicMultiDeferreOneConflictTest {  
+contract AtomicMultiDeferredNoConflictTest {  
      Bool container = new Bool();
 
      bytes32[2] results;
      Atomic atomic = new Atomic(); 
      function call() public  { 
        bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
-   
        Threading mp = new Threading(2);
        mp.add(100000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 0,data));
        mp.add(400000, address(this), abi.encodeWithSignature("acculm(uint256)", 10));
@@ -228,6 +227,25 @@ contract AtomicMultiDeferreOneConflictTest {
     }
 }
 
+contract ConflictInThreadsFixedLengthTest {  
+     uint256[2] results;
+     function call() public  { 
+       results[0] = 100;
+       results[1] = 200;
+       Threading mp = new Threading(2);
+       mp.add(100000, address(this), abi.encodeWithSignature("updater(uint256)", 11));
+       mp.add(400000, address(this), abi.encodeWithSignature("updater(uint256)", 33));
+       mp.add(400000, address(this), abi.encodeWithSignature("updater(uint256)", 55));
+       mp.run();     
+       require(results[0] == 155); 
+       require(results[1] == 255); 
+    }
+
+    function updater(uint256 num) public {
+         results[0] += num;
+         results[1] += num;
+    }
+}
 
 
 
