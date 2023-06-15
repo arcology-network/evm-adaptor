@@ -82,20 +82,8 @@ func (this *Jobs) Run() []*Result {
 		this.results, _ = Results(this.results).DetectConflict() // Detect potential conflicts
 	}
 
-	// Extract deferred calls if exist
-	ResultDict := (&ResultDict{}).Categorize(this.results)
-	subJobs := make([]*Jobs, len(ResultDict))
-	for i := 0; i < len(ResultDict); i++ {
-		seq := Results(ResultDict[i]).ToSequence()
-		subJobs[i] = NewJobsFromSequence(i, this.numThreads, this.parentApiRouter, seq)
-	}
-	subJobs = common.Remove(&subJobs, nil)
-
 	// Run deferrred jobs
-	subResults := make([][]*Result, len(subJobs))
-	for i, jobs := range subJobs {
-		subResults[i] = jobs.Run() // need to transfer the funds into a temp account
-	}
+	subResults := this.RunSpawned(this.results)
 
 	fmt.Println("Sub subResults 1 === ====================== ====================== ====================== =========================================")
 	if len(subResults) > 0 {
@@ -113,12 +101,6 @@ func (this *Jobs) Run() []*Result {
 		(*v).WriteTo(this.parentApiRouter.TxIndex(), this.parentApiRouter.Ccurl().WriteCache()) // Merge the write cache to its parent
 	})
 
-	// fmt.Println("Sub Catenated === ====================== ====================== ====================== =========================================")
-	// indexer.Univalues(Results(common.Flatten(subResults)).Transitions()).SortByDefault().Print()
-
-	// fmt.Println("Current Catenated === ====================== ====================== ====================== =========================================")
-	// indexer.Univalues(Results(this.results).Transitions()).SortByDefault().Print()
-
 	return catenated
 }
 
@@ -126,4 +108,26 @@ func (this *Jobs) Clear() uint64 {
 	length := len(this.jobs)
 	this.jobs = this.jobs[:0]
 	return uint64(length)
+}
+
+// Extract deferred calls if exist
+func (this *Jobs) GetSpawned(results []*Result) []*Jobs {
+	ResultDict := (&ResultDict{}).Categorize(results)
+	subJobs := make([]*Jobs, len(ResultDict))
+	for i := 0; i < len(ResultDict); i++ {
+		seq := Results(ResultDict[i]).ToSequence()
+		subJobs[i] = NewJobsFromSequence(i, this.numThreads, this.parentApiRouter, seq)
+	}
+	return common.Remove(&subJobs, nil)
+}
+
+func (this *Jobs) RunSpawned(results []*Result) [][]*Result {
+	spawnedJobs := this.GetSpawned(results)
+
+	// need to transfer the funds to a temp account
+	spawnedResults := make([][]*Result, len(spawnedJobs))
+	for i, jobs := range spawnedJobs {
+		spawnedResults[i] = jobs.Run()
+	}
+	return spawnedResults
 }

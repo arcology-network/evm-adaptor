@@ -37,7 +37,7 @@ func (this *AtomicHandler) Call(caller, callee evmcommon.Address, input []byte, 
 
 	switch signature {
 	case [4]byte{0x92, 0x8a, 0x5d, 0x96}:
-		return this.deferred(caller, input[4:])
+		return this.deferred(origin, input[4:])
 
 	case [4]byte{0xbb, 0x07, 0xe8, 0x5d}: // bb 07 e8 5d
 		return this.uuid(caller, callee, input[4:])
@@ -46,7 +46,7 @@ func (this *AtomicHandler) Call(caller, callee evmcommon.Address, input []byte, 
 	return []byte{}, false
 }
 
-func (this *AtomicHandler) deferred(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *AtomicHandler) deferred(origin evmcommon.Address, input []byte) ([]byte, bool) {
 	if this.api.VM().ArcologyNetworkAPIs.Depth() > 4 {
 		return []byte{}, false
 	}
@@ -63,6 +63,11 @@ func (this *AtomicHandler) deferred(caller evmcommon.Address, input []byte) ([]b
 
 	funCallData, err := abi.DecodeTo(input, 2, []byte{}, 2, math.MaxUint32)
 	if err != nil {
+		return []byte{}, false
+	}
+
+	// Check if the sender has sufficent balance
+	if !this.api.VM().Context.CanTransfer(this.api.VM().StateDB, origin, big.NewInt(int64(gasLimit))) {
 		return []byte{}, false
 	}
 
