@@ -105,10 +105,10 @@ func NewTestEU() (*cceu.EU, *cceu.Config, interfaces.Datastore, *concurrenturl.C
 	statedb.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 	statedb.CreateAccount(eucommon.Coinbase)
 	statedb.CreateAccount(eucommon.Alice)
-	statedb.CreateAccount(eucommon.ATOMIC_HANDLER)
-
 	statedb.AddBalance(eucommon.Alice, new(big.Int).SetUint64(1e18))
-	statedb.AddBalance(eucommon.ATOMIC_HANDLER, new(big.Int).SetUint64(1e18))
+
+	statedb.CreateAccount(eucommon.ATOMIC_HANDLER)
+	// statedb.AddBalance(eucommon.ATOMIC_HANDLER, new(big.Int).SetUint64(1e18))
 
 	// transitions := url.Export()
 	_, transitions := url.ExportAll()

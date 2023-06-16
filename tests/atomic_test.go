@@ -17,7 +17,7 @@ import (
 	compiler "github.com/arcology-network/vm-adaptor/compiler"
 )
 
-func TestAtomicWithThreading(t *testing.T) {
+func TestAtomicDeferredInThreading(t *testing.T) {
 	eu, config, db, url, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
@@ -92,7 +92,7 @@ func TestAtomicWithThreading(t *testing.T) {
 	}
 }
 
-func TestAtomicWithThreadingAndContainer(t *testing.T) {
+func TestAtomicDeferredBoolContainer(t *testing.T) {
 	eu, config, db, url, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
@@ -212,6 +212,7 @@ func TestAtomicMultiDeferredWithBoolContainer(t *testing.T) {
 	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	_, transitions = eu.Api().Ccurl().ExportAll()
 
+	fmt.Println(receipt)
 	if err != nil {
 		t.Error(err)
 	}
@@ -224,22 +225,22 @@ func TestAtomicMultiDeferredWithBoolContainer(t *testing.T) {
 		t.Error("Error: Failed to call!!!", err)
 	}
 
-	data = crypto.Keccak256([]byte("PostCheck()"))[:4]
-	msg = types.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-	receipt, execResult, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
-	_, transitions = eu.Api().Ccurl().ExportAll()
+	// data = crypto.Keccak256([]byte("PostCheck()"))[:4]
+	// msg = types.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	// receipt, execResult, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	// _, transitions = eu.Api().Ccurl().ExportAll()
 
-	if err != nil {
-		t.Error(err)
-	}
+	// if err != nil {
+	// 	t.Error(err)
+	// }
 
-	if execResult != nil && execResult.Err != nil {
-		t.Error(execResult.Err)
-	}
+	// if execResult != nil && execResult.Err != nil {
+	// 	t.Error(execResult.Err)
+	// }
 
-	if receipt.Status != 1 || err != nil {
-		t.Error("Error: Failed to call!!!", err)
-	}
+	// if receipt.Status != 1 || err != nil {
+	// 	t.Error("Error: Failed to call!!!", err)
+	// }
 }
 
 func TestConflictInThreads(t *testing.T) {

@@ -66,11 +66,6 @@ func (this *AtomicHandler) deferred(origin evmcommon.Address, input []byte) ([]b
 		return []byte{}, false
 	}
 
-	// Check if the sender has sufficent balance
-	if !this.api.VM().Context.CanTransfer(this.api.VM().StateDB, origin, big.NewInt(int64(gasLimit))) {
-		return []byte{}, false
-	}
-
 	hierarchy := this.api.VM().ArcologyNetworkAPIs.CallHierarchy()
 	groupBy := sha3.Sum256(commonlibcommon.Flatten(commonlibcommon.Reverse[[]byte](&hierarchy)))
 

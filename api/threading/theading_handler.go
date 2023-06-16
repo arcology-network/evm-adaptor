@@ -143,7 +143,7 @@ func (this *ThreadingHandler) run(caller, callee evmcommon.Address, input []byte
 		return []byte{}, false
 	}
 
-	this.pools[id].Run()
+	this.pools[id].Run([]*execution.Result{})
 	return []byte{}, true
 }
 
