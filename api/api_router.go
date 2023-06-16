@@ -2,28 +2,30 @@ package api
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"strconv"
 
 	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
-	"github.com/arcology-network/common-lib/types"
 	commontypes "github.com/arcology-network/common-lib/types"
 	"github.com/arcology-network/concurrenturl"
 	evmcommon "github.com/arcology-network/evm/common"
+	"github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/core/vm"
-	corevm "github.com/arcology-network/evm/core/vm"
 	cceu "github.com/arcology-network/vm-adaptor"
+	atomic "github.com/arcology-network/vm-adaptor/api/atomic"
 	cumulativei256 "github.com/arcology-network/vm-adaptor/api/commutative/int256"
 	cumulativeu256 "github.com/arcology-network/vm-adaptor/api/commutative/u256"
-	"github.com/arcology-network/vm-adaptor/api/concurrency"
+	"github.com/arcology-network/vm-adaptor/execution"
+
 	noncommutativeBytes "github.com/arcology-network/vm-adaptor/api/noncommutative/base"
 	threading "github.com/arcology-network/vm-adaptor/api/threading"
-	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
 
 type API struct {
-	logs    []interfaces.ILog
+	logs    []eucommon.ILog
 	txHash  evmcommon.Hash // Tx hash
 	txIndex uint32         // Tx index in the block
 
@@ -32,28 +34,30 @@ type API struct {
 	ccElemID uint64
 	depth    uint8
 
-	deferredFunc *types.DeferCall
-	eu           *cceu.EU
-	callContext  *corevm.ScopeContext
+	reserved interface{}
+	eu       *cceu.EU
 
-	handlerDict map[[20]byte]interfaces.ApiCallHandler // APIs under the concurrency namespace
+	handlerDict map[[20]byte]eucommon.ApiCallHandler // APIs under the atomic namespace
 	ccurl       *concurrenturl.ConcurrentUrl
+
+	execResult *execution.Result
 }
 
 func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	api := &API{
 		eu:          nil,
 		ccurl:       ccurl,
-		handlerDict: make(map[[20]byte]interfaces.ApiCallHandler),
+		handlerDict: make(map[[20]byte]eucommon.ApiCallHandler),
 		depth:       0,
+		execResult:  &execution.Result{},
 	}
 
-	handlers := []interfaces.ApiCallHandler{
+	handlers := []eucommon.ApiCallHandler{
 		noncommutativeBytes.NewNoncommutativeBytesHandlers(api),
 		cumulativeu256.NewU256CumulativeHandlers(api),
 		cumulativei256.NewInt256CumulativeHandlers(api),
 		threading.NewThreadingHandler(api),
-		concurrency.NewConcurrencyHandler(api),
+		atomic.NewAtomicHandler(api),
 	}
 
 	for i, v := range handlers {
@@ -62,10 +66,16 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 		}
 		api.handlerDict[(handlers)[i].Address()] = v
 	}
+
+	api.ccurl.NewAccount( // A temp account for handling deferred calls
+		concurrenturl.SYSTEM,
+		api.ccurl.Platform.Eth10(),
+		hex.EncodeToString(codec.Bytes20(atomic.NewAtomicHandler(api).Address()).Encode()),
+	)
 	return api
 }
 
-func (this *API) New(txHash evmcommon.Hash, txIndex uint32, parentDepth uint8, ccurl *concurrenturl.ConcurrentUrl) interfaces.ApiRouter {
+func (this *API) New(txHash evmcommon.Hash, txIndex uint32, parentDepth uint8, ccurl *concurrenturl.ConcurrentUrl) eucommon.EthApiRouter {
 	api := NewAPI(ccurl)
 
 	api.txHash = txHash
@@ -79,29 +89,26 @@ func (this *API) New(txHash evmcommon.Hash, txIndex uint32, parentDepth uint8, c
 	return api
 }
 
-func (this *API) GetDeferred() *types.DeferCall          { return this.deferredFunc }
-func (this *API) SetDeferred(deferCall *types.DeferCall) { this.deferredFunc = deferCall }
-func (this *API) Depth() uint8                           { return this.depth }
-func (this *API) Coinbase() evmcommon.Address            { return this.eu.VM().Context.Coinbase }
-func (this *API) Origin() evmcommon.Address              { return this.eu.VM().TxContext.Origin }
-func (this *API) VM() *vm.EVM                            { return this.eu.VM() }
-func (this *API) GetEU() interface{}                     { return this.eu }
+func (this *API) IsLocal(txID uint32) bool         { return txID == concurrenturl.SYSTEM } //A local tx
+func (this *API) GetReserved() interface{}         { return this.reserved }
+func (this *API) SetReserved(reserved interface{}) { this.reserved = reserved }
 
-func (this *API) SetCallContext(Context interface{}) {
-	this.callContext = Context.(*corevm.ScopeContext) // Runtime context
-}
+func (this *API) Depth() uint8                { return this.depth }
+func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }
+func (this *API) Origin() evmcommon.Address   { return this.eu.VM().TxContext.Origin }
 
-func (this *API) GetCallContext() interface{} {
-	return this.callContext // Runtime context
-}
+func (this *API) Message() *core.Message { return this.eu.Message() }
 
+func (this *API) VM() *vm.EVM { return this.eu.VM() }
+
+func (this *API) GetEU() interface{}   { return this.eu }
 func (this *API) SetEU(eu interface{}) { this.eu = eu.(*cceu.EU) }
 
 func (this *API) TxHash() [32]byte                    { return this.txHash }
 func (this *API) TxIndex() uint32                     { return this.txIndex }
 func (this *API) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }
 
-func (this *API) Prepare(txHash evmcommon.Hash, height *big.Int, txIndex uint32) {
+func (this *API) SetContext(txHash evmcommon.Hash, height *big.Int, txIndex uint32) {
 	this.txHash = txHash
 	this.txIndex = txIndex
 }
@@ -131,7 +138,7 @@ func (this *API) AddLog(key, value string) {
 	})
 }
 
-func (this *API) GetLogs() []interfaces.ILog {
+func (this *API) GetLogs() []eucommon.ILog {
 	return this.logs
 }
 
@@ -140,6 +147,8 @@ func (this *API) ClearLogs() {
 }
 
 func (this *API) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64, blockhash evmcommon.Hash) (bool, []byte, bool) {
+	fmt.Println(callee)
+
 	if handler, ok := this.handlerDict[callee]; ok {
 		result, successful := handler.Call(
 			evmcommon.Address(codec.Bytes20(caller).Clone().(codec.Bytes20)),

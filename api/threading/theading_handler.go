@@ -4,28 +4,28 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/arcology-network/common-lib/codec"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
+	"github.com/arcology-network/vm-adaptor/common"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
-	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
+	execution "github.com/arcology-network/vm-adaptor/execution"
 )
 
 // APIs under the concurrency namespace
 type ThreadingHandler struct {
-	api       interfaces.ApiRouter
-	jobQueues map[string]*Queue
+	api   eucommon.EthApiRouter
+	pools map[string]*execution.Jobs
 }
 
-func NewThreadingHandler(apiRounter interfaces.ApiRouter) *ThreadingHandler {
+func NewThreadingHandler(ethApiRouter eucommon.EthApiRouter) *ThreadingHandler {
 	return &ThreadingHandler{
-		api:       apiRounter,
-		jobQueues: map[string]*Queue{},
+		api:   ethApiRouter,
+		pools: map[string]*execution.Jobs{},
 	}
 }
 
 func (this *ThreadingHandler) Address() [20]byte {
-	return [20]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x90}
+	return common.THREADING_HANDLER
 }
 
 func (this *ThreadingHandler) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
@@ -37,7 +37,7 @@ func (this *ThreadingHandler) Call(caller, callee evmcommon.Address, input []byt
 	case [4]byte{0x58, 0x16, 0xc4, 0x25}:
 		return this.new(caller, callee, input[4:])
 
-	case [4]byte{0x9b, 0xb5, 0x52, 0xd1}:
+	case [4]byte{0xf8, 0xf0, 0xd9, 0x80}:
 		return this.add(caller, callee, input[4:])
 
 	case [4]byte{0x84, 0x67, 0x3c, 0xc9}:
@@ -61,7 +61,7 @@ func (this *ThreadingHandler) Call(caller, callee evmcommon.Address, input []byt
 }
 
 func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-	if this.api.Depth() >= eucommon.MAX_RECURSIION_DEPTH {
+	if this.api.Depth() >= common.MAX_RECURSIION_DEPTH {
 		return []byte{}, false // Execeeds the max recursion depth
 	}
 
@@ -70,8 +70,8 @@ func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte
 		return []byte{}, false
 	}
 
-	id := strconv.Itoa(len(this.jobQueues))
-	this.jobQueues[id] = NewJobQueue(threads)
+	id := strconv.Itoa(len(this.pools))
+	this.pools[id] = execution.NewJobs(len(this.pools), threads, this.api, []*execution.Job{})
 	return []byte(id), true // Create a new container
 }
 
@@ -81,80 +81,96 @@ func (this *ThreadingHandler) add(caller, callee evmcommon.Address, input []byte
 	}
 
 	id := this.ParseID(input)
-	if len(id) == 0 || this.jobQueues[id] == nil {
+	if len(id) == 0 || this.pools[id] == nil {
 		return []byte{}, false
 	}
 
 	// fmt.Println(input)
-	rawAddr, err := abi.DecodeTo(input, 1, [20]byte{}, 1, 32)
+	gasLimit, err := abi.DecodeTo(input, 1, uint64(0), 1, 32)
+	if err != nil {
+		return []byte{}, false
+	}
+
+	rawAddr, err := abi.DecodeTo(input, 2, [20]byte{}, 1, 32)
 	if err != nil {
 		return []byte{}, false
 	}
 	calleeAddr := evmcommon.BytesToAddress(rawAddr[:]) // Callee contract
 
-	funCall, err := abi.DecodeTo(input, 2, []byte{}, 2, math.MaxUint32)
+	funCall, err := abi.DecodeTo(input, 3, []byte{}, 2, math.MaxUint32)
 	if err != nil {
 		return []byte{}, false
 	}
 
-	return []byte{}, this.jobQueues[id].Add(this.api.Origin(), calleeAddr, funCall)
+	job := execution.NewJob(
+		int(this.pools[id].Length()),
+		this.pools[id].Prefix(),
+		this.api.Origin(),
+		calleeAddr,
+		funCall,
+		gasLimit,
+		this.api,
+	)
+
+	return []byte{}, this.pools[id].Add(job)
 }
 
 func (this *ThreadingHandler) clear(input []byte) ([]byte, bool) {
 	id := this.ParseID(input)
-	if len(id) == 0 || this.jobQueues[id] == nil {
+	if len(id) == 0 || this.pools[id] == nil {
 		return []byte{}, false
 	}
 
-	this.jobQueues[id].Clear()
+	this.pools[id].Clear()
 	return []byte{}, true
 }
 
 func (this *ThreadingHandler) length(input []byte) ([]byte, bool) {
 	id := this.ParseID(input)
-	if len(id) == 0 || this.jobQueues[id] == nil {
+	if len(id) == 0 || this.pools[id] == nil {
 		return []byte{}, false
 	}
 
-	v, err := abi.Encode(this.jobQueues[id].Length())
+	v, err := abi.Encode(this.pools[id].Length())
 	return v, err == nil
 }
 
-func (this *ThreadingHandler) error(input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
 	id := this.ParseID(input)
-	if len(id) == 0 || this.jobQueues[id] == nil {
+	if len(id) == 0 || this.pools[id] == nil {
+		return []byte{}, false
+	}
+
+	this.pools[id].Run()
+	return []byte{}, true
+}
+
+func (this *ThreadingHandler) get(input []byte) ([]byte, bool) {
+	id := this.ParseID(input)
+	if len(id) == 0 || this.pools[id] == nil {
 		return []byte{}, false
 	}
 
 	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
-		if item := this.jobQueues[id].At(idx); item != nil {
-			buffer, err := abi.Encode(codec.String(item.prechkErr.Error() + item.prechkErr.Error()).Clone().(codec.String).ToBytes())
-			return buffer, err == nil
+		if item := this.pools[id].At(idx); item != nil && item.EvmResult != nil {
+			return item.EvmResult.ReturnData, item.EvmResult.Err == nil
 		}
 	}
 	return []byte{}, false
 }
 
-func (this *ThreadingHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-	id := this.ParseID(input)
-	if len(id) == 0 || this.jobQueues[id] == nil {
-		return []byte{}, false
-	}
+func (this *ThreadingHandler) error(input []byte) ([]byte, bool) {
+	// id := this.ParseID(input)
+	// if len(id) == 0 || this.pools[id] == nil {
+	// 	return []byte{}, false
+	// }
 
-	return []byte{}, this.jobQueues[id].Run(this.api)
-}
-
-func (this *ThreadingHandler) get(input []byte) ([]byte, bool) {
-	id := this.ParseID(input)
-	if len(id) == 0 || this.jobQueues[id] == nil {
-		return []byte{}, false
-	}
-
-	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
-		if item := this.jobQueues[id].At(idx); item != nil {
-			return item.result.ReturnData, item.result.Err == nil
-		}
-	}
+	// if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
+	// 	if item := this.pools[id].At(idx); item != nil {
+	// 		buffer, err := abi.Encode(item.Err.Error())
+	// 		return buffer, err == nil
+	// 	}
+	// }
 	return []byte{}, false
 }
 

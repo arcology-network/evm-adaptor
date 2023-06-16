@@ -27,7 +27,6 @@ require (
 	// github.com/HPISTechnologies/evm v1.10.4-0.20220902063532-a4690b596277 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/VictoriaMetrics/fastcache v1.6.0 // indirect
-	github.com/arcology-network/3rd-party v1.7.1 // indirect
 	github.com/btcsuite/btcd v0.21.0-beta // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect

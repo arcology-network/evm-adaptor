@@ -102,8 +102,8 @@ contract U256ThreadingTest {
         require(container.length() == 3);
 
         Threading mp = new Threading(1);
-        mp.add(address(this), abi.encodeWithSignature("push(uint256)", 41));
-        mp.add(address(this), abi.encodeWithSignature("push(uint256)", 51));
+        mp.add(100000, address(this), abi.encodeWithSignature("push(uint256)", 41));
+        mp.add(100000, address(this), abi.encodeWithSignature("push(uint256)", 51));
         require(mp.length() == 2);
         require(container.length() == 3);
 
@@ -119,8 +119,8 @@ contract U256ThreadingTest {
 
 
         mp.clear();
-        mp.add(address(this), abi.encodeWithSignature("get(uint256)", 0));
-        mp.add(address(this), abi.encodeWithSignature("get(uint256)", 1));
+        mp.add(100000, address(this), abi.encodeWithSignature("get(uint256)", 0));
+        mp.add(100000, address(this), abi.encodeWithSignature("get(uint256)", 1));
         require(mp.length() == 2);
         mp.run();
 
@@ -135,8 +135,8 @@ contract U256ThreadingTest {
 
         // // Here should be one conflict
         mp.clear();
-        mp.add(address(this), abi.encodeWithSignature("pop()"));
-        mp.add(address(this), abi.encodeWithSignature("pop()"));
+        mp.add(100000, address(this), abi.encodeWithSignature("pop()"));
+        mp.add(100000, address(this), abi.encodeWithSignature("pop()"));
         require(mp.length() == 2);
         mp.run();
 
@@ -174,10 +174,10 @@ contract ArrayThreadingTest {
         push(0, 11);
         push(0, 12);
 
-        mp.add(address(this), abi.encodeWithSignature("push(uint256,uint256)", 0, 13));
-        mp.add(address(this), abi.encodeWithSignature("push(uint256,uint256)", 0, 14));
-        mp.add(address(this), abi.encodeWithSignature("push(uint256,uint256)", 1, 51));
-        mp.add(address(this), abi.encodeWithSignature("push(uint256,uint256)", 1, 52));
+        mp.add(100000, address(this), abi.encodeWithSignature("push(uint256,uint256)", 0, 13));
+        mp.add(100000, address(this), abi.encodeWithSignature("push(uint256,uint256)", 0, 14));
+        mp.add(100000, address(this), abi.encodeWithSignature("push(uint256,uint256)", 1, 51));
+        mp.add(100000, address(this), abi.encodeWithSignature("push(uint256,uint256)", 1, 52));
         require(mp.length() == 4);
         mp.run();
 

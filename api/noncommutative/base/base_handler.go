@@ -10,7 +10,8 @@ import (
 	"github.com/arcology-network/concurrenturl/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
-	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
+	"github.com/arcology-network/vm-adaptor/common"
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
 	"github.com/holiman/uint256"
@@ -18,11 +19,11 @@ import (
 
 // APIs under the concurrency namespace
 type BytesHandlers struct {
-	api       interfaces.ApiRouter
+	api       eucommon.EthApiRouter
 	connector *apicommon.CcurlConnector
 }
 
-func NewNoncommutativeBytesHandlers(api interfaces.ApiRouter) *BytesHandlers {
+func NewNoncommutativeBytesHandlers(api eucommon.EthApiRouter) *BytesHandlers {
 	return &BytesHandlers{
 		api:       api,
 		connector: apicommon.NewCCurlConnector("/containers/", api, api.Ccurl()),
@@ -30,7 +31,7 @@ func NewNoncommutativeBytesHandlers(api interfaces.ApiRouter) *BytesHandlers {
 }
 
 func (this *BytesHandlers) Address() [20]byte {
-	return [20]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x84}
+	return common.BYTES_HANDLER
 }
 
 func (this *BytesHandlers) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
@@ -126,9 +127,7 @@ func (this *BytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, 
 // Push a new element into the container
 func (this *BytesHandlers) push(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
 	path := this.buildPath(caller, input) // BytesHandlers path
-
-	txHash := this.api.TxHash()
-	key := path + hex.EncodeToString(txHash[:8]) + "-" + string(this.api.GenCcElemUID())
+	key := path + string(this.api.GenCcElemUID())
 
 	value, err := abi.Decode(input, 1, []byte{}, 2, math.MaxInt)
 	if value == nil || err != nil {

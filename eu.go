@@ -8,22 +8,25 @@ import (
 
 	ethCommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core"
+	evmcore "github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/core/vm"
 	"github.com/arcology-network/evm/crypto"
 	"github.com/arcology-network/evm/params"
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 	eth "github.com/arcology-network/vm-adaptor/eth"
-	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
 )
 
 type EU struct {
-	evm         *vm.EVM              // Original ETH EVM
-	statedb     vm.StateDB           // Arcology Implementation of Eth StateDB
-	api         interfaces.ApiRouter // Arcology API calls
-	CallContext *vm.ScopeContext     // Arcology API calls
+	msg         *evmcore.Message
+	evm         *vm.EVM               // Original ETH EVM
+	statedb     vm.StateDB            // Arcology Implementation of Eth StateDB
+	api         eucommon.EthApiRouter // Arcology API calls
+	CallContext *vm.ScopeContext      // Arcology API calls
+
 }
 
-func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.StateDB, api interfaces.ApiRouter) *EU {
+func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.StateDB, api eucommon.EthApiRouter) *EU {
 	eu := &EU{
 		evm:     vm.NewEVM(vm.BlockContext{BlockNumber: new(big.Int).SetUint64(100000000)}, vm.TxContext{}, statedb, chainConfig, vmConfig),
 		statedb: statedb,
@@ -31,29 +34,32 @@ func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.State
 	}
 
 	eu.api.SetEU(eu)
-	eu.evm.ArcologyNetworkAPIs.SetApiRouter(api)
+	eu.evm.ArcologyNetworkAPIs.APIs = api
 	return eu
 }
 
-func (this *EU) VM() *vm.EVM               { return this.evm }
-func (this *EU) Statedb() vm.StateDB       { return this.statedb }
-func (this *EU) Api() interfaces.ApiRouter { return this.api }
+func (this *EU) Message() *evmcore.Message  { return this.msg }
+func (this *EU) VM() *vm.EVM                { return this.evm }
+func (this *EU) Statedb() vm.StateDB        { return this.statedb }
+func (this *EU) Api() eucommon.EthApiRouter { return this.api }
 
 // func (this *EU) Depth() uint8                               { return this.depth }
 
-func (this *EU) SetContext(statedb vm.StateDB, api interfaces.ApiRouter) {
+func (this *EU) SetContext(statedb vm.StateDB, api eucommon.EthApiRouter) {
 	this.api = api
 	this.statedb = statedb
 
 	this.evm.StateDB = this.statedb
-	this.evm.ArcologyNetworkAPIs.SetApiRouter(api)
+	this.evm.ArcologyNetworkAPIs.APIs = api
 }
 
-func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *core.Message, blockContext vm.BlockContext, txContext vm.TxContext) (*types.Receipt, *core.ExecutionResult, error) {
+func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *evmcore.Message, blockContext vm.BlockContext, txContext vm.TxContext) (*types.Receipt, *evmcore.ExecutionResult, error) {
 	this.statedb.(*eth.ImplStateDB).PrepareFormer(txHash, ethCommon.Hash{}, txIndex)
-	this.api.Prepare(txHash, blockContext.BlockNumber, uint32(txIndex))
+	// this.api.Prepare(txHash, blockContext.BlockNumber, uint32(txIndex))
+	this.api.SetContext(txHash, blockContext.BlockNumber, uint32(txIndex))
 	this.evm.Context = blockContext
 	this.evm.TxContext = txContext
+	this.msg = msg
 
 	gasPool := core.GasPool(math.MaxUint64)
 

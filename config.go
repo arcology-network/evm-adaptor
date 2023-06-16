@@ -10,7 +10,7 @@ import (
 	"github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/core/vm"
 	"github.com/arcology-network/evm/params"
-	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
 
 // DummyChain implements the ChainContext interface.
@@ -26,7 +26,7 @@ type Config struct {
 	BlockNumber *big.Int    // types.Header.Number
 	ParentHash  common.Hash // types.Header.ParentHash
 	Time        *big.Int    // types.Header.Time
-	Chain       interfaces.ChainContext
+	Chain       eucommon.ChainContext
 	Coinbase    *evmcommon.Address
 	GasLimit    uint64   // types.Header.GasLimit
 	Difficulty  *big.Int // types.Header.Difficulty

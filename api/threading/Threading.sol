@@ -12,8 +12,8 @@ contract Threading {
     }
 
     // Append a new task to the queue, the execution only starts when run() is called
-    function add(address addr, bytes memory args) public returns(bool)  {
-        (bool success,) = address(API).call(abi.encodeWithSignature("add(bytes,address,bytes)", id, addr, args));   
+    function add(uint256 gaslimit, address addr, bytes memory args) public returns(bool)  {
+        (bool success,) = address(API).call(abi.encodeWithSignature("add(bytes,uint256,address,bytes)", id, gaslimit, addr, args));   
         return (success);
     }
 

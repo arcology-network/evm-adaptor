@@ -5,7 +5,7 @@ import (
 
 	"github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/vm"
-	interfaces "github.com/arcology-network/vm-adaptor/interfaces"
+	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
 
 func NewEVMBlockContext(cfg *Config) vm.BlockContext {
@@ -23,7 +23,7 @@ func NewEVMBlockContext(cfg *Config) vm.BlockContext {
 }
 
 // GetHashFn returns a GetHashFunc which retrieves header hashes by number
-func GetHashFn(blockNumber *big.Int, parentHash common.Hash, chain interfaces.ChainContext) func(n uint64) common.Hash {
+func GetHashFn(blockNumber *big.Int, parentHash common.Hash, chain eucommon.ChainContext) func(n uint64) common.Hash {
 	return func(n uint64) common.Hash { return common.Hash{} }
 }
 
