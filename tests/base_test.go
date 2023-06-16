@@ -20,7 +20,7 @@ func TestBase(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	// pyCompiler := project + "/compiler/compiler.py"
+
 	targetPath := project + "/api/noncommutative/"
 
 	code, err := compiler.CompileContracts(targetPath+"base", "base_test.sol", "0.8.19", "BaseTest", false)

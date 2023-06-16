@@ -99,10 +99,21 @@ func (this *Job) Run(coinbase [20]byte, snapshotUrl ccurlinterfaces.Datastore) *
 			cceu.NewEVMTxContext(*this.EvmMsg),
 		)
 
+	// Do gas transfer
+	if prechkErr == nil && this.EvmResult != nil && this.EvmResult.Err == nil && this.ApiRouter.GetReserved() != nil {
+		deferred := this.ApiRouter.GetReserved().(*StandardMessage)
+		if this.EvmMsg.GasLimit-this.EvmResult.UsedGas >= deferred.Native.GasLimit {
+			eu.VM().Context.Transfer(
+				eu.VM().StateDB,
+				this.EvmMsg.From,
+				eucommon.ATOMIC_HANDLER,
+				big.NewInt(int64(deferred.Native.GasLimit)),
+			)
+		}
+	}
 	transitions := this.ApiRouter.Ccurl().Export()
-	transitions = common.RemoveIf(&transitions, func(v ccurlinterfaces.Univalue) bool {
-		return v.GetTx() == ccurlinterfaces.SYSTEM // remove temp
-	})
+
+	indexer.Univalues(transitions).Print()
 
 	return &Result{
 		TxIndex: uint32(this.ID),

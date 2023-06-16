@@ -73,7 +73,7 @@ func TestCumulativeInt256(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	// pyCompiler := project + "/compiler/compiler.py"
+
 	targetPath := project + "/api/commutative/"
 
 	code, err := compiler.CompileContracts(targetPath+"int256", "int256Cumulative_test.sol", "0.8.0", "Int256CumulativeTest", false)

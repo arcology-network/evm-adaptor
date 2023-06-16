@@ -3,6 +3,7 @@ package threading
 import (
 	"math"
 	"strconv"
+	"sync/atomic"
 
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
@@ -61,8 +62,9 @@ func (this *ThreadingHandler) Call(caller, callee evmcommon.Address, input []byt
 }
 
 func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-	if this.api.Depth() >= common.MAX_RECURSIION_DEPTH {
-		return []byte{}, false // Execeeds the max recursion depth
+	if this.api.Depth() >= common.MAX_RECURSIION_DEPTH ||
+		atomic.AddUint64(&common.TotalProcesses, 1) > common.MAX_SUB_PROCESSES {
+		return []byte{}, false // Execeeds the max recursion depth or the max sub processes
 	}
 
 	threads, err := abi.DecodeTo(input, 0, uint8(1), 1, 32)
@@ -141,7 +143,7 @@ func (this *ThreadingHandler) run(caller, callee evmcommon.Address, input []byte
 		return []byte{}, false
 	}
 
-	this.pools[id].Run()
+	this.pools[id].Run([]*execution.Result{})
 	return []byte{}, true
 }
 

@@ -81,7 +81,7 @@ func TestNoncommutative256N(t *testing.T) {
 		// ================================== Compile the contract ==================================
 		currentPath, _ := os.Getwd()
 		project := filepath.Dir(currentPath)
-		// pyCompiler := project + "/compiler/compiler.py"
+
 		targetPath := project + "/api/commutative/"
 
 		if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/u256/Threading.sol"); err != nil {
@@ -138,7 +138,7 @@ func TestNoncommutative256N(t *testing.T) {
 		// ================================== Compile the contract ==================================
 		currentPath, _ := os.Getwd()
 		project := filepath.Dir(currentPath)
-		// pyCompiler := project + "/compiler/compiler.py"
+
 		targetPath := project + "/api/commutative/"
 
 		code, err := compiler.CompileContracts(targetPath+"/u256", "u256Cumulative_test.sol", "0.8.0", "ThreadingCumulativeU256", false)
@@ -191,7 +191,7 @@ func TestNoncommutative256N(t *testing.T) {
 		// ================================== Compile the contract ==================================
 		currentPath, _ := os.Getwd()
 		project := filepath.Dir(currentPath)
-		// pyCompiler := project + "/compiler/compiler.py"
+
 		targetPath := project + "/api/commutative/"
 
 		code, err := compiler.CompileContracts(targetPath+"/u256", "u256Cumulative_test.sol", "0.8.0", "ThreadingCumulativeU256Multi", false)

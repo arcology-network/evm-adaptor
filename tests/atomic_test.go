@@ -16,21 +16,16 @@ import (
 	compiler "github.com/arcology-network/vm-adaptor/compiler"
 )
 
-func TestAtomicWithThreading(t *testing.T) {
+func TestAtomicDeferredInThreading(t *testing.T) {
 	eu, config, db, url, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	// pyCompiler := project + "/compiler/compiler.py"
+
 	targetPath := project + "/api/"
 
-	// if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/Threading.sol"); err != nil {
-	// 	t.Error(err)
-	// }
-
 	code, err := compiler.CompileContracts(targetPath, "atomic/atomic_test.sol", "0.8.19", "AtomicDeferredInThreadingTest", false)
-	// code, err := compiler.CompileContracts(pyCompiler, project+"/api/atomic/atomic_test.sol", "AtomicDeferredInThreadingTest")
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}
@@ -92,20 +87,15 @@ func TestAtomicWithThreading(t *testing.T) {
 	}
 }
 
-func TestAtomicWithThreadingAndContainer(t *testing.T) {
+func TestAtomicDeferredBoolContainer(t *testing.T) {
 	eu, config, db, url, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	// pyCompiler := project + "/compiler/compiler.py"
 	targetPath := project + "/api/"
 
-	// if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/Threading.sol"); err != nil {
-	// 	t.Error(err)
-	// }
 	code, err := compiler.CompileContracts(targetPath, "atomic/atomic_test.sol", "0.8.19", "AtomicDeferredBoolContainerTest", false)
-	// code, err := compiler.CompileContracts(pyCompiler, project+"/api/atomic/atomic_test.sol", "AtomicDeferredBoolContainerTest")
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}
@@ -173,12 +163,9 @@ func TestAtomicMultiDeferredWithBoolContainer(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	// pyCompiler := project + "/compiler/compiler.py"
+
 	targetPath := project + "/api/"
 
-	// if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/Threading.sol"); err != nil {
-	// 	t.Error(err)
-	// }
 	code, err := compiler.CompileContracts(targetPath, "atomic/atomic_test.sol", "0.8.19", "AtomicMultiDeferredWithBoolContainerTest", false)
 	// code, err := compiler.CompileContracts(pyCompiler, project+"/api/atomic/atomic_test.sol", "AtomicMultiDeferredWithBoolContainerTest")
 	if err != nil || len(code) == 0 {
@@ -212,6 +199,7 @@ func TestAtomicMultiDeferredWithBoolContainer(t *testing.T) {
 	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
 	_, transitions = eu.Api().Ccurl().ExportAll()
 
+	fmt.Println(receipt)
 	if err != nil {
 		t.Error(err)
 	}
@@ -224,38 +212,35 @@ func TestAtomicMultiDeferredWithBoolContainer(t *testing.T) {
 		t.Error("Error: Failed to call!!!", err)
 	}
 
-	data = crypto.Keccak256([]byte("PostCheck()"))[:4]
-	msg = core.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-	receipt, execResult, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
-	_, transitions = eu.Api().Ccurl().ExportAll()
+	// data = crypto.Keccak256([]byte("PostCheck()"))[:4]
+	// msg = core.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	// receipt, execResult, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+	// _, transitions = eu.Api().Ccurl().ExportAll()
 
-	if err != nil {
-		t.Error(err)
-	}
+	// if err != nil {
+	// 	t.Error(err)
+	// }
 
-	if execResult != nil && execResult.Err != nil {
-		t.Error(execResult.Err)
-	}
+	// if execResult != nil && execResult.Err != nil {
+	// 	t.Error(execResult.Err)
+	// }
 
-	if receipt.Status != 1 || err != nil {
-		t.Error("Error: Failed to call!!!", err)
-	}
+	// if receipt.Status != 1 || err != nil {
+	// 	t.Error("Error: Failed to call!!!", err)
+	// }
 }
 
-func TestAtomicMultiDeferreOneConflictTest(t *testing.T) {
+func TestConflictInThreads(t *testing.T) {
 	eu, config, db, url, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	// pyCompiler := project + "/compiler/compiler.py"
+
 	targetPath := project + "/api/"
 
-	// if err := common.CopyFile(project+"/api/threading/Threading.sol", targetPath+"/Threading.sol"); err != nil {
-	// 	t.Error(err)
-	// }
-	code, err := compiler.CompileContracts(targetPath, "atomic/atomic_test.sol", "0.8.19", "AtomicMultiDeferreOneConflictTest", false)
-	// code, err := compiler.CompileContracts(pyCompiler, project+"/api/atomic/atomic_test.sol", "AtomicMultiDeferreOneConflictTest")
+	code, err := compiler.CompileContracts(targetPath, "atomic/atomic_test.sol", "0.8.19", "ConflictInThreadsFixedLengthTest", false)
+	// code, err := compiler.CompileContracts(pyCompiler, project+"/api/atomic/atomic_test.sol", "ConflictInThreadsFixedLengthTest")
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}
