@@ -13,10 +13,10 @@ import (
 )
 
 type Result struct {
-	GroupID     uint32
+	BranchID    uint32
 	TxIndex     uint32
 	TxHash      [32]byte
-	Deferred    *StandardMessage
+	Spawned     *StandardMessage
 	Transitions []ccurlinterfaces.Univalue
 	Err         error
 	GasUsed     uint64
@@ -50,9 +50,9 @@ func (this Results) Transitions() []ccurlinterfaces.Univalue {
 	return all
 }
 
-func (this Results) SetGroupIDs(GroupID uint32) {
+func (this Results) SetGroupIDs(BranchID uint32) {
 	common.Foreach(this, func(v **Result) {
-		(**v).GroupID = GroupID
+		(**v).BranchID = BranchID
 	})
 }
 
@@ -61,7 +61,7 @@ func (this Results) DetectConflict() ([]*Result, int) {
 	accesseVec := []ccurlinterfaces.Univalue{}
 	for _, v := range this {
 		if v.Err == nil {
-			groupIDs = append(groupIDs, common.Fill(make([]uint32, len(v.Transitions)), v.GroupID)...)
+			groupIDs = append(groupIDs, common.Fill(make([]uint32, len(v.Transitions)), v.BranchID)...)
 			accesseVec = append(accesseVec, indexer.Univalues(common.Clone(v.Transitions)).To(indexer.IPCAccess{})...)
 		}
 	}
@@ -84,13 +84,13 @@ func (this Results) DetectConflict() ([]*Result, int) {
 }
 
 func (this Results) ToSequence() *Sequence {
-	if this[0].Deferred == nil {
+	if this[0].Spawned == nil {
 		return nil
 	}
 
 	predecessors := make([][32]byte, 0, len(this))
-	common.Foreach(this, func(v **Result) { predecessors = append(predecessors, (**v).Deferred.TxHash) })
-	return NewSequence([32]byte{}, predecessors, []*StandardMessage{this[0].Deferred}, true)
+	common.Foreach(this, func(v **Result) { predecessors = append(predecessors, (**v).Spawned.TxHash) })
+	return NewSequence([32]byte{}, predecessors, []*StandardMessage{this[0].Spawned}, true)
 }
 
 // This works with the deferred execution
@@ -102,15 +102,15 @@ func (this *ResultDict) Categorize(results []*Result) [][]*Result {
 	}
 
 	for _, v := range results {
-		if v.Deferred == nil {
+		if v.Spawned == nil {
 			continue
 		}
 
-		vec := (*this)[v.Deferred.GroupBy]
+		vec := (*this)[v.Spawned.GroupBy]
 		if vec != nil {
 			vec = []*Result{}
 		}
-		(*this)[v.Deferred.GroupBy] = append(vec, v)
+		(*this)[v.Spawned.GroupBy] = append(vec, v)
 	}
 	return common.MapValues((map[[32]byte][]*Result)(*this))
 }

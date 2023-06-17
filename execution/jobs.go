@@ -13,32 +13,31 @@ import (
 // APIs under the concurrency namespace
 type Jobs struct {
 	id              int
-	numThreads      uint8
+	maxThreads      uint8
 	parentApiRouter eucommon.EthApiRouter
 	jobs            []*Job // para jobs
-	results         []*Result
 }
 
-func NewJobs(id int, numThreads uint8, ethApiRouter eucommon.EthApiRouter, jobs []*Job) *Jobs {
+func NewJobs(id int, maxThreads uint8, ethApiRouter eucommon.EthApiRouter, jobs []*Job) *Jobs {
 	return &Jobs{
 		id:              id,
-		numThreads:      numThreads,
+		maxThreads:      maxThreads,
 		parentApiRouter: ethApiRouter,
 		jobs:            jobs,
 	}
 }
 
-func NewJobsFromSequence(id int, numThreads uint8, ethApiRouter eucommon.EthApiRouter, sequence *Sequence) *Jobs {
+func NewJobsFromSequence(id int, maxThreads uint8, ethApiRouter eucommon.EthApiRouter, sequence *Sequence) *Jobs {
 	if sequence == nil {
 		return nil
 	}
 
 	this := &Jobs{
 		id:              id,
-		numThreads:      numThreads,
+		maxThreads:      maxThreads,
 		parentApiRouter: ethApiRouter,
 		jobs:            make([]*Job, len(sequence.Msgs)),
-		results:         []*Result{},
+		// results:         []*Result{},
 	}
 
 	for i, msg := range sequence.Msgs {
@@ -73,22 +72,21 @@ func (this *Jobs) Add(job *Job) bool {
 }
 
 func (this *Jobs) Run(predecessors []*Result) []*Result {
-	// snapshotUrl := this.parentApiRouter.Ccurl().Snapshot()
-
 	preTransitions := common.Concate(predecessors, func(v *Result) []ccinterfaces.Univalue { return v.Transitions })
 	snapshotUrl := this.parentApiRouter.Ccurl().Snapshot(preTransitions)
 
-	this.results = make([]*Result, len(this.jobs))
+	// this.results = make([]*Result, len(this.jobs))
 	for i := 0; i < len(this.jobs); i++ {
-		this.results[i] = this.jobs[i].Run(this.parentApiRouter.Coinbase(), snapshotUrl)
+		this.jobs[i].Result = this.jobs[i].Run(this.parentApiRouter.Coinbase(), snapshotUrl)
 	}
 
-	if len(this.results) > 1 {
-		this.results, _ = Results(this.results).DetectConflict() // Detect potential conflicts
+	results := common.Concate(this.jobs, func(job *Job) []*Result { return []*Result{job.Result} })
+	if len(results) > 1 {
+		results, _ = Results(results).DetectConflict() // Detect potential conflicts
 	}
 
 	// Run deferrred jobs
-	subResults := this.RunSpawned(this.results)
+	subResults := this.RunSpawned(results)
 
 	fmt.Println("Sub subResults 1 === ====================== ====================== ====================== =========================================")
 	if len(subResults) > 0 {
@@ -99,7 +97,7 @@ func (this *Jobs) Run(predecessors []*Result) []*Result {
 		indexer.Univalues(Results((subResults[1])).Transitions()).SortByDefault().Print()
 	}
 	// Write the transitions back to the parent write cache
-	catenated := append(this.results, common.Flatten(subResults)...)
+	catenated := append(results, common.Flatten(subResults)...)
 	common.Foreach(catenated, func(v **Result) {
 		(*v).WriteTo(this.parentApiRouter.TxIndex(), this.parentApiRouter.Ccurl().WriteCache()) // Merge the write cache to its parent
 	})
@@ -119,7 +117,7 @@ func (this *Jobs) GetSpawned(results []*Result) ([]*Jobs, [][]*Result) {
 	subJobs := make([]*Jobs, len(resultDict))
 	for i := 0; i < len(resultDict); i++ {
 		seq := Results(resultDict[i]).ToSequence()
-		subJobs[i] = NewJobsFromSequence(i, this.numThreads, this.parentApiRouter, seq)
+		subJobs[i] = NewJobsFromSequence(i, this.maxThreads, this.parentApiRouter, seq)
 	}
 	return common.Remove(&subJobs, nil), resultDict
 }

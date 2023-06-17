@@ -30,6 +30,7 @@ type Job struct {
 	ApiRouter    eucommon.EthApiRouter
 	Receipt      *evmTypes.Receipt
 	EvmResult    *evmcore.ExecutionResult
+	Result       *Result
 }
 
 func NewJob(ID int, Prefix []byte, from, to evmcommon.Address, funCallData []byte, gaslimit uint64, parentApiRouter eucommon.EthApiRouter) *Job {
@@ -44,7 +45,6 @@ func NewJob(ID int, Prefix []byte, from, to evmcommon.Address, funCallData []byt
 		nil,
 		false, // Don't checking nonce
 	)
-
 	return NewJobFromNative(ID, Prefix, &msg, parentApiRouter)
 }
 
@@ -118,7 +118,7 @@ func (this *Job) Run(coinbase [20]byte, snapshotUrl ccurlinterfaces.Datastore) *
 	return &Result{
 		TxIndex: uint32(this.ID),
 		TxHash:  common.IfThenDo1st(this.Receipt != nil, func() evmcommon.Hash { return this.Receipt.TxHash }, evmcommon.Hash{}),
-		Deferred: common.IfThenDo1st(this.ApiRouter.GetReserved() != nil,
+		Spawned: common.IfThenDo1st(this.ApiRouter.GetReserved() != nil,
 			func() *StandardMessage {
 				return this.ApiRouter.GetReserved().(*StandardMessage)
 			},
