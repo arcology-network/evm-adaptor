@@ -92,25 +92,3 @@ func (this Results) ToSequence() *Sequence {
 	common.Foreach(this, func(v **Result) { predecessors = append(predecessors, (**v).Spawned.TxHash) })
 	return NewSequence([32]byte{}, predecessors, []*StandardMessage{this[0].Spawned}, true)
 }
-
-// This works with the deferred execution
-type ResultDict map[[32]byte][]*Result
-
-func (this *ResultDict) Categorize(results []*Result) [][]*Result {
-	if len(results) == 1 {
-		return [][]*Result{results}
-	}
-
-	for _, v := range results {
-		if v.Spawned == nil {
-			continue
-		}
-
-		vec := (*this)[v.Spawned.GroupBy]
-		if vec != nil {
-			vec = []*Result{}
-		}
-		(*this)[v.Spawned.GroupBy] = append(vec, v)
-	}
-	return common.MapValues((map[[32]byte][]*Result)(*this))
-}

@@ -108,13 +108,16 @@ func (this *Jobs) Clear() uint64 {
 
 // Extract deferred calls if exist
 func (this *Jobs) GetSpawned(results []*Result) ([]*Jobs, [][]*Result) {
-	resultDict := (&ResultDict{}).Categorize(results)
-	subJobs := make([]*Jobs, len(resultDict))
-	for i := 0; i < len(resultDict); i++ {
-		seq := Results(resultDict[i]).ToSequence()
+	resultvec := common.GroupBy(results, func(v *Result) *[32]byte {
+		return common.IfThenDo1st(v.Spawned != nil, func() *[32]byte { return &(v.Spawned.CallSig) }, nil)
+	})
+
+	subJobs := make([]*Jobs, len(resultvec))
+	for i := 0; i < len(resultvec); i++ {
+		seq := Results(resultvec[i]).ToSequence()
 		subJobs[i] = NewJobsFromSequence(i, this.maxThreads, this.parentApiRouter, seq)
 	}
-	return common.Remove(&subJobs, nil), resultDict
+	return common.Remove(&subJobs, nil), resultvec
 }
 
 func (this *Jobs) RunSpawned(results []*Result) [][]*Result {

@@ -10,7 +10,7 @@ const (
 
 type StandardMessage struct {
 	TxHash  [32]byte
-	GroupBy [32]byte
+	CallSig [32]byte
 	Native  *core.Message
 	Source  uint8
 }

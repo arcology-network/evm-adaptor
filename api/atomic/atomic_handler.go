@@ -89,7 +89,7 @@ func (this *AtomicHandler) deferred(origin evmcommon.Address, input []byte) ([]b
 
 	msg := &execution.StandardMessage{
 		TxHash:  sha256.Sum256(funCallData),
-		GroupBy: groupBy,
+		CallSig: groupBy,
 		Native:  &evmMsg,
 		Source:  commonlibtypes.TX_SOURCE_DEFERRED,
 	}
