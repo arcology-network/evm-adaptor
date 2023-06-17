@@ -23,7 +23,7 @@ import (
 )
 
 type Job struct {
-	ID           int
+	ID           uint64
 	TxHash       [32]byte
 	Predecessors [][32]byte
 	EvmMsg       *evmcore.Message
@@ -33,7 +33,7 @@ type Job struct {
 	Result       *Result
 }
 
-func NewJob(ID int, Prefix []byte, from, to evmcommon.Address, funCallData []byte, gaslimit uint64, parentApiRouter eucommon.EthApiRouter) *Job {
+func NewJob(jobID, batchID uint64, from, to evmcommon.Address, funCallData []byte, gaslimit uint64, parentApiRouter eucommon.EthApiRouter) *Job {
 	msg := evmcore.NewMessage( // Build the message
 		from,
 		&to,
@@ -45,24 +45,23 @@ func NewJob(ID int, Prefix []byte, from, to evmcommon.Address, funCallData []byt
 		nil,
 		false, // Don't checking nonce
 	)
-	return NewJobFromNative(ID, Prefix, &msg, parentApiRouter)
+	return NewJobFromNative(jobID, batchID, &msg, parentApiRouter)
 }
 
-func NewJobFromNative(ID int, Prefix []byte, nativeMsg *evmcore.Message, parentApiRouter eucommon.EthApiRouter) *Job {
+func NewJobFromNative(jobID, batchID uint64, nativeMsg *evmcore.Message, parentApiRouter eucommon.EthApiRouter) *Job {
 	job := &Job{
-		ID:        ID,
-		TxHash:    (&Job{ID: ID, EvmMsg: nativeMsg, ApiRouter: parentApiRouter}).Hash(Prefix),
+		ID:        jobID,
 		EvmMsg:    nativeMsg,
 		ApiRouter: parentApiRouter,
 	}
-	job.TxHash = job.Hash(Prefix)
+	job.TxHash = job.Hash(batchID)
 	return job
 }
 
-func (this *Job) Hash(Prefix []byte) [32]byte {
+func (this *Job) Hash(batchID uint64) [32]byte {
 	return sha256.Sum256(common.Flatten([][]byte{
 		codec.Bytes32(this.ApiRouter.TxHash()).Encode(),
-		Prefix,
+		codec.Uint32((batchID)).Encode(),
 		this.EvmMsg.Data[:4],
 		codec.Uint32(this.ID).Encode(),
 	}))
@@ -76,12 +75,11 @@ func (this *Job) CaptureStates(snapshotUrl ccurlinterfaces.Datastore) eucommon.E
 	return this.ApiRouter.New(this.TxHash, uint32(this.ID), this.ApiRouter.Depth(), ccurl)
 }
 
-func (this *Job) Run(coinbase [20]byte, snapshotUrl ccurlinterfaces.Datastore) *Result { //
+func (this *Job) Run(config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore) *Result { //
 	this.ApiRouter = this.CaptureStates(snapshotUrl)
-	statedb := eth.NewImplStateDB(this.ApiRouter)           // Eth state DB
-	statedb.PrepareFormer(this.TxHash, [32]byte{}, this.ID) // tx hash , block hash and tx index
+	statedb := eth.NewImplStateDB(this.ApiRouter)                // Eth state DB
+	statedb.PrepareFormer(this.TxHash, [32]byte{}, int(this.ID)) // tx hash , block hash and tx index
 
-	config := cceu.NewConfig().SetCoinbase(coinbase) // Share the same coinbase as the main thread
 	eu := cceu.NewEU(
 		config.ChainConfig,
 		vm.Config{},
@@ -93,7 +91,7 @@ func (this *Job) Run(coinbase [20]byte, snapshotUrl ccurlinterfaces.Datastore) *
 	this.Receipt, this.EvmResult, prechkErr =
 		eu.Run(
 			this.TxHash,
-			this.ID,
+			int(this.ID),
 			this.EvmMsg,
 			cceu.NewEVMBlockContext(config),
 			cceu.NewEVMTxContext(*this.EvmMsg),
@@ -112,7 +110,6 @@ func (this *Job) Run(coinbase [20]byte, snapshotUrl ccurlinterfaces.Datastore) *
 		}
 	}
 	transitions := this.ApiRouter.Ccurl().Export()
-
 	indexer.Univalues(transitions).Print()
 
 	return &Result{

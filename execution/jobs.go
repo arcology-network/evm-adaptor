@@ -3,16 +3,16 @@ package execution
 import (
 	"fmt"
 
-	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 	ccinterfaces "github.com/arcology-network/concurrenturl/interfaces"
+	cceu "github.com/arcology-network/vm-adaptor"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
 
 // APIs under the concurrency namespace
 type Jobs struct {
-	id              int
+	batchID         uint64
 	maxThreads      uint8
 	parentApiRouter eucommon.EthApiRouter
 	jobs            []*Job // para jobs
@@ -20,7 +20,7 @@ type Jobs struct {
 
 func NewJobs(id int, maxThreads uint8, ethApiRouter eucommon.EthApiRouter, jobs []*Job) *Jobs {
 	return &Jobs{
-		id:              id,
+		batchID:         uint64(id),
 		maxThreads:      maxThreads,
 		parentApiRouter: ethApiRouter,
 		jobs:            jobs,
@@ -33,17 +33,16 @@ func NewJobsFromSequence(id int, maxThreads uint8, ethApiRouter eucommon.EthApiR
 	}
 
 	this := &Jobs{
-		id:              id,
+		batchID:         uint64(id),
 		maxThreads:      maxThreads,
 		parentApiRouter: ethApiRouter,
 		jobs:            make([]*Job, len(sequence.Msgs)),
-		// results:         []*Result{},
 	}
 
 	for i, msg := range sequence.Msgs {
 		this.jobs[i] = NewJobFromNative(
-			i,
-			this.Prefix(), // Parent prefix for uid generation
+			uint64(i),
+			this.batchID, // batch ID
 			msg.Native,
 			ethApiRouter,
 		)
@@ -51,11 +50,7 @@ func NewJobsFromSequence(id int, maxThreads uint8, ethApiRouter eucommon.EthApiR
 	return this
 }
 
-func (this *Jobs) Prefix() []byte {
-	hash := this.parentApiRouter.TxHash()
-	return append(hash[:], codec.Uint32(this.id).Encode()...)
-}
-
+func (this *Jobs) Batch() uint64  { return uint64(this.batchID) }
 func (this *Jobs) Length() uint64 { return uint64(len(this.jobs)) }
 
 func (this *Jobs) At(idx uint64) *Job {
@@ -75,9 +70,9 @@ func (this *Jobs) Run(predecessors []*Result) []*Result {
 	preTransitions := common.Concate(predecessors, func(v *Result) []ccinterfaces.Univalue { return v.Transitions })
 	snapshotUrl := this.parentApiRouter.Ccurl().Snapshot(preTransitions)
 
-	// this.results = make([]*Result, len(this.jobs))
+	config := cceu.NewConfig().SetCoinbase(this.parentApiRouter.Coinbase())
 	for i := 0; i < len(this.jobs); i++ {
-		this.jobs[i].Result = this.jobs[i].Run(this.parentApiRouter.Coinbase(), snapshotUrl)
+		this.jobs[i].Result = this.jobs[i].Run(config, snapshotUrl)
 	}
 
 	results := common.Concate(this.jobs, func(job *Job) []*Result { return []*Result{job.Result} })

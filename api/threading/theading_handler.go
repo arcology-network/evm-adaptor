@@ -105,8 +105,8 @@ func (this *ThreadingHandler) add(caller, callee evmcommon.Address, input []byte
 	}
 
 	job := execution.NewJob(
-		int(this.pools[id].Length()),
-		this.pools[id].Prefix(),
+		this.pools[id].Length(),
+		this.pools[id].Batch(),
 		this.api.Origin(),
 		calleeAddr,
 		funCall,
