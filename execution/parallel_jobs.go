@@ -67,10 +67,10 @@ func (this *ParallelJobs) Add(job *Job) bool {
 	return true
 }
 
-func (this *ParallelJobs) Run(preTransitions []ccinterfaces.Univalue) []*Result {
-	snapshotUrl := this.parentApiRouter.Ccurl().Snapshot(preTransitions)
+func (this *ParallelJobs) Run(parentApiRouter eucommon.EthApiRouter, preTransitions []ccinterfaces.Univalue) []*Result {
+	snapshotUrl := parentApiRouter.Ccurl().Snapshot(preTransitions)
 
-	config := cceu.NewConfig().SetCoinbase(this.parentApiRouter.Coinbase())
+	config := cceu.NewConfig().SetCoinbase(parentApiRouter.Coinbase())
 	for i := 0; i < len(this.jobs); i++ {
 		this.jobs[i].Result = this.jobs[i].Run(config, snapshotUrl)
 	}
@@ -79,7 +79,7 @@ func (this *ParallelJobs) Run(preTransitions []ccinterfaces.Univalue) []*Result 
 	results, _ = Results(results).DetectConflict() // Detect potential conflicts
 
 	// Run deferrred jobs
-	subResults := this.RunSpawned(results)
+	subResults := this.RunSpawned(parentApiRouter, results)
 
 	fmt.Println("Sub subResults 1 === ====================== ====================== ====================== =========================================")
 	if len(subResults) > 0 {
@@ -92,7 +92,7 @@ func (this *ParallelJobs) Run(preTransitions []ccinterfaces.Univalue) []*Result 
 	// Write the transitions back to the parent write cache
 	catenated := append(results, common.Flatten(subResults)...)
 	common.Foreach(catenated, func(v **Result) {
-		(*v).WriteTo(this.parentApiRouter.TxIndex(), this.parentApiRouter.Ccurl().WriteCache()) // Merge the write cache to its parent
+		(*v).WriteTo(parentApiRouter.TxIndex(), parentApiRouter.Ccurl().WriteCache()) // Merge the write cache to its parent
 	})
 
 	return catenated
@@ -104,7 +104,7 @@ func (this *ParallelJobs) Clear() uint64 {
 	return uint64(length)
 }
 
-func (this *ParallelJobs) RunSpawned(results []*Result) [][]*Result {
+func (this *ParallelJobs) RunSpawned(parentApiRouter eucommon.EthApiRouter, results []*Result) [][]*Result {
 	grouped := common.GroupBy(results, func(v *Result) *[32]byte {
 		return common.IfThenDo1st(v.Spawned != nil, func() *[32]byte { return &(v.Spawned.CallSig) }, nil)
 	})
@@ -112,7 +112,7 @@ func (this *ParallelJobs) RunSpawned(results []*Result) [][]*Result {
 	spawnedJobs := make([]*ParallelJobs, 0, len(grouped))
 	for i := 0; i < len(grouped); i++ {
 		seq := Results(grouped[i]).ToSequence()
-		if job := NewParallelJobsFromSequence(i, this.maxThreads, this.parentApiRouter, seq); job != nil {
+		if job := NewParallelJobsFromSequence(i, this.maxThreads, parentApiRouter, seq); job != nil {
 			spawnedJobs = append(spawnedJobs, job)
 		}
 	}
@@ -124,7 +124,7 @@ func (this *ParallelJobs) RunSpawned(results []*Result) [][]*Result {
 	spawnedResults := make([][]*Result, len(spawnedJobs))
 	for i, jobs := range spawnedJobs {
 		preTransitions := common.Concate(grouped[i], func(v *Result) []ccinterfaces.Univalue { return v.Transitions })
-		spawnedResults[i] = jobs.Run(preTransitions)
+		spawnedResults[i] = jobs.Run(parentApiRouter, preTransitions)
 	}
 	return spawnedResults
 }

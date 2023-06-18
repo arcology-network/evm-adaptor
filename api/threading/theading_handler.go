@@ -144,7 +144,7 @@ func (this *ThreadingHandler) run(caller, callee evmcommon.Address, input []byte
 		return []byte{}, false
 	}
 
-	this.pools[id].Run([]ccinterfaces.Univalue{})
+	this.pools[id].Run(this.api, []ccinterfaces.Univalue{})
 	return []byte{}, true
 }
 
