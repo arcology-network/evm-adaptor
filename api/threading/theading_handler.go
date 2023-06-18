@@ -15,13 +15,13 @@ import (
 // APIs under the concurrency namespace
 type ThreadingHandler struct {
 	api   eucommon.EthApiRouter
-	pools map[string]*execution.Jobs
+	pools map[string]*execution.ParallelJobs
 }
 
 func NewThreadingHandler(ethApiRouter eucommon.EthApiRouter) *ThreadingHandler {
 	return &ThreadingHandler{
 		api:   ethApiRouter,
-		pools: map[string]*execution.Jobs{},
+		pools: map[string]*execution.ParallelJobs{},
 	}
 }
 
@@ -73,7 +73,7 @@ func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte
 	}
 
 	id := strconv.Itoa(len(this.pools))
-	this.pools[id] = execution.NewJobs(len(this.pools), threads, this.api, []*execution.Job{})
+	this.pools[id] = execution.NewParallelJobs(len(this.pools), threads, this.api, []*execution.Job{})
 	return []byte(id), true // Create a new container
 }
 
@@ -154,8 +154,8 @@ func (this *ThreadingHandler) get(input []byte) ([]byte, bool) {
 	}
 
 	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
-		if item := this.pools[id].At(idx); item != nil && item.EvmResult != nil {
-			return item.EvmResult.ReturnData, item.EvmResult.Err == nil
+		if item := this.pools[id].At(idx); item != nil && item.Result.EvmResult != nil {
+			return item.Result.EvmResult.ReturnData, item.Result.EvmResult.Err == nil
 		}
 	}
 	return []byte{}, false

@@ -10,6 +10,8 @@ import (
 	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
+	evmcore "github.com/arcology-network/evm/core"
+	evmTypes "github.com/arcology-network/evm/core/types"
 )
 
 type Result struct {
@@ -18,8 +20,9 @@ type Result struct {
 	TxHash      [32]byte
 	Spawned     *StandardMessage
 	Transitions []ccurlinterfaces.Univalue
+	Receipt     *evmTypes.Receipt
+	EvmResult   *evmcore.ExecutionResult
 	Err         error
-	GasUsed     uint64
 }
 
 func (this *Result) WriteTo(newTxIdx uint32, targetCache *indexer.WriteCache) {

@@ -11,15 +11,15 @@ import (
 )
 
 // APIs under the concurrency namespace
-type Jobs struct {
+type ParallelJobs struct {
 	batchID         uint64
 	maxThreads      uint8
 	parentApiRouter eucommon.EthApiRouter
 	jobs            []*Job // para jobs
 }
 
-func NewJobs(id int, maxThreads uint8, ethApiRouter eucommon.EthApiRouter, jobs []*Job) *Jobs {
-	return &Jobs{
+func NewParallelJobs(id int, maxThreads uint8, ethApiRouter eucommon.EthApiRouter, jobs []*Job) *ParallelJobs {
+	return &ParallelJobs{
 		batchID:         uint64(id),
 		maxThreads:      maxThreads,
 		parentApiRouter: ethApiRouter,
@@ -27,12 +27,12 @@ func NewJobs(id int, maxThreads uint8, ethApiRouter eucommon.EthApiRouter, jobs 
 	}
 }
 
-func NewJobsFromSequence(id int, maxThreads uint8, ethApiRouter eucommon.EthApiRouter, sequence *Sequence) *Jobs {
+func NewParallelJobsFromSequence(id int, maxThreads uint8, ethApiRouter eucommon.EthApiRouter, sequence *Sequence) *ParallelJobs {
 	if sequence == nil {
 		return nil
 	}
 
-	this := &Jobs{
+	this := &ParallelJobs{
 		batchID:         uint64(id),
 		maxThreads:      maxThreads,
 		parentApiRouter: ethApiRouter,
@@ -50,14 +50,14 @@ func NewJobsFromSequence(id int, maxThreads uint8, ethApiRouter eucommon.EthApiR
 	return this
 }
 
-func (this *Jobs) Batch() uint64  { return uint64(this.batchID) }
-func (this *Jobs) Length() uint64 { return uint64(len(this.jobs)) }
+func (this *ParallelJobs) Batch() uint64  { return uint64(this.batchID) }
+func (this *ParallelJobs) Length() uint64 { return uint64(len(this.jobs)) }
 
-func (this *Jobs) At(idx uint64) *Job {
+func (this *ParallelJobs) At(idx uint64) *Job {
 	return common.IfThenDo1st(idx < uint64(len(this.jobs)), func() *Job { return this.jobs[idx] }, nil)
 }
 
-func (this *Jobs) Add(job *Job) bool {
+func (this *ParallelJobs) Add(job *Job) bool {
 	if uint32(len(this.jobs)) > eucommon.MAX_NUMBER_THREADS {
 		return false
 	}
@@ -66,7 +66,7 @@ func (this *Jobs) Add(job *Job) bool {
 	return true
 }
 
-func (this *Jobs) Run(predecessors []*Result) []*Result {
+func (this *ParallelJobs) Run(predecessors []*Result) []*Result {
 	preTransitions := common.Concate(predecessors, func(v *Result) []ccinterfaces.Univalue { return v.Transitions })
 	snapshotUrl := this.parentApiRouter.Ccurl().Snapshot(preTransitions)
 
@@ -100,27 +100,27 @@ func (this *Jobs) Run(predecessors []*Result) []*Result {
 	return catenated
 }
 
-func (this *Jobs) Clear() uint64 {
+func (this *ParallelJobs) Clear() uint64 {
 	length := len(this.jobs)
 	this.jobs = this.jobs[:0]
 	return uint64(length)
 }
 
 // Extract deferred calls if exist
-func (this *Jobs) GetSpawned(results []*Result) ([]*Jobs, [][]*Result) {
+func (this *ParallelJobs) GetSpawned(results []*Result) ([]*ParallelJobs, [][]*Result) {
 	resultvec := common.GroupBy(results, func(v *Result) *[32]byte {
 		return common.IfThenDo1st(v.Spawned != nil, func() *[32]byte { return &(v.Spawned.CallSig) }, nil)
 	})
 
-	subJobs := make([]*Jobs, len(resultvec))
+	subJobs := make([]*ParallelJobs, len(resultvec))
 	for i := 0; i < len(resultvec); i++ {
 		seq := Results(resultvec[i]).ToSequence()
-		subJobs[i] = NewJobsFromSequence(i, this.maxThreads, this.parentApiRouter, seq)
+		subJobs[i] = NewParallelJobsFromSequence(i, this.maxThreads, this.parentApiRouter, seq)
 	}
 	return common.Remove(&subJobs, nil), resultvec
 }
 
-func (this *Jobs) RunSpawned(results []*Result) [][]*Result {
+func (this *ParallelJobs) RunSpawned(results []*Result) [][]*Result {
 	spawnedJobs, preResults := this.GetSpawned(results)
 	if len(spawnedJobs) == 0 {
 		return [][]*Result{}

@@ -14,7 +14,6 @@ import (
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	evmcommon "github.com/arcology-network/evm/common"
 	evmcore "github.com/arcology-network/evm/core"
-	evmTypes "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/core/vm"
 	evmparams "github.com/arcology-network/evm/params"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
@@ -28,8 +27,6 @@ type Job struct {
 	Predecessors [][32]byte
 	EvmMsg       *evmcore.Message
 	ApiRouter    eucommon.EthApiRouter
-	Receipt      *evmTypes.Receipt
-	EvmResult    *evmcore.ExecutionResult
 	Result       *Result
 }
 
@@ -87,8 +84,8 @@ func (this *Job) Run(config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore)
 		this.ApiRouter, // Tx hash, tx id and url
 	)
 
-	var prechkErr error
-	this.Receipt, this.EvmResult, prechkErr =
+	// var prechkErr error
+	receipt, evmResult, prechkErr :=
 		eu.Run(
 			this.TxHash,
 			int(this.ID),
@@ -98,9 +95,9 @@ func (this *Job) Run(config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore)
 		)
 
 	// Do gas transfer
-	if prechkErr == nil && this.EvmResult != nil && this.EvmResult.Err == nil && this.ApiRouter.GetReserved() != nil {
+	if prechkErr == nil && evmResult != nil && evmResult.Err == nil && this.ApiRouter.GetReserved() != nil {
 		deferred := this.ApiRouter.GetReserved().(*StandardMessage)
-		if this.EvmMsg.GasLimit-this.EvmResult.UsedGas >= deferred.Native.GasLimit {
+		if this.EvmMsg.GasLimit-evmResult.UsedGas >= deferred.Native.GasLimit {
 			eu.VM().Context.Transfer(
 				eu.VM().StateDB,
 				this.EvmMsg.From,
@@ -114,15 +111,18 @@ func (this *Job) Run(config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore)
 
 	return &Result{
 		TxIndex: uint32(this.ID),
-		TxHash:  common.IfThenDo1st(this.Receipt != nil, func() evmcommon.Hash { return this.Receipt.TxHash }, evmcommon.Hash{}),
+		TxHash:  common.IfThenDo1st(receipt != nil, func() evmcommon.Hash { return receipt.TxHash }, evmcommon.Hash{}),
 		Spawned: common.IfThenDo1st(this.ApiRouter.GetReserved() != nil,
 			func() *StandardMessage {
 				return this.ApiRouter.GetReserved().(*StandardMessage)
 			},
 			nil),
 		Transitions: transitions, // Transitions + Accesses
-		Err:         common.IfThenDo1st(prechkErr == nil, func() error { return this.EvmResult.Err }, prechkErr),
-		GasUsed:     common.IfThenDo1st(this.Receipt != nil, func() uint64 { return this.Receipt.GasUsed }, 0),
+		Err:         common.IfThenDo1st(prechkErr == nil, func() error { return evmResult.Err }, prechkErr),
+		// GasUsed:     common.IfThenDo1st(this.Receipt != nil, func() uint64 { return this.Receipt.GasUsed }, 0),
+
+		Receipt:   receipt,
+		EvmResult: evmResult,
 	}
 }
 
