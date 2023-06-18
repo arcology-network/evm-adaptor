@@ -14,6 +14,7 @@ import (
 type ParallelJobs struct {
 	batchID         uint64
 	maxThreads      uint8
+	Predecessors    [][32]byte
 	parentApiRouter eucommon.EthApiRouter
 	jobs            []*Job // para jobs
 }
@@ -107,29 +108,39 @@ func (this *ParallelJobs) Clear() uint64 {
 }
 
 // Extract deferred calls if exist
-func (this *ParallelJobs) GetSpawned(results []*Result) ([]*ParallelJobs, [][]*Result) {
-	resultvec := common.GroupBy(results, func(v *Result) *[32]byte {
+// func (this *ParallelJobs) GetSpawned(results []*Result) ([]*ParallelJobs, [][]*Result) {
+// 	resultvec := common.GroupBy(results, func(v *Result) *[32]byte {
+// 		return common.IfThenDo1st(v.Spawned != nil, func() *[32]byte { return &(v.Spawned.CallSig) }, nil)
+// 	})
+
+// 	spawnedJobs := make([]*ParallelJobs, len(resultvec))
+// 	for i := 0; i < len(resultvec); i++ {
+// 		seq := Results(resultvec[i]).ToSequence()
+// 		spawnedJobs[i] = NewParallelJobsFromSequence(i, this.maxThreads, this.parentApiRouter, seq)
+// 	}
+// 	return common.Remove(&spawnedJobs, nil), resultvec
+// }
+
+func (this *ParallelJobs) RunSpawned(results []*Result) [][]*Result {
+	grouped := common.GroupBy(results, func(v *Result) *[32]byte {
 		return common.IfThenDo1st(v.Spawned != nil, func() *[32]byte { return &(v.Spawned.CallSig) }, nil)
 	})
 
-	subJobs := make([]*ParallelJobs, len(resultvec))
-	for i := 0; i < len(resultvec); i++ {
-		seq := Results(resultvec[i]).ToSequence()
-		subJobs[i] = NewParallelJobsFromSequence(i, this.maxThreads, this.parentApiRouter, seq)
+	spawnedJobs := make([]*ParallelJobs, 0, len(grouped))
+	for i := 0; i < len(grouped); i++ {
+		seq := Results(grouped[i]).ToSequence()
+		if job := NewParallelJobsFromSequence(i, this.maxThreads, this.parentApiRouter, seq); job != nil {
+			spawnedJobs = append(spawnedJobs, job)
+		}
 	}
-	return common.Remove(&subJobs, nil), resultvec
-}
 
-func (this *ParallelJobs) RunSpawned(results []*Result) [][]*Result {
-	spawnedJobs, preResults := this.GetSpawned(results)
 	if len(spawnedJobs) == 0 {
 		return [][]*Result{}
 	}
 
-	// need to transfer the funds to a temp account
 	spawnedResults := make([][]*Result, len(spawnedJobs))
 	for i, jobs := range spawnedJobs {
-		spawnedResults[i] = jobs.Run(preResults[i])
+		spawnedResults[i] = jobs.Run(grouped[i])
 	}
 	return spawnedResults
 }

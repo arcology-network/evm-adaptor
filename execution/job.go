@@ -22,12 +22,11 @@ import (
 )
 
 type Job struct {
-	ID           uint64
-	TxHash       [32]byte
-	Predecessors [][32]byte
-	EvmMsg       *evmcore.Message
-	ApiRouter    eucommon.EthApiRouter
-	Result       *Result
+	ID        uint64
+	TxHash    [32]byte
+	EvmMsg    *evmcore.Message
+	ApiRouter eucommon.EthApiRouter
+	Result    *Result
 }
 
 func NewJob(jobID, batchID uint64, from, to evmcommon.Address, funCallData []byte, gaslimit uint64, parentApiRouter eucommon.EthApiRouter) *Job {
