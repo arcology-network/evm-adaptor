@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"sync/atomic"
 
+	ccinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
 	"github.com/arcology-network/vm-adaptor/common"
@@ -143,7 +144,7 @@ func (this *ThreadingHandler) run(caller, callee evmcommon.Address, input []byte
 		return []byte{}, false
 	}
 
-	this.pools[id].Run([]*execution.Result{})
+	this.pools[id].Run([]ccinterfaces.Univalue{})
 	return []byte{}, true
 }
 

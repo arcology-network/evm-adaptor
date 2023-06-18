@@ -45,22 +45,17 @@ func NewJob(jobID, batchID uint64, from, to evmcommon.Address, funCallData []byt
 }
 
 func NewJobFromNative(jobID, batchID uint64, nativeMsg *evmcore.Message, parentApiRouter eucommon.EthApiRouter) *Job {
-	job := &Job{
+	return &Job{
 		ID:        jobID,
 		EvmMsg:    nativeMsg,
 		ApiRouter: parentApiRouter,
+		TxHash: sha256.Sum256(common.Flatten([][]byte{
+			codec.Bytes32(parentApiRouter.TxHash()).Encode(),
+			codec.Uint32((batchID)).Encode(),
+			nativeMsg.Data[:4],
+			codec.Uint32(jobID).Encode(),
+		})),
 	}
-	job.TxHash = job.Hash(batchID)
-	return job
-}
-
-func (this *Job) Hash(batchID uint64) [32]byte {
-	return sha256.Sum256(common.Flatten([][]byte{
-		codec.Bytes32(this.ApiRouter.TxHash()).Encode(),
-		codec.Uint32((batchID)).Encode(),
-		this.EvmMsg.Data[:4],
-		codec.Uint32(this.ID).Encode(),
-	}))
 }
 
 func (this *Job) CaptureStates(snapshotUrl ccurlinterfaces.Datastore) eucommon.EthApiRouter {

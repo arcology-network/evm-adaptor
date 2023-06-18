@@ -60,6 +60,10 @@ func (this Results) SetGroupIDs(BranchID uint32) {
 }
 
 func (this Results) DetectConflict() ([]*Result, int) {
+	if len(this) == 1 {
+		return this, 0
+	}
+
 	groupIDs := []uint32{}
 	accesseVec := []ccurlinterfaces.Univalue{}
 	for _, v := range this {

@@ -115,8 +115,6 @@ func TestAtomicDeferredBoolContainer(t *testing.T) {
 	url.Commit([]uint32{1})
 
 	receipt, _, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
-	// _, transitions = eu.Api().Ccurl().ExportAll()
-
 	if err != nil {
 		fmt.Print(err)
 	}

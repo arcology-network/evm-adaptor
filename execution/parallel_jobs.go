@@ -14,7 +14,7 @@ import (
 type ParallelJobs struct {
 	batchID         uint64
 	maxThreads      uint8
-	Predecessors    [][32]byte
+	predecessors    [][32]byte
 	parentApiRouter eucommon.EthApiRouter
 	jobs            []*Job // para jobs
 }
@@ -67,8 +67,7 @@ func (this *ParallelJobs) Add(job *Job) bool {
 	return true
 }
 
-func (this *ParallelJobs) Run(predecessors []*Result) []*Result {
-	preTransitions := common.Concate(predecessors, func(v *Result) []ccinterfaces.Univalue { return v.Transitions })
+func (this *ParallelJobs) Run(preTransitions []ccinterfaces.Univalue) []*Result {
 	snapshotUrl := this.parentApiRouter.Ccurl().Snapshot(preTransitions)
 
 	config := cceu.NewConfig().SetCoinbase(this.parentApiRouter.Coinbase())
@@ -77,9 +76,7 @@ func (this *ParallelJobs) Run(predecessors []*Result) []*Result {
 	}
 
 	results := common.Concate(this.jobs, func(job *Job) []*Result { return []*Result{job.Result} })
-	if len(results) > 1 {
-		results, _ = Results(results).DetectConflict() // Detect potential conflicts
-	}
+	results, _ = Results(results).DetectConflict() // Detect potential conflicts
 
 	// Run deferrred jobs
 	subResults := this.RunSpawned(results)
@@ -107,20 +104,6 @@ func (this *ParallelJobs) Clear() uint64 {
 	return uint64(length)
 }
 
-// Extract deferred calls if exist
-// func (this *ParallelJobs) GetSpawned(results []*Result) ([]*ParallelJobs, [][]*Result) {
-// 	resultvec := common.GroupBy(results, func(v *Result) *[32]byte {
-// 		return common.IfThenDo1st(v.Spawned != nil, func() *[32]byte { return &(v.Spawned.CallSig) }, nil)
-// 	})
-
-// 	spawnedJobs := make([]*ParallelJobs, len(resultvec))
-// 	for i := 0; i < len(resultvec); i++ {
-// 		seq := Results(resultvec[i]).ToSequence()
-// 		spawnedJobs[i] = NewParallelJobsFromSequence(i, this.maxThreads, this.parentApiRouter, seq)
-// 	}
-// 	return common.Remove(&spawnedJobs, nil), resultvec
-// }
-
 func (this *ParallelJobs) RunSpawned(results []*Result) [][]*Result {
 	grouped := common.GroupBy(results, func(v *Result) *[32]byte {
 		return common.IfThenDo1st(v.Spawned != nil, func() *[32]byte { return &(v.Spawned.CallSig) }, nil)
@@ -140,7 +123,8 @@ func (this *ParallelJobs) RunSpawned(results []*Result) [][]*Result {
 
 	spawnedResults := make([][]*Result, len(spawnedJobs))
 	for i, jobs := range spawnedJobs {
-		spawnedResults[i] = jobs.Run(grouped[i])
+		preTransitions := common.Concate(grouped[i], func(v *Result) []ccinterfaces.Univalue { return v.Transitions })
+		spawnedResults[i] = jobs.Run(preTransitions)
 	}
 	return spawnedResults
 }
