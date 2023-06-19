@@ -29,7 +29,7 @@ type Job struct {
 	Result    *Result
 }
 
-func NewJob(jobID, batchID uint64, from, to evmcommon.Address, funCallData []byte, gaslimit uint64, parentApiRouter eucommon.EthApiRouter) *Job {
+func NewJob(jobID, branchID uint64, from, to evmcommon.Address, funCallData []byte, gaslimit uint64, parentApiRouter eucommon.EthApiRouter) *Job {
 	msg := evmcore.NewMessage( // Build the message
 		from,
 		&to,
@@ -41,17 +41,17 @@ func NewJob(jobID, batchID uint64, from, to evmcommon.Address, funCallData []byt
 		nil,
 		false, // Don't checking nonce
 	)
-	return NewJobFromNative(jobID, batchID, &msg, parentApiRouter)
+	return NewJobFromNative(jobID, branchID, &msg, parentApiRouter)
 }
 
-func NewJobFromNative(jobID, batchID uint64, nativeMsg *evmcore.Message, parentApiRouter eucommon.EthApiRouter) *Job {
+func NewJobFromNative(jobID, branchID uint64, nativeMsg *evmcore.Message, parentApiRouter eucommon.EthApiRouter) *Job {
 	return &Job{
 		ID:        jobID,
 		EvmMsg:    nativeMsg,
 		ApiRouter: parentApiRouter,
 		TxHash: sha256.Sum256(common.Flatten([][]byte{
 			codec.Bytes32(parentApiRouter.TxHash()).Encode(),
-			codec.Uint32((batchID)).Encode(),
+			codec.Uint32((branchID)).Encode(),
 			nativeMsg.Data[:4],
 			codec.Uint32(jobID).Encode(),
 		})),

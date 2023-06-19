@@ -12,19 +12,17 @@ import (
 
 // APIs under the concurrency namespace
 type ParallelJobs struct {
-	batchID         uint64
-	maxThreads      uint8
-	predecessors    [][32]byte
-	parentApiRouter eucommon.EthApiRouter
-	jobs            []*Job // para jobs
+	branchID     uint64
+	maxThreads   uint8
+	predecessors [][32]byte
+	jobs         []*Job // para jobs
 }
 
 func NewParallelJobs(id int, maxThreads uint8, ethApiRouter eucommon.EthApiRouter, jobs []*Job) *ParallelJobs {
 	return &ParallelJobs{
-		batchID:         uint64(id),
-		maxThreads:      maxThreads,
-		parentApiRouter: ethApiRouter,
-		jobs:            jobs,
+		branchID:   uint64(id),
+		maxThreads: maxThreads,
+		jobs:       jobs,
 	}
 }
 
@@ -34,16 +32,15 @@ func NewParallelJobsFromSequence(id int, maxThreads uint8, ethApiRouter eucommon
 	}
 
 	this := &ParallelJobs{
-		batchID:         uint64(id),
-		maxThreads:      maxThreads,
-		parentApiRouter: ethApiRouter,
-		jobs:            make([]*Job, len(sequence.Msgs)),
+		branchID:   uint64(id),
+		maxThreads: maxThreads,
+		jobs:       make([]*Job, len(sequence.Msgs)),
 	}
 
 	for i, msg := range sequence.Msgs {
 		this.jobs[i] = NewJobFromNative(
 			uint64(i),
-			this.batchID, // batch ID
+			this.branchID, // batch ID
 			msg.Native,
 			ethApiRouter,
 		)
@@ -51,7 +48,7 @@ func NewParallelJobsFromSequence(id int, maxThreads uint8, ethApiRouter eucommon
 	return this
 }
 
-func (this *ParallelJobs) Batch() uint64  { return uint64(this.batchID) }
+func (this *ParallelJobs) Batch() uint64  { return uint64(this.branchID) }
 func (this *ParallelJobs) Length() uint64 { return uint64(len(this.jobs)) }
 
 func (this *ParallelJobs) At(idx uint64) *Job {
