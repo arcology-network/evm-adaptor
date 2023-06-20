@@ -1,14 +1,19 @@
 package threading
 
 import (
+	"crypto/sha256"
 	"math"
+	"math/big"
 	"strconv"
 	"sync/atomic"
 
-	ccinterfaces "github.com/arcology-network/concurrenturl/interfaces"
+	"github.com/arcology-network/common-lib/codec"
+	commonlibcommon "github.com/arcology-network/common-lib/common"
+	"github.com/arcology-network/concurrenturl/interfaces"
 	evmcommon "github.com/arcology-network/evm/common"
+	evmcore "github.com/arcology-network/evm/core"
 	"github.com/arcology-network/vm-adaptor/abi"
-	"github.com/arcology-network/vm-adaptor/common"
+
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	execution "github.com/arcology-network/vm-adaptor/execution"
 )
@@ -27,10 +32,10 @@ func NewThreadingHandler(ethApiRouter eucommon.EthApiRouter) *ThreadingHandler {
 }
 
 func (this *ThreadingHandler) Address() [20]byte {
-	return common.THREADING_HANDLER
+	return eucommon.THREADING_HANDLER
 }
 
-func (this *ThreadingHandler) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
+func (this *ThreadingHandler) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
@@ -63,8 +68,8 @@ func (this *ThreadingHandler) Call(caller, callee evmcommon.Address, input []byt
 }
 
 func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
-	if this.api.Depth() >= common.MAX_RECURSIION_DEPTH ||
-		atomic.AddUint64(&common.TotalProcesses, 1) > common.MAX_SUB_PROCESSES {
+	if this.api.Depth() >= eucommon.MAX_RECURSIION_DEPTH ||
+		atomic.AddUint64(&eucommon.TotalProcesses, 1) > eucommon.MAX_SUB_PROCESSES {
 		return []byte{}, false // Execeeds the max recursion depth or the max sub processes
 	}
 
@@ -105,17 +110,37 @@ func (this *ThreadingHandler) add(caller, callee evmcommon.Address, input []byte
 		return []byte{}, false
 	}
 
-	job := execution.NewJob(
-		this.pools[id].Length(),
-		this.pools[id].Batch(),
+	evmMsg := evmcore.NewMessage( // Build the message
 		this.api.Origin(),
-		calleeAddr,
-		funCall,
+		&calleeAddr,
+		0,
+		new(big.Int).SetUint64(0), // Amount to transfer
 		gasLimit,
-		this.api,
+		this.api.Message().GasPrice, // gas price
+		funCall,
+		nil,
+		false, // Don't checking nonce
 	)
 
-	return []byte{}, this.pools[id].Add(job)
+	newJob := &execution.Job{
+		JobID:     this.pools[id].Length(),
+		BranchID:  this.pools[id].BranchID(),
+		ApiRouter: this.api,
+	}
+
+	stdMsg := &execution.StandardMessage{
+		ID:     0,
+		Native: &evmMsg,
+		TxHash: sha256.Sum256(commonlibcommon.Flatten([][]byte{
+			codec.Bytes32(this.api.TxHash()).Encode(),
+			codec.Uint32((this.pools[id].BranchID())).Encode(),
+			evmMsg.Data[:4],
+			codec.Uint32(newJob.JobID).Encode(),
+		})),
+	}
+
+	newJob.StdMsgs = []*execution.StandardMessage{stdMsg}
+	return []byte{}, this.pools[id].Add(newJob)
 }
 
 func (this *ThreadingHandler) clear(input []byte) ([]byte, bool) {
@@ -144,7 +169,7 @@ func (this *ThreadingHandler) run(caller, callee evmcommon.Address, input []byte
 		return []byte{}, false
 	}
 
-	this.pools[id].Run(this.api, []ccinterfaces.Univalue{})
+	this.pools[id].Run(this.api, this.api.Ccurl().Snapshot([]interfaces.Univalue{}))
 	return []byte{}, true
 }
 
@@ -155,8 +180,8 @@ func (this *ThreadingHandler) get(input []byte) ([]byte, bool) {
 	}
 
 	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
-		if item := this.pools[id].At(idx); item != nil && item.Result.EvmResult != nil {
-			return item.Result.EvmResult.ReturnData, item.Result.EvmResult.Err == nil
+		if item := this.pools[id].At(idx); item != nil && item.Results[0].EvmResult != nil {
+			return item.Results[0].EvmResult.ReturnData, item.Results[0].EvmResult.Err == nil
 		}
 	}
 	return []byte{}, false

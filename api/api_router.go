@@ -146,7 +146,7 @@ func (this *API) ClearLogs() {
 	this.logs = this.logs[:0]
 }
 
-func (this *API) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64, blockhash evmcommon.Hash) (bool, []byte, bool) {
+func (this *API) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64, blockhash evmcommon.Hash) (bool, []byte, bool) {
 	fmt.Println(callee)
 
 	if handler, ok := this.handlerDict[callee]; ok {

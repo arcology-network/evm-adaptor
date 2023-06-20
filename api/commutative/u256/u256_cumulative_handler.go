@@ -33,7 +33,7 @@ func (this *U256CumulativeHandlers) Address() [20]byte {
 	return common.CUMULATIVE_U256_HANDLER
 }
 
-func (this *U256CumulativeHandlers) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
+func (this *U256CumulativeHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 

@@ -34,7 +34,7 @@ func (this *BytesHandlers) Address() [20]byte {
 	return common.BYTES_HANDLER
 }
 
-func (this *BytesHandlers) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
+func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 

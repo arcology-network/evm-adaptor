@@ -31,7 +31,7 @@ func (this *AtomicHandler) Address() [20]byte {
 	return common.ATOMIC_HANDLER
 }
 
-func (this *AtomicHandler) Call(caller, callee evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool) {
+func (this *AtomicHandler) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
