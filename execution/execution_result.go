@@ -3,9 +3,6 @@ package execution
 import (
 	// "github.com/arcology-network/common-lib/codec"
 
-	"errors"
-	"fmt"
-
 	common "github.com/arcology-network/common-lib/common"
 	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
@@ -59,9 +56,10 @@ func (this Results) SetGroupIDs(BranchID uint32) {
 	})
 }
 
-func (this Results) DetectConflict() ([]*Result, int) {
+func (this Results) Detect() *map[uint32]uint64 {
 	if len(this) == 1 {
-		return this, 0
+		dict := make(map[uint32]uint64)
+		return &dict
 	}
 
 	groupIDs := []uint32{}
@@ -74,21 +72,37 @@ func (this Results) DetectConflict() ([]*Result, int) {
 	}
 
 	conflicInfo := arbitrator.Conflicts((&arbitrator.Arbitrator{}).Detect(groupIDs, accesseVec))
-	dict := conflicInfo.ToDict()
-
-	if len(dict) > 0 {
-		fmt.Println("Conflict")
-	}
-
-	totalConflict := 0
-	for i := 0; i < len(this); i++ {
-		if _, conflict := (dict)[this[i].TxIndex]; conflict {
-			this[i].Err = errors.New("Error: Conflicts detected in state accesses")
-			totalConflict++
-		}
-	}
-	return this, totalConflict
+	return conflicInfo.ToDict()
 }
+
+// func (this Results) DetectConflict() []*Result {
+// 	if len(this) == 1 {
+// 		return this
+// 	}
+
+// 	groupIDs := []uint32{}
+// 	accesseVec := []ccurlinterfaces.Univalue{}
+// 	for _, v := range this {
+// 		if v.Err == nil {
+// 			groupIDs = append(groupIDs, common.Fill(make([]uint32, len(v.Transitions)), v.BranchID)...)
+// 			accesseVec = append(accesseVec, indexer.Univalues(common.Clone(v.Transitions)).To(indexer.IPCAccess{})...)
+// 		}
+// 	}
+
+// 	conflicInfo := arbitrator.Conflicts((&arbitrator.Arbitrator{}).Detect(groupIDs, accesseVec))
+// 	dict := conflicInfo.ToDict()
+
+// 	if len(dict) > 0 {
+// 		fmt.Println("Conflict")
+// 	}
+
+// 	for i := 0; i < len(this); i++ {
+// 		if _, conflict := (dict)[this[i].TxIndex]; conflict {
+// 			this[i].Err = errors.New("Error: Conflicts detected in state accesses")
+// 		}
+// 	}
+// 	return this
+// }
 
 func (this Results) ToSequence() *Sequence {
 	if this[0].Spawned == nil {

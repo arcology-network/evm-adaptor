@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/arcology-network/concurrenturl"
+	"github.com/arcology-network/concurrenturl/interfaces"
 	"github.com/arcology-network/evm/common"
 
 	evmCommon "github.com/arcology-network/evm/common"
@@ -31,7 +32,7 @@ type EthApiRouter interface {
 
 	Depth() uint8
 	AddLog(key, value string)
-	Call(caller, callee evmCommon.Address, input []byte, origin evmCommon.Address, nonce uint64, blockhash evmCommon.Hash) (bool, []byte, bool)
+	Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64, blockhash evmCommon.Hash) (bool, []byte, bool)
 	SetContext(evmCommon.Hash, *big.Int, uint32)
 
 	TxIndex() uint32
@@ -54,5 +55,26 @@ type ChainContext interface {
 
 type ApiCallHandler interface {
 	Address() [20]byte
-	Call(evmCommon.Address, evmCommon.Address, []byte, evmCommon.Address, uint64) ([]byte, bool)
+	Call([20]byte, [20]byte, []byte, [20]byte, uint64) ([]byte, bool)
+}
+
+type StateConflict interface {
+	Detect() []uint32
+}
+
+type SnapshotMaker interface {
+	Import([]interfaces.Univalue)
+	Make([]uint32) interface{}
+	Clear()
+}
+
+type LocalSnapshotMaker struct {
+	transitions []interfaces.Univalue
+}
+
+func (this *LocalSnapshotMaker) Import(values []interfaces.Univalue) { this.transitions = values }
+func (this *LocalSnapshotMaker) Clear()                              { this.transitions = this.transitions[:0] }
+
+func (this *LocalSnapshotMaker) Make(ccurl *concurrenturl.ConcurrentUrl, _ []uint32) interface{} {
+	return ccurl.Snapshot(this.transitions)
 }

@@ -1,10 +1,8 @@
 package execution
 
 import (
-	"crypto/sha256"
 	"math/big"
 
-	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/commutative"
@@ -13,7 +11,6 @@ import (
 
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	evmcommon "github.com/arcology-network/evm/common"
-	evmcore "github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/core/vm"
 	evmparams "github.com/arcology-network/evm/params"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
@@ -22,54 +19,33 @@ import (
 )
 
 type Job struct {
-	ID        uint64
-	TxHash    [32]byte
-	EvmMsg    *evmcore.Message
+	JobID     uint64
+	BranchID  uint64
+	StdMsgs   []*StandardMessage
+	Results   []*Result
 	ApiRouter eucommon.EthApiRouter
-	Result    *Result
 }
 
-func NewJob(jobID, branchID uint64, from, to evmcommon.Address, funCallData []byte, gaslimit uint64, parentApiRouter eucommon.EthApiRouter) *Job {
-	msg := evmcore.NewMessage( // Build the message
-		from,
-		&to,
-		0,
-		new(big.Int).SetUint64(0), // Amount to transfer
-		gaslimit,
-		parentApiRouter.Message().GasPrice, // gas price
-		funCallData,
-		nil,
-		false, // Don't checking nonce
-	)
-	return NewJobFromNative(jobID, branchID, &msg, parentApiRouter)
-}
-
-func NewJobFromNative(jobID, branchID uint64, nativeMsg *evmcore.Message, parentApiRouter eucommon.EthApiRouter) *Job {
-	return &Job{
-		ID:        jobID,
-		EvmMsg:    nativeMsg,
-		ApiRouter: parentApiRouter,
-		TxHash: sha256.Sum256(common.Flatten([][]byte{
-			codec.Bytes32(parentApiRouter.TxHash()).Encode(),
-			codec.Uint32((branchID)).Encode(),
-			nativeMsg.Data[:4],
-			codec.Uint32(jobID).Encode(),
-		})),
-	}
-}
-
-func (this *Job) CaptureStates(snapshotUrl ccurlinterfaces.Datastore) eucommon.EthApiRouter {
+func (this *Job) CaptureStates(stdMsg *StandardMessage, snapshotUrl ccurlinterfaces.Datastore) eucommon.EthApiRouter {
 	ccurl := (&concurrenturl.ConcurrentUrl{}).New(
 		indexer.NewWriteCache(snapshotUrl, this.ApiRouter.Ccurl().Platform),
 		this.ApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
 
-	return this.ApiRouter.New(this.TxHash, uint32(this.ID), this.ApiRouter.Depth(), ccurl)
+	return this.ApiRouter.New(stdMsg.TxHash, uint32(stdMsg.ID), this.ApiRouter.Depth(), ccurl)
 }
 
-func (this *Job) Run(config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore) *Result { //
-	this.ApiRouter = this.CaptureStates(snapshotUrl)
-	statedb := eth.NewImplStateDB(this.ApiRouter)                // Eth state DB
-	statedb.PrepareFormer(this.TxHash, [32]byte{}, int(this.ID)) // tx hash , block hash and tx index
+func (this *Job) Run(config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore) []*Result { //
+	results := make([]*Result, len(this.StdMsgs))
+	for i, msg := range this.StdMsgs {
+		results[i] = this.runMsg(msg, config, snapshotUrl)
+	}
+	return results
+}
+
+func (this *Job) runMsg(stdMsg *StandardMessage, config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore) *Result { //
+	this.ApiRouter = this.CaptureStates(stdMsg, snapshotUrl)
+	statedb := eth.NewImplStateDB(this.ApiRouter)                    // Eth state DB
+	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, int(stdMsg.ID)) // tx hash , block hash and tx index
 
 	eu := cceu.NewEU(
 		config.ChainConfig,
@@ -81,20 +57,20 @@ func (this *Job) Run(config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore)
 	// var prechkErr error
 	receipt, evmResult, prechkErr :=
 		eu.Run(
-			this.TxHash,
-			int(this.ID),
-			this.EvmMsg,
+			stdMsg.TxHash,
+			int(stdMsg.ID),
+			stdMsg.Native,
 			cceu.NewEVMBlockContext(config),
-			cceu.NewEVMTxContext(*this.EvmMsg),
+			cceu.NewEVMTxContext(*stdMsg.Native),
 		)
 
 	// Do gas transfer
 	if prechkErr == nil && evmResult != nil && evmResult.Err == nil && this.ApiRouter.GetReserved() != nil {
 		deferred := this.ApiRouter.GetReserved().(*StandardMessage)
-		if this.EvmMsg.GasLimit-evmResult.UsedGas >= deferred.Native.GasLimit {
+		if stdMsg.Native.GasLimit-evmResult.UsedGas >= deferred.Native.GasLimit {
 			eu.VM().Context.Transfer(
 				eu.VM().StateDB,
-				this.EvmMsg.From,
+				stdMsg.Native.From,
 				eucommon.ATOMIC_HANDLER,
 				big.NewInt(int64(deferred.Native.GasLimit)),
 			)
@@ -104,7 +80,7 @@ func (this *Job) Run(config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore)
 	indexer.Univalues(transitions).Print()
 
 	return &Result{
-		TxIndex: uint32(this.ID),
+		TxIndex: uint32(stdMsg.ID),
 		TxHash:  common.IfThenDo1st(receipt != nil, func() evmcommon.Hash { return receipt.TxHash }, evmcommon.Hash{}),
 		Spawned: common.IfThenDo1st(this.ApiRouter.GetReserved() != nil,
 			func() *StandardMessage {

@@ -1,21 +1,45 @@
 package execution
 
 import (
-	"github.com/arcology-network/evm/core"
-)
+	"bytes"
+	"sort"
 
-const (
-	concurrency = 4
+	evmcore "github.com/arcology-network/evm/core"
 )
 
 type StandardMessage struct {
+	ID      uint64
 	TxHash  [32]byte
 	CallSig [32]byte
-	Native  *core.Message
+	Native  *evmcore.Message
 	Source  uint8
 }
 
-// type StandardMessages []*StandardMessage
+type StandardMessages []*StandardMessage
+
+func (this StandardMessages) SortByFee() {
+	// this.Native.
+	sort.SliceStable(
+		this,
+		func(i, j int) bool {
+			return this[i].Native.GasLimit < this[j].Native.GasLimit
+		},
+	)
+}
+
+func (this StandardMessages) SortByHash() {
+	sort.Slice(this, func(i, j int) bool { return string(this[i].TxHash[:]) < string(this[j].TxHash[:]) })
+}
+
+func (this StandardMessages) Count(value *StandardMessage) int {
+	counter := 0
+	for i := range this {
+		if bytes.Equal(this[i].TxHash[:], value.TxHash[:]) {
+			counter++
+		}
+	}
+	return counter
+}
 
 // func (this StandardMessages) FromSequence(baseApiRouter eucommon.EthApiRouter) []*StandardMessage {
 // 	jobs := make([]*Job, len(this.Msgs))
@@ -33,34 +57,6 @@ type StandardMessage struct {
 // 		hashes[i] = this[i].TxHash
 // 	}
 // 	return hashes
-// }
-
-// func (this StandardMessages) SortByFee() {
-// 	// this.Native.
-// 	sort.Slice(
-// 		this,
-// 		func(i, j int) bool {
-// 			return this[i].Native.Gas() < this[j].Native.Gas()
-// 		},
-// 	)
-// }
-
-// // func (this StandardMessages) SortByGas() {
-// // 	sort.Sort(byGas(this))
-// // }
-
-// func (this StandardMessages) SortByHash() {
-// 	sort.Slice(this, func(i, j int) bool { return string(this[i].TxHash[:]) < string(this[j].TxHash[:]) })
-// }
-
-// func (this StandardMessages) Count(value *StandardMessage) int {
-// 	counter := 0
-// 	for i := range this {
-// 		if bytes.Equal(this[i].TxHash[:], value.TxHash[:]) {
-// 			counter++
-// 		}
-// 	}
-// 	return counter
 // }
 
 // func (this StandardMessages) QuickSort(less func(this *StandardMessage, rgt *StandardMessage) bool) {
