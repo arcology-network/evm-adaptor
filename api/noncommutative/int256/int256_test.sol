@@ -6,7 +6,7 @@ import "./Int256.sol";
 contract Int256Test {
     Int256 container = new Int256();
     
-    constructor() public {     
+    constructor() {     
        require(container.length() == 0); 
     
         container.push((10));

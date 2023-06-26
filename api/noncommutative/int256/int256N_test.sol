@@ -6,7 +6,7 @@ import "./Int256N.sol";
 contract Int64NTest {
     Int256N container;
 
-    constructor() public {    
+    constructor() {    
         int256 num1 = 0;
         int256 num2 = 1;
         int256 num3 = 2;

@@ -42,6 +42,10 @@ func GetContractMeta(file string) (contractName string, err error) {
 }
 
 func CompileContracts(dockerRootpath, solfilename, version, contractname string, outpathhold bool) (string, error) {
+	if !outpathhold {
+		removeOut(dockerRootpath)
+	}
+
 	if !common.FileExists(dockerRootpath + "/" + solfilename) {
 		return "", errors.New("Error: The contract file doesn't exist in " + dockerRootpath + "/" + solfilename)
 	}

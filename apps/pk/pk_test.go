@@ -168,7 +168,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 		url.Init(db)
 		api := ccApi.NewAPI(url)
 		statedb := eth.NewImplStateDB(api)
-		eu.SetContext(statedb, api)
+		eu.SetRuntimeContext(statedb, api)
 		accesses, transitions, receipt = tests.RunEx(eu, config, &cooAddress, &coreAddress, uint64(i), false, "createPromoKitty(uint256,address)", []byte{byte((i + 1) / 65536), byte((i + 1) / 256), byte((i + 1) % 256)}, []byte{byte(i / 65536), byte((i + 1) / 256), byte((i + 1) % 256)})
 		if receipt.Status != 1 {
 			t.Log(receipt)

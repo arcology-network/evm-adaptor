@@ -6,7 +6,7 @@ import "./Bytes.sol";
 contract ByteTest {
     Bytes container = new Bytes();
     
-    constructor() public {     
+    constructor() {     
         require(container.length() == 0); 
  
         bytes memory arr1 = '0x1000000000000000000000000000000000000000000000000000000000000001';

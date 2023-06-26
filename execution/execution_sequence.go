@@ -1,31 +1,27 @@
 package execution
 
-import (
-	"crypto/sha256"
-)
+// type Sequence struct {
+// 	Hash            [32]byte
+// 	Predecessors    [][32]byte
+// 	PredecessorHash [32]byte
+// 	Msgs            []*StandardMessage
+// 	Parallel        bool
+// }
 
-type Sequence struct {
-	Hash            [32]byte
-	Predecessors    [][32]byte
-	PredecessorHash [32]byte
-	Msgs            []*StandardMessage
-	Parallel        bool
-}
+// func NewSequence(ID [32]byte, predecessors [][32]byte, msgs []*StandardMessage, parallel bool) *Sequence {
+// 	buffer := make([]byte, len(msgs)*32)
+// 	for i, v := range msgs {
+// 		copy(buffer[i*32:], v.TxHash[:])
+// 	}
 
-func NewSequence(ID [32]byte, predecessors [][32]byte, msgs []*StandardMessage, parallel bool) *Sequence {
-	buffer := make([]byte, len(msgs)*32)
-	for i, v := range msgs {
-		copy(buffer[i*32:], v.TxHash[:])
-	}
-
-	return &Sequence{
-		Hash:            sha256.Sum256(buffer),
-		Predecessors:    predecessors,
-		PredecessorHash: sha256.Sum256(buffer),
-		Msgs:            msgs,
-		Parallel:        parallel,
-	}
-}
+// 	return &Sequence{
+// 		Hash:            sha256.Sum256(buffer),
+// 		Predecessors:    predecessors,
+// 		PredecessorHash: sha256.Sum256(buffer),
+// 		Msgs:            msgs,
+// 		Parallel:        parallel,
+// 	}
+// }
 
 // func (this ExecutingSequences) Encode() ([]byte, error) {
 // 	if this == nil {

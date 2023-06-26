@@ -6,7 +6,7 @@ import "./String.sol";
 contract StringTest {
     String container = new String();
     
-    constructor() public {     
+    constructor() {     
         require(container.length() == 0); 
    
         string memory str0 = "Test string 0";

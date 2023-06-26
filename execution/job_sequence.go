@@ -1,8 +1,6 @@
 package execution
 
 import (
-	"math/big"
-
 	common "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/commutative"
@@ -18,34 +16,34 @@ import (
 	"github.com/holiman/uint256"
 )
 
-type Job struct {
-	JobID     uint64
-	BranchID  uint64
+type JobSequence struct {
+	ID        uint64
 	StdMsgs   []*StandardMessage
 	Results   []*Result
 	ApiRouter eucommon.EthApiRouter
 }
 
-func (this *Job) CaptureStates(stdMsg *StandardMessage, snapshotUrl ccurlinterfaces.Datastore) eucommon.EthApiRouter {
-	ccurl := (&concurrenturl.ConcurrentUrl{}).New(
-		indexer.NewWriteCache(snapshotUrl, this.ApiRouter.Ccurl().Platform),
-		this.ApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
-
-	return this.ApiRouter.New(stdMsg.TxHash, uint32(stdMsg.ID), this.ApiRouter.Depth(), ccurl)
-}
-
-func (this *Job) Run(config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore) []*Result { //
+func (this *JobSequence) Run(config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore) []*Result { //
 	results := make([]*Result, len(this.StdMsgs))
+
 	for i, msg := range this.StdMsgs {
-		results[i] = this.runMsg(msg, config, snapshotUrl)
+		results[i] = this.execute(msg, config, snapshotUrl) // What happens if it fails
+		transitions := indexer.Univalues(common.Clone(results[i].Transitions)).To(indexer.ITCTransition{})
+		if i < len(this.StdMsgs)-1 {
+			snapshotUrl = this.ApiRouter.Ccurl().Snapshot(transitions)
+		}
 	}
 	return results
 }
 
-func (this *Job) runMsg(stdMsg *StandardMessage, config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore) *Result { //
-	this.ApiRouter = this.CaptureStates(stdMsg, snapshotUrl)
-	statedb := eth.NewImplStateDB(this.ApiRouter)                    // Eth state DB
-	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, int(stdMsg.ID)) // tx hash , block hash and tx index
+func (this *JobSequence) execute(stdMsg *StandardMessage, config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore) *Result { //
+	ccurl := (&concurrenturl.ConcurrentUrl{}).New(
+		indexer.NewWriteCache(snapshotUrl, this.ApiRouter.Ccurl().Platform),
+		this.ApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
+
+	this.ApiRouter = this.ApiRouter.New(stdMsg.TxHash, uint32(stdMsg.ID), this.ApiRouter.Depth(), ccurl, this.ApiRouter.Schedule())
+	statedb := eth.NewImplStateDB(this.ApiRouter)                       // Eth state DB
+	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, uint32(stdMsg.ID)) // tx hash , block hash and tx index
 
 	eu := cceu.NewEU(
 		config.ChainConfig,
@@ -58,45 +56,38 @@ func (this *Job) runMsg(stdMsg *StandardMessage, config *cceu.Config, snapshotUr
 	receipt, evmResult, prechkErr :=
 		eu.Run(
 			stdMsg.TxHash,
-			int(stdMsg.ID),
+			uint32(stdMsg.ID),
 			stdMsg.Native,
 			cceu.NewEVMBlockContext(config),
 			cceu.NewEVMTxContext(*stdMsg.Native),
 		)
 
 	// Do gas transfer
-	if prechkErr == nil && evmResult != nil && evmResult.Err == nil && this.ApiRouter.GetReserved() != nil {
-		deferred := this.ApiRouter.GetReserved().(*StandardMessage)
-		if stdMsg.Native.GasLimit-evmResult.UsedGas >= deferred.Native.GasLimit {
-			eu.VM().Context.Transfer(
-				eu.VM().StateDB,
-				stdMsg.Native.From,
-				eucommon.ATOMIC_HANDLER,
-				big.NewInt(int64(deferred.Native.GasLimit)),
-			)
-		}
-	}
-	transitions := this.ApiRouter.Ccurl().Export()
-	indexer.Univalues(transitions).Print()
+	// if prechkErr == nil && evmResult != nil && evmResult.Err == nil && this.ApiRouter.GetReserved() != nil {
+	// 	deferred := this.ApiRouter.GetReserved().(*StandardMessage)
+	// 	if stdMsg.Native.GasLimit-evmResult.UsedGas >= deferred.Native.GasLimit {
+	// 		eu.VM().Context.Transfer(
+	// 			eu.VM().StateDB,
+	// 			stdMsg.Native.From,
+	// 			eucommon.ATOMIC_HANDLER,
+	// 			big.NewInt(int64(deferred.Native.GasLimit)),
+	// 		)
+	// 	}
+	// }
+	indexer.Univalues(this.ApiRouter.Ccurl().Export()).Print()
 
 	return &Result{
-		TxIndex: uint32(stdMsg.ID),
-		TxHash:  common.IfThenDo1st(receipt != nil, func() evmcommon.Hash { return receipt.TxHash }, evmcommon.Hash{}),
-		Spawned: common.IfThenDo1st(this.ApiRouter.GetReserved() != nil,
-			func() *StandardMessage {
-				return this.ApiRouter.GetReserved().(*StandardMessage)
-			},
-			nil),
-		Transitions: transitions, // Transitions + Accesses
+		TxIndex:     uint32(stdMsg.ID),
+		TxHash:      common.IfThenDo1st(receipt != nil, func() evmcommon.Hash { return receipt.TxHash }, evmcommon.Hash{}),
+		Transitions: this.ApiRouter.Ccurl().Export(), // Transitions + Accesses
 		Err:         common.IfThenDo1st(prechkErr == nil, func() error { return evmResult.Err }, prechkErr),
-		// GasUsed:     common.IfThenDo1st(this.Receipt != nil, func() uint64 { return this.Receipt.GasUsed }, 0),
 
 		Receipt:   receipt,
 		EvmResult: evmResult,
 	}
 }
 
-func (this *Job) CalcualteRefund() uint64 {
+func (this *JobSequence) CalcualteRefund() uint64 {
 	amount := uint64(0)
 	for _, v := range *this.ApiRouter.Ccurl().WriteCache().Cache() {
 		typed := v.Value().(ccurlinterfaces.Type)
@@ -109,7 +100,7 @@ func (this *Job) CalcualteRefund() uint64 {
 	return amount
 }
 
-func (this *Job) RefundTo(payer, recipent ccurlinterfaces.Univalue, amount uint64) (uint64, error) {
+func (this *JobSequence) RefundTo(payer, recipent ccurlinterfaces.Univalue, amount uint64) (uint64, error) {
 	// amount := uint64(this.receipt.GasUsed)
 	credit := commutative.NewU256Delta(uint256.NewInt(amount), true).(*commutative.U256)
 	if _, _, _, _, err := recipent.Value().(ccurlinterfaces.Type).Set(credit, nil); err != nil {

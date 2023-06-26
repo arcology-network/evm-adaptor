@@ -8,7 +8,7 @@ contract U256DynamicTest {
     U256 container = new U256();
     U256[] array;
 
-    constructor() public {     
+    constructor() {     
         require(container.length() == 0); 
     
         container.push(uint256(10));
@@ -108,6 +108,8 @@ contract U256ThreadingTest {
         require(container.length() == 3);
 
         mp.run();
+        require(container.length() == 5);
+
         require(container.get(0) == uint256(10));
         require(container.get(1) == uint256(20));
         require(container.get(2) == uint256(30));
@@ -134,10 +136,9 @@ contract U256ThreadingTest {
         require(container.length() == 3);
 
         // // Here should be one conflict
-        mp.clear();
+        // mp.clear();
         mp.add(100000, address(this), abi.encodeWithSignature("pop()"));
         mp.add(100000, address(this), abi.encodeWithSignature("pop()"));
-        require(mp.length() == 2);
         mp.run();
 
         require(container.length() == 1);  // Only one transaction went through, so only one pop() took effect
@@ -163,7 +164,7 @@ contract U256ThreadingTest {
 contract ArrayThreadingTest {
     U256[] array; 
 
-    constructor() public {
+    constructor() {
         array = new U256[](2);
         array[0] = new U256();
         array[1] = new U256();

@@ -6,7 +6,7 @@ import "./Int256Cumulative.sol";
 contract Int256CumulativeTest {
     Int256Cumulative cumulative ;
 
-    constructor() public {    
+    constructor() {    
         cumulative = new Int256Cumulative(0, 1);  // [1, 100]
         // require(cumulative.add(99));
         // cumulative.sub(99);

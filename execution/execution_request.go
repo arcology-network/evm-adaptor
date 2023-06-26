@@ -1,15 +1,11 @@
 package execution
 
-import (
-	"math/big"
-)
-
-type ExecutorRequest struct {
-	Sequences   []*Sequence
-	Timestamp   *big.Int
-	Parallelism uint64
-	Debug       bool
-}
+// type ExecutorRequest struct {
+// 	Sequences   []*Sequence
+// 	Timestamp   *big.Int
+// 	Parallelism uint64
+// 	Debug       bool
+// }
 
 // func (this *ExecutorRequest) GobEncode() ([]byte, error) {
 // 	executingSequences := ExecutingSequences(this.Sequences)

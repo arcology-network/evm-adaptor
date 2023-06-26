@@ -8,11 +8,10 @@ import (
 )
 
 type StandardMessage struct {
-	ID      uint64
-	TxHash  [32]byte
-	CallSig [32]byte
-	Native  *evmcore.Message
-	Source  uint8
+	ID     uint64
+	TxHash [32]byte
+	Native *evmcore.Message
+	Source uint8
 }
 
 type StandardMessages []*StandardMessage

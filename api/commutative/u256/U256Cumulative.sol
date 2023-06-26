@@ -5,10 +5,15 @@ contract U256Cumulative {
     address constant public API = address(0x85);    
     bytes private id;
 
-    constructor (uint256 min, uint256 max) public {
+    constructor (uint256 min, uint256 max) {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("New(uint256, uint256, uint256)", min, max));
         id = data; 
         assert(success);
+    }
+
+    function peek() public returns(uint256) {  
+        (,bytes memory data) = address(API).call(abi.encodeWithSignature("peek()", id));
+        return abi.decode(data, (uint256));
     }
     
     function get() public returns(uint256) {  

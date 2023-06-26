@@ -33,7 +33,7 @@ func (this *Int256CumulativeHandlers) Address() [20]byte {
 	return common.CUMULATIVE_I256_HANDLER
 }
 
-func (this *Int256CumulativeHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool) {
+func (this *Int256CumulativeHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
@@ -53,15 +53,15 @@ func (this *Int256CumulativeHandlers) Call(caller, callee [20]byte, input []byte
 	return this.Unknow(caller, input)
 }
 
-func (this *Int256CumulativeHandlers) Unknow(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Int256CumulativeHandlers) Unknow(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	this.api.AddLog("Unhandled function call in cumulative handler router", hex.EncodeToString(input))
-	return []byte{}, false
+	return []byte{}, false, 0
 }
 
-func (this *Int256CumulativeHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Int256CumulativeHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	id := this.api.GenCcObjID()
 	if !this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) { // A new container
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	path := this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id))
@@ -71,85 +71,85 @@ func (this *Int256CumulativeHandlers) new(caller evmcommon.Address, input []byte
 	min, minErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
 	max, maxErr := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
 	if minErr != nil || maxErr != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	newU256 := commutative.NewU256(min.(*uint256.Int), max.(*uint256.Int))
 	if _, err := this.api.Ccurl().Write(this.api.TxIndex(), key, newU256); err != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
-	return id, true
+	return id, true, 0
 }
 
-func (this *Int256CumulativeHandlers) get(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Int256CumulativeHandlers) get(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	if value, _, err := this.api.Ccurl().ReadAt(this.api.TxIndex(), path, 0); value == nil || err != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	} else {
 
 		updated := value.(*uint256.Int)
 		if encoded, err := abi.Encode(updated); err == nil { // Encode the result
-			return encoded, true
+			return encoded, true, 0
 		}
 	}
-	return []byte{}, false
+	return []byte{}, false, 0
 }
 
-func (this *Int256CumulativeHandlers) add(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Int256CumulativeHandlers) add(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	delta, err := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
 	if err != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	value := commutative.NewU256Delta(delta.(*uint256.Int), true)
 	_, err = this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value)
-	return []byte{}, err == nil
+	return []byte{}, err == nil, 0
 }
 
-func (this *Int256CumulativeHandlers) sub(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Int256CumulativeHandlers) sub(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	delta, err := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
 	if err != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	value := commutative.NewU256Delta(delta.(*uint256.Int), false)
 	_, err = this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value)
-	return []byte{}, err == nil
+	return []byte{}, err == nil, 0
 }
 
-func (this *Int256CumulativeHandlers) set(caller evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *Int256CumulativeHandlers) set(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	delta, err := abi.DecodeTo(input, 1, &uint256.Int{}, 1, 32)
 	if err != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	sign, err := abi.DecodeTo(input, 1, bool(true), 1, 32)
 	if err != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	value := commutative.NewU256Delta(delta, sign)
 	_, err = this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value)
-	return []byte{}, err == nil
+	return []byte{}, err == nil, 0
 }
 
 // Build the container path

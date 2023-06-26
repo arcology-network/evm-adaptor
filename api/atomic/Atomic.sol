@@ -13,6 +13,12 @@ contract Atomic {
         return (success,data);
     }
 
+
+    function singleton() public returns(bool) {
+        (bool ok,) = address(API).call(abi.encodeWithSignature("singleton()"));     
+        return ok;
+    }
+
     function uuid() public returns(bytes memory args) {
         (,bytes memory id) = address(API).call(abi.encodeWithSignature("uuid()"));     
         return id;

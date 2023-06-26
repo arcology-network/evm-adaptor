@@ -6,7 +6,7 @@ import "./AddressN.sol";
 contract U256NTest {
     AddressN container;
 
-    constructor() public {    
+    constructor() {    
         address addr1 = 0x1111111110123456789012345678901234567890;
         address addr2 = 0x2222222220123456789012345678901234567890;
         address addr3 = 0x3333337890123456789012345678901234567890;

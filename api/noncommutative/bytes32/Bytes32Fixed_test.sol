@@ -6,7 +6,7 @@ import "./Bytes32N.sol";
 contract Bytes32NTest {
     Bytes32N container;
 
-    constructor() public {    
+    constructor() {    
         bytes32 arr1 = keccak256(abi.encodePacked("0"));
         bytes32 arr2 = keccak256(abi.encodePacked("1"));
         bytes32 arr3 = keccak256(abi.encodePacked("2"));

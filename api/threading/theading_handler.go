@@ -8,8 +8,9 @@ import (
 	"sync/atomic"
 
 	"github.com/arcology-network/common-lib/codec"
+	"github.com/arcology-network/common-lib/common"
 	commonlibcommon "github.com/arcology-network/common-lib/common"
-	"github.com/arcology-network/concurrenturl/interfaces"
+	"github.com/arcology-network/concurrenturl/indexer"
 	evmcommon "github.com/arcology-network/evm/common"
 	evmcore "github.com/arcology-network/evm/core"
 	"github.com/arcology-network/vm-adaptor/abi"
@@ -21,13 +22,13 @@ import (
 // APIs under the concurrency namespace
 type ThreadingHandler struct {
 	api   eucommon.EthApiRouter
-	pools map[string]*execution.ParallelJobs
+	pools map[string]*execution.ParallelSequences
 }
 
 func NewThreadingHandler(ethApiRouter eucommon.EthApiRouter) *ThreadingHandler {
 	return &ThreadingHandler{
 		api:   ethApiRouter,
-		pools: map[string]*execution.ParallelJobs{},
+		pools: map[string]*execution.ParallelSequences{},
 	}
 }
 
@@ -35,7 +36,7 @@ func (this *ThreadingHandler) Address() [20]byte {
 	return eucommon.THREADING_HANDLER
 }
 
-func (this *ThreadingHandler) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool) {
+func (this *ThreadingHandler) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
@@ -58,56 +59,52 @@ func (this *ThreadingHandler) Call(caller, callee [20]byte, input []byte, origin
 
 	case [4]byte{0x5e, 0x1d, 0x05, 0x4d}: // 5e 1d 05 4d
 		return this.clear(input[4:])
-
-		// case [4]byte{0xb4, 0x8f, 0xb6, 0xcf}:
-		// 	return this.error(input[4:])
-
 	}
 
-	return []byte{}, false
+	return []byte{}, false, 0
 }
 
-func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	if this.api.Depth() >= eucommon.MAX_RECURSIION_DEPTH ||
 		atomic.AddUint64(&eucommon.TotalProcesses, 1) > eucommon.MAX_SUB_PROCESSES {
-		return []byte{}, false // Execeeds the max recursion depth or the max sub processes
+		return []byte{}, false, 0 // Execeeds the max recursion depth or the max sub processes
 	}
 
 	threads, err := abi.DecodeTo(input, 0, uint8(1), 1, 32)
 	if err != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	id := strconv.Itoa(len(this.pools))
-	this.pools[id] = execution.NewParallelJobs(len(this.pools), threads, this.api, []*execution.Job{})
-	return []byte(id), true // Create a new container
+	this.pools[id] = execution.NewParallelJobs(uint32(len(this.pools)), 0, threads, this.api, []*execution.JobSequence{})
+	return []byte(id), true, 0 // Create a new container
 }
 
-func (this *ThreadingHandler) add(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) add(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	if len(input) < 4 {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	id := this.ParseID(input)
 	if len(id) == 0 || this.pools[id] == nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	// fmt.Println(input)
 	gasLimit, err := abi.DecodeTo(input, 1, uint64(0), 1, 32)
 	if err != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	rawAddr, err := abi.DecodeTo(input, 2, [20]byte{}, 1, 32)
 	if err != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 	calleeAddr := evmcommon.BytesToAddress(rawAddr[:]) // Callee contract
 
 	funCall, err := abi.DecodeTo(input, 3, []byte{}, 2, math.MaxUint32)
 	if err != nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	evmMsg := evmcore.NewMessage( // Build the message
@@ -122,72 +119,72 @@ func (this *ThreadingHandler) add(caller, callee evmcommon.Address, input []byte
 		false, // Don't checking nonce
 	)
 
-	newJob := &execution.Job{
-		JobID:     this.pools[id].Length(),
-		BranchID:  this.pools[id].BranchID(),
+	newJob := &execution.JobSequence{
+		ID:        this.pools[id].Length(),
 		ApiRouter: this.api,
 	}
 
 	stdMsg := &execution.StandardMessage{
-		ID:     0,
+		ID:     this.api.CCUID(),
 		Native: &evmMsg,
 		TxHash: sha256.Sum256(commonlibcommon.Flatten([][]byte{
 			codec.Bytes32(this.api.TxHash()).Encode(),
 			codec.Uint32((this.pools[id].BranchID())).Encode(),
 			evmMsg.Data[:4],
-			codec.Uint32(newJob.JobID).Encode(),
+			codec.Uint32(newJob.ID).Encode(),
 		})),
 	}
 
 	newJob.StdMsgs = []*execution.StandardMessage{stdMsg}
-	return []byte{}, this.pools[id].Add(newJob)
+	return []byte{}, this.pools[id].Add(newJob), 0
 }
 
-func (this *ThreadingHandler) clear(input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) clear(input []byte) ([]byte, bool, int64) {
 	id := this.ParseID(input)
 	if len(id) == 0 || this.pools[id] == nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	this.pools[id].Clear()
-	return []byte{}, true
+	return []byte{}, true, 0
 }
 
-func (this *ThreadingHandler) length(input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) length(input []byte) ([]byte, bool, int64) {
 	id := this.ParseID(input)
 	if len(id) == 0 || this.pools[id] == nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	v, err := abi.Encode(this.pools[id].Length())
-	return v, err == nil
+	return v, err == nil, 0
 }
 
-func (this *ThreadingHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	id := this.ParseID(input)
 	if len(id) == 0 || this.pools[id] == nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
-	this.pools[id].Run(this.api, this.api.Ccurl().Snapshot([]interfaces.Univalue{}))
-	return []byte{}, true
+	preTransitions := indexer.Univalues(common.Clone(this.api.Ccurl().Export())).To(indexer.ITCTransition{})
+	this.pools[id].Run(this.api, this.api.Ccurl().Snapshot(preTransitions))
+	return []byte{}, true, 0
 }
 
-func (this *ThreadingHandler) get(input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) get(input []byte) ([]byte, bool, int64) {
 	id := this.ParseID(input)
 	if len(id) == 0 || this.pools[id] == nil {
-		return []byte{}, false
+		return []byte{}, false, 0
 	}
 
 	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
 		if item := this.pools[id].At(idx); item != nil && item.Results[0].EvmResult != nil {
-			return item.Results[0].EvmResult.ReturnData, item.Results[0].EvmResult.Err == nil
+			return item.Results[0].EvmResult.ReturnData, item.Results[0].EvmResult.Err == nil, 0
 		}
 	}
-	return []byte{}, false
+	return []byte{}, false, 0
 }
 
-func (this *ThreadingHandler) error(input []byte) ([]byte, bool) {
+func (this *ThreadingHandler) error(input []byte) ([]byte, bool, int64) {
 	// id := this.ParseID(input)
 	// if len(id) == 0 || this.pools[id] == nil {
 	// 	return []byte{}, false
@@ -199,7 +196,7 @@ func (this *ThreadingHandler) error(input []byte) ([]byte, bool) {
 	// 		return buffer, err == nil
 	// 	}
 	// }
-	return []byte{}, false
+	return []byte{}, false, 0
 }
 
 // Build the container path

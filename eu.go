@@ -45,7 +45,7 @@ func (this *EU) Api() eucommon.EthApiRouter { return this.api }
 
 // func (this *EU) Depth() uint8                               { return this.depth }
 
-func (this *EU) SetContext(statedb vm.StateDB, api eucommon.EthApiRouter) {
+func (this *EU) SetRuntimeContext(statedb vm.StateDB, api eucommon.EthApiRouter) {
 	this.api = api
 	this.statedb = statedb
 
@@ -53,16 +53,15 @@ func (this *EU) SetContext(statedb vm.StateDB, api eucommon.EthApiRouter) {
 	this.evm.ArcologyNetworkAPIs.APIs = api
 }
 
-func (this *EU) Run(txHash ethCommon.Hash, txIndex int, msg *evmcore.Message, blockContext vm.BlockContext, txContext vm.TxContext) (*types.Receipt, *evmcore.ExecutionResult, error) {
+func (this *EU) Run(txHash ethCommon.Hash, txIndex uint32, msg *evmcore.Message, blockContext vm.BlockContext, txContext vm.TxContext) (*types.Receipt, *evmcore.ExecutionResult, error) {
 	this.statedb.(*eth.ImplStateDB).PrepareFormer(txHash, ethCommon.Hash{}, txIndex)
 	// this.api.Prepare(txHash, blockContext.BlockNumber, uint32(txIndex))
-	this.api.SetContext(txHash, blockContext.BlockNumber, uint32(txIndex))
+	this.api.SetRuntimeContext(txHash, txIndex, blockContext.BlockNumber)
 	this.evm.Context = blockContext
 	this.evm.TxContext = txContext
 	this.msg = msg
 
 	gasPool := core.GasPool(math.MaxUint64)
-
 	result, err := core.ApplyMessage(this.evm, msg, &gasPool) // Execute the transcation
 	// if err != nil {
 	// 	return nil, nil, err // Failed in Precheck before tx execution started

@@ -6,7 +6,7 @@ import "./BoolN.sol";
 contract BoolNTest {
     BoolN container;
 
-    constructor() public {    
+    constructor() {    
         container = new BoolN(4, true);
         require(container.length() == 4); 
 

@@ -7,7 +7,7 @@ import "../../threading/Threading.sol";
 contract CumulativeU256Test {
     U256Cumulative cumulative ;
 
-    constructor() public {    
+    constructor() {    
         cumulative = new U256Cumulative(1, 100);  // [1, 100]
         require(cumulative.min() == 1);
         require(cumulative.max() == 100);
@@ -43,7 +43,7 @@ contract CumulativeU256Test {
 
 contract ThreadingCumulativeU256 {
     U256Cumulative cumulative = new U256Cumulative(0, 100); 
-    
+
     function call() public {
         Threading mp = new Threading(1);
         mp.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 2));

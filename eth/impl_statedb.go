@@ -256,10 +256,10 @@ func (this *ImplStateDB) SlotInAccessList(addr evmcommon.Address, slot evmcommon
 	return true, true
 }
 
-func (this *ImplStateDB) PrepareFormer(txHash, bhash evmcommon.Hash, ti int) {
+func (this *ImplStateDB) PrepareFormer(txHash, bhash evmcommon.Hash, ti uint32) {
 	this.refund = 0
 	this.txHash = txHash
-	this.tid = uint32(ti)
+	this.tid = ti
 	this.logs = make(map[evmcommon.Hash][]*evmtypes.Log)
 }
 

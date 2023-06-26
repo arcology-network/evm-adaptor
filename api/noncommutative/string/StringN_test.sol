@@ -6,7 +6,7 @@ import "./StringN.sol";
 contract Int64NTest {
     StringN container;
 
-    constructor() public {    
+    constructor() {    
         string memory _1 = "1111";
         string memory _2 = "2222";
         string memory _3 = "3333";

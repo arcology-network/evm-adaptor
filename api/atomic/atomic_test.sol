@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
 import "./Atomic.sol";
@@ -13,18 +14,22 @@ contract AtomicDeferredInThreadingTest {
         bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
   
         Threading mp = new Threading(2);
-        mp.add(800000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 0,data));
-        mp.add(800000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 1,data));
+        mp.add(800000, address(this), abi.encodeWithSignature("worker(uint256,bytes)", 0,data));
+        mp.add(800000, address(this), abi.encodeWithSignature("worker(uint256,bytes)", 1,data));
         require(mp.length() == 2);
         mp.run();
        
+        // if (atomic.singleton()) {
+            results[0] = keccak256("0");
+            results[1] = keccak256("1");
+        // }
+
         mp.clear();
         assert(mp.length() == 0);      
     }
 
-    function hasher(uint256 idx, bytes memory data) public {
+    function worker(uint256 idx, bytes memory data) public {
        results[idx] = keccak256(data);
-       atomic.deferred(300000, address(this), abi.encodeWithSignature("example()"));
     }
 
     function example() public {
@@ -54,9 +59,9 @@ contract AtomicDeferredBoolContainerTest {
        bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
    
        Threading mp = new Threading(2);
-       mp.add(1000000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 0,data));
-       mp.add(2000000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 1,data));
-       mp.add(2000000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 2,data));
+       mp.add(1000000, address(this), abi.encodeWithSignature("worker(uint256,bytes)", 0,data));
+       mp.add(2000000, address(this), abi.encodeWithSignature("worker(uint256,bytes)", 1,data));
+       mp.add(2000000, address(this), abi.encodeWithSignature("worker(uint256,bytes)", 2,data));
        require(mp.length() == 3);
        require(container.length() == 0);
        mp.run();      
@@ -73,7 +78,7 @@ contract AtomicDeferredBoolContainerTest {
        assert(mp.length() == 0);      
     }
 
-    function hasher(uint256 idx, bytes memory data) public {
+    function worker(uint256 idx, bytes memory data) public {
        container.push(true);
        results[idx] = keccak256(data);
        atomic.deferred(500000, address(this), abi.encodeWithSignature("example()"));
@@ -111,9 +116,9 @@ contract AtomicMultiDeferredWithBoolContainerTest {
         bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
    
         Threading mp = new Threading(2);
-        mp.add(1000000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 0,data));
-        mp.add(2000000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 1,data));
-        mp.add(2000000, address(this), abi.encodeWithSignature("hasher(uint256,bytes)", 2,data));
+        mp.add(1000000, address(this), abi.encodeWithSignature("worker(uint256,bytes)", 0,data));
+        mp.add(2000000, address(this), abi.encodeWithSignature("worker(uint256,bytes)", 1,data));
+        mp.add(2000000, address(this), abi.encodeWithSignature("worker(uint256,bytes)", 2,data));
 
         mp.add(4000000, address(this), abi.encodeWithSignature("acculm(uint256)", 10));
         mp.add(5000000, address(this), abi.encodeWithSignature("acculm(uint256)", 22));
@@ -132,7 +137,7 @@ contract AtomicMultiDeferredWithBoolContainerTest {
        container.push(true);
     }
 
-    function hasher(uint256 idx, bytes memory data) public {
+    function worker(uint256 idx, bytes memory data) public {
        container.push(true);
        results[idx] = keccak256(data);
        atomic.deferred(300000, address(this), abi.encodeWithSignature("hasherDeferred()"));
@@ -171,7 +176,7 @@ contract ConflictInThreadsFixedLengthTest {
        mp.add(400000, address(this), abi.encodeWithSignature("updater(uint256)", 33));
        mp.add(400000, address(this), abi.encodeWithSignature("updater(uint256)", 55));
        mp.run();     
-       require(results[0] == 155); 
+       require(results[0] == 155);  // 11 and 33 will be reverted due to conflicts
        require(results[1] == 255); 
     }
 

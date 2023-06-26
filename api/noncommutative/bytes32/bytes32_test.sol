@@ -6,7 +6,7 @@ import "./Bytes32.sol";
 contract Bytes32Test {
     Bytes32 container = new Bytes32();
     
-    constructor() public {     
+    constructor() {     
         require(container.length() == 0); 
    
         bytes32 hash0 = keccak256(abi.encodePacked("0"));

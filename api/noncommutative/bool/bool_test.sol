@@ -6,7 +6,7 @@ import "./Bool.sol";
 contract BoolTest {
     Bool container = new Bool();
     
-    constructor() public {     
+    constructor() {     
         require(container.length() == 0); 
     
         container.push(true);

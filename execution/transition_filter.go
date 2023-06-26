@@ -10,12 +10,12 @@ import (
 // APIs under the concurrency namespace
 type TransitionFilter struct {
 	indexer.IPCTransition
-	status uint8
+	Err error
 }
 
 // Remove nonce
 func (this TransitionFilter) From(univ ccurlinterfaces.Univalue) interface{} {
-	v := indexer.IPCTransition{Status: this.status}.From(univ)
+	v := indexer.IPCTransition{Err: this.Err}.From(univ)
 	if v == nil || v.(ccurlinterfaces.Univalue).Value() == nil {
 		return v
 	}

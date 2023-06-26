@@ -15,7 +15,6 @@ type Result struct {
 	BranchID    uint32
 	TxIndex     uint32
 	TxHash      [32]byte
-	Spawned     *StandardMessage
 	Transitions []ccurlinterfaces.Univalue
 	Receipt     *evmTypes.Receipt
 	EvmResult   *evmcore.ExecutionResult
@@ -23,7 +22,7 @@ type Result struct {
 }
 
 func (this *Result) WriteTo(newTxIdx uint32, targetCache *indexer.WriteCache) {
-	transitions := []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(TransitionFilter{status: 0}))
+	transitions := []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(TransitionFilter{Err: this.Err}))
 
 	newPathTrans := common.MoveIf(&transitions, func(v ccurlinterfaces.Univalue) bool {
 		return common.IsPath(*v.GetPath()) && !v.Preexist() // Move new path creation transitions
@@ -104,12 +103,12 @@ func (this Results) Detect() *map[uint32]uint64 {
 // 	return this
 // }
 
-func (this Results) ToSequence() *Sequence {
-	if this[0].Spawned == nil {
-		return nil
-	}
+// func (this Results) ToSequence() *Sequence {
+// 	if this[0].Spawned == nil {
+// 		return nil
+// 	}
 
-	predecessors := make([][32]byte, 0, len(this))
-	common.Foreach(this, func(v **Result) { predecessors = append(predecessors, (**v).Spawned.TxHash) })
-	return NewSequence([32]byte{}, predecessors, []*StandardMessage{this[0].Spawned}, true)
-}
+// 	predecessors := make([][32]byte, 0, len(this))
+// 	common.Foreach(this, func(v **Result) { predecessors = append(predecessors, (**v).Spawned.TxHash) })
+// 	return NewSequence([32]byte{}, predecessors, []*StandardMessage{this[0].Spawned}, true)
+// }

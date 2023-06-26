@@ -6,7 +6,7 @@ import "./U256N.sol";
 contract U256NTest {
     U256N container;
 
-    constructor() public {    
+    constructor() {    
         container = new U256N(4, 0);
         require(container.length() == 4); 
 

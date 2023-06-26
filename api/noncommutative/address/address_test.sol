@@ -6,7 +6,7 @@ import "./Address.sol";
 contract AddressTest {
     Address container = new Address();
     
-    constructor() public {     
+    constructor() {     
         require(container.length() == 0);    
         address addr1 = 0x1111111110123456789012345678901234567890;
         address addr2 = 0x2222222220123456789012345678901234567890;

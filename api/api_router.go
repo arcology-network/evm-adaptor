@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math/big"
 	"strconv"
 
@@ -11,7 +10,7 @@ import (
 	commontypes "github.com/arcology-network/common-lib/types"
 	"github.com/arcology-network/concurrenturl"
 	evmcommon "github.com/arcology-network/evm/common"
-	"github.com/arcology-network/evm/core"
+	evmcore "github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/core/vm"
 	cceu "github.com/arcology-network/vm-adaptor"
 	atomic "github.com/arcology-network/vm-adaptor/api/atomic"
@@ -34,8 +33,9 @@ type API struct {
 	ccElemID uint64
 	depth    uint8
 
-	reserved interface{}
+	schedule *execution.Schedule
 	eu       *cceu.EU
+	reserved interface{}
 
 	handlerDict map[[20]byte]eucommon.ApiCallHandler // APIs under the atomic namespace
 	ccurl       *concurrenturl.ConcurrentUrl
@@ -75,11 +75,12 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	return api
 }
 
-func (this *API) New(txHash evmcommon.Hash, txIndex uint32, parentDepth uint8, ccurl *concurrenturl.ConcurrentUrl) eucommon.EthApiRouter {
+func (this *API) New(txHash evmcommon.Hash, txIndex uint32, parentDepth uint8, ccurl *concurrenturl.ConcurrentUrl, schedule interface{}) eucommon.EthApiRouter {
 	api := NewAPI(ccurl)
 
 	api.txHash = txHash
 	api.txIndex = txIndex
+	api.schedule = schedule.(*execution.Schedule)
 
 	api.uuid = 0
 	api.ccUID = 0
@@ -97,9 +98,10 @@ func (this *API) Depth() uint8                { return this.depth }
 func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }
 func (this *API) Origin() evmcommon.Address   { return this.eu.VM().TxContext.Origin }
 
-func (this *API) Message() *core.Message { return this.eu.Message() }
-
-func (this *API) VM() *vm.EVM { return this.eu.VM() }
+func (this *API) SetSchedule(schedule *execution.Schedule) { this.schedule = schedule }
+func (this *API) Schedule() interface{}                    { return this.schedule }
+func (this *API) Message() *evmcore.Message                { return this.eu.Message() }
+func (this *API) VM() *vm.EVM                              { return this.eu.VM() }
 
 func (this *API) GetEU() interface{}   { return this.eu }
 func (this *API) SetEU(eu interface{}) { this.eu = eu.(*cceu.EU) }
@@ -108,26 +110,33 @@ func (this *API) TxHash() [32]byte                    { return this.txHash }
 func (this *API) TxIndex() uint32                     { return this.txIndex }
 func (this *API) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }
 
-func (this *API) SetContext(txHash evmcommon.Hash, height *big.Int, txIndex uint32) {
+func (this *API) CCUID() uint64 {
+	this.ccUID++
+	return this.ccUID
+}
+
+func (this *API) CCElemID() uint64 {
+	this.ccElemID++
+	return this.ccElemID
+}
+
+func (this *API) SetRuntimeContext(txHash [32]byte, txIndex uint32, height *big.Int) {
 	this.txHash = txHash
 	this.txIndex = txIndex
 }
 
 func (this *API) GenUUID() []byte {
 	this.uuid++
-	id := codec.Bytes32(this.txHash).UUID(this.uuid)
-	return id[:]
+	return codec.Bytes32(this.txHash).UUID(this.uuid).Encode()
 }
 
 func (this *API) GenCcElemUID() []byte {
-	this.ccElemID++
-	return []byte(hex.EncodeToString(this.txHash[:8]) + "-" + strconv.Itoa(int(this.ccElemID)))
+	return []byte(hex.EncodeToString(this.txHash[:8]) + "-" + strconv.Itoa(int(this.CCElemID())))
 }
 
 // Generate an UUID based on transaction hash and the counter
 func (this *API) GenCcObjID() []byte {
-	this.ccUID++
-	id := codec.Bytes32(this.txHash).UUID(this.ccUID)
+	id := codec.Bytes32(this.txHash).UUID(this.CCUID())
 	return id[:8]
 }
 
@@ -146,18 +155,16 @@ func (this *API) ClearLogs() {
 	this.logs = this.logs[:0]
 }
 
-func (this *API) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64, blockhash evmcommon.Hash) (bool, []byte, bool) {
-	fmt.Println(callee)
-
+func (this *API) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64, blockhash evmcommon.Hash) (bool, []byte, bool, int64) {
 	if handler, ok := this.handlerDict[callee]; ok {
-		result, successful := handler.Call(
+		result, successful, _ := handler.Call(
 			evmcommon.Address(codec.Bytes20(caller).Clone().(codec.Bytes20)),
 			evmcommon.Address(codec.Bytes20(callee).Clone().(codec.Bytes20)),
 			common.Clone(input),
 			origin,
 			nonce,
 		)
-		return true, result, successful
+		return true, result, successful, 0
 	}
-	return false, []byte{}, false
+	return false, []byte{}, true, 0 // not an Arcology call, used 0 gas
 }

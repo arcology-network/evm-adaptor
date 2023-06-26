@@ -192,7 +192,7 @@ contract KittyBase is KittyAccessControl {
     uint256 balanceOfSiringAuction = 0;
     uint256 totalBalance = 0;
 
-    constructor() public {
+    constructor() {
         darray.create("balanceChangesOfSaleAuction", uint256(ConcurrentLib.DataType.UINT256));
         darray.create("balanceChangesOfSiringAuction", uint256(ConcurrentLib.DataType.UINT256));
         darray.create("totalBalanceChanges", uint256(ConcurrentLib.DataType.UINT256));
