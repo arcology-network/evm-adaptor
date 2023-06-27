@@ -44,7 +44,16 @@ contract CumulativeU256Test {
 contract ThreadingCumulativeU256 {
     U256Cumulative cumulative = new U256Cumulative(0, 100); 
 
+    constructor() {
+        require(cumulative.peek() == 0);
+        cumulative.add(1);
+        cumulative.sub(1);
+         require(cumulative.peek() == 0);
+    }
+
     function call() public {
+        require(cumulative.peek() == 0);
+
         Threading mp = new Threading(1);
         mp.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 2));
         mp.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 2));   
@@ -68,6 +77,7 @@ contract ThreadingCumulativeU256 {
         mp.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 2));
         mp.run();
         require(cumulative.get() == 7);      
+        require(cumulative.peek() == 0);
     }
 
     function call1() public {
