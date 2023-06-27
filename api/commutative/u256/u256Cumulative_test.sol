@@ -78,6 +78,14 @@ contract ThreadingCumulativeU256 {
         mp.run();
         require(cumulative.get() == 7);      
         require(cumulative.peek() == 0);
+
+        mp.clear();
+        mp.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 50));
+        mp.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 50));   
+        mp.add(200000, address(this), abi.encodeWithSignature("add(uint256)", 1));
+        mp.run();  
+
+        require(cumulative.get() == 58);
     }
 
     function call1() public {
