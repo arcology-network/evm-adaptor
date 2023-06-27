@@ -11,7 +11,7 @@ contract Example {
 
     event logMsg(string message);
 
-    constructor  () public {
+    constructor() {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("new()"));       
         require(success, "Example.New() Failed");
         id = data;

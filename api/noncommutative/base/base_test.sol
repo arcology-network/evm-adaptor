@@ -2,8 +2,7 @@
 pragma solidity ^0.8.19;
 
 
-contract BaseTest {
-    
+contract BaseTest {    
     address constant public API = address(0x84); 
 
     uint[] public arr2 = [1, 2, 3];
@@ -11,7 +10,7 @@ contract BaseTest {
 
     event logMsg(string message);
 
-    constructor  () public {
+    constructor() {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("new()"));       
         require(success, "Bytes.New() Failed");
         id = data;
@@ -20,11 +19,13 @@ contract BaseTest {
         for (uint  i = 0; i < 75; i ++) {
             byteArray[i] = 0x41;
         }
-
+    
+        require(peek() == 0);  
         require(length() == 0); 
-        push(byteArray, arr2);  
-        push(byteArray, arr2);          
+        push(byteArray);  
+        push(byteArray);          
         require(length() == 2); 
+        require(peek() == 0);  
 
         bytes memory stored = get(1);
         require(stored.length == byteArray.length);
@@ -55,13 +56,27 @@ contract BaseTest {
             require(stored[i] == elems[i]);
         }
         require(length() == 1); 
+        require(peek() == 0);  
+    }
+
+    function call() public{ 
+        require(peek() == 1); 
+        pop();
+        require(peek() == 1); 
+    }
+
+    function peek() public returns(uint256) {
+        (,bytes memory data) = address(API).call(abi.encodeWithSignature("peek(bytes)", id));
+        if (data.length > 0) {
+            return abi.decode(data, (uint256));   
+        }
+        return 0;   
     }
 
     function length() public returns(uint256) {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("length(bytes)", id));
         require(success, "Bytes.length() Failed");
-        uint256 length = abi.decode(data, (uint256));
-        return length;
+        return  abi.decode(data, (uint256));
     }
 
     function pop() public returns(bytes memory) {
@@ -70,11 +85,10 @@ contract BaseTest {
         return abi.decode(data, (bytes)); 
     }
 
-    function push(bytes memory elem, uint[] memory array) public {
+    function push(bytes memory elem) public {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("push(bytes,bytes)",  id, elem));
         require(success, "Bytes.push() Failed");
     }   
-
 
     function get(uint256 idx) public returns(bytes memory)  {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("get(bytes,uint256)", id, idx));

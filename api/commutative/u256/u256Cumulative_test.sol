@@ -82,7 +82,6 @@ contract ThreadingCumulativeU256 {
         require(cumulative.get() == 1);   
     }
 
-
     function call2() public {
         require(cumulative.get() == 1);
     }

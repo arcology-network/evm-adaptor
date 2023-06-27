@@ -157,14 +157,14 @@ func (this *API) ClearLogs() {
 
 func (this *API) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64, blockhash evmcommon.Hash) (bool, []byte, bool, int64) {
 	if handler, ok := this.handlerDict[callee]; ok {
-		result, successful, _ := handler.Call(
+		result, successful, fees := handler.Call(
 			evmcommon.Address(codec.Bytes20(caller).Clone().(codec.Bytes20)),
 			evmcommon.Address(codec.Bytes20(callee).Clone().(codec.Bytes20)),
 			common.Clone(input),
 			origin,
 			nonce,
 		)
-		return true, result, successful, 0
+		return true, result, successful, fees
 	}
 	return false, []byte{}, true, 0 // not an Arcology call, used 0 gas
 }

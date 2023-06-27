@@ -12,7 +12,7 @@ contract U256Cumulative {
     }
 
     function peek() public returns(uint256) {  
-        (,bytes memory data) = address(API).call(abi.encodeWithSignature("peek()", id));
+        (,bytes memory data) = address(API).call(abi.encodeWithSignature("peek(bytes)", id));
         return abi.decode(data, (uint256));
     }
     

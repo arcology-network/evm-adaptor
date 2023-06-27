@@ -5,7 +5,7 @@ contract NativeStorage {
         uint256 x = 1 ;
         uint256 y = 100 ;
 
-   constructor  () public { 
+   constructor() { 
         incrementX();
         incrementY();
         require(x == 2);

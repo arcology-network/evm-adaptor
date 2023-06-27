@@ -41,7 +41,7 @@ func (this *U256CumulativeHandlers) Call(caller, callee [20]byte, input []byte, 
 	case [4]byte{0x1c, 0x64, 0x49, 0x9c}:
 		return this.new(caller, input[4:])
 
-	case [4]byte{0x59, 0xe0, 0x2d, 0xd7}:
+	case [4]byte{0xee, 0xb8, 0xa8, 0xd3}:
 		return this.peek(caller, input[4:])
 
 	case [4]byte{0x6d, 0x4c, 0xe6, 0x3c}:

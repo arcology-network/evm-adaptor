@@ -8,7 +8,7 @@ contract String {
 
     event logMsg(string message);
 
-    constructor  () public {  base = new Base(); }
+    constructor() {  base = new Base(); }
     function length() public returns(uint256) { return base.length();}
 
     function pop() public returns(string memory) { 

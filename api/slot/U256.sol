@@ -6,7 +6,7 @@ import "../noncommutative/base/Base.sol";
 contract U256 {
     Base base;
 
-    constructor  () public {  base = new Base(); }
+    constructor() {  base = new Base(); }
     function length() public returns(uint256) { return base.length();}
     function clear() public{ base.clear();}
 

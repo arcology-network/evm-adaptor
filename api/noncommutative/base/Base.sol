@@ -7,7 +7,7 @@ contract Base {
 
     event logMsg(string message);
 
-    constructor () public{
+    constructor () {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("new()"));       
         require(success);
         ctrn = data; 
@@ -23,6 +23,12 @@ contract Base {
         return abi.decode(data, (uint256));
     }
 
+    function peek() public returns(bytes memory)  {
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("peek(bytes)", ctrn));
+        require(success);
+        return data;  
+    } 
+
     function pop() public returns(bytes memory) { // 80 26 32 97
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("pop()", ctrn));
         require(success);
@@ -32,7 +38,7 @@ contract Base {
     function push(bytes memory encoded) public { //9e c6 69 25
         (bool success,) = address(API).call(encoded);
         require(success);
-    }   
+    }  
 
     function get(uint256 idx) public returns(bytes memory)  { // 31 fe 88 d0
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("get(bytes,uint256)", ctrn, idx));
