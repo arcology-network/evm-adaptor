@@ -6,7 +6,7 @@ import (
 	common "github.com/arcology-network/common-lib/common"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	ccinterfaces "github.com/arcology-network/concurrenturl/interfaces"
-	cceu "github.com/arcology-network/vm-adaptor"
+	evmeu "github.com/arcology-network/vm-adaptor"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
 
@@ -41,7 +41,7 @@ func (this *ParallelSequences) Add(job *JobSequence) bool {
 }
 
 func (this *ParallelSequences) Run(parentApiRouter eucommon.EthApiRouter, snapshot ccinterfaces.Datastore) []*Result {
-	config := cceu.NewConfig().SetCoinbase(parentApiRouter.Coinbase())
+	config := evmeu.NewConfig().SetCoinbase(parentApiRouter.Coinbase())
 
 	// common.ParallelForeach(this.jobs, this.maxThreads, func(job **JobSequence) *JobSequence {
 	// 	(**job).Results = (**job).Run(config, snapshot)

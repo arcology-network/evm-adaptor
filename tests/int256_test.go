@@ -76,7 +76,7 @@ func TestCumulativeInt256(t *testing.T) {
 
 	targetPath := project + "/api/commutative/"
 
-	code, err := compiler.CompileContracts(targetPath+"int256", "int256Cumulative_test.sol", "0.8.0", "Int256CumulativeTest", false)
+	code, err := compiler.CompileContracts(targetPath+"int256", "int256Cumulative_test.sol", "0.8.19", "Int256CumulativeTest", false)
 	// code, err := compiler.CompileContracts(pyCompiler, targetPath+"/int256/int256Cumulative_test.sol", "Int256CumulativeTest")
 
 	if err != nil || len(code) == 0 {
@@ -114,7 +114,7 @@ func TestCumulativeInt256(t *testing.T) {
 // 	}
 // 	// ================================== Deploy the contract ==================================
 // 	msg := types.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false) // Build the message
-// 	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))       // Execute it
+// 	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, evmeu.NewEVMBlockContext(config), evmeu.NewEVMTxContext(msg))       // Execute it
 // 	// t.Log("\n" + eucommon.FormatTransitions(transitions))
 // 	// indexer.Univalues(transitions).Print()
 // 	if receipt.Status != 1 || err != nil {
@@ -126,7 +126,7 @@ func TestCumulativeInt256(t *testing.T) {
 // 	data := crypto.Keccak256([]byte("call()"))[:4]
 // 	contractAddress := receipt.ContractAddress
 // 	msg = types.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-// 	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))
+// 	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, evmeu.NewEVMBlockContext(config), evmeu.NewEVMTxContext(msg))
 // 	// indexer.Univalues(transitions).Print()
 
 // 	if err != nil {

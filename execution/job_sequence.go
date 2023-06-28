@@ -5,7 +5,7 @@ import (
 	"github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/commutative"
 	"github.com/arcology-network/concurrenturl/indexer"
-	cceu "github.com/arcology-network/vm-adaptor"
+	evmeu "github.com/arcology-network/vm-adaptor"
 
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	evmcommon "github.com/arcology-network/evm/common"
@@ -23,7 +23,7 @@ type JobSequence struct {
 	ApiRouter eucommon.EthApiRouter
 }
 
-func (this *JobSequence) Run(config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore) []*Result { //
+func (this *JobSequence) Run(config *evmeu.Config, snapshotUrl ccurlinterfaces.Datastore) []*Result { //
 	results := make([]*Result, len(this.StdMsgs))
 
 	for i, msg := range this.StdMsgs {
@@ -36,7 +36,7 @@ func (this *JobSequence) Run(config *cceu.Config, snapshotUrl ccurlinterfaces.Da
 	return results
 }
 
-func (this *JobSequence) execute(stdMsg *StandardMessage, config *cceu.Config, snapshotUrl ccurlinterfaces.Datastore) *Result { //
+func (this *JobSequence) execute(stdMsg *StandardMessage, config *evmeu.Config, snapshotUrl ccurlinterfaces.Datastore) *Result { //
 	ccurl := (&concurrenturl.ConcurrentUrl{}).New(
 		indexer.NewWriteCache(snapshotUrl, this.ApiRouter.Ccurl().Platform),
 		this.ApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
@@ -45,7 +45,7 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *cceu.Config, s
 	statedb := eth.NewImplStateDB(this.ApiRouter)                       // Eth state DB
 	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, uint32(stdMsg.ID)) // tx hash , block hash and tx index
 
-	eu := cceu.NewEU(
+	eu := evmeu.NewEU(
 		config.ChainConfig,
 		vm.Config{},
 		statedb,
@@ -58,8 +58,8 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *cceu.Config, s
 			stdMsg.TxHash,
 			uint32(stdMsg.ID),
 			stdMsg.Native,
-			cceu.NewEVMBlockContext(config),
-			cceu.NewEVMTxContext(*stdMsg.Native),
+			evmeu.NewEVMBlockContext(config),
+			evmeu.NewEVMTxContext(*stdMsg.Native),
 		)
 
 	// Do gas transfer

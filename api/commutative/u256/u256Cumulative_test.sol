@@ -140,26 +140,3 @@ contract ThreadingCumulativeU256Multi {
         cumulative.sub(elem);
     }  
 }
-
-contract ThreadingCumulativeU256Recursive {
-    uint256[2] results;
-    function call() public {
-        results[0] = 1;        
-        Threading mp = new Threading(1);
-        mp.add(900000, address(this), abi.encodeWithSignature("add(uint256)", 11));
-        mp.run();
-        require(results[1] == 11);
-        require(results[0] == 22);
-    }
-
-    function add(uint256 elem) public { //9e c6 69 25
-        Threading mp2 = new Threading(1);     
-        mp2.add(400000, address(this), abi.encodeWithSignature("add2(uint256)", elem));
-        mp2.run();              
-    }  
-
-    function add2(uint256 elem) public { //9e c6 69 25
-        results[1] = elem; 
-        results[0] = elem * 2; 
-    }  
-}

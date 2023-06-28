@@ -12,7 +12,7 @@ import (
 	evmcommon "github.com/arcology-network/evm/common"
 	evmcore "github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/core/vm"
-	cceu "github.com/arcology-network/vm-adaptor"
+	evmeu "github.com/arcology-network/vm-adaptor"
 	atomic "github.com/arcology-network/vm-adaptor/api/atomic"
 	cumulativei256 "github.com/arcology-network/vm-adaptor/api/commutative/int256"
 	cumulativeu256 "github.com/arcology-network/vm-adaptor/api/commutative/u256"
@@ -34,7 +34,7 @@ type API struct {
 	depth    uint8
 
 	schedule *execution.Schedule
-	eu       *cceu.EU
+	eu       *evmeu.EU
 	reserved interface{}
 
 	handlerDict map[[20]byte]eucommon.ApiCallHandler // APIs under the atomic namespace
@@ -104,7 +104,7 @@ func (this *API) Message() *evmcore.Message                { return this.eu.Mess
 func (this *API) VM() *vm.EVM                              { return this.eu.VM() }
 
 func (this *API) GetEU() interface{}   { return this.eu }
-func (this *API) SetEU(eu interface{}) { this.eu = eu.(*cceu.EU) }
+func (this *API) SetEU(eu interface{}) { this.eu = eu.(*evmeu.EU) }
 
 func (this *API) TxHash() [32]byte                    { return this.txHash }
 func (this *API) TxIndex() uint32                     { return this.txIndex }

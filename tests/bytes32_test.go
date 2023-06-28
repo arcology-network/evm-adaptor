@@ -8,7 +8,7 @@ import (
 
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core"
-	cceu "github.com/arcology-network/vm-adaptor"
+	evmeu "github.com/arcology-network/vm-adaptor"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/compiler"
 )
@@ -27,7 +27,7 @@ func TestContractBytes32(t *testing.T) {
 	}
 	// ================================== Deploy the contract ==================================
 	msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
-	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, cceu.NewEVMBlockContext(config), cceu.NewEVMTxContext(msg))           // Execute it
+	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, evmeu.NewEVMBlockContext(config), evmeu.NewEVMTxContext(msg))         // Execute it
 	_, transitions := eu.Api().Ccurl().ExportAll()
 	// ---------------
 
