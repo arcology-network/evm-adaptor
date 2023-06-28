@@ -75,7 +75,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	return api
 }
 
-func (this *API) New(txHash evmcommon.Hash, txIndex uint32, parentDepth uint8, ccurl *concurrenturl.ConcurrentUrl, schedule interface{}) eucommon.EthApiRouter {
+func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl, schedule interface{}) eucommon.EthApiRouter {
 	api := NewAPI(ccurl)
 
 	api.txHash = txHash
@@ -86,7 +86,7 @@ func (this *API) New(txHash evmcommon.Hash, txIndex uint32, parentDepth uint8, c
 	api.ccUID = 0
 	api.ccElemID = 0
 
-	api.depth = parentDepth + 1
+	api.depth = this.depth + 1
 	return api
 }
 

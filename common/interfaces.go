@@ -18,7 +18,7 @@ import (
 type EthApiRouter interface {
 	Origin() evmcommon.Address
 	Ccurl() *concurrenturl.ConcurrentUrl
-	New(common.Hash, uint32, uint8, *concurrenturl.ConcurrentUrl, interface{}) EthApiRouter
+	New(common.Hash, uint32, *concurrenturl.ConcurrentUrl, interface{}) EthApiRouter
 	Coinbase() evmcommon.Address
 
 	SetEU(interface{})

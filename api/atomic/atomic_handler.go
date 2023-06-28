@@ -46,58 +46,6 @@ func (this *AtomicHandler) singleton(origin evmcommon.Address, input []byte) ([]
 
 }
 
-// func (this *AtomicHandler) deferred(origin evmcommon.Address, input []byte) ([]byte, bool, int64) {
-// 	if this.api.VM().ArcologyNetworkAPIs.Depth() > 4 {
-// 		return []byte{}, false
-// 	}
-
-// 	gasLimit, err := abi.DecodeTo(input, 0, uint64(0), 1, 32)
-// 	if err != nil {
-// 		return []byte{}, false
-// 	}
-
-// 	calleeAddr, err := abi.DecodeTo(input, 1, [20]byte{}, 1, 20)
-// 	if err != nil {
-// 		return []byte{}, false
-// 	}
-
-// 	funCallData, err := abi.DecodeTo(input, 2, []byte{}, 2, math.MaxUint32)
-// 	if err != nil {
-// 		return []byte{}, false
-// 	}
-
-// 	// Check if the sender has sufficent balance
-// 	if !this.api.VM().Context.CanTransfer(this.api.VM().StateDB, origin, big.NewInt(int64(gasLimit))) {
-// 		return []byte{}, false
-// 	}
-
-// 	hierarchy := this.api.VM().ArcologyNetworkAPIs.CallHierarchy()
-// 	groupBy := sha3.Sum256(commonlibcommon.Flatten(commonlibcommon.Reverse[[]byte](&hierarchy)))
-
-// 	addr := evmcommon.Address(calleeAddr)
-// 	evmMsg := core.NewMessage(
-// 		common.ATOMIC_HANDLER, // From the system account
-// 		&addr,
-// 		0,
-// 		big.NewInt(0),
-// 		gasLimit,
-// 		big.NewInt(1),
-// 		funCallData,
-// 		nil,
-// 		false,
-// 	)
-
-// 	msg := &execution.StandardMessage{
-// 		TxHash:  sha256.Sum256(funCallData),
-// 		CallSig: groupBy,
-// 		Native:  &evmMsg,
-// 		Source:  commonlibtypes.TX_SOURCE_DEFERRED,
-// 	}
-
-// 	this.api.SetReserved(msg) // System address pays for it
-// 	return []byte{}, true
-// }
-
 func (this *AtomicHandler) uuid(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	return this.api.GenUUID(), true, 0
 }

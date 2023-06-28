@@ -1,7 +1,6 @@
 package common
 
 const (
-	MAX_NUMBER_THREADS   = uint32(1024)
 	MAX_RECURSIION_DEPTH = uint8(3)
 	MAX_SUB_PROCESSES    = uint64(2048)
 )

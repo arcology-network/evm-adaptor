@@ -41,7 +41,7 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *cceu.Config, s
 		indexer.NewWriteCache(snapshotUrl, this.ApiRouter.Ccurl().Platform),
 		this.ApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
 
-	this.ApiRouter = this.ApiRouter.New(stdMsg.TxHash, uint32(stdMsg.ID), this.ApiRouter.Depth(), ccurl, this.ApiRouter.Schedule())
+	this.ApiRouter = this.ApiRouter.New(stdMsg.TxHash, uint32(stdMsg.ID), ccurl, this.ApiRouter.Schedule())
 	statedb := eth.NewImplStateDB(this.ApiRouter)                       // Eth state DB
 	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, uint32(stdMsg.ID)) // tx hash , block hash and tx index
 

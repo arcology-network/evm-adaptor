@@ -5,7 +5,7 @@ contract Threading {
     address constant private API = address(0x90); 
     bytes private id;
 
-    constructor (uint256 numThreads) public {
+    constructor (uint256 numThreads) {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("new(uint256)", numThreads));     
         require(success);
         id = data; 

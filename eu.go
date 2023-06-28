@@ -43,8 +43,6 @@ func (this *EU) VM() *vm.EVM                { return this.evm }
 func (this *EU) Statedb() vm.StateDB        { return this.statedb }
 func (this *EU) Api() eucommon.EthApiRouter { return this.api }
 
-// func (this *EU) Depth() uint8                               { return this.depth }
-
 func (this *EU) SetRuntimeContext(statedb vm.StateDB, api eucommon.EthApiRouter) {
 	this.api = api
 	this.statedb = statedb

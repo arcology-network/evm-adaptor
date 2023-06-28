@@ -19,7 +19,7 @@ type ParallelSequences struct {
 	jobs       []*JobSequence // para jobs
 }
 
-func NewParallelJobs(id uint32, branchID uint32, maxThreads uint8, ethApiRouter eucommon.EthApiRouter, jobs []*JobSequence) *ParallelSequences {
+func NewParallelJobs(id uint32, branchID uint32, maxThreads uint8, jobs []*JobSequence) *ParallelSequences {
 	return &ParallelSequences{
 		ID:         id,
 		branchID:   branchID,
@@ -36,10 +36,6 @@ func (this *ParallelSequences) At(idx uint64) *JobSequence {
 }
 
 func (this *ParallelSequences) Add(job *JobSequence) bool {
-	if uint32(len(this.jobs)) > eucommon.MAX_NUMBER_THREADS {
-		return false
-	}
-
 	this.jobs = append(this.jobs, job)
 	return true
 }
@@ -59,6 +55,7 @@ func (this *ParallelSequences) Run(parentApiRouter eucommon.EthApiRouter, snapsh
 	// Detect potential conflicts
 	results := common.Concate(this.jobs, func(job *JobSequence) []*Result { return job.Results })
 	dict := Results(results).Detect()
+
 	for i := 0; i < len(results); i++ {
 		if _, conflict := (*dict)[results[i].TxIndex]; conflict {
 			results[i].Err = errors.New(ccurlcommon.ERR_ACCESS_CONFLICT)
