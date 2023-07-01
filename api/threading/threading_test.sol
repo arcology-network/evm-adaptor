@@ -100,13 +100,15 @@ contract RecursiveThreadingTest {
 }
 
 contract MaxRecursiveThreadingTest {
+    Bool container = new Bool();
     uint256 counter = 0;
     function call() public {     
         Threading mp = new Threading(1);
-        mp.add(9000000, address(this), abi.encodeWithSignature("add(uint256)", 1));
-        mp.add(9000000, address(this), abi.encodeWithSignature("add(uint256)", 1));
+        mp.add(9900000, address(this), abi.encodeWithSignature("add(uint256)", 1));
+        mp.add(9900000, address(this), abi.encodeWithSignature("add(uint256)", 1));
         mp.run(); 
-        require(counter >= 6);
+        // require(counter == 7);
+        require(container.length() == 3); // 2 + 4 + 8
     } 
 
     function add(uint256 elem) public { //9e c6 69  
@@ -114,10 +116,10 @@ contract MaxRecursiveThreadingTest {
             counter = elem;
             return; 
         }
-
-        Threading mp2 = new Threading(1);     
-        mp2.add(4000000, address(this), abi.encodeWithSignature("add(uint256)", elem + 2));
-        mp2.add(4000000, address(this), abi.encodeWithSignature("add(uint256)", elem + 2));
+        container.push(true);
+        Threading mp2 = new Threading(2);     
+        mp2.add(5900000, address(this), abi.encodeWithSignature("add(uint256)", elem + 2));
+        mp2.add(5900000, address(this), abi.encodeWithSignature("add(uint256)", elem + 2));
         mp2.run();              
     }  
 }

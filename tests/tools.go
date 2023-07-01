@@ -181,23 +181,17 @@ func InvokeTestContract(targetPath, file, version, contractName, funcName string
 		return errors.New("Error: Deployment failed!!!" + errmsg), eu
 	}
 
-	// ================================== CallBasic() ==================================
-	receipt, _, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, evmeu.NewEVMBlockContext(config), evmeu.NewEVMTxContext(msg))
-	_, transitions = eu.Api().Ccurl().ExportAll()
-	if err != nil {
-		return err, eu
-	}
-
 	if len(funcName) == 0 {
 		return err, eu
 	}
 
+	// ================================== CallBasic() ==================================
 	data := crypto.Keccak256([]byte(funcName))[:4]
 	data = append(data, inputData...)
 
 	msg = core.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, evmeu.NewEVMBlockContext(config), evmeu.NewEVMTxContext(msg))
-	_, transitions = eu.Api().Ccurl().ExportAll()
+	receipt, execResult, _ := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, evmeu.NewEVMBlockContext(config), evmeu.NewEVMTxContext(msg))
+	// _, transitions = eu.Api().Ccurl().ExportAll()
 
 	if receipt.Status != 1 {
 		return execResult.Err, eu

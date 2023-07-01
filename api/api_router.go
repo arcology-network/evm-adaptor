@@ -13,9 +13,9 @@ import (
 	evmcore "github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/core/vm"
 	evmeu "github.com/arcology-network/vm-adaptor"
-	atomic "github.com/arcology-network/vm-adaptor/api/atomic"
 	cumulativei256 "github.com/arcology-network/vm-adaptor/api/commutative/int256"
 	cumulativeu256 "github.com/arcology-network/vm-adaptor/api/commutative/u256"
+	runtime "github.com/arcology-network/vm-adaptor/api/runtime"
 	"github.com/arcology-network/vm-adaptor/execution"
 
 	noncommutativeBytes "github.com/arcology-network/vm-adaptor/api/noncommutative/base"
@@ -33,7 +33,7 @@ type API struct {
 	ccElemID uint64
 	depth    uint8
 
-	schedule *execution.Schedule
+	schedule interface{}
 	eu       *evmeu.EU
 	reserved interface{}
 
@@ -57,7 +57,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 		cumulativeu256.NewU256CumulativeHandlers(api),
 		cumulativei256.NewInt256CumulativeHandlers(api),
 		threading.NewThreadingHandler(api),
-		atomic.NewAtomicHandler(api),
+		runtime.NewAtomicHandler(api),
 	}
 
 	for i, v := range handlers {
@@ -70,7 +70,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	api.ccurl.NewAccount( // A temp account for handling deferred calls
 		concurrenturl.SYSTEM,
 		api.ccurl.Platform.Eth10(),
-		hex.EncodeToString(codec.Bytes20(atomic.NewAtomicHandler(api).Address()).Encode()),
+		hex.EncodeToString(codec.Bytes20(runtime.NewAtomicHandler(api).Address()).Encode()),
 	)
 	return api
 }
@@ -80,7 +80,7 @@ func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl
 
 	api.txHash = txHash
 	api.txIndex = txIndex
-	api.schedule = schedule.(*execution.Schedule)
+	// api.schedule = schedule.(*execution.Schedule)
 
 	api.uuid = 0
 	api.ccUID = 0
@@ -98,10 +98,12 @@ func (this *API) Depth() uint8                { return this.depth }
 func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }
 func (this *API) Origin() evmcommon.Address   { return this.eu.VM().TxContext.Origin }
 
-func (this *API) SetSchedule(schedule *execution.Schedule) { this.schedule = schedule }
-func (this *API) Schedule() interface{}                    { return this.schedule }
-func (this *API) Message() *evmcore.Message                { return this.eu.Message() }
-func (this *API) VM() *vm.EVM                              { return this.eu.VM() }
+func (this *API) SetSchedule(schedule interface{}) { this.schedule = schedule }
+func (this *API) Schedule() interface{}            { return this.schedule }
+func (this *API) Message() *evmcore.Message        { return this.eu.Message() }
+func (this *API) VM() *vm.EVM {
+	return common.IfThenDo1st(this.eu != nil, func() *vm.EVM { return this.eu.VM() }, nil)
+}
 
 func (this *API) GetEU() interface{}   { return this.eu }
 func (this *API) SetEU(eu interface{}) { this.eu = eu.(*evmeu.EU) }

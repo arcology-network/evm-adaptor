@@ -22,13 +22,13 @@ import (
 // APIs under the concurrency namespace
 type ThreadingHandler struct {
 	api   eucommon.EthApiRouter
-	pools map[string]*execution.ParallelSequences
+	pools map[string]*execution.Generation
 }
 
 func NewThreadingHandler(ethApiRouter eucommon.EthApiRouter) *ThreadingHandler {
 	return &ThreadingHandler{
 		api:   ethApiRouter,
-		pools: map[string]*execution.ParallelSequences{},
+		pools: map[string]*execution.Generation{},
 	}
 }
 
@@ -76,7 +76,7 @@ func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte
 	}
 
 	id := strconv.Itoa(len(this.pools))
-	this.pools[id] = execution.NewParallelJobs(uint32(len(this.pools)), 0, threads, []*execution.JobSequence{})
+	this.pools[id] = execution.NewGeneration(uint32(len(this.pools)), 0, threads, []*execution.JobSequence{})
 	return []byte(id), true, 0 // Create a new container
 }
 

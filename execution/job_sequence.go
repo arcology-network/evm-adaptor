@@ -18,6 +18,7 @@ import (
 
 type JobSequence struct {
 	ID        uint64
+	PreTxs    []uint32
 	StdMsgs   []*StandardMessage
 	Results   []*Result
 	ApiRouter eucommon.EthApiRouter

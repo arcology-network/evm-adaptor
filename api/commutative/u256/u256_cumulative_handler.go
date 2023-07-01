@@ -79,7 +79,7 @@ func (this *U256CumulativeHandlers) new(caller evmcommon.Address, input []byte) 
 	}
 
 	newU256 := commutative.NewU256(min.(*uint256.Int), max.(*uint256.Int))
-	if _, err := this.api.Ccurl().Write(this.api.TxIndex(), key, newU256); err != nil {
+	if _, err := this.api.Ccurl().Write(this.api.TxIndex(), key, newU256, true); err != nil {
 		return []byte{}, false, 0
 	}
 	return id, true, 0
@@ -144,7 +144,7 @@ func (this *U256CumulativeHandlers) set(caller evmcommon.Address, input []byte, 
 
 	value := commutative.NewU256Delta(delta.(*uint256.Int), isPositive)
 
-	_, v := this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value)
+	_, v := this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value, true)
 	return []byte{}, v == nil, 0
 }
 
