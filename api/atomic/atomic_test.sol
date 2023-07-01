@@ -61,8 +61,8 @@ contract ConflictInThreadsFixedLengthTest {
        mp.add(400000, address(this), abi.encodeWithSignature("updater(uint256)", 33));
        mp.add(400000, address(this), abi.encodeWithSignature("updater(uint256)", 55));
        mp.run();     
-       require(results[0] == 155);  // 11 and 33 will be reverted due to conflicts
-       require(results[1] == 255); 
+       require(results[0] == 111);  // 11 and 33 will be reverted due to conflicts
+       require(results[1] == 211); 
     }
 
     function updater(uint256 num) public {

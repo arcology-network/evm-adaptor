@@ -147,7 +147,7 @@ func (this *BytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, 
 	}
 
 	value := noncommutative.NewBytes(bytes.([]byte))
-	if _, err := this.api.Ccurl().WriteAt(this.api.TxIndex(), path, idx, value); err == nil {
+	if _, err := this.api.Ccurl().WriteAt(this.api.TxIndex(), path, idx, value, true); err == nil {
 		return []byte{}, true, 0
 	}
 	return []byte{}, false, 0
@@ -166,7 +166,7 @@ func (this *BytesHandlers) push(caller evmcommon.Address, input []byte, origin e
 		return []byte{}, false, 0
 	}
 
-	_, err = this.api.Ccurl().Write(this.api.TxIndex(), key, noncommutative.NewBytes(value.([]byte)))
+	_, err = this.api.Ccurl().Write(this.api.TxIndex(), key, noncommutative.NewBytes(value.([]byte)), true)
 	return []byte{}, err == nil, 0
 }
 
@@ -176,7 +176,7 @@ func (this *BytesHandlers) pop(caller evmcommon.Address, input []byte) ([]byte, 
 		return []byte{}, false, 0
 	}
 
-	if value, _, err := this.api.Ccurl().PopBack(this.api.TxIndex(), path); err != nil {
+	if value, _, err := this.api.Ccurl().PopBack(this.api.TxIndex(), path, true); err != nil {
 		return []byte{}, false, 0
 	} else {
 		if value != nil {

@@ -87,11 +87,11 @@ func createAccount(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, 
 		panic(err)
 	}
 
-	if _, err := url.Write(tid, getBalancePath(url, account), commutative.NewU256(commutative.U256_MIN, commutative.U256_MAX)); err != nil { // Initialize balance
+	if _, err := url.Write(tid, getBalancePath(url, account), commutative.NewU256(commutative.U256_MIN, commutative.U256_MAX), true); err != nil { // Initialize balance
 		panic(err)
 	}
 
-	if _, err := url.Write(tid, getNoncePath(url, account), commutative.NewUint64()); err != nil {
+	if _, err := url.Write(tid, getNoncePath(url, account), commutative.NewUint64(), true); err != nil {
 		panic(err)
 	}
 	// if err := url.Write(tid, getCodePath(url, account), noncommutative.NewBytes(nil)); err != nil {
