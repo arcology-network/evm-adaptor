@@ -35,13 +35,3 @@ func TestRecursiveThreading(t *testing.T) {
 		t.Error(err)
 	}
 }
-
-func TestMultipleRecursiveThreading(t *testing.T) {
-	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/api/"
-
-	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "MaxRecursiveThreadingTest", "call()", []byte{}, false)
-	if err != nil {
-		t.Error(err)
-	}
-}

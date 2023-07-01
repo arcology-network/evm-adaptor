@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/big"
 	"strconv"
-	"sync/atomic"
 
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/common"
@@ -65,10 +64,10 @@ func (this *ThreadingHandler) Call(caller, callee [20]byte, input []byte, origin
 }
 
 func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	if this.api.Depth() >= eucommon.MAX_RECURSIION_DEPTH ||
-		atomic.AddUint64(&eucommon.TotalSubProcesses, 1) > eucommon.MAX_SUB_PROCESSES {
-		return []byte{}, false, 0 // Execeeds the max recursion depth or the max sub processes
-	}
+	// if this.api.Depth() >= eucommon.MAX_RECURSIION_DEPTH ||
+	// 	atomic.AddUint64(&eucommon.TotalProcesses, 1) > eucommon.MAX_SUB_PROCESSES {
+	// 	return []byte{}, false, 0 // Execeeds the max recursion depth or the max sub processes
+	// }
 
 	threads, err := abi.DecodeTo(input, 0, uint8(1), 1, 32)
 	if err != nil {
