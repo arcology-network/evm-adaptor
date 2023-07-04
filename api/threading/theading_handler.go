@@ -3,7 +3,6 @@ package threading
 import (
 	"math"
 	"math/big"
-	"strconv"
 
 	evmcommon "github.com/arcology-network/evm/common"
 	evmcore "github.com/arcology-network/evm/core"
@@ -39,19 +38,19 @@ func (this *ThreadingHandler) Call(caller, callee [20]byte, input []byte, origin
 	case [4]byte{0x58, 0x16, 0xc4, 0x25}:
 		return this.new(caller, callee, input[4:])
 
-	case [4]byte{0xf8, 0xf0, 0xd9, 0x80}:
+	case [4]byte{0x55, 0x46, 0x3c, 0x05}:
 		return this.add(caller, callee, input[4:])
 
-	case [4]byte{0x84, 0x67, 0x3c, 0xc9}:
+	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}: //
 		return this.length(input[4:])
 
-	case [4]byte{0x3a, 0x27, 0x65, 0x23}: //3a 27 65 23
+	case [4]byte{0xc0, 0x40, 0x62, 0x26}: //
 		return this.run(caller, callee, input[4:])
 
-	case [4]byte{0x4d, 0xd4, 0x9a, 0xb4}: // 4d d4 9a b4
+	case [4]byte{0x95, 0x07, 0xd3, 0x9a}: //
 		return this.get(input[4:])
 
-	case [4]byte{0x5e, 0x1d, 0x05, 0x4d}: // 5e 1d 05 4d
+	case [4]byte{0x52, 0xef, 0xea, 0x6e}:
 		return this.clear(input[4:])
 	}
 
@@ -69,9 +68,9 @@ func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte
 		return []byte{}, false, 0
 	}
 
-	id := strconv.Itoa(len(this.pools))
-	this.pools[id] = execution.NewGeneration(uint32(len(this.pools)), threads, []*execution.JobSequence{})
-	return []byte(id), true, 0 // Create a new container
+	address := this.GetAddress()
+	this.pools[string(address)] = execution.NewGeneration(uint32(len(this.pools)), threads, []*execution.JobSequence{})
+	return []byte(address), true, 0 // Create a new container
 }
 
 func (this *ThreadingHandler) add(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
@@ -79,24 +78,27 @@ func (this *ThreadingHandler) add(caller, callee evmcommon.Address, input []byte
 		return []byte{}, false, 0
 	}
 
-	id := this.ParseID(input)
+	id := this.GetAddress()
+	address := this.api.VM().ArcologyNetworkAPIs.CallContext.Contract.CodeAddr[:]
+	id = string(address)
+
 	if len(id) == 0 || this.pools[id] == nil {
 		return []byte{}, false, 0
 	}
 
 	// fmt.Println(input)
-	gasLimit, err := abi.DecodeTo(input, 1, uint64(0), 1, 32)
+	gasLimit, err := abi.DecodeTo(input, 0, uint64(0), 1, 32)
 	if err != nil {
 		return []byte{}, false, 0
 	}
 
-	rawAddr, err := abi.DecodeTo(input, 2, [20]byte{}, 1, 32)
+	rawAddr, err := abi.DecodeTo(input, 1, [20]byte{}, 1, 32)
 	if err != nil {
 		return []byte{}, false, 0
 	}
 	calleeAddr := evmcommon.BytesToAddress(rawAddr[:]) // Callee contract
 
-	funCall, err := abi.DecodeTo(input, 3, []byte{}, 2, math.MaxUint32)
+	funCall, err := abi.DecodeTo(input, 2, []byte{}, 2, math.MaxUint32)
 	if err != nil {
 		return []byte{}, false, 0
 	}
@@ -130,7 +132,7 @@ func (this *ThreadingHandler) add(caller, callee evmcommon.Address, input []byte
 }
 
 func (this *ThreadingHandler) clear(input []byte) ([]byte, bool, int64) {
-	id := this.ParseID(input)
+	id := this.GetAddress()
 	if len(id) == 0 || this.pools[id] == nil {
 		return []byte{}, false, 0
 	}
@@ -140,7 +142,7 @@ func (this *ThreadingHandler) clear(input []byte) ([]byte, bool, int64) {
 }
 
 func (this *ThreadingHandler) length(input []byte) ([]byte, bool, int64) {
-	id := this.ParseID(input)
+	id := this.GetAddress()
 	if len(id) == 0 || this.pools[id] == nil {
 		return []byte{}, false, 0
 	}
@@ -150,7 +152,7 @@ func (this *ThreadingHandler) length(input []byte) ([]byte, bool, int64) {
 }
 
 func (this *ThreadingHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	id := this.ParseID(input)
+	id := this.GetAddress()
 	if len(id) == 0 || this.pools[id] == nil {
 		return []byte{}, false, 0
 	}
@@ -160,12 +162,12 @@ func (this *ThreadingHandler) run(caller, callee evmcommon.Address, input []byte
 }
 
 func (this *ThreadingHandler) get(input []byte) ([]byte, bool, int64) {
-	id := this.ParseID(input)
+	id := this.GetAddress()
 	if len(id) == 0 || this.pools[id] == nil {
 		return []byte{}, false, 0
 	}
 
-	if idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32); err == nil {
+	if idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {
 		if item := this.pools[id].At(idx); item != nil && item.Results[0].EvmResult != nil {
 			return item.Results[0].EvmResult.ReturnData, item.Results[0].EvmResult.Err == nil, 0
 		}
@@ -174,7 +176,7 @@ func (this *ThreadingHandler) get(input []byte) ([]byte, bool, int64) {
 }
 
 func (this *ThreadingHandler) error(input []byte) ([]byte, bool, int64) {
-	// id := this.ParseID(input)
+	// id := this.GetAddress()
 	// if len(id) == 0 || this.pools[id] == nil {
 	// 	return []byte{}, false
 	// }
@@ -189,7 +191,13 @@ func (this *ThreadingHandler) error(input []byte) ([]byte, bool, int64) {
 }
 
 // Build the container path
-func (this *ThreadingHandler) ParseID(input []byte) string {
-	id, _ := abi.DecodeTo(input, 0, []byte{}, 2, 32) // max 32 bytes                                                                          // container ID
-	return string(id)                                // unique ID
+// func (this *ThreadingHandler) GetAddress(input []byte) string {
+// 	id, _ := abi.DecodeTo(input, 0, []byte{}, 2, 32) // max 32 bytes                                                                          // container ID
+// 	return string(id)                                // unique ID
+// }
+
+// Build the container path
+func (this *ThreadingHandler) GetAddress() string {
+	// id, _ := abi.DecodeTo(input, 0, []byte{}, 2, 32) // max 32 bytes                                                                          // container ID
+	return string(this.api.VM().ArcologyNetworkAPIs.CallContext.Contract.CodeAddr[:]) // unique ID
 }

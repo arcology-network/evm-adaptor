@@ -183,7 +183,19 @@ contract ThreadingMpArraySubprocessTest {
 }
 
 
+contract ThreadingDeploymentAddressTest {
+    Threading[1] mps;
+    function call() public {     
+        Threading mp = new Threading(1);     
+        mp.add(4000000, address(this), abi.encodeWithSignature("deployer()"));  
+        mp.run();    
+    } 
 
+    function deployer() public { //9e c6 69 25
+        Threading mp = new Threading(1); 
+    }  
+ 
+}
 
 contract RecursiveThreadingTest {
     uint256[2] results;

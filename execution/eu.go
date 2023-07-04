@@ -18,12 +18,10 @@ import (
 )
 
 type EU struct {
-	stdMsg      *StandardMessage
-	evm         *vm.EVM               // Original ETH EVM
-	statedb     vm.StateDB            // Arcology Implementation of Eth StateDB
-	api         eucommon.EthApiRouter // Arcology API calls
-	CallContext *vm.ScopeContext      // Arcology API calls
-
+	stdMsg  *StandardMessage
+	evm     *vm.EVM               // Original ETH EVM
+	statedb vm.StateDB            // Arcology Implementation of Eth StateDB
+	api     eucommon.EthApiRouter // Arcology API calls
 }
 
 func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.StateDB, api eucommon.EthApiRouter) *EU {

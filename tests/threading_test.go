@@ -75,3 +75,13 @@ func TestRecursiveThreadingContainer(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestThreadingDeployment(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "ThreadingDeploymentAddressTest", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
