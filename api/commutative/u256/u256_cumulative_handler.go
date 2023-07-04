@@ -14,6 +14,7 @@ import (
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
 	"github.com/arcology-network/vm-adaptor/common"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
+	"github.com/arcology-network/vm-adaptor/execution"
 )
 
 // APIs under the concurrency namespace
@@ -63,13 +64,15 @@ func (this *U256CumulativeHandlers) Call(caller, callee [20]byte, input []byte, 
 }
 
 func (this *U256CumulativeHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	id := this.api.GenCcObjID()
-	if !this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) { // A new container
+	id := this.api.UUID()
+
+	txIndex := uint32(this.api.GetEU().(*execution.EU).Message().ID)
+	if !this.connector.New(txIndex, types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) { // A new container
 		return []byte{}, false, 0
 	}
 
 	path := this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id))
-	key := path + string(this.api.GenCcElemUID()) // Element ID
+	key := path + string(this.api.ElementUID()) // Element ID
 
 	// val, valErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
 	min, minErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
@@ -79,7 +82,7 @@ func (this *U256CumulativeHandlers) new(caller evmcommon.Address, input []byte) 
 	}
 
 	newU256 := commutative.NewU256(min.(*uint256.Int), max.(*uint256.Int))
-	if _, err := this.api.Ccurl().Write(this.api.TxIndex(), key, newU256, true); err != nil {
+	if _, err := this.api.Ccurl().Write(txIndex, key, newU256, true); err != nil {
 		return []byte{}, false, 0
 	}
 	return id, true, 0
@@ -91,7 +94,7 @@ func (this *U256CumulativeHandlers) get(caller evmcommon.Address, input []byte) 
 		return []byte{}, false, 0
 	}
 
-	if value, _, err := this.api.Ccurl().ReadAt(this.api.TxIndex(), path, 0); value == nil || err != nil {
+	if value, _, err := this.api.Ccurl().ReadAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0); value == nil || err != nil {
 		return []byte{}, false, 0
 	} else {
 		updated := value.(*uint256.Int)
@@ -109,7 +112,7 @@ func (this *U256CumulativeHandlers) peek(caller evmcommon.Address, input []byte)
 	}
 
 	// Peek the initial value
-	value, _, err := this.api.Ccurl().DoAt(this.api.TxIndex(), path, 0, func(v interface{}) interface{} {
+	value, _, err := this.api.Ccurl().DoAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, func(v interface{}) interface{} {
 		return []interface{}{uint32(0), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()}
 	})
 
@@ -144,7 +147,7 @@ func (this *U256CumulativeHandlers) set(caller evmcommon.Address, input []byte, 
 
 	value := commutative.NewU256Delta(delta.(*uint256.Int), isPositive)
 
-	_, v := this.api.Ccurl().WriteAt(this.api.TxIndex(), path, 0, value, true)
+	_, v := this.api.Ccurl().WriteAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, value, true)
 	return []byte{}, v == nil, 0
 }
 
@@ -154,7 +157,7 @@ func (this *U256CumulativeHandlers) min(caller evmcommon.Address, input []byte) 
 		return []byte{}, false, 0
 	}
 
-	value, _, err := this.api.Ccurl().DoAt(this.api.TxIndex(), path, 0, func(v interface{}) interface{} {
+	value, _, err := this.api.Ccurl().DoAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, func(v interface{}) interface{} {
 		return []interface{}{uint32(1), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()}
 	})
 
@@ -173,7 +176,7 @@ func (this *U256CumulativeHandlers) max(caller evmcommon.Address, input []byte) 
 		return []byte{}, false, 0
 	}
 
-	value, _, err := this.api.Ccurl().DoAt(this.api.TxIndex(), path, 0, func(v interface{}) interface{} {
+	value, _, err := this.api.Ccurl().DoAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, func(v interface{}) interface{} {
 		return []interface{}{uint32(1), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()}
 	})
 

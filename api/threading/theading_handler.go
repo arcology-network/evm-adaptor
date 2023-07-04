@@ -1,15 +1,10 @@
 package threading
 
 import (
-	"crypto/sha256"
 	"math"
 	"math/big"
 	"strconv"
 
-	"github.com/arcology-network/common-lib/codec"
-	"github.com/arcology-network/common-lib/common"
-	commonlibcommon "github.com/arcology-network/common-lib/common"
-	"github.com/arcology-network/concurrenturl/indexer"
 	evmcommon "github.com/arcology-network/evm/common"
 	evmcore "github.com/arcology-network/evm/core"
 	"github.com/arcology-network/vm-adaptor/abi"
@@ -21,13 +16,13 @@ import (
 // APIs under the concurrency namespace
 type ThreadingHandler struct {
 	api   eucommon.EthApiRouter
-	pools map[string]*execution.ParallelSequences
+	pools map[string]*execution.Generation
 }
 
 func NewThreadingHandler(ethApiRouter eucommon.EthApiRouter) *ThreadingHandler {
 	return &ThreadingHandler{
 		api:   ethApiRouter,
-		pools: map[string]*execution.ParallelSequences{},
+		pools: map[string]*execution.Generation{},
 	}
 }
 
@@ -75,7 +70,7 @@ func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte
 	}
 
 	id := strconv.Itoa(len(this.pools))
-	this.pools[id] = execution.NewParallelJobs(uint32(len(this.pools)), 0, threads, []*execution.JobSequence{})
+	this.pools[id] = execution.NewGeneration(uint32(len(this.pools)), threads, []*execution.JobSequence{})
 	return []byte(id), true, 0 // Create a new container
 }
 
@@ -106,32 +101,28 @@ func (this *ThreadingHandler) add(caller, callee evmcommon.Address, input []byte
 		return []byte{}, false, 0
 	}
 
+	newJob := &execution.JobSequence{
+		ID:        this.api.GetSerialNum(eucommon.SUB_PROCESS),
+		ApiRouter: this.api,
+	}
+
+	// txHash := newJob.DeriveNewHash(this.api.GetEU().(*execution.EU).Message().TxHash)
 	evmMsg := evmcore.NewMessage( // Build the message
 		this.api.Origin(),
 		&calleeAddr,
 		0,
 		new(big.Int).SetUint64(0), // Amount to transfer
 		gasLimit,
-		this.api.Message().GasPrice, // gas price
+		this.api.GetEU().(*execution.EU).Message().Native.GasPrice, // gas price
 		funCall,
 		nil,
 		false, // Don't checking nonce
 	)
 
-	newJob := &execution.JobSequence{
-		ID:        this.pools[id].Length(),
-		ApiRouter: this.api,
-	}
-
 	stdMsg := &execution.StandardMessage{
-		ID:     this.api.CCUID(),
+		ID:     newJob.ID, // this is the problem !!!!
 		Native: &evmMsg,
-		TxHash: sha256.Sum256(commonlibcommon.Flatten([][]byte{
-			codec.Bytes32(this.api.TxHash()).Encode(),
-			codec.Uint32((this.pools[id].BranchID())).Encode(),
-			evmMsg.Data[:4],
-			codec.Uint32(newJob.ID).Encode(),
-		})),
+		TxHash: newJob.DeriveNewHash(this.api.GetEU().(*execution.EU).Message().TxHash),
 	}
 
 	newJob.StdMsgs = []*execution.StandardMessage{stdMsg}
@@ -164,8 +155,7 @@ func (this *ThreadingHandler) run(caller, callee evmcommon.Address, input []byte
 		return []byte{}, false, 0
 	}
 
-	preTransitions := indexer.Univalues(common.Clone(this.api.Ccurl().Export())).To(indexer.ITCTransition{})
-	this.pools[id].Run(this.api, this.api.Ccurl().Snapshot(preTransitions))
+	this.pools[id].Run(this.api)
 	return []byte{}, true, 0
 }
 

@@ -1,11 +1,14 @@
 package execution
 
 import (
-	common "github.com/arcology-network/common-lib/common"
+	"crypto/sha256"
+	"fmt"
+
+	"github.com/arcology-network/common-lib/codec"
+	"github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/commutative"
 	"github.com/arcology-network/concurrenturl/indexer"
-	evmeu "github.com/arcology-network/vm-adaptor"
 
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	evmcommon "github.com/arcology-network/evm/common"
@@ -18,12 +21,22 @@ import (
 
 type JobSequence struct {
 	ID        uint64
+	PreTxs    []uint32
 	StdMsgs   []*StandardMessage
 	Results   []*Result
 	ApiRouter eucommon.EthApiRouter
 }
 
-func (this *JobSequence) Run(config *evmeu.Config, snapshotUrl ccurlinterfaces.Datastore) []*Result { //
+func (this *JobSequence) DeriveNewHash(seed [32]byte) [32]byte {
+	return sha256.Sum256(common.Flatten([][]byte{
+		codec.Bytes32(seed).Encode(),
+		codec.Uint32(this.ID).Encode(),
+	}))
+}
+
+func (this *JobSequence) Length() int { return len(this.StdMsgs) }
+
+func (this *JobSequence) Run(config *Config, snapshotUrl ccurlinterfaces.Datastore) []*Result { //
 	results := make([]*Result, len(this.StdMsgs))
 
 	for i, msg := range this.StdMsgs {
@@ -32,20 +45,25 @@ func (this *JobSequence) Run(config *evmeu.Config, snapshotUrl ccurlinterfaces.D
 		if i < len(this.StdMsgs)-1 {
 			snapshotUrl = this.ApiRouter.Ccurl().Snapshot(transitions)
 		}
+
+		fmt.Println(" ************************ ")
+		indexer.Univalues(results[i].Transitions).Print()
+		fmt.Println(" ************************ ")
 	}
+
 	return results
 }
 
-func (this *JobSequence) execute(stdMsg *StandardMessage, config *evmeu.Config, snapshotUrl ccurlinterfaces.Datastore) *Result { //
+func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapshotUrl ccurlinterfaces.Datastore) *Result { //
 	ccurl := (&concurrenturl.ConcurrentUrl{}).New(
 		indexer.NewWriteCache(snapshotUrl, this.ApiRouter.Ccurl().Platform),
 		this.ApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
 
-	this.ApiRouter = this.ApiRouter.New(stdMsg.TxHash, uint32(stdMsg.ID), ccurl, this.ApiRouter.Schedule())
+	this.ApiRouter = this.ApiRouter.New(ccurl, this.ApiRouter.Schedule())
 	statedb := eth.NewImplStateDB(this.ApiRouter)                       // Eth state DB
 	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, uint32(stdMsg.ID)) // tx hash , block hash and tx index
 
-	eu := evmeu.NewEU(
+	eu := NewEU(
 		config.ChainConfig,
 		vm.Config{},
 		statedb,
@@ -55,25 +73,11 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *evmeu.Config, 
 	// var prechkErr error
 	receipt, evmResult, prechkErr :=
 		eu.Run(
-			stdMsg.TxHash,
-			uint32(stdMsg.ID),
-			stdMsg.Native,
-			evmeu.NewEVMBlockContext(config),
-			evmeu.NewEVMTxContext(*stdMsg.Native),
+			stdMsg,
+			NewEVMBlockContext(config),
+			NewEVMTxContext(*stdMsg.Native),
 		)
 
-	// Do gas transfer
-	// if prechkErr == nil && evmResult != nil && evmResult.Err == nil && this.ApiRouter.GetReserved() != nil {
-	// 	deferred := this.ApiRouter.GetReserved().(*StandardMessage)
-	// 	if stdMsg.Native.GasLimit-evmResult.UsedGas >= deferred.Native.GasLimit {
-	// 		eu.VM().Context.Transfer(
-	// 			eu.VM().StateDB,
-	// 			stdMsg.Native.From,
-	// 			eucommon.ATOMIC_HANDLER,
-	// 			big.NewInt(int64(deferred.Native.GasLimit)),
-	// 		)
-	// 	}
-	// }
 	indexer.Univalues(this.ApiRouter.Ccurl().Export()).Print()
 
 	return &Result{

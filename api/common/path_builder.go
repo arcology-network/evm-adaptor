@@ -25,11 +25,11 @@ func NewCCurlConnector(subDir string, api eucommon.EthApiRouter, ccurl *concurre
 }
 
 // Make Arcology paths under the current account
-func (this *CcurlConnector) New(account types.Address, containerId string) bool {
-	if !this.newStorageRoot(account, this.apiRouter.TxIndex()) { // Create the root path if has been created yet.
+func (this *CcurlConnector) New(txIndex uint32, account types.Address, containerId string) bool {
+	if !this.newStorageRoot(account, txIndex) { // Create the root path if has been created yet.
 		return false
 	}
-	return this.newContainerRoot(account, containerId[:], this.apiRouter.TxIndex()) //
+	return this.newContainerRoot(account, containerId[:], txIndex) //
 }
 
 func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32) bool {

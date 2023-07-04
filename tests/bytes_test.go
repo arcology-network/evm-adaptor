@@ -6,11 +6,12 @@ import (
 	"path/filepath"
 	"testing"
 
+	commontype "github.com/arcology-network/common-lib/types"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core"
-	ccEu "github.com/arcology-network/vm-adaptor"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/compiler"
+	execution "github.com/arcology-network/vm-adaptor/execution"
 )
 
 func TestContractBytes(t *testing.T) {
@@ -27,9 +28,20 @@ func TestContractBytes(t *testing.T) {
 	}
 
 	// ================================== Deploy the contract ==================================
-	msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
-	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, ccEu.NewEVMBlockContext(config), ccEu.NewEVMTxContext(msg))           // Execute it
+	msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)
+	stdMsg := &execution.StandardMessage{
+		ID:     1,
+		TxHash: [32]byte{1, 1, 1},
+		Native: &msg, // Build the message
+		Source: commontype.TX_SOURCE_LOCAL,
+	}
+
+	receipt, _, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
 	_, transitions := eu.Api().Ccurl().ExportAll()
+
+	// msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
+	// receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg)) // Execute it
+	// _, transitions := eu.Api().Ccurl().ExportAll()
 
 	// ---------------
 

@@ -1,4 +1,4 @@
-package eu
+package execution
 
 import (
 	"bytes"
@@ -18,7 +18,7 @@ import (
 )
 
 type EU struct {
-	msg         *evmcore.Message
+	stdMsg      *StandardMessage
 	evm         *vm.EVM               // Original ETH EVM
 	statedb     vm.StateDB            // Arcology Implementation of Eth StateDB
 	api         eucommon.EthApiRouter // Arcology API calls
@@ -38,7 +38,7 @@ func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.State
 	return eu
 }
 
-func (this *EU) Message() *evmcore.Message  { return this.msg }
+func (this *EU) Message() *StandardMessage  { return this.stdMsg }
 func (this *EU) VM() *vm.EVM                { return this.evm }
 func (this *EU) Statedb() vm.StateDB        { return this.statedb }
 func (this *EU) Api() eucommon.EthApiRouter { return this.api }
@@ -51,16 +51,15 @@ func (this *EU) SetRuntimeContext(statedb vm.StateDB, api eucommon.EthApiRouter)
 	this.evm.ArcologyNetworkAPIs.APIs = api
 }
 
-func (this *EU) Run(txHash ethCommon.Hash, txIndex uint32, msg *evmcore.Message, blockContext vm.BlockContext, txContext vm.TxContext) (*types.Receipt, *evmcore.ExecutionResult, error) {
-	this.statedb.(*eth.ImplStateDB).PrepareFormer(txHash, ethCommon.Hash{}, txIndex)
-	// this.api.Prepare(txHash, blockContext.BlockNumber, uint32(txIndex))
-	this.api.SetRuntimeContext(txHash, txIndex, blockContext.BlockNumber)
+func (this *EU) Run(stdmsg *StandardMessage, blockContext vm.BlockContext, txContext vm.TxContext) (*types.Receipt, *evmcore.ExecutionResult, error) {
+	this.statedb.(*eth.ImplStateDB).PrepareFormer(stdmsg.TxHash, ethCommon.Hash{}, uint32(stdmsg.ID))
+
 	this.evm.Context = blockContext
 	this.evm.TxContext = txContext
-	this.msg = msg
+	this.stdMsg = stdmsg
 
 	gasPool := core.GasPool(math.MaxUint64)
-	result, err := core.ApplyMessage(this.evm, msg, &gasPool) // Execute the transcation
+	result, err := core.ApplyMessage(this.evm, this.stdMsg.Native, &gasPool) // Execute the transcation
 	// if err != nil {
 	// 	return nil, nil, err // Failed in Precheck before tx execution started
 	// }
@@ -77,18 +76,18 @@ func (this *EU) Run(txHash ethCommon.Hash, txIndex uint32, msg *evmcore.Message,
 
 	// Create a new receipt
 	receipt := types.NewReceipt(nil, result.Failed(), result.UsedGas)
-	receipt.TxHash = txHash
+	receipt.TxHash = stdmsg.TxHash
 	receipt.GasUsed = result.UsedGas
 
 	// Check the newly created address
-	if msg.To == nil {
-		userSpecifiedAddress := crypto.CreateAddress(this.evm.Origin, msg.Nonce)
+	if stdmsg.Native.To == nil {
+		userSpecifiedAddress := crypto.CreateAddress(this.evm.Origin, stdmsg.Native.Nonce)
 		receipt.ContractAddress = result.ContractAddress
 		if !bytes.Equal(userSpecifiedAddress.Bytes(), result.ContractAddress.Bytes()) {
 			this.api.AddLog("ContractAddressWarning", fmt.Sprintf("user specified address = %v, inner address = %v", userSpecifiedAddress, result.ContractAddress))
 		}
 	}
-	receipt.Logs = this.statedb.(*eth.ImplStateDB).GetLogs(txHash)
+	receipt.Logs = this.statedb.(*eth.ImplStateDB).GetLogs(stdmsg.TxHash)
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 	// accesses, transitions := this.api.Ccurl().ExportAll()
 

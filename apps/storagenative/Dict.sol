@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-import "./U256.sol";
-
+import "../../api/noncommutative/u256/U256.sol";
 
 contract Dict {
     U256 keys = new U256();

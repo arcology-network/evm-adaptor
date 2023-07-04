@@ -2,12 +2,14 @@ package eth
 
 import (
 	"encoding/hex"
+	"fmt"
 
 	codec "github.com/arcology-network/common-lib/codec"
 	commonlib "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
+	vmCommon "github.com/arcology-network/vm-adaptor/common"
 )
 
 type EthCCurlConnector struct {
@@ -52,10 +54,19 @@ func getStorageRootPath(url *concurrenturl.ConcurrentUrl, account evmcommon.Addr
 	return commonlib.StrCat(url.Platform.Eth10Account(), string(accHex[:]), "/storage/native/")
 }
 
-func getStorageKeyPath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, key evmcommon.Hash) string {
+func getLocalStorageKeyPath(api vmCommon.EthApiRouter, account evmcommon.Address, key evmcommon.Hash) string {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], account[:])
-	return commonlib.StrCat(url.Platform.Eth10Account(), string(accHex[:]), "/storage/native/", key.Hex())
+
+	mem := api.VM().ArcologyNetworkAPIs.CallContext.Memory.Data()
+	fmt.Print(len(mem))
+	return api.Ccurl().Platform.Eth10Account() + string(accHex[:]) + "/storage/native/local/" + "0"
+}
+
+func getStorageKeyPath(api vmCommon.EthApiRouter, account evmcommon.Address, key evmcommon.Hash) string {
+	var accHex [2 * evmcommon.AddressLength]byte
+	hex.Encode(accHex[:], account[:])
+	return commonlib.StrCat(api.Ccurl().Platform.Eth10Account(), string(accHex[:]), "/storage/native/", key.Hex())
 }
 
 func getBalancePath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {

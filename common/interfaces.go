@@ -2,15 +2,12 @@
 package common
 
 import (
-	"math/big"
-
 	"github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/interfaces"
 	"github.com/arcology-network/evm/common"
 
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/consensus"
-	"github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/core/vm"
 )
@@ -18,14 +15,13 @@ import (
 type EthApiRouter interface {
 	Origin() evmcommon.Address
 	Ccurl() *concurrenturl.ConcurrentUrl
-	New(common.Hash, uint32, *concurrenturl.ConcurrentUrl, interface{}) EthApiRouter
+	New(*concurrenturl.ConcurrentUrl, interface{}) EthApiRouter
 	Coinbase() evmcommon.Address
 
 	SetEU(interface{})
 	GetEU() interface{}
-
-	Message() *core.Message
 	VM() *vm.EVM
+	Schedule() interface{}
 
 	GetReserved() interface{}
 	SetReserved(interface{})
@@ -33,18 +29,10 @@ type EthApiRouter interface {
 	Depth() uint8
 	AddLog(key, value string)
 	Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64, blockhash evmcommon.Hash) (bool, []byte, bool, int64)
-	SetRuntimeContext([32]byte, uint32, *big.Int)
 
-	TxIndex() uint32
-	TxHash() [32]byte
-	Schedule() interface{}
-
-	CCUID() uint64
-	CCElemID() uint64
-
-	GenCcObjID() []byte
-	GenCcElemUID() []byte
-	GenUUID() []byte
+	GetSerialNum(int) uint64
+	UUID() []byte
+	ElementUID() []byte
 }
 
 type ILog interface {

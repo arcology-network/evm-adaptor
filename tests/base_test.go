@@ -1,19 +1,19 @@
 package tests
 
 import (
-	"fmt"
 	"math/big"
 	"os"
 	"path/filepath"
 	"testing"
 
+	commontypes "github.com/arcology-network/common-lib/types"
 	concurrenturl "github.com/arcology-network/concurrenturl"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/crypto"
-	evmeu "github.com/arcology-network/vm-adaptor"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/compiler"
+	execution "github.com/arcology-network/vm-adaptor/execution"
 )
 
 func TestBase(t *testing.T) {
@@ -31,9 +31,20 @@ func TestBase(t *testing.T) {
 	}
 
 	// ================================== Deploy the contract ==================================
-	msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
-	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, evmeu.NewEVMBlockContext(config), evmeu.NewEVMTxContext(msg))         // Execute it
+	msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)
+	stdMsg := &execution.StandardMessage{
+		ID:     1,
+		TxHash: [32]byte{1, 1, 1},
+		Native: &msg, // Build the message
+		Source: commontypes.TX_SOURCE_LOCAL,
+	}
+
+	receipt, execResult, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
 	_, transitions := eu.Api().Ccurl().ExportAll()
+
+	// msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
+	// receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg)) // Execute it
+	// _, transitions := eu.Api().Ccurl().ExportAll()
 
 	t.Log("\n" + eucommon.FormatTransitions(transitions))
 	// t.Log(receipt)
@@ -49,17 +60,26 @@ func TestBase(t *testing.T) {
 	url.Commit([]uint32{1})
 
 	// ================================== Call() ==================================
-	receipt, _, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, evmeu.NewEVMBlockContext(config), evmeu.NewEVMTxContext(msg))
-	// _, transitions = eu.Api().Ccurl().ExportAll()
-
-	if err != nil {
-		fmt.Print(err)
-	}
+	// receipt, _, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg))
+	// if err != nil {
+	// 	fmt.Print(err)
+	// }
 
 	data := crypto.Keccak256([]byte("call()"))[:4]
-	msg = core.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-	receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, evmeu.NewEVMBlockContext(config), evmeu.NewEVMTxContext(msg))
+	msg = core.NewMessage(eucommon.Alice, &contractAddress, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	stdMsg = &execution.StandardMessage{
+		ID:     1,
+		TxHash: [32]byte{1, 1, 1},
+		Native: &msg, // Build the message
+		Source: commontypes.TX_SOURCE_LOCAL,
+	}
+
+	receipt, execResult, err = eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
 	_, transitions = eu.Api().Ccurl().ExportAll()
+
+	// msg = core.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	// receipt, execResult, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg))
+	// _, transitions = eu.Api().Ccurl().ExportAll()
 
 	if err != nil {
 		t.Error(err)
