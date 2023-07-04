@@ -13,6 +13,7 @@ import (
 	abi "github.com/arcology-network/vm-adaptor/abi"
 	"github.com/arcology-network/vm-adaptor/common"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
+	"github.com/arcology-network/vm-adaptor/execution"
 
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
 	"github.com/holiman/uint256"
@@ -69,8 +70,12 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 }
 
 func (this *BytesHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	id := this.api.GenCcObjID()                                                                             // Generate a uuid for the container
-	return id[:], this.connector.New(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)), 0 // Create a new container
+	id := this.api.UUID() // Generate a uuid for the container
+	return id[:], this.connector.New(
+		uint32(this.api.GetEU().(*execution.EU).Message().ID),
+		types.Address(codec.Bytes20(caller).Hex()),
+		hex.EncodeToString(id),
+	), 0 // Create a new container
 }
 
 // Get the number of elements in the container
@@ -80,7 +85,7 @@ func (this *BytesHandlers) length(caller evmcommon.Address, input []byte) ([]byt
 		return []byte{}, false, 0
 	}
 
-	if path, _ := this.api.Ccurl().Read(this.api.TxIndex(), path); path != nil {
+	if path, _ := this.api.Ccurl().Read(uint32(this.api.GetEU().(*execution.EU).Message().ID), path); path != nil {
 		if encoded, err := abi.Encode(uint256.NewInt(uint64(len(path.([]string))))); err == nil {
 			return encoded, true, 0
 		}
@@ -117,7 +122,7 @@ func (this *BytesHandlers) get(caller evmcommon.Address, input []byte) ([]byte, 
 		return []byte{}, false, 0
 	}
 
-	if value, _, err := this.api.Ccurl().ReadAt(this.api.TxIndex(), path, idx); err != nil && value == nil {
+	if value, _, err := this.api.Ccurl().ReadAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, idx); err != nil && value == nil {
 		return []byte{}, false, 0
 	} else {
 		if encoded, err := abi.Encode(value.([]byte)); err == nil { // Encode the result
@@ -147,7 +152,7 @@ func (this *BytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, 
 	}
 
 	value := noncommutative.NewBytes(bytes.([]byte))
-	if _, err := this.api.Ccurl().WriteAt(this.api.TxIndex(), path, idx, value, true); err == nil {
+	if _, err := this.api.Ccurl().WriteAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, idx, value, true); err == nil {
 		return []byte{}, true, 0
 	}
 	return []byte{}, false, 0
@@ -160,13 +165,13 @@ func (this *BytesHandlers) push(caller evmcommon.Address, input []byte, origin e
 		return []byte{}, false, 0
 	}
 
-	key := path + string(this.api.GenCcElemUID())
+	key := path + string(this.api.ElementUID())
 	value, err := abi.Decode(input, 1, []byte{}, 2, math.MaxInt)
 	if value == nil || err != nil {
 		return []byte{}, false, 0
 	}
 
-	_, err = this.api.Ccurl().Write(this.api.TxIndex(), key, noncommutative.NewBytes(value.([]byte)), true)
+	_, err = this.api.Ccurl().Write(uint32(this.api.GetEU().(*execution.EU).Message().ID), key, noncommutative.NewBytes(value.([]byte)), true)
 	return []byte{}, err == nil, 0
 }
 
@@ -176,7 +181,7 @@ func (this *BytesHandlers) pop(caller evmcommon.Address, input []byte) ([]byte, 
 		return []byte{}, false, 0
 	}
 
-	if value, _, err := this.api.Ccurl().PopBack(this.api.TxIndex(), path, true); err != nil {
+	if value, _, err := this.api.Ccurl().PopBack(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, true); err != nil {
 		return []byte{}, false, 0
 	} else {
 		if value != nil {

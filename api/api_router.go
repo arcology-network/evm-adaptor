@@ -2,21 +2,16 @@ package api
 
 import (
 	"encoding/hex"
-	"math/big"
 	"strconv"
 
 	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
-	commontypes "github.com/arcology-network/common-lib/types"
 	"github.com/arcology-network/concurrenturl"
 	evmcommon "github.com/arcology-network/evm/common"
-	evmcore "github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/core/vm"
-	evmeu "github.com/arcology-network/vm-adaptor"
-	cumulativei256 "github.com/arcology-network/vm-adaptor/api/commutative/int256"
 	cumulativeu256 "github.com/arcology-network/vm-adaptor/api/commutative/u256"
 	runtime "github.com/arcology-network/vm-adaptor/api/runtime"
-	"github.com/arcology-network/vm-adaptor/execution"
+	execution "github.com/arcology-network/vm-adaptor/execution"
 
 	noncommutativeBytes "github.com/arcology-network/vm-adaptor/api/noncommutative/base"
 	threading "github.com/arcology-network/vm-adaptor/api/threading"
@@ -24,17 +19,13 @@ import (
 )
 
 type API struct {
-	logs    []eucommon.ILog
-	txHash  evmcommon.Hash // Tx hash
-	txIndex uint32         // Tx index in the block
+	logs  []eucommon.ILog
+	depth uint8
 
-	uuid     uint64
-	ccUID    uint64 // for uuid generation
-	ccElemID uint64
-	depth    uint8
+	serialNums [4]uint64 // sub-process/container/element/uuid generator,
 
 	schedule interface{}
-	eu       *evmeu.EU
+	eu       *execution.EU
 	reserved interface{}
 
 	handlerDict map[[20]byte]eucommon.ApiCallHandler // APIs under the atomic namespace
@@ -50,14 +41,15 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 		handlerDict: make(map[[20]byte]eucommon.ApiCallHandler),
 		depth:       0,
 		execResult:  &execution.Result{},
+		serialNums:  [4]uint64{},
 	}
 
 	handlers := []eucommon.ApiCallHandler{
 		noncommutativeBytes.NewNoncommutativeBytesHandlers(api),
 		cumulativeu256.NewU256CumulativeHandlers(api),
-		cumulativei256.NewInt256CumulativeHandlers(api),
+		// cumulativei256.NewInt256CumulativeHandlers(api),
 		threading.NewThreadingHandler(api),
-		runtime.NewAtomicHandler(api),
+		runtime.NewRuntimeHandler(api),
 	}
 
 	for i, v := range handlers {
@@ -70,22 +62,13 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	api.ccurl.NewAccount( // A temp account for handling deferred calls
 		concurrenturl.SYSTEM,
 		api.ccurl.Platform.Eth10(),
-		hex.EncodeToString(codec.Bytes20(runtime.NewAtomicHandler(api).Address()).Encode()),
+		hex.EncodeToString(codec.Bytes20(runtime.NewRuntimeHandler(api).Address()).Encode()),
 	)
 	return api
 }
 
-func (this *API) New(txHash evmcommon.Hash, txIndex uint32, ccurl *concurrenturl.ConcurrentUrl, schedule interface{}) eucommon.EthApiRouter {
+func (this *API) New(ccurl *concurrenturl.ConcurrentUrl, schedule interface{}) eucommon.EthApiRouter {
 	api := NewAPI(ccurl)
-
-	api.txHash = txHash
-	api.txIndex = txIndex
-	// api.schedule = schedule.(*execution.Schedule)
-
-	api.uuid = 0
-	api.ccUID = 0
-	api.ccElemID = 0
-
 	api.depth = this.depth + 1
 	return api
 }
@@ -100,50 +83,33 @@ func (this *API) Origin() evmcommon.Address   { return this.eu.VM().TxContext.Or
 
 func (this *API) SetSchedule(schedule interface{}) { this.schedule = schedule }
 func (this *API) Schedule() interface{}            { return this.schedule }
-func (this *API) Message() *evmcore.Message        { return this.eu.Message() }
+
 func (this *API) VM() *vm.EVM {
 	return common.IfThenDo1st(this.eu != nil, func() *vm.EVM { return this.eu.VM() }, nil)
 }
 
 func (this *API) GetEU() interface{}   { return this.eu }
-func (this *API) SetEU(eu interface{}) { this.eu = eu.(*evmeu.EU) }
+func (this *API) SetEU(eu interface{}) { this.eu = eu.(*execution.EU) }
 
-func (this *API) TxHash() [32]byte                    { return this.txHash }
-func (this *API) TxIndex() uint32                     { return this.txIndex }
 func (this *API) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }
 
-func (this *API) CCUID() uint64 {
-	this.ccUID++
-	return this.ccUID
+func (this *API) GetSerialNum(idx int) uint64 {
+	this.serialNums[idx]++
+	return this.serialNums[idx]
 }
 
-func (this *API) CCElemID() uint64 {
-	this.ccElemID++
-	return this.ccElemID
-}
-
-func (this *API) SetRuntimeContext(txHash [32]byte, txIndex uint32, height *big.Int) {
-	this.txHash = txHash
-	this.txIndex = txIndex
-}
-
-func (this *API) GenUUID() []byte {
-	this.uuid++
-	return codec.Bytes32(this.txHash).UUID(this.uuid).Encode()
-}
-
-func (this *API) GenCcElemUID() []byte {
-	return []byte(hex.EncodeToString(this.txHash[:8]) + "-" + strconv.Itoa(int(this.CCElemID())))
+func (this *API) ElementUID() []byte {
+	return []byte(hex.EncodeToString(this.eu.Message().TxHash[:8]) + "-" + strconv.Itoa(int(this.GetSerialNum(eucommon.ELEMENT_ID))))
 }
 
 // Generate an UUID based on transaction hash and the counter
-func (this *API) GenCcObjID() []byte {
-	id := codec.Bytes32(this.txHash).UUID(this.CCUID())
+func (this *API) UUID() []byte {
+	id := codec.Bytes32(this.eu.Message().TxHash).UUID(this.GetSerialNum(eucommon.UUID))
 	return id[:8]
 }
 
 func (this *API) AddLog(key, value string) {
-	this.logs = append(this.logs, &commontypes.ExecutingLog{
+	this.logs = append(this.logs, &execution.ExecutionLog{
 		Key:   key,
 		Value: value,
 	})

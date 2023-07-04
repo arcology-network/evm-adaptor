@@ -8,31 +8,31 @@ import (
 	"github.com/arcology-network/common-lib/types"
 	"github.com/arcology-network/concurrenturl/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
-	evmeu "github.com/arcology-network/vm-adaptor"
 	"github.com/arcology-network/vm-adaptor/abi"
 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
 	"github.com/arcology-network/vm-adaptor/common"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
+	execution "github.com/arcology-network/vm-adaptor/execution"
 )
 
 // APIs under the concurrency namespace
-type AtomicHandler struct {
+type RuntimeHandler struct {
 	api       eucommon.EthApiRouter
 	connector *apicommon.CcurlConnector
 }
 
-func NewAtomicHandler(ethApiRouter eucommon.EthApiRouter) *AtomicHandler {
-	return &AtomicHandler{
+func NewRuntimeHandler(ethApiRouter eucommon.EthApiRouter) *RuntimeHandler {
+	return &RuntimeHandler{
 		api:       ethApiRouter,
 		connector: apicommon.NewCCurlConnector("/native/local/", ethApiRouter, ethApiRouter.Ccurl()),
 	}
 }
 
-func (this *AtomicHandler) Address() [20]byte {
+func (this *RuntimeHandler) Address() [20]byte {
 	return common.ATOMIC_HANDLER
 }
 
-func (this *AtomicHandler) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
+func (this *RuntimeHandler) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
@@ -50,7 +50,7 @@ func (this *AtomicHandler) Call(caller, callee [20]byte, input []byte, origin [2
 	return []byte{}, false, 0
 }
 
-func (this *AtomicHandler) singleton(origin evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *RuntimeHandler) singleton(origin evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	// schedule := this.api.Schedule()
 	// if schedule != nil {
 	// 	schedule.IsLast(this.api.TxHash(), this.api.Message())
@@ -58,12 +58,12 @@ func (this *AtomicHandler) singleton(origin evmcommon.Address, input []byte) ([]
 	return []byte{}, false, 0
 }
 
-func (this *AtomicHandler) uuid(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	return this.api.GenUUID(), true, 0
+func (this *RuntimeHandler) uuid(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	return this.api.UUID(), true, 0
 }
 
-func (this *AtomicHandler) localize(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	if this.api.GetEU().(*evmeu.EU).Message().To != nil {
+func (this *RuntimeHandler) localize(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	if this.api.GetEU().(*execution.EU).Message().Native.To != nil {
 		return []byte{}, false, 0 // Only in constructor
 	}
 
@@ -76,7 +76,7 @@ func (this *AtomicHandler) localize(caller, callee evmcommon.Address, input []by
 	path = strings.TrimSuffix(path, "/")
 
 	value := noncommutative.NewBytes([]byte{})
-	if _, err := this.api.Ccurl().Write(this.api.TxIndex(), path, value, false); err == nil {
+	if _, err := this.api.Ccurl().Write(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, value, false); err == nil {
 		return []byte{}, true, 0
 	}
 	return []byte{}, false, 0
