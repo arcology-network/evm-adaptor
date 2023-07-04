@@ -1,4 +1,4 @@
-package tests
+package threading
 
 import (
 	"os"
@@ -70,7 +70,7 @@ func TestRecursiveThreadingContainer(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "ThreadingMpArraySubprocessTest", "call()", []byte{}, false)
+	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "ThreadingConflictTest", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}

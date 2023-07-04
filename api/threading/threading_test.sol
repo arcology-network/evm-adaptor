@@ -159,6 +159,31 @@ contract ThreadingMpArrayTest {
     }
 }
 
+contract ThreadingMpArraySubprocessTest {
+    Bool container = new Bool();
+    Threading[2] mps;
+    function call() public {     
+        mps[0] = new Threading(1);
+        mps[1] = new Threading(1);  // This will cause a conflict
+
+        mps[0].add(9000000, address(this), abi.encodeWithSignature("add()"));
+        mps[0].run();
+        require(container.length() == 1);
+    } 
+
+    function add() public { //9e c6 69 25
+        container.push(true);
+        mps[1].add(4000000, address(this), abi.encodeWithSignature("add2()"));
+        mps[1].run();              
+    }  
+
+    function add2() public { //9e c6 69 25
+        container.push(true);
+    }  
+}
+
+
+
 
 contract RecursiveThreadingTest {
     uint256[2] results;
@@ -181,41 +206,6 @@ contract RecursiveThreadingTest {
     function add2(uint256 elem) public { //9e c6 69 25
         results[1] = elem; 
         results[0] = elem * 2; 
-    }  
-}
-
-contract ThreadingConflictTest {
-    Bool container = new Bool();
-    Threading[3] mps;
-    function call() public {     
-        mps[0] = new Threading(1);
-        mps[1] = new Threading(1);  // This will cause a conflict
-        mps[2] = new Threading(1);  // This will cause a conflict
-
-        mps[0].add(9000000, address(this), abi.encodeWithSignature("add()"));
-        mps[0].run();
-        require(container.length() == 1);
-        // require(results[1] == 0);
-        // require(results[2] == 23);
-        // require(results[3] == 23);
-    } 
-
-    // function add(uint256 index) public { //9e c6 69 25
-    //     Threading mp2 = new Threading(1);  // This will cause a conflict
-    //     mp2.add(4000000, address(this), abi.encodeWithSignature("add2(uint256)", index));
-    //     mp2.add(4000000, address(this), abi.encodeWithSignature("add2(uint256)", index + 1));
-    //     mp2.run();               
-    // }  
-
-    function add() public { //9e c6 69 25
-        // mps[index/2] = new Threading(1);  // This will cause a conflict
-        container.push(true);
-        mps[1].add(4000000, address(this), abi.encodeWithSignature("add2()"));
-        mps[1].run();              
-    }  
-
-    function add2() public { //9e c6 69 25
-        container.push(true);
     }  
 }
 
