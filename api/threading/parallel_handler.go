@@ -54,9 +54,9 @@ func (this *ParallelHandler) run(caller, callee evmcommon.Address, input []byte)
 
 	// this.pools[id].Run(this.BytesHandlers.Api())
 
-	for i := 0; i < this.BytesHandlers.Length(caller); i++ {
+	// for i := 0; i < this.BytesHandlers.Length(caller); i++ {
 
-	}
+	// }
 
 	return []byte{}, true, 0
 }
