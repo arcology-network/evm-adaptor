@@ -3,36 +3,29 @@ pragma solidity ^0.8.19;
 
 contract Base {
     address constant public API = address(0x84);    
-    bytes private ctrn;
-
     event logMsg(string message);
 
     constructor () {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("new()"));       
         require(success);
-        ctrn = data; 
-    }
-
-    function id() public view returns(bytes memory) {
-        return ctrn;
     }
 
     function length() public returns(uint256) {  // 58 94 13 33
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("length(bytes)", ctrn));
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("length()"));
         require(success);
         return abi.decode(data, (uint256));
     }
 
     function peek() public returns(bytes memory)  {
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("peek(bytes)", ctrn));
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("peek()"));
         require(success);
         return data;  
     } 
 
     function pop() public returns(bytes memory) { // 80 26 32 97
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("pop()", ctrn));
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("pop()"));
         require(success);
-        return data; 
+        return abi.decode(data, (bytes)); 
     }
 
     function push(bytes memory encoded) public { //9e c6 69 25
@@ -41,9 +34,9 @@ contract Base {
     }  
 
     function get(uint256 idx) public returns(bytes memory)  { // 31 fe 88 d0
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("get(bytes,uint256)", ctrn, idx));
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("get(uint256)", idx));
         require(success);
-        return data;  
+        return abi.decode(data, (bytes));  
     }
 
     function set(bytes memory encoded) public { // 7a fa 62 38
@@ -58,10 +51,10 @@ contract Base {
 
     // Clear the data
     function clear() public {
-        address(API).call(abi.encodeWithSignature("clear(bytes)", ctrn));       
+        address(API).call(abi.encodeWithSignature("clear()" ));       
     }
     
     function log(bytes memory elem) public { // 7a fa 62 38
-        address(API).call(abi.encodeWithSignature("log(bytes)", id(), elem));     
+        address(API).call(abi.encodeWithSignature("log()", elem));     
     }
 }

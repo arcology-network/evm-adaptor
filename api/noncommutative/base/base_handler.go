@@ -44,16 +44,16 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 	case [4]byte{0xcd, 0xbf, 0x60, 0x8d}: //cd bf 60 8d
 		return this.New(caller, input[4:])
 
-	case [4]byte{0xee, 0xb8, 0xa8, 0xd3}:
+	case [4]byte{0x59, 0xe0, 0x2d, 0xd7}:
 		return this.Peek(caller, input[4:])
 
-	case [4]byte{0xe7, 0x71, 0xee, 0x0d}: // e771ee0d
+	case [4]byte{0x7d, 0xac, 0xda, 0x03}: // 7d ac da 03
 		return this.Push(caller, input[4:], origin, nonce)
 
-	case [4]byte{0x84, 0x67, 0x3c, 0xc9}: // 84 67 3c c9
+	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}: // 1f 7b 6d 32
 		return this.Length(caller, input[4:])
 
-	case [4]byte{0x4d, 0xd4, 0x9a, 0xb4}: // 4d d4 9a b4
+	case [4]byte{0x95, 0x07, 0xd3, 0x9a}: // 95 07 d3 9a
 		return this.Get(caller, input[4:])
 
 	case [4]byte{0xa4, 0xec, 0xe5, 0x2c}: // a4 ec e5 2c
@@ -62,7 +62,7 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 	case [4]byte{0x5e, 0x1d, 0x05, 0x4d}: // 5e 1d 05 4d
 		return this.Clear(caller, input[4:])
 
-	case [4]byte{0x4c, 0x51, 0xa8, 0x8f}: // 4c51a88f
+	case [4]byte{0x8b, 0x28, 0x29, 0x47}: // 8b 28 29 47
 		return this.Set(caller, input[4:])
 	}
 
@@ -120,7 +120,7 @@ func (this *BytesHandlers) Get(caller evmcommon.Address, input []byte) ([]byte, 
 		return []byte{}, false, 0
 	}
 
-	idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32)
+	idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32)
 	if err != nil {
 		return []byte{}, false, 0
 	}
@@ -144,13 +144,13 @@ func (this *BytesHandlers) Set(caller evmcommon.Address, input []byte) ([]byte, 
 		return []byte{}, false, 0
 	}
 
-	idx, err := abi.DecodeTo(input, 1, uint64(0), 1, 32)
+	idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32)
 	if err != nil {
 		return []byte{}, false, 0
 	}
 
-	bytes, err := abi.Decode(input, 2, []byte{}, 2, math.MaxInt)
-	if bytes == nil {
+	bytes, err := abi.Decode(input, 1, []byte{}, 2, math.MaxInt)
+	if bytes == nil || err != nil {
 		return []byte{}, false, 0
 	}
 
@@ -168,8 +168,8 @@ func (this *BytesHandlers) Push(caller evmcommon.Address, input []byte, origin e
 		return []byte{}, false, 0
 	}
 
-	value, err := abi.Decode(input, 1, []byte{}, 2, math.MaxInt)
-	if value == nil {
+	value, err := abi.Decode(input, 0, []byte{}, 2, math.MaxInt)
+	if value == nil || err != nil {
 		return []byte{}, false, 0
 	}
 

@@ -94,8 +94,9 @@ func (this *API) SetEU(eu interface{}) { this.eu = eu.(*execution.EU) }
 func (this *API) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }
 
 func (this *API) GetSerialNum(idx int) uint64 {
+	v := this.serialNums[idx]
 	this.serialNums[idx]++
-	return this.serialNums[idx]
+	return v
 }
 
 func (this *API) ElementUID() []byte {

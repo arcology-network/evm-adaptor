@@ -16,7 +16,7 @@ contract Bytes {
     }
 
     function push(bytes memory elem) public { //9e c6 69 25
-        base.push(abi.encodeWithSignature("push(bytes,bytes)",  base.id(), elem));
+        base.push(abi.encodeWithSignature("push(bytes)", abi.encode(elem)));
     }   
 
     function get(uint256 idx) public returns(bytes memory)  { // 31 fe 88 d0
@@ -24,6 +24,6 @@ contract Bytes {
     }
 
     function set(uint256 idx, bytes memory elem) public { // 7a fa 62 38
-        base.set(abi.encodeWithSignature("set(bytes,uint256,bytes)", base.id(), idx, elem));     
+        base.set(abi.encodeWithSignature("set(uint256,bytes)", idx, abi.encode(elem)));     
     }
 }

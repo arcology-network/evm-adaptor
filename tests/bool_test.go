@@ -54,3 +54,44 @@ func TestContractBool(t *testing.T) {
 		t.Error("Error: Deployment failed!!!", execResults.Err)
 	}
 }
+
+func TestContractBoolN(t *testing.T) {
+	eu, config, _, _, _ := NewTestEU()
+
+	// ================================== Compile the contract ==================================
+	currentPath, _ := os.Getwd()
+	project := filepath.Dir(currentPath)
+
+	targetPath := project + "/api/noncommutative"
+
+	code, err := compiler.CompileContracts(targetPath, "bool/booln_test.sol", "0.8.19", "BoolNTest", false)
+	if err != nil || len(code) == 0 {
+		t.Error(err)
+	}
+
+	// ================================== Deploy the contract ==================================
+	msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)
+	stdMsg := &execution.StandardMessage{
+		ID:     1,
+		TxHash: [32]byte{1, 1, 1},
+		Native: &msg, // Build the message
+		Source: commontype.TX_SOURCE_LOCAL,
+	}
+
+	receipt, execResults, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
+	_, transitions := eu.Api().Ccurl().ExportAll()
+
+	// msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)           // Build the message
+	// receipt, execResults, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg)) // Execute it
+	// _, transitions := eu.Api().Ccurl().ExportAll()
+
+	// ---------------
+
+	// t.Log("\n" + FormatTransitions(accesses))
+	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	// t.Log(receipt)
+	// contractAddress := receipt.ContractAddress
+	if receipt.Status != 1 || err != nil {
+		t.Error("Error: Deployment failed!!!", execResults.Err)
+	}
+}

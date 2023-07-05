@@ -10,18 +10,18 @@ contract Bool {
     function length() public returns(uint256) { return base.length();}
 
     function pop() public returns(bool) { 
-        return abi.decode(abi.decode(base.pop(), (bytes)), (bool));  
+        return abi.decode(base.pop(), (bool));  
     }
 
     function push(bool elem) public { 
-       base.push(abi.encodeWithSignature("push(bytes,bytes)",  base.id(), abi.encode(elem)));
+       base.push(abi.encodeWithSignature("push(bytes)", abi.encode(elem)));
     }   
 
     function get(uint256 idx) public returns(bool)  { 
-        return abi.decode(abi.decode(base.get(idx), (bytes)), (bool));
+        return abi.decode(base.get(idx), (bool));
     }
 
     function set(uint256 idx, bool elem) public {
-        base.set(abi.encodeWithSignature("set(bytes,uint256,bytes)", base.id(), idx, abi.encode(elem)));        
+        base.set(abi.encodeWithSignature("set(uint256,bytes)", idx, abi.encode(elem)));        
     }
 }

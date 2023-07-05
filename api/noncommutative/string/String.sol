@@ -12,19 +12,19 @@ contract String {
     function length() public returns(uint256) { return base.length();}
 
     function pop() public returns(string memory) { 
-        return abi.decode(abi.decode(base.pop(), (bytes)), (string));  
+        return abi.decode(base.pop(), (string));  
     }
 
     function push(string memory elem) public { 
-       base.push(abi.encodeWithSignature("push(bytes,bytes)",  base.id(), abi.encode(elem)));
+       base.push(abi.encodeWithSignature("push(bytes)", abi.encode(elem)));
     }   
 
     function get(uint256 idx) public returns(string memory)  { 
-        return abi.decode(abi.decode(base.get(idx), (bytes)), (string));
+        return abi.decode(base.get(idx), (string));
     }
 
     function set(uint256 idx, string memory elem) public {
-        base.set(abi.encodeWithSignature("set(bytes,uint256,bytes)", base.id(), idx, abi.encode(elem)));        
+        base.set(abi.encodeWithSignature("set(uint256,bytes)", idx, abi.encode(elem)));        
     }
 }
 
