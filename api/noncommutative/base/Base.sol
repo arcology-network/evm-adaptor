@@ -51,6 +51,11 @@ contract Base {
         require(success);
     }
 
+    //Return True if the queue is empty, False otherwise. 
+    function  empty() public returns(bool)  {
+        return length() == 0;
+    }
+
     // Clear the data
     function clear() public {
         address(API).call(abi.encodeWithSignature("clear(bytes)", ctrn));       

@@ -70,6 +70,9 @@ func (this *ThreadingHandler) new(caller, callee evmcommon.Address, input []byte
 
 	address := this.GetAddress()
 	this.pools[string(address)] = execution.NewGeneration(uint32(len(this.pools)), threads, []*execution.JobSequence{})
+
+	// no need to do it, insert into the pool on fly as adding the jobs
+
 	return []byte(address), true, 0 // Create a new container
 }
 

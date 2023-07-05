@@ -39,8 +39,4 @@ contract Threading {
         return success;
     }
 
-    //Return True if the queue is empty, False otherwise. 
-    function  empty() public returns(bool)  {
-        return length() == 0;
-    }
 }

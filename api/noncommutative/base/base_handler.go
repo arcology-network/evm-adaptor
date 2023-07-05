@@ -42,34 +42,36 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 
 	switch signature {
 	case [4]byte{0xcd, 0xbf, 0x60, 0x8d}: //cd bf 60 8d
-		return this.new(caller, input[4:])
+		return this.New(caller, input[4:])
 
 	case [4]byte{0xee, 0xb8, 0xa8, 0xd3}:
-		return this.peek(caller, input[4:])
+		return this.Peek(caller, input[4:])
 
 	case [4]byte{0xe7, 0x71, 0xee, 0x0d}: // e771ee0d
-		return this.push(caller, input[4:], origin, nonce)
+		return this.Push(caller, input[4:], origin, nonce)
 
 	case [4]byte{0x84, 0x67, 0x3c, 0xc9}: // 84 67 3c c9
-		return this.length(caller, input[4:])
+		return this.Length(caller, input[4:])
 
 	case [4]byte{0x4d, 0xd4, 0x9a, 0xb4}: // 4d d4 9a b4
-		return this.get(caller, input[4:])
+		return this.Get(caller, input[4:])
 
 	case [4]byte{0xa4, 0xec, 0xe5, 0x2c}: // a4 ec e5 2c
-		return this.pop(caller, input[4:])
+		return this.Pop(caller, input[4:])
 
 	case [4]byte{0x5e, 0x1d, 0x05, 0x4d}: // 5e 1d 05 4d
-		return this.clear(caller, input[4:])
+		return this.Clear(caller, input[4:])
 
 	case [4]byte{0x4c, 0x51, 0xa8, 0x8f}: // 4c51a88f
-		return this.set(caller, input[4:])
+		return this.Set(caller, input[4:])
 	}
 
 	return []byte{}, false, 0 // unknown
 }
 
-func (this *BytesHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BytesHandlers) Api() eucommon.EthApiRouter { return this.api }
+
+func (this *BytesHandlers) New(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	id := this.api.UUID() // Generate a uuid for the container
 	return id[:], this.connector.New(
 		uint32(this.api.GetEU().(*execution.EU).Message().ID),
@@ -79,7 +81,7 @@ func (this *BytesHandlers) new(caller evmcommon.Address, input []byte) ([]byte, 
 }
 
 // Get the number of elements in the container
-func (this *BytesHandlers) length(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BytesHandlers) Length(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path, err := this.buildPath(caller, input) // BytesHandlers path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false, 0
@@ -94,7 +96,7 @@ func (this *BytesHandlers) length(caller evmcommon.Address, input []byte) ([]byt
 }
 
 // Get the intial length of the container
-func (this *BytesHandlers) peek(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BytesHandlers) Peek(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path, err := this.buildPath(caller, input) // BytesHandlers path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false, 0
@@ -111,7 +113,7 @@ func (this *BytesHandlers) peek(caller evmcommon.Address, input []byte) ([]byte,
 	return []byte{}, false, int64(fees)
 }
 
-func (this *BytesHandlers) get(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BytesHandlers) Get(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false, 0
@@ -135,7 +137,7 @@ func (this *BytesHandlers) get(caller evmcommon.Address, input []byte) ([]byte, 
 	return []byte{}, false, 0
 }
 
-func (this *BytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BytesHandlers) Set(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false, 0
@@ -159,7 +161,7 @@ func (this *BytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, 
 }
 
 // Push a new element into the container
-func (this *BytesHandlers) push(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool, int64) {
+func (this *BytesHandlers) Push(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool, int64) {
 	path, err := this.buildPath(caller, input) // BytesHandlers path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false, 0
@@ -175,7 +177,7 @@ func (this *BytesHandlers) push(caller evmcommon.Address, input []byte, origin e
 	return []byte{}, err == nil, 0
 }
 
-func (this *BytesHandlers) pop(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BytesHandlers) Pop(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path, err := this.buildPath(caller, input) // Build container path
 	if len(path) == 0 || err != nil {
 		return []byte{}, false, 0
@@ -196,9 +198,9 @@ func (this *BytesHandlers) pop(caller evmcommon.Address, input []byte) ([]byte, 
 	return []byte{}, true, 0
 }
 
-func (this *BytesHandlers) clear(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BytesHandlers) Clear(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	for {
-		if _, ok, _ := this.pop(caller, input); !ok {
+		if _, ok, _ := this.Pop(caller, input); !ok {
 			break
 		}
 	}
@@ -209,4 +211,8 @@ func (this *BytesHandlers) clear(caller evmcommon.Address, input []byte) ([]byte
 func (this *BytesHandlers) buildPath(caller evmcommon.Address, input []byte) (string, error) {
 	id, err := abi.Decode(input, 0, []byte{}, 2, 32)                                                            // max 32 bytes                                                                          // container ID
 	return this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id.([]byte))), err // unique ID
+}
+
+func (this *BytesHandlers) GetAddress() string {
+	return string(this.api.VM().ArcologyNetworkAPIs.CallContext.Contract.CodeAddr[:]) // unique ID
 }
