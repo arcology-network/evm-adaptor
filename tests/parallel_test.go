@@ -16,71 +16,71 @@ func TestParallelBasic(t *testing.T) {
 	}
 }
 
-// func TestParallelWithConflict(t *testing.T) {
-// 	currentPath, _ := os.Getwd()
-// 	targetPath := filepath.Dir(currentPath) + "/api/"
+func TestParallelWithConflict(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
 
-// 	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "ThreadingFixedLengthWithConflictTest", "call()", []byte{}, false)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ParaFixedLengthWithConflictTest", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
 
 // func TestParaContainerManipulation(t *testing.T) {
 // 	currentPath, _ := os.Getwd()
 // 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-// 	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "ThreadingParaContainerManipulationTest", "call()", []byte{}, false)
+// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ParaContainerManipulationTest", "call()", []byte{}, false)
 // 	if err != nil {
 // 		t.Error(err)
 // 	}
 // }
 
-// func TestThreadingMultiMPsTest(t *testing.T) {
+// func TestparallelMultiMPsTest(t *testing.T) {
 // 	currentPath, _ := os.Getwd()
 // 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-// 	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "ThreadingMultiMPsTest", "call()", []byte{}, false)
+// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "parallelMultiMPsTest", "call()", []byte{}, false)
 // 	if err != nil {
 // 		t.Error(err)
 // 	}
 // }
 
-// func TestThreadingMpArray(t *testing.T) {
+// func TestparallelMpArray(t *testing.T) {
 // 	currentPath, _ := os.Getwd()
 // 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-// 	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "ThreadingMpArrayTest", "call()", []byte{}, false)
+// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "parallelMpArrayTest", "call()", []byte{}, false)
 // 	if err != nil {
 // 		t.Error(err)
 // 	}
 // }
 
-// func TestRecursiveThreadingNative(t *testing.T) {
+// func TestRecursiveparallelNative(t *testing.T) {
 // 	currentPath, _ := os.Getwd()
 // 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-// 	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "RecursiveThreadingTest", "call()", []byte{}, false)
+// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "RecursiveparallelTest", "call()", []byte{}, false)
 // 	if err != nil {
 // 		t.Error(err)
 // 	}
 // }
 
-// func TestRecursiveThreadingContainer(t *testing.T) {
+// func TestRecursiveparallelContainer(t *testing.T) {
 // 	currentPath, _ := os.Getwd()
 // 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-// 	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "ThreadingMpArraySubprocessTest", "call()", []byte{}, false)
+// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "parallelMpArraySubprocessTest", "call()", []byte{}, false)
 // 	if err != nil {
 // 		t.Error(err)
 // 	}
 // }
 
-// func TestThreadingDeployment(t *testing.T) {
+// func TestparallelDeployment(t *testing.T) {
 // 	currentPath, _ := os.Getwd()
 // 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-// 	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "ThreadingDeploymentAddressTest", "call()", []byte{}, false)
+// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "parallelDeploymentAddressTest", "call()", []byte{}, false)
 // 	if err != nil {
 // 		t.Error(err)
 // 	}

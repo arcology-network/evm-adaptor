@@ -6,6 +6,16 @@ import (
 	"testing"
 )
 
+func TestThreadingNativeArray(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "ThreadingNativeArrayTest", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestThreadingBasic(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
@@ -26,7 +36,7 @@ func TestThreadsWithConflict(t *testing.T) {
 	}
 }
 
-func TestParaContainerManipulation(t *testing.T) {
+func TestThreadingParaContainerManipulation(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
