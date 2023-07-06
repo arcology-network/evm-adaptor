@@ -2,14 +2,11 @@
 pragma solidity ^0.8.19;
 
 import "./Parallel.sol";
-// import "../noncommutative/bool/Bool.sol";
 import "../commutative/u256/U256Cumulative.sol";
 
 contract ParaHasherTest {
     uint256[2] results;
     function call() public  { 
-    //    bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
-
        Parallel mp = new Parallel(2);
        mp.push(abi.encode(50000, address(this), abi.encodeWithSignature("assigner(uint256)", 0)));
        mp.push(abi.encode(50000, address(this), abi.encodeWithSignature("assigner(uint256)", 1)));
@@ -18,50 +15,32 @@ contract ParaHasherTest {
 
        assert(results[0] == 10);
        assert(results[1] == 11);
-   }
+    }
 
     function assigner(uint256 v)  public {
         results[v] = v + 10;
     }
 }
 
-// contract ThreadingFixedLengthWithConflictTest {  
-//      uint256[2] results;
-//      function call() public  { 
-//        results[0] = 100;
-//        results[1] = 200;
-//        Threading mp = new Threading(2);
-//        mp.add(400000, address(this), abi.encodeWithSignature("updater(uint256)", 11));
-//        mp.add(400000, address(this), abi.encodeWithSignature("updater(uint256)", 33));
-//        mp.add(400000, address(this), abi.encodeWithSignature("updater(uint256)", 55));
-//        mp.run();     
-//        require(results[0] == 111);  // 11 and 33 will be reverted due to conflicts
-//        require(results[1] == 211); 
-//     }
+contract ParaFixedLengthWithConflictTest {  
+     uint256[2] results;
+     function call() public  { 
+       results[0] = 100;
+       results[1] = 200;
+       Parallel mp = new Parallel(2);
+       mp.push(abi.encode(400000, address(this), abi.encodeWithSignature("updater(uint256)", 11)));
+       mp.push(abi.encode(400000, address(this), abi.encodeWithSignature("updater(uint256)", 33)));
+       mp.push(abi.encode(400000, address(this), abi.encodeWithSignature("updater(uint256)", 55)));
+       mp.run();     
+       require(results[0] == 111);  // 11 and 33 will be reverted due to conflicts
+       require(results[1] == 211); 
+    }
 
-//     function updater(uint256 num) public {
-//          results[0] += num;
-//          results[1] += num;
-//     }
-// }
-
-// contract ThreadingParaContainerManipulationTest {
-//     Bool container = new Bool();
-//     bytes32[2] results;
-//     function call() public  { 
-//        Threading mp = new Threading(2);
-//        mp.add(4000000, address(this), abi.encodeWithSignature("appender()"));
-//        mp.add(4000000, address(this), abi.encodeWithSignature("appender()"));
-//        mp.run();
-
-//        require(container.length() == 4);    
-//     }
-
-//     function appender()  public {
-//        container.push(true);
-//        container.push(true);
-//     }
-// }
+    function updater(uint256 num) public {
+         results[0] += num;
+         results[1] += num;
+    }
+}
 
 // // contract ThreadingCumulativeU256Multi {
 // //     U256Cumulative cumulative = new U256Cumulative(0, 100);     
