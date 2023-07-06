@@ -5,7 +5,7 @@ import "../noncommutative/bytes/Bytes.sol";
 import "../noncommutative/bool/Bool.sol";
 
 contract PairTest {
-    Bytes bytesContainer = new Bytes();
+    Bytes bytesContainer = new Bytes(address(0x84));
     Bool boolContainer = new Bool();
     constructor() {     
         require(bytesContainer.length() == 0); 

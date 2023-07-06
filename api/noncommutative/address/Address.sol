@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
+
 import "../base/Base.sol";
 
 contract Address {
@@ -8,7 +9,7 @@ contract Address {
 
     event logMsg(string message);
 
-    constructor(){  base = new Base(); }
+    constructor() {  base = new Base(address(0x84)); }
     function length() public returns(uint256) { return base.length();}
 
     function pop() public returns(address) { 

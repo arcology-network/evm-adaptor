@@ -8,7 +8,7 @@ contract Bytes {
 
     event logMsg(string message);
 
-    constructor() {  base = new Base(); }
+    constructor(address addr) {  base = new Base(addr); }
     function length() public returns(uint256) { return base.length();}
 
     function pop() public returns(bytes memory) { // 80 26 32 97

@@ -2,10 +2,11 @@
 pragma solidity ^0.8.19;
 
 contract Base {
-    address constant public API = address(0x84);    
+    address public immutable API;// = address(0x84);    
     event logMsg(string message);
 
-    constructor () {
+    constructor (address addr) {
+        API = addr;
         (bool success,) = address(API).call(abi.encodeWithSignature("new()"));       
         require(success);
     }

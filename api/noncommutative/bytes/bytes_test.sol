@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-import "./Bytes2.sol";
+import "./Bytes.sol";
 
 contract ByteTest {
     Bytes container = new Bytes(address(0x84));

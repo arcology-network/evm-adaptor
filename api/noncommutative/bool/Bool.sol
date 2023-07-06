@@ -6,7 +6,7 @@ import "../base/Base.sol";
 contract Bool {
     Base base;
 
-    constructor() {  base = new Base(); }
+    constructor() {  base = new Base(address(0x84)); }
     function length() public returns(uint256) { return base.length();}
 
     function pop() public returns(bool) { 
