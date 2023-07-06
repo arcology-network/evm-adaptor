@@ -1,33 +1,38 @@
-package threading
+package parallel
 
 import (
 	"errors"
 	"math"
 	"math/big"
 
+	"github.com/arcology-network/common-lib/common"
 	evmcommon "github.com/arcology-network/evm/common"
 	evmcore "github.com/arcology-network/evm/core"
 
 	"github.com/arcology-network/vm-adaptor/abi"
 	base "github.com/arcology-network/vm-adaptor/api/noncommutative/base"
+	execution "github.com/arcology-network/vm-adaptor/execution"
 
 	eucommon "github.com/arcology-network/vm-adaptor/common"
-	execution "github.com/arcology-network/vm-adaptor/execution"
 )
 
 // APIs under the concurrency namespace
 type ParallelHandler struct {
 	*base.BytesHandlers
+	erros   []error
+	jobseqs []*execution.JobSequence
 }
 
 func NewParallelHandler(ethApiRouter eucommon.EthApiRouter) *ParallelHandler {
 	return &ParallelHandler{
 		base.NewNoncommutativeBytesHandlers(ethApiRouter),
+		[]error{},
+		[]*execution.JobSequence{},
 	}
 }
 
 func (this *ParallelHandler) Address() [20]byte {
-	return eucommon.THREADING_HANDLER
+	return eucommon.PARALLEL_HANDLER
 }
 
 func (this *ParallelHandler) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
@@ -39,7 +44,7 @@ func (this *ParallelHandler) Call(caller, callee [20]byte, input []byte, origin 
 	copy(signature[:], input)
 
 	switch signature { // bf 22 6c 78
-	case [4]byte{0xc0, 0x40, 0x62, 0x26}: //
+	case [4]byte{0xa4, 0x44, 0xf5, 0xe9}: // a4 44 f5 e9
 		return this.run(caller, callee, input[4:])
 	}
 
@@ -47,47 +52,49 @@ func (this *ParallelHandler) Call(caller, callee [20]byte, input []byte, origin 
 }
 
 func (this *ParallelHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	// id := this.GetAddress()
-	// if len(id) == 0 || this.pools[id] == nil {
-	// 	return []byte{}, false, 0
-	// }
+	parentCaller := *this.BytesHandlers.Api().VM().ArcologyNetworkAPIs.CallContext.Contract.CodeAddr
+	path := this.BuildPath(parentCaller)
+	length, successful, fee := this.BytesHandlers.Length(path)
+	if !successful {
+		return []byte{}, successful, fee
+	}
 
-	// this.pools[id].Run(this.BytesHandlers.Api())
+	generation := execution.NewGeneration(0, 4, []*execution.JobSequence{})
 
-	// for i := 0; i < this.BytesHandlers.Length(caller); i++ {
+	fees := make([]int64, length)
+	this.erros = make([]error, length)
+	this.jobseqs = make([]*execution.JobSequence, length)
+	for i := uint64(0); i < length; i++ {
+		data, successful, fee := this.BytesHandlers.Get(path, uint64(i))
+		if fees[i] = fee; successful {
+			this.jobseqs[i], this.erros[i] = this.toJobSeq(data)
+		}
+		generation.Add(this.jobseqs[i])
+	}
 
-	// }
+	generation.Run(this.BytesHandlers.Api())
 
-	return []byte{}, true, 0
+	return []byte{}, true, common.Sum(fees, int64(0))
 }
 
-func (this *ParallelHandler) parse(input []byte) (*execution.JobSequence, error) {
-
-	// id := this.GetAddress()
-	// address := this.api.VM().ArcologyNetworkAPIs.CallContext.Contract.CodeAddr[:]
-	// id = string(address)
-
-	// if len(id) == 0 || this.pools[id] == nil {
-	// 	return []byte{}, false, 0
-	// }
-	// fmt.Println(input)
+func (this *ParallelHandler) toJobSeq(input []byte) (*execution.JobSequence, error) {
 	gasLimit, err := abi.DecodeTo(input, 0, uint64(0), 1, 32)
 	if err != nil {
-		return nil, errors.New("Error: Failed to part gas limit")
+		return nil, errors.New("Error: Failed to decode the gas limit")
 	}
 
 	rawAddr, err := abi.DecodeTo(input, 1, [20]byte{}, 1, 32)
 	if err != nil {
-		return nil, errors.New("Error: Failed to parse callee Addr")
+		return nil, errors.New("Error: Failed to decode the caller address")
 	}
 	calleeAddr := evmcommon.BytesToAddress(rawAddr[:]) // Callee contract
 
 	funCall, err := abi.DecodeTo(input, 2, []byte{}, 2, math.MaxUint32)
 	if err != nil {
-		return nil, errors.New("Error: Failed to parse callee function call data")
+		return nil, errors.New("Error: Failed to decode the function signature")
 	}
 
-	newSeq := &execution.JobSequence{
+	newJobSeq := &execution.JobSequence{
 		ID:        this.BytesHandlers.Api().GetSerialNum(eucommon.SUB_PROCESS),
 		ApiRouter: this.BytesHandlers.Api(),
 	}
@@ -105,11 +112,11 @@ func (this *ParallelHandler) parse(input []byte) (*execution.JobSequence, error)
 	)
 
 	stdMsg := &execution.StandardMessage{
-		ID:     0, //Can ONly be 1 msg at the most
+		ID:     newJobSeq.ID, // this is the problem !!!!
 		Native: &evmMsg,
-		TxHash: newSeq.DeriveNewHash(this.BytesHandlers.Api().GetEU().(*execution.EU).Message().TxHash),
+		TxHash: newJobSeq.DeriveNewHash(this.BytesHandlers.Api().GetEU().(*execution.EU).Message().TxHash),
 	}
 
-	newSeq.StdMsgs = []*execution.StandardMessage{stdMsg}
-	return newSeq, nil
+	newJobSeq.StdMsgs = []*execution.StandardMessage{stdMsg}
+	return newJobSeq, nil
 }

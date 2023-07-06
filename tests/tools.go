@@ -133,8 +133,8 @@ func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concu
 	statedb.CreateAccount(eucommon.Alice)
 	statedb.AddBalance(eucommon.Alice, new(big.Int).SetUint64(1e18))
 
-	statedb.CreateAccount(eucommon.ATOMIC_HANDLER)
-	// statedb.AddBalance(eucommon.ATOMIC_HANDLER, new(big.Int).SetUint64(1e18))
+	statedb.CreateAccount(eucommon.RUNTIME_HANDLER)
+	// statedb.AddBalance(eucommon.RUNTIME_HANDLER, new(big.Int).SetUint64(1e18))
 
 	// transitions := url.Export()
 	_, transitions := url.ExportAll()

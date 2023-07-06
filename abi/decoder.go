@@ -9,6 +9,16 @@ import (
 	"github.com/holiman/uint256"
 )
 
+func CanDecodeTo[T any](raw []byte, idx int, initv T, depth uint8, maxLength int, validate func(v T) bool) bool {
+	if v, err := DecodeTo(raw, idx, initv, depth, maxLength); err == nil {
+		if validate != nil {
+			return validate(v)
+		}
+		return true
+	}
+	return false
+}
+
 func DecodeTo[T any](raw []byte, idx int, initv T, depth uint8, maxLength int) (T, error) {
 	v, err := Decode(raw, idx, initv, depth, maxLength)
 	if err == nil {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-import "./Atomic.sol";
+import "./Runtime.sol";
 import "../threading/Threading.sol";
 import "../noncommutative/bool/Bool.sol";
 import "../commutative/u256/U256Cumulative.sol";
@@ -9,7 +9,7 @@ import "../commutative/u256/U256Cumulative.sol";
  // this should fail because the deferred call hasn't been processed yet. 
 contract AtomicDeferredInThreadingTest {  
      bytes32[2] results;
-     Atomic atomic = new Atomic(); 
+     Runtime atomic = new Runtime(); 
      function call() public  { 
         bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
   

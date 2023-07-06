@@ -6,21 +6,21 @@ import (
 	"testing"
 )
 
-func TestThreadsWithConflict(t *testing.T) {
-	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/api/"
-
-	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "ThreadingFixedLengthWithConflictTest", "call()", []byte{}, false)
-	if err != nil {
-		t.Error(err)
-	}
-}
-
 func TestThreadingBasic(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
 	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "ThreadingParaHasherTest", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestThreadsWithConflict(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "threading/threading_test.sol", "0.8.19", "ThreadingFixedLengthWithConflictTest", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}

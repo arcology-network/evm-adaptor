@@ -29,7 +29,7 @@ func NewRuntimeHandler(ethApiRouter eucommon.EthApiRouter) *RuntimeHandler {
 }
 
 func (this *RuntimeHandler) Address() [20]byte {
-	return common.ATOMIC_HANDLER
+	return common.RUNTIME_HANDLER
 }
 
 func (this *RuntimeHandler) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
