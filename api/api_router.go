@@ -10,6 +10,7 @@ import (
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/vm"
 	cumulativeu256 "github.com/arcology-network/vm-adaptor/api/commutative/u256"
+	"github.com/arcology-network/vm-adaptor/api/parallel"
 	runtime "github.com/arcology-network/vm-adaptor/api/runtime"
 	"github.com/arcology-network/vm-adaptor/api/threading"
 	execution "github.com/arcology-network/vm-adaptor/execution"
@@ -45,7 +46,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	}
 
 	handlers := []eucommon.ApiCallHandler{
-		// parallel.NewParallelHandler(api),
+		parallel.NewParallelHandler(api),
 		noncommutativeBytes.NewNoncommutativeBytesHandlers(api),
 		cumulativeu256.NewU256CumulativeHandlers(api),
 		// cumulativei256.NewInt256CumulativeHandlers(api),

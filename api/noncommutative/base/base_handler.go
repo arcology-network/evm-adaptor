@@ -71,6 +71,7 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 }
 
 func (this *BytesHandlers) Api() eucommon.EthApiRouter { return this.api }
+func (this *BytesHandlers) DeploymentAddr() [20]byte   { return this.deploymentAddr }
 
 func (this *BytesHandlers) New(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	this.deploymentAddr = caller
@@ -136,13 +137,14 @@ func (this *BytesHandlers) get(caller evmcommon.Address, input []byte) ([]byte, 
 func (this *BytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.BuildPath(caller) // Build container path
 
-	if !abi.CanDecodeTo(input, 0, uint64(0), 1, 32, nil) ||
-		!abi.CanDecodeTo(input, 1, []byte{}, 2, math.MaxInt, nil) {
+	idx, bytes, err := abi.Parse2(input,
+		uint64(0), 1, 32,
+		[]byte{}, 2, math.MaxInt,
+	)
+
+	if err != nil {
 		return []byte{}, false, 0
 	}
-
-	idx, _ := abi.DecodeTo(input, 0, uint64(0), 1, 32)
-	bytes, _ := abi.DecodeTo(input, 1, []byte{}, 2, math.MaxInt)
 
 	if successful, fee := this.Set(path, idx, bytes); successful {
 		return []byte{}, true, fee
@@ -199,8 +201,8 @@ func (this *BytesHandlers) clear(caller evmcommon.Address, input []byte) ([]byte
 
 // Build the container path
 func (this *BytesHandlers) BuildPath(caller evmcommon.Address) string {
-	id := []byte(this.GetAddress())
-	return this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) // unique ID
+	// id := hex.EncodeToString([]byte(this.GetAddress()))
+	return this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), codec.Bytes20(caller).Hex()) // unique ID
 }
 
 func (this *BytesHandlers) GetAddress() string {

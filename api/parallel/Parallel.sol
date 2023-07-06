@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-import "../noncommutative/bytes/Bytes.sol";
+import "../noncommutative/bytes/Bytes2.sol";
 
-contract Parallel is Bytes {    
+contract Parallel is Bytes {
+    address constant public API = address(0xb0);   
     uint256 numThreads = 1;
-    constructor (uint256 threads) {
+    constructor (uint256 threads) Bytes(API) {
         numThreads = threads; 
     }
 
     // Start processing all the parallel jobs in the queue by specifing the number of threads, the number is between [1, 255]
     function run() public returns(bool) {
-        (bool success,) = address(0x90).call(abi.encodeWithSignature("run(uint256)", numThreads));   
+        (bool success,) = address(API).call(abi.encodeWithSignature("run(uint256)", numThreads));   
         return success;
     } 
 

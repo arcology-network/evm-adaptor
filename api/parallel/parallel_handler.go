@@ -52,7 +52,7 @@ func (this *ParallelHandler) Call(caller, callee [20]byte, input []byte, origin 
 }
 
 func (this *ParallelHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	parentCaller := *this.BytesHandlers.Api().VM().ArcologyNetworkAPIs.CallContext.Contract.CodeAddr
+	parentCaller := this.BytesHandlers.DeploymentAddr()
 	path := this.BuildPath(parentCaller)
 	length, successful, fee := this.BytesHandlers.Length(path)
 	if !successful {
@@ -73,25 +73,22 @@ func (this *ParallelHandler) run(caller, callee evmcommon.Address, input []byte)
 	}
 
 	generation.Run(this.BytesHandlers.Api())
-
 	return []byte{}, true, common.Sum(fees, int64(0))
 }
 
 func (this *ParallelHandler) toJobSeq(input []byte) (*execution.JobSequence, error) {
-	gasLimit, err := abi.DecodeTo(input, 0, uint64(0), 1, 32)
+	input, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt64)
 	if err != nil {
-		return nil, errors.New("Error: Failed to decode the gas limit")
+		return nil, errors.New("Error: Unrecognizable input format")
 	}
 
-	rawAddr, err := abi.DecodeTo(input, 1, [20]byte{}, 1, 32)
-	if err != nil {
-		return nil, errors.New("Error: Failed to decode the caller address")
-	}
-	calleeAddr := evmcommon.BytesToAddress(rawAddr[:]) // Callee contract
+	gasLimit, calleeAddr, funCall, err := abi.Parse3(input,
+		uint64(0), 1, 32,
+		[20]byte{}, 1, 32,
+		[]byte{}, 2, math.MaxInt64)
 
-	funCall, err := abi.DecodeTo(input, 2, []byte{}, 2, math.MaxUint32)
 	if err != nil {
-		return nil, errors.New("Error: Failed to decode the function signature")
+		return nil, err
 	}
 
 	newJobSeq := &execution.JobSequence{
@@ -99,9 +96,10 @@ func (this *ParallelHandler) toJobSeq(input []byte) (*execution.JobSequence, err
 		ApiRouter: this.BytesHandlers.Api(),
 	}
 
+	addr := evmcommon.Address(calleeAddr)
 	evmMsg := evmcore.NewMessage( // Build the message
 		this.BytesHandlers.Api().Origin(),
-		&calleeAddr,
+		&addr,
 		0,
 		new(big.Int).SetUint64(0), // Amount to transfer
 		gasLimit,

@@ -5,6 +5,27 @@ import "./Threading.sol";
 import "../noncommutative/bool/Bool.sol";
 import "../commutative/u256/U256Cumulative.sol";
 
+contract ThreadingNativeArrayTest {
+    uint256[2] results;
+    function call() public  { 
+    //    bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
+
+       Threading mp = new Threading(2);
+       mp.add(50000, address(this), abi.encodeWithSignature("assigner()"));
+       mp.add(50000, address(this), abi.encodeWithSignature("assigner()"));
+       require(mp.length() == 2);
+       mp.run();
+
+       assert(results[0] == 11);
+    //    assert(results[1] == 11);
+   }
+
+    function assigner()  public {
+        results[0] = 1 + 10;
+    }
+}
+
+
 contract ThreadingParaHasherTest {
     bytes32[2] results;
     function call() public  { 
@@ -63,12 +84,13 @@ contract ThreadingParaContainerManipulationTest {
     Bool container = new Bool();
     bytes32[2] results;
     function call() public  { 
+       container.push(true);
        Threading mp = new Threading(2);
        mp.add(4000000, address(this), abi.encodeWithSignature("appender()"));
        mp.add(4000000, address(this), abi.encodeWithSignature("appender()"));
        mp.run();
 
-       require(container.length() == 4);    
+       require(container.length() == 5);    
     }
 
     function appender()  public {

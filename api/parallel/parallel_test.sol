@@ -2,26 +2,26 @@
 pragma solidity ^0.8.19;
 
 import "./Parallel.sol";
-import "../noncommutative/bool/Bool.sol";
+// import "../noncommutative/bool/Bool.sol";
 import "../commutative/u256/U256Cumulative.sol";
 
 contract ParaHasherTest {
     uint256[2] results;
     function call() public  { 
-       bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
+    //    bytes memory data = "0x60298f78cc0b47170ba79c10aa3851d7648bd96f2f8e46a19dbc777c36fb0c00";
 
        Parallel mp = new Parallel(2);
-       mp.push(abi.encode(100000, address(this), abi.encodeWithSignature("assigner(uint256)", 0, data)));
-       mp.push(abi.encode(200000, address(this), abi.encodeWithSignature("assigner(uint256)", 1, data)));
+       mp.push(abi.encode(50000, address(this), abi.encodeWithSignature("assigner(uint256)", 0)));
+       mp.push(abi.encode(50000, address(this), abi.encodeWithSignature("assigner(uint256)", 1)));
        require(mp.length() == 2);
        mp.run();
 
-    //    assert(results[0] == 10);
-    //    assert(results[1] == 11);
+       assert(results[0] == 10);
+       assert(results[1] == 11);
    }
 
-    function assigner(uint256 idx)  public {
-        results[idx] = idx + 10;
+    function assigner(uint256 v)  public {
+        results[v] = v + 10;
     }
 }
 
