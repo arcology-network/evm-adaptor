@@ -38,7 +38,8 @@ contract Bytes32Test {
         require(container.pop() == hash0);
         require(container.pop() == hash1);
         require(container.pop() == hash2);
-        require(container.pop() == hash3);
+
+        container.clear();
         require(container.length() == 0);       
     }
 }

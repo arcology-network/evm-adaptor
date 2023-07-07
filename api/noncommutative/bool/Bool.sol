@@ -24,4 +24,8 @@ contract Bool {
     function set(uint256 idx, bool elem) public {
         base.set(abi.encodeWithSignature("set(uint256,bytes)", idx, abi.encode(elem)));        
     }
+
+    function clear() public { // 7a fa 62 38
+        base.clear();
+    }
 }

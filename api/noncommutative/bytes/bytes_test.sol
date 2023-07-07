@@ -10,7 +10,7 @@ contract ByteTest {
         require(container.length() == 0); 
  
         bytes memory arr1 = '0x1000000000000000000000000000000000000000000000000000000000000001';
-        bytes memory arr2 = '0x2000000000000000000000000000000000000000000000000000000000000002';
+        bytes memory arr2 = '0x0x2000000000000000000000000000000000000000000000000000000000000002';
 
         container.push(arr1);  
         container.push(arr2); 
@@ -24,7 +24,7 @@ contract ByteTest {
         require(keccak256(container.get(1)) == keccak256(arr2));
         require(keccak256(container.pop()) == keccak256(arr2));
 
-        container.pop();
+        container.clear();
         require(container.length() == 0); 
     }
 }

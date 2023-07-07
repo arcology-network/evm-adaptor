@@ -26,4 +26,8 @@ contract Bytes {
     function set(uint256 idx, bytes memory elem) public { // 7a fa 62 38
         base.set(abi.encodeWithSignature("set(uint256,bytes)", idx, abi.encode(elem)));     
     }
+
+    function clear() public { // 7a fa 62 38
+        base.clear();
+    }
 }

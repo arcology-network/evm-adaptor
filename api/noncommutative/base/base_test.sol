@@ -55,7 +55,10 @@ contract BaseTest {
             require(stored[i] == elems[i]);
         }
         require(length() == 1); 
+
+        // clear();
         require(peek() == 0);  
+        require(length() == 1); 
     }
 
     function call() public{ 
@@ -97,6 +100,11 @@ contract BaseTest {
 
     function set(uint256 idx, bytes memory elem) public {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("set(uint256,bytes)", idx, elem));
+        require(success, "Bytes.set() Failed");
+    }
+
+    function clear() public {
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("clear()"));
         require(success, "Bytes.set() Failed");
     }
 }

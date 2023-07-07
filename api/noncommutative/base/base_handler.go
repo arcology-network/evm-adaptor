@@ -60,7 +60,7 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 	case [4]byte{0xa4, 0xec, 0xe5, 0x2c}: // a4 ec e5 2c
 		return this.pop(caller, input[4:])
 
-	case [4]byte{0x5e, 0x1d, 0x05, 0x4d}: // 5e 1d 05 4d
+	case [4]byte{0x52, 0xef, 0xea, 0x6e}: // 52 ef ea 6e
 		return this.clear(caller, input[4:])
 
 	case [4]byte{0x8b, 0x28, 0x29, 0x47}: // 8b 28 29 47
@@ -169,7 +169,7 @@ func (this *BytesHandlers) push(caller evmcommon.Address, input []byte, origin e
 	return []byte{}, err == nil, 0
 }
 
-func (this *BytesHandlers) pop(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BytesHandlers) pop(caller evmcommon.Address, _ []byte) ([]byte, bool, int64) {
 	path := this.BuildPath(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
@@ -192,7 +192,7 @@ func (this *BytesHandlers) pop(caller evmcommon.Address, input []byte) ([]byte, 
 
 func (this *BytesHandlers) clear(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	for {
-		if _, ok, _ := this.pop(caller, input); !ok {
+		if _, ok, _ := this.pop(caller, nil); !ok {
 			break
 		}
 	}

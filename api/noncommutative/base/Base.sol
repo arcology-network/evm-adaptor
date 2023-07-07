@@ -17,6 +17,7 @@ contract Base {
         return abi.decode(data, (uint256));
     }
 
+    // The initial length of the container at the current block height
     function peek() public returns(bytes memory)  {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("peek()"));
         require(success);
@@ -52,10 +53,10 @@ contract Base {
 
     // Clear the data
     function clear() public {
-        address(API).call(abi.encodeWithSignature("clear()" ));       
+        address(API).call(abi.encodeWithSignature("clear()"));       
     }
     
-    function log(bytes memory elem) public { // 7a fa 62 38
-        address(API).call(abi.encodeWithSignature("log()", elem));     
-    }
+    // function log(bytes memory elem) public { // 7a fa 62 38
+    //     address(API).call(abi.encodeWithSignature("log()", elem));     
+    // }
 }
