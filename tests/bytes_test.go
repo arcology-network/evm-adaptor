@@ -14,7 +14,7 @@ import (
 	execution "github.com/arcology-network/vm-adaptor/execution"
 )
 
-func TestContractBytes(t *testing.T) {
+func TestBytesContainer(t *testing.T) {
 	eu, config, _, _, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================

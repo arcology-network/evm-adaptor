@@ -26,15 +26,35 @@ func TestParallelWithConflict(t *testing.T) {
 	}
 }
 
-// func TestParaContainerManipulation(t *testing.T) {
-// 	currentPath, _ := os.Getwd()
-// 	targetPath := filepath.Dir(currentPath) + "/api/"
+func TestParaContainerManipulation(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
 
-// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ParaContainerManipulationTest", "call()", []byte{}, false)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ParaContainerTest", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestParaMulti(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ParaMultiTest", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestParaMultiWithClear(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ParaMultiTestWithClear", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
 
 // func TestparallelMultiMPsTest(t *testing.T) {
 // 	currentPath, _ := os.Getwd()

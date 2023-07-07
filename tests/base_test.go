@@ -16,7 +16,7 @@ import (
 	execution "github.com/arcology-network/vm-adaptor/execution"
 )
 
-func TestBase(t *testing.T) {
+func TestBaseContainer(t *testing.T) {
 	eu, config, db, url, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
