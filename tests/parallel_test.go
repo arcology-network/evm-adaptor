@@ -30,7 +30,7 @@ func TestParaContainerManipulation(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ParaContainerTest", "call()", []byte{}, false)
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ParaContainerConcurrentPushTest", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -40,7 +40,7 @@ func TestParaMulti(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ParaMultiTest", "call()", []byte{}, false)
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MultiParaTest", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -50,57 +50,57 @@ func TestParaMultiWithClear(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ParaMultiTestWithClear", "call()", []byte{}, false)
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MultiParaTestWithClear", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-// func TestparallelMultiMPsTest(t *testing.T) {
+func TestMultiParaCumulativeU256(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MultiParaCumulativeU256", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestParallelizerArray(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ParallelizerArrayTest", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestMultipleParallelArray(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MultiParaCumulativeU256", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestRecursiveParallelizerOnContainer(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "RecursiveParallelizerOnContainerTest", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+// func TestRecursiveParallelizer(t *testing.T) {
 // 	currentPath, _ := os.Getwd()
 // 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "parallelMultiMPsTest", "call()", []byte{}, false)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
-
-// func TestparallelMpArray(t *testing.T) {
-// 	currentPath, _ := os.Getwd()
-// 	targetPath := filepath.Dir(currentPath) + "/api/"
-
-// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "parallelMpArrayTest", "call()", []byte{}, false)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
-
-// func TestRecursiveparallelNative(t *testing.T) {
-// 	currentPath, _ := os.Getwd()
-// 	targetPath := filepath.Dir(currentPath) + "/api/"
-
-// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "RecursiveparallelTest", "call()", []byte{}, false)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
-
-// func TestRecursiveparallelContainer(t *testing.T) {
-// 	currentPath, _ := os.Getwd()
-// 	targetPath := filepath.Dir(currentPath) + "/api/"
-
-// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "parallelMpArraySubprocessTest", "call()", []byte{}, false)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
-
-// func TestparallelDeployment(t *testing.T) {
-// 	currentPath, _ := os.Getwd()
-// 	targetPath := filepath.Dir(currentPath) + "/api/"
-
-// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "parallelDeploymentAddressTest", "call()", []byte{}, false)
+// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "RecursiveThreadingTest", "call()", []byte{}, false)
 // 	if err != nil {
 // 		t.Error(err)
 // 	}
