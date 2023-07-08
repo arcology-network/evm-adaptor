@@ -25,11 +25,11 @@ func NewCCurlConnector(subDir string, api eucommon.EthApiRouter, ccurl *concurre
 }
 
 // Make Arcology paths under the current account
-func (this *CcurlConnector) New(txIndex uint32, account types.Address, containerId string) bool {
-	if !this.newStorageRoot(account, txIndex) { // Create the root path if has been created yet.
+func (this *CcurlConnector) New(txIndex uint32, deploymentAddr types.Address, containerId string) bool {
+	if !this.newStorageRoot(deploymentAddr, txIndex) { // Create the root path if has been created yet.
 		return false
 	}
-	return this.newContainerRoot(account, containerId[:], txIndex) //
+	return this.newContainerRoot(deploymentAddr, containerId[:], txIndex) //
 }
 
 func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32) bool {
@@ -42,14 +42,14 @@ func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32
 
 func (this *CcurlConnector) newContainerRoot(account types.Address, id string, txIndex uint32) bool {
 	containerRoot := this.Key(account, id)
+
 	if value, _ := this.ccurl.Peek(containerRoot); value == nil {
 		_, err := this.ccurl.Write(txIndex, containerRoot, commutative.NewPath(), true) // Create a new container
 		return err == nil
 	}
 	return true // Already exists
-
 }
 
 func (this *CcurlConnector) Key(account types.Address, id string) string { // container ID
-	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage", this.subDir, id, "/")
+	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage", this.subDir, "/")
 }

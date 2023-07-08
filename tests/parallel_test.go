@@ -86,6 +86,16 @@ func TestMultipleParallelArray(t *testing.T) {
 	}
 }
 
+func TestRecursiveParallelizerOnNativeArray(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "RecursiveParallelizerOnNativeArrayTest", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestRecursiveParallelizerOnContainer(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"

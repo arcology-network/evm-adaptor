@@ -72,12 +72,19 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 func (this *API) New(ccurl *concurrenturl.ConcurrentUrl, schedule interface{}) eucommon.EthApiRouter {
 	api := NewAPI(ccurl)
 	api.depth = this.depth + 1
+
+	*(api.handlerDict)[(&parallel.ParallelHandler{}).Address()].(*parallel.ParallelHandler).DeployedAt() =
+		*(this.handlerDict)[(&parallel.ParallelHandler{}).Address()].(*parallel.ParallelHandler).DeployedAt()
+
+	*(api.handlerDict)[(&noncommutativeBytes.BytesHandlers{}).Address()].(*noncommutativeBytes.BytesHandlers).DeployedAt() =
+		*(this.handlerDict)[(&noncommutativeBytes.BytesHandlers{}).Address()].(*noncommutativeBytes.BytesHandlers).DeployedAt()
 	return api
 }
 
-func (this *API) IsLocal(txID uint32) bool         { return txID == concurrenturl.SYSTEM } //A local tx
-func (this *API) GetReserved() interface{}         { return this.reserved }
-func (this *API) SetReserved(reserved interface{}) { this.reserved = reserved }
+func (this *API) Handlers() *map[[20]byte]eucommon.ApiCallHandler { return &this.handlerDict }
+func (this *API) IsLocal(txID uint32) bool                        { return txID == concurrenturl.SYSTEM } //A local tx
+func (this *API) GetReserved() interface{}                        { return this.reserved }
+func (this *API) SetReserved(reserved interface{})                { this.reserved = reserved }
 
 func (this *API) Depth() uint8                { return this.depth }
 func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }

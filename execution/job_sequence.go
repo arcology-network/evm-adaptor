@@ -60,6 +60,12 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapsh
 		this.ApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
 
 	this.ApiRouter = this.ApiRouter.New(ccurl, this.ApiRouter.Schedule())
+
+	// handlerDict := this.ApiRouter.Handlers() // *map[[20]byte]ApiCallHandler
+	// if handler, ok := (*handlerDict)[(&ParallelHandler{}).Address()]; ok {
+	// 	this.BytesHandlers
+	// }
+
 	statedb := eth.NewImplStateDB(this.ApiRouter)                       // Eth state DB
 	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, uint32(stdMsg.ID)) // tx hash , block hash and tx index
 

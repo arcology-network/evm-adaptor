@@ -43,7 +43,6 @@ contract ParaFixedLengthWithConflictTest {
     }
 }
 
-
 contract ParaContainerConcurrentPushTest {
     Bool container = new Bool();
     function call() public  { 
@@ -160,42 +159,62 @@ contract MultiParaCumulativeU256 {
     }  
 }
 
-contract RecursiveParallelizerOnContainerTest {
+contract RecursiveParallelizerOnNativeArrayTest {
     uint256[2] results;
-    Bool container = new Bool();
-    Parallel mp2 = new Parallel(1); 
     function call() public {
-        results[0] = 1;       
         Parallel mp = new Parallel(1);
-        mp.push(abi.encode(9000000, address(this), abi.encodeWithSignature("add()"))); // Only one will go through
+        mp.push(abi.encode(9999999, address(this), abi.encodeWithSignature("add()"))); // Only one will go through
         mp.run();
-        require(container.length() == 1);
+
+        require(results[0] == 11);
+        require(results[1] == 12);
     } 
 
     function add() public { //9e c6 69 25
-        container.push(true);
-        //  mp2 = new Parallel(1);
-        mp2.push(abi.encode(4000000, address(this), abi.encodeWithSignature("add2()")));
+        Parallel mp2 = new Parallel(1); 
+        mp2.push(abi.encode(11111111, address(this), abi.encodeWithSignature("add2()")));
         mp2.run();              
     }  
 
     function add2() public { 
-        container.push(true);
+        results[0] = 11;
+        results[1] = 12;
     }  
 }
 
-// contract ThreadingDeploymentAddressTest {
-//     Threading[1] mps;
-//     function call() public {     
-//         Threading mp = new Threading(1);     
-//         mp.push(abi.encode(4000000, address(this), abi.encodeWithSignature("deployer()"));  
-//         mp.run();    
-//     } 
+contract RecursiveParallelizerOnContainerTest {
+    uint256[2] results;
+    Bool container = new Bool();
+    U256Cumulative cumulative = new U256Cumulative(0, 100);  
 
-//     function deployer() public { //9e c6 69 25
-//         Threading mp = new Threading(1); 
-//     }   
-// }
+    function call() public {
+        Parallel mp = new Parallel(1);
+        mp.push(abi.encode(9999999, address(this), abi.encodeWithSignature("add()"))); // Only one will go through
+        mp.run();
+
+        require(results[0] == 11);
+        require(results[1] == 12);
+        require(container.length() == 2);
+        require(cumulative.get() == 5);
+    } 
+
+    function add() public { //9e c6 69 25
+        container.push(true);
+        cumulative.add(10);
+        Parallel mp2 = new Parallel(1); 
+        mp2.push(abi.encode(11111111, address(this), abi.encodeWithSignature("add2()")));
+        mp2.run();              
+    }  
+
+    function add2() public {
+        container.push(true); 
+        cumulative.sub(5);
+        results[0] = 11;
+        results[1] = 12;
+    }  
+}
+
+
 
 // contract MaxRecursiveThreadingTest {
 //     uint256[2] results;
