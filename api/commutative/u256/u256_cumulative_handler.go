@@ -1,8 +1,6 @@
 package u256
 
 import (
-	"encoding/hex"
-
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/types"
 	"github.com/holiman/uint256"
@@ -67,11 +65,11 @@ func (this *U256CumulativeHandlers) new(caller evmcommon.Address, input []byte) 
 	id := this.api.UUID()
 
 	txIndex := uint32(this.api.GetEU().(*execution.EU).Message().ID)
-	if !this.connector.New(txIndex, types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id)) { // A new container
+	if !this.connector.New(txIndex, types.Address(codec.Bytes20(caller).Hex())) { // A new container
 		return []byte{}, false, 0
 	}
 
-	path := this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id))
+	path := this.connector.Key(caller)
 	key := path + string(this.api.ElementUID()) // Element ID
 
 	// val, valErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
@@ -89,8 +87,8 @@ func (this *U256CumulativeHandlers) new(caller evmcommon.Address, input []byte) 
 }
 
 func (this *U256CumulativeHandlers) get(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path, err := this.buildPath(caller, input) // Build container path
-	if len(path) == 0 || err != nil {
+	path := this.connector.Key(caller) // Build container path
+	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
 
@@ -106,8 +104,8 @@ func (this *U256CumulativeHandlers) get(caller evmcommon.Address, input []byte) 
 }
 
 func (this *U256CumulativeHandlers) peek(caller evmcommon.Address, input []byte) ([]byte, bool, int64) { // Get the initial value
-	path, err := this.buildPath(caller, input) // Build container path
-	if len(path) == 0 || err != nil {
+	path := this.connector.Key(caller) // Build container path
+	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
 
@@ -135,8 +133,8 @@ func (this *U256CumulativeHandlers) sub(caller evmcommon.Address, input []byte) 
 }
 
 func (this *U256CumulativeHandlers) set(caller evmcommon.Address, input []byte, isPositive bool) ([]byte, bool, int64) {
-	path, err := this.buildPath(caller, input) // Build container path
-	if len(path) == 0 || err != nil {
+	path := this.connector.Key(caller) // Build container path
+	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
 
@@ -152,8 +150,8 @@ func (this *U256CumulativeHandlers) set(caller evmcommon.Address, input []byte, 
 }
 
 func (this *U256CumulativeHandlers) min(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path, err := this.buildPath(caller, input) // Build container path
-	if len(path) == 0 || err != nil {
+	path := this.connector.Key(caller) // Build container path
+	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
 
@@ -171,8 +169,8 @@ func (this *U256CumulativeHandlers) min(caller evmcommon.Address, input []byte) 
 }
 
 func (this *U256CumulativeHandlers) max(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path, err := this.buildPath(caller, input) // Build container path
-	if len(path) == 0 || err != nil {
+	path := this.connector.Key(caller) // Build container path
+	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
 
@@ -187,13 +185,4 @@ func (this *U256CumulativeHandlers) max(caller evmcommon.Address, input []byte) 
 		}
 	}
 	return []byte{}, false, 0
-}
-
-// Build the container path
-func (this *U256CumulativeHandlers) buildPath(caller evmcommon.Address, input []byte) (string, error) {
-	id, err := abi.Decode(input, 0, []byte{}, 2, 32) // max 32 bytes
-	if err != nil {
-		return "", nil
-	} // container ID
-	return this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), hex.EncodeToString(id.([]byte))), nil // unique ID
 }

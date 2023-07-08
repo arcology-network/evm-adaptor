@@ -82,7 +82,7 @@ package int64
 // }
 
 // func (this *Int256CumulativeHandlers) get(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-// 	path, err := this.buildPath(caller, input) // Build container path
+// 	path :=  this.connector.Key(caller)// Build container path
 // 	if len(path) == 0 || err != nil {
 // 		return []byte{}, false, 0
 // 	}
@@ -100,7 +100,7 @@ package int64
 // }
 
 // func (this *Int256CumulativeHandlers) add(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-// 	path, err := this.buildPath(caller, input) // Build container path
+// 	path :=  this.connector.Key(caller)// Build container path
 // 	if len(path) == 0 || err != nil {
 // 		return []byte{}, false, 0
 // 	}
@@ -116,7 +116,7 @@ package int64
 // }
 
 // func (this *Int256CumulativeHandlers) sub(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-// 	path, err := this.buildPath(caller, input) // Build container path
+// 	path :=  this.connector.Key(caller)// Build container path
 // 	if len(path) == 0 || err != nil {
 // 		return []byte{}, false, 0
 // 	}
@@ -132,7 +132,7 @@ package int64
 // }
 
 // func (this *Int256CumulativeHandlers) set(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-// 	path, err := this.buildPath(caller, input) // Build container path
+// 	path :=  this.connector.Key(caller)// Build container path
 // 	if len(path) == 0 || err != nil {
 // 		return []byte{}, false, 0
 // 	}

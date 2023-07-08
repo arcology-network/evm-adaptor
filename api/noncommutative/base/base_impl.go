@@ -41,7 +41,7 @@ func (this *BytesHandlers) Set(path string, idx uint64, bytes []byte) (bool, int
 }
 
 func (this *BytesHandlers) Push(caller evmcommon.Address, input []byte, nonce uint64) ([]byte, bool, int64) {
-	path := this.PathKey(caller) // BytesHandlers path
+	path := this.connector.Key(caller) // BytesHandlers path
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}

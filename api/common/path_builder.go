@@ -1,6 +1,7 @@
 package common
 
 import (
+	"github.com/arcology-network/common-lib/codec"
 	commonlib "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/types"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
@@ -25,11 +26,11 @@ func NewCCurlConnector(subDir string, api eucommon.EthApiRouter, ccurl *concurre
 }
 
 // Make Arcology paths under the current account
-func (this *CcurlConnector) New(txIndex uint32, deploymentAddr types.Address, containerId string) bool {
+func (this *CcurlConnector) New(txIndex uint32, deploymentAddr types.Address) bool {
 	if !this.newStorageRoot(deploymentAddr, txIndex) { // Create the root path if has been created yet.
 		return false
 	}
-	return this.newContainerRoot(deploymentAddr, containerId[:], txIndex) //
+	return this.newContainerRoot(deploymentAddr, txIndex) //
 }
 
 func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32) bool {
@@ -40,8 +41,8 @@ func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32
 	return true // ALready exists
 }
 
-func (this *CcurlConnector) newContainerRoot(account types.Address, id string, txIndex uint32) bool {
-	containerRoot := this.Key(account, id)
+func (this *CcurlConnector) newContainerRoot(account types.Address, txIndex uint32) bool {
+	containerRoot := this.key(account)
 
 	if value, _ := this.ccurl.Peek(containerRoot); value == nil {
 		_, err := this.ccurl.Write(txIndex, containerRoot, commutative.NewPath(), true) // Create a new container
@@ -50,6 +51,10 @@ func (this *CcurlConnector) newContainerRoot(account types.Address, id string, t
 	return true // Already exists
 }
 
-func (this *CcurlConnector) Key(account types.Address, id string) string { // container ID
+func (this *CcurlConnector) Key(caller [20]byte) string { // container ID
+	return this.key(types.Address(codec.Bytes20(caller).Hex()))
+}
+
+func (this *CcurlConnector) key(account types.Address) string { // container ID
 	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), string(account), "/storage", this.subDir, "/")
 }

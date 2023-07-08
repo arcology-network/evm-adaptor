@@ -1,11 +1,8 @@
 package concurrency
 
 import (
-	"strconv"
 	"strings"
 
-	"github.com/arcology-network/common-lib/codec"
-	"github.com/arcology-network/common-lib/types"
 	"github.com/arcology-network/concurrenturl/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
@@ -67,12 +64,12 @@ func (this *RuntimeHandler) localize(caller, callee evmcommon.Address, input []b
 		return []byte{}, false, 0 // Only in constructor
 	}
 
-	slot, err := abi.DecodeTo(input, 0, uint64(0), 1, 32) // max 32 bytes
+	_, err := abi.DecodeTo(input, 0, uint64(0), 1, 32) // max 32 bytes
 	if err != nil {
 		return []byte{}, false, 0
 	}
 
-	path := this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), strconv.Itoa(int(slot))) // unique ID
+	path := this.connector.Key(caller) // unique ID
 	path = strings.TrimSuffix(path, "/")
 
 	value := noncommutative.NewBytes([]byte{})

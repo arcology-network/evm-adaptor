@@ -58,7 +58,7 @@ contract ParaContainerConcurrentPushTest {
     }
 }
 
-contract MultiParaTest {
+contract MultiTempParaTest {
     Bool container = new Bool();
     bytes32[2] results;
     function call() public  { 
@@ -80,7 +80,35 @@ contract MultiParaTest {
     }
 }
 
-contract MultiParaTestWithClear {
+contract MultiGlobalPara {
+    Bool container = new Bool();
+    // bytes32[2] results;
+    Parallel mp2 = new Parallel(2);
+    Parallel mp = new Parallel(2);
+
+    function call() public  {  
+    //    mp = new Parallel(2);
+       mp.push(abi.encode(1000000, address(this), abi.encodeWithSignature("appender()")));
+       mp.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
+       mp.run();
+       require(container.length() == 2);     
+      
+    //    mp2 = new Parallel(2);
+       mp2.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
+       mp2.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
+       mp2.run();
+       require(container.length() == 4);  
+
+       container.push(true);
+       require(container.length() == 5);  
+    }
+
+    function appender()  public {
+       container.push(true);
+    }
+}
+
+contract MultiLocalParaTestWithClear {
     Bool container = new Bool();
     bytes32[2] results;
     function call() public  { 
@@ -214,28 +242,71 @@ contract RecursiveParallelizerOnContainerTest {
     }  
 }
 
+contract MixedRecursiveParallelizerTest {
+    Bool container = new Bool();
+    uint256[2] results;
+    U256Cumulative cumulative = new U256Cumulative(0, 100);  
 
+    Parallel mp = new Parallel(1);
+    function call() public {
+        cumulative.add(50);
+        container.push(true);
+        mp.push(abi.encode(9999999, address(this), abi.encodeWithSignature("add()"))); // Only one will go through
+        mp.run();
 
-// contract MaxRecursiveThreadingTest {
+        require(results[0] == 11);
+        require(results[1] == 12);
+        require(container.length() == 3);
+        require(cumulative.get() == 55);
+    } 
+
+    function add() public { //9e c6 69 25
+        cumulative.add(10);
+        Parallel mp2 = new Parallel(1); 
+        mp2.push(abi.encode(11111111, address(this), abi.encodeWithSignature("add2()")));
+        mp2.run();
+        container.push(true);              
+    }  
+
+    function add2() public {
+        cumulative.sub(5);
+        results[0] = 11;
+        results[1] = 12;
+        container.push(true);
+    }  
+}
+
+// contract MixedRecursiveParallelizerTest {
+//     Bool container = new Bool();
 //     uint256[2] results;
-//     uint256 counter = 0;
-//     function call() public {     
-//         Threading mp = new Threading(2);
-//         mp.push(abi.encode(9900000, address(this), abi.encodeWithSignature("add(uint256)"));
-//         mp.push(abi.encode(9900000, address(this), abi.encodeWithSignature("add()"));
-//         mp.run(); 
-//         require(container.length() ==2); // 2 + 4 + 8
+//     U256Cumulative cumulative = new U256Cumulative(0, 100);  
+
+//     Parallel mp;
+//     function call() public {
+//         cumulative.add(50);
+//         container.push(true);       
+//         mp = new Parallel(1);
+//         mp.push(abi.encode(9999999, address(this), abi.encodeWithSignature("add()"))); // Only one will go through
+//         mp.run();
+
+//         require(results[0] == 11);
+//         require(results[1] == 12);
+//         require(container.length() == 3);
+//         require(cumulative.get() == 55);
 //     } 
 
-//     function add() public { //9e c6 69  
-//         container.push(true);
-//         Threading mp2 = new Threading(2);     
-//         // mp2.push(abi.encode(4400000, address(this), abi.encodeWithSignature("add2()"));
-//         // // mp2.push(abi.encode(4400000, address(this), abi.encodeWithSignature("add2()"));
-//         // mp2.run();              
+//     function add() public { //9e c6 69 25
+//         cumulative.add(10);
+//         Parallel mp2 = new Parallel(1); 
+//         mp2.push(abi.encode(11111111, address(this), abi.encodeWithSignature("add2()")));
+//         mp2.run();
+//         container.push(true);              
 //     }  
 
-//     function add2() public { //9e c6 69  
-//         container.push(true); 
-//     }   
+//     function add2() public {
+//         cumulative.sub(5);
+//         results[0] = 11;
+//         results[1] = 12;
+//         container.push(true);
+//     }  
 // }

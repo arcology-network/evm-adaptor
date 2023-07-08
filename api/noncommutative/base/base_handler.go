@@ -1,7 +1,6 @@
 package concurrentcontainer
 
 import (
-	"encoding/hex"
 	"math"
 
 	"github.com/arcology-network/common-lib/codec"
@@ -35,6 +34,8 @@ func NewNoncommutativeBytesHandlers(api eucommon.EthApiRouter) *BytesHandlers {
 func (this *BytesHandlers) Address() [20]byte {
 	return common.BYTES_HANDLER
 }
+
+func (this *BytesHandlers) Connector() *apicommon.CcurlConnector { return this.connector }
 
 func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
 	signature := [4]byte{}
@@ -79,14 +80,13 @@ func (this *BytesHandlers) New(caller evmcommon.Address, input []byte) ([]byte, 
 	connected := this.connector.New(
 		uint32(this.api.GetEU().(*execution.EU).Message().ID),   // Tx ID for conflict detection
 		types.Address(codec.Bytes20(this.deploymentAddr).Hex()), // Main contract address
-		hex.EncodeToString(codeAddr[:]),                         // Container contract address, unique in every main contract
 	)
 	return codeAddr[:], connected, 0 // Create a new container
 }
 
 // get the number of elements in the container
 func (this *BytesHandlers) length(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	if length, successful, _ := this.Length(this.PathKey(caller)); successful {
+	if length, successful, _ := this.Length(this.connector.Key(caller)); successful {
 		if encoded, err := abi.Encode(uint256.NewInt(length)); err == nil {
 			return encoded, true, 0
 		}
@@ -96,7 +96,7 @@ func (this *BytesHandlers) length(caller evmcommon.Address, input []byte) ([]byt
 
 // get the intial length of the container
 func (this *BytesHandlers) Peek(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.PathKey(caller) // BytesHandlers path
+	path := this.connector.Key(caller) // BytesHandlers path
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
@@ -113,7 +113,7 @@ func (this *BytesHandlers) Peek(caller evmcommon.Address, input []byte) ([]byte,
 }
 
 func (this *BytesHandlers) get(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.PathKey(caller) // Build container path
+	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
@@ -136,7 +136,7 @@ func (this *BytesHandlers) get(caller evmcommon.Address, input []byte) ([]byte, 
 }
 
 func (this *BytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.PathKey(caller) // Build container path
+	path := this.connector.Key(caller) // Build container path
 
 	idx, bytes, err := abi.Parse2(input,
 		uint64(0), 1, 32,
@@ -159,7 +159,7 @@ func (this *BytesHandlers) push(caller evmcommon.Address, input []byte, origin e
 }
 
 func (this *BytesHandlers) pop(caller evmcommon.Address, _ []byte) ([]byte, bool, int64) {
-	path := this.PathKey(caller) // Build container path
+	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
@@ -188,11 +188,10 @@ func (this *BytesHandlers) clear(caller evmcommon.Address, input []byte) ([]byte
 	return []byte{}, true, 0
 }
 
-// Build the container path
-func (this *BytesHandlers) PathKey(caller evmcommon.Address) string {
-	// id := hex.EncodeToString([]byte(this.GetCodeAddress()))
-	return this.connector.Key(types.Address(codec.Bytes20(caller).Hex()), "") // unique ID
-}
+// // Build the container path
+// func (this *BytesHandlers) PathKey(caller evmcommon.Address) string {
+// 	return this.connector.Key(caller) // unique ID
+// }
 
 func (this *BytesHandlers) GetCodeAddress() [20]byte {
 	return (*this.api.VM().ArcologyNetworkAPIs.CallContext.Contract.CodeAddr) // unique ID

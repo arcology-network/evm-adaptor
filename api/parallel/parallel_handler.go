@@ -66,8 +66,8 @@ func (this *ParallelHandler) push(caller evmcommon.Address, input []byte, nonce 
 }
 
 func (this *ParallelHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	deployedAddr := *this.BytesHandlers.DeployedAt()
-	path := this.PathKey(deployedAddr)
+	path := this.BytesHandlers.Connector().Key(*this.BytesHandlers.DeployedAt())
+
 	length, successful, fee := this.BytesHandlers.Length(path)
 	if !successful {
 		return []byte{}, successful, fee
