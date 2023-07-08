@@ -36,11 +36,21 @@ func TestParaContainerManipulation(t *testing.T) {
 	}
 }
 
-func TestParaMulti(t *testing.T) {
+func TestMultiLocalPara(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MultiParaTest", "call()", []byte{}, false)
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MultiTempParaTest", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestMultiGlobalParaTest(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MultiGlobalPara", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -50,7 +60,7 @@ func TestParaMultiWithClear(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MultiParaTestWithClear", "call()", []byte{}, false)
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MultiLocalParaTestWithClear", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -106,12 +116,12 @@ func TestRecursiveParallelizerOnContainer(t *testing.T) {
 	}
 }
 
-// func TestRecursiveParallelizer(t *testing.T) {
-// 	currentPath, _ := os.Getwd()
-// 	targetPath := filepath.Dir(currentPath) + "/api/"
+func TestMixedRecursiveParallelizer(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
 
-// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "RecursiveThreadingTest", "call()", []byte{}, false)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MixedRecursiveParallelizerTest", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
