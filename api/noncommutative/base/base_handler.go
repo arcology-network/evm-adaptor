@@ -1,6 +1,7 @@
 package concurrentcontainer
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/arcology-network/common-lib/codec"
@@ -19,9 +20,8 @@ import (
 
 // APIs under the concurrency namespace
 type BytesHandlers struct {
-	deploymentAddr [20]byte
-	api            eucommon.EthApiRouter
-	connector      *apicommon.CcurlConnector
+	api       eucommon.EthApiRouter
+	connector *apicommon.CcurlConnector
 }
 
 func NewNoncommutativeBytesHandlers(api eucommon.EthApiRouter) *BytesHandlers {
@@ -66,23 +66,28 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 
 	case [4]byte{0x8b, 0x28, 0x29, 0x47}: // 8b 28 29 47
 		return this.set(caller, input[4:])
+
+	case [4]byte{0xa4, 0x44, 0xf5, 0xe9}: // a4 44 f5 e9
+		return this.run(caller, input[4:])
 	}
 
 	return []byte{}, false, 0 // unknown
 }
 
+func (this *BytesHandlers) run(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	fmt.Println(caller)
+	fmt.Println(caller)
+	return []byte{}, false, 0
+}
+
 func (this *BytesHandlers) Api() eucommon.EthApiRouter { return this.api }
-func (this *BytesHandlers) DeployedAt() *[20]byte      { return &this.deploymentAddr }
 
 func (this *BytesHandlers) New(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	this.deploymentAddr = caller
-	// codeAddr := this.GetCodeAddress()
-
 	connected := this.connector.New(
-		uint32(this.api.GetEU().(*execution.EU).Message().ID),   // Tx ID for conflict detection
-		types.Address(codec.Bytes20(this.deploymentAddr).Hex()), // Main contract address
+		uint32(this.api.GetEU().(*execution.EU).Message().ID), // Tx ID for conflict detection
+		types.Address(codec.Bytes20(caller).Hex()),            // Main contract address
 	)
-	return []byte{}, connected, 0 // Create a new container
+	return caller[:], connected, 0 // Create a new container
 }
 
 // get the number of elements in the container
@@ -188,13 +193,4 @@ func (this *BytesHandlers) clear(caller evmcommon.Address, input []byte) ([]byte
 		}
 	}
 	return []byte{}, true, 0
-}
-
-// // Build the container path
-// func (this *BytesHandlers) PathKey(caller evmcommon.Address) string {
-// 	return this.connector.Key(caller) // unique ID
-// }
-
-func (this *BytesHandlers) GetCodeAddress() [20]byte {
-	return (*this.api.VM().ArcologyNetworkAPIs.CallContext.Contract.CodeAddr) // unique ID
 }

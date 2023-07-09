@@ -73,11 +73,6 @@ func (this *API) New(ccurl *concurrenturl.ConcurrentUrl, schedule interface{}) e
 	api := NewAPI(ccurl)
 	api.depth = this.depth + 1
 
-	*(api.handlerDict)[(&parallel.ParallelHandler{}).Address()].(*parallel.ParallelHandler).DeployedAt() =
-		*(this.handlerDict)[(&parallel.ParallelHandler{}).Address()].(*parallel.ParallelHandler).DeployedAt()
-
-	*(api.handlerDict)[(&noncommutativeBytes.BytesHandlers{}).Address()].(*noncommutativeBytes.BytesHandlers).DeployedAt() =
-		*(this.handlerDict)[(&noncommutativeBytes.BytesHandlers{}).Address()].(*noncommutativeBytes.BytesHandlers).DeployedAt()
 	return api
 }
 

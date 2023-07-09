@@ -31,8 +31,9 @@ func NewParallelHandler(ethApiRouter eucommon.EthApiRouter) *ParallelHandler {
 	}
 }
 
-func (this *ParallelHandler) Address() [20]byte     { return eucommon.PARALLEL_HANDLER }
-func (this *ParallelHandler) DeployedAt() *[20]byte { return this.BytesHandlers.DeployedAt() }
+func (this *ParallelHandler) Address() [20]byte { return eucommon.PARALLEL_HANDLER }
+
+// func (this *ParallelHandler) DeployedAt() *[20]byte { return this.BytesHandlers.DeployedAt() }
 
 func (this *ParallelHandler) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
 	if returned, called, fees := this.BytesHandlers.Call(caller, callee, input, origin, nonce); called {
@@ -42,32 +43,25 @@ func (this *ParallelHandler) Call(caller, callee [20]byte, input []byte, origin 
 	signature := [4]byte{}
 	copy(signature[:], input)
 
-	switch signature { // bf 22 6c 78
-
-	case [4]byte{0xcd, 0xbf, 0x60, 0x8d}: //cd bf 60 8d
-		return this.new(caller, input[4:])
-
-	case [4]byte{0x7d, 0xac, 0xda, 0x03}: // 7d ac da 03
-		return this.push(caller, input[4:], nonce)
-
-	case [4]byte{0xa4, 0x44, 0xf5, 0xe9}: // a4 44 f5 e9
+	switch signature {
+	case [4]byte{0xc0, 0x40, 0x62, 0x26}: // c0 40 62 26
 		return this.run(caller, callee, input[4:])
 	}
 
 	return []byte{}, false, 0
 }
 
-func (this *ParallelHandler) new(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	return this.BytesHandlers.New(caller, input)
-}
+// func (this *ParallelHandler) new(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+// 	return this.BytesHandlers.New(caller, input)
+// }
 
-func (this *ParallelHandler) push(caller evmcommon.Address, input []byte, nonce uint64) ([]byte, bool, int64) {
-	path := this.BytesHandlers.Connector().Key(caller)
-	return this.BytesHandlers.Push(path, input)
-}
+// func (this *ParallelHandler) push(caller evmcommon.Address, input []byte, nonce uint64) ([]byte, bool, int64) {
+// 	path := this.BytesHandlers.Connector().Key(caller)
+// 	return this.BytesHandlers.Push(path, input)
+// }
 
 func (this *ParallelHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.BytesHandlers.Connector().Key(*this.BytesHandlers.DeployedAt())
+	path := this.BytesHandlers.Connector().Key(caller)
 
 	length, successful, fee := this.BytesHandlers.Length(path)
 	if !successful {

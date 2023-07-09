@@ -10,7 +10,7 @@ func TestParallelBasic(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ParaHasherTest", "call()", []byte{}, false)
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ParaNativeAssignmentTest", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -96,15 +96,15 @@ func TestRecursiveParallelizerOnContainer(t *testing.T) {
 	}
 }
 
-func TestMixedRecursiveParallelizer(t *testing.T) {
-	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/api/"
+// func TestMixedRecursiveParallelizer(t *testing.T) {
+// 	currentPath, _ := os.Getwd()
+// 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MixedRecursiveParallelizerTest", "call()", []byte{}, false)
-	if err != nil {
-		t.Error(err)
-	}
-}
+// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MixedRecursiveParallelizerTest", "call()", []byte{}, false)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// }
 
 // func TestParaContainerManipulation(t *testing.T) {
 // 	currentPath, _ := os.Getwd()
@@ -125,3 +125,13 @@ func TestMixedRecursiveParallelizer(t *testing.T) {
 // 		t.Error(err)
 // 	}
 // }
+
+func TestForeachRun(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ForeachTest", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}

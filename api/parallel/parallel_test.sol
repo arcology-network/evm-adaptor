@@ -5,7 +5,7 @@ import "./Parallel.sol";
 import "../commutative/u256/U256Cumulative.sol";
 import "../noncommutative/bool/Bool.sol";
 
-contract ParaHasherTest {
+contract ParaNativeAssignmentTest {
     uint256[2] results;
     function call() public  { 
        Parallel mp = new Parallel(2);
@@ -47,14 +47,17 @@ contract ParaContainerConcurrentPushTest {
     Bool container = new Bool();
     Bool container2 = new Bool();
     function call() public  { 
+       container.push(true);
+
        Parallel mp = new Parallel(2);
        mp.push(abi.encode(1000000, address(this), abi.encodeWithSignature("appender()")));
        mp.push(abi.encode(1000000, address(this), abi.encodeWithSignature("appender()")));
        mp.run();
-    //    require(container.length() == 2);    
+       require(container.length() == 3);    
        require(container2.length() == 2);   
-             container.push(true);
-        
+       container.push(true);
+       require(container.length() == 4);    
+    //    container.push(true);        
     }
 
     function appender()  public {
@@ -87,10 +90,9 @@ contract MultiTempParaTest {
 
 contract MultiGlobalPara {
     Bool container = new Bool();
-    // bytes32[2] results;
+
     Parallel mp = new Parallel(2);
     Parallel mp2 = new Parallel(2);
-
     function call() public  {  
     //    mp = new Parallel(2);
        mp.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
@@ -163,6 +165,8 @@ contract ParallelizerArrayTest {
        container.push(true);
     }
 }
+
+
 
 contract MultiParaCumulativeU256 {
     U256Cumulative cumulative = new U256Cumulative(0, 100);     
@@ -280,6 +284,24 @@ contract MixedRecursiveParallelizerTest {
         container.push(true);
     }  
 }
+
+contract ForeachTest {
+    Bool container = new Bool();
+
+    Parallel mp2 = new Parallel(2);
+    Parallel mp = new Parallel(2);
+    function call() public  {  
+       mp2.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
+       mp2.run();
+       require(container.length() == 1);    
+    }
+
+    function appender()  public {
+       container.push(true);
+    }
+}
+
+
 
 // contract MixedRecursiveParallelizerTest {
 //     Bool container = new Bool();
