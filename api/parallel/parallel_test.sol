@@ -88,26 +88,42 @@ contract MultiTempParaTest {
     }
 }
 
+contract MultiGlobalParaSingleInUse {
+    Bool container = new Bool();
+
+    Parallel mp2 = new Parallel(2);
+    Parallel mp = new Parallel(2);
+    function call() public  {  
+       mp2.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
+       mp2.run();
+       require(container.length() == 2);    
+    }
+
+    function appender()  public {
+       container.push(true);
+       container.push(true);
+    }
+}
+
 contract MultiGlobalPara {
     Bool container = new Bool();
 
     Parallel mp = new Parallel(2);
     Parallel mp2 = new Parallel(2);
     function call() public  {  
-    //    mp = new Parallel(2);
        mp.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
-    //    mp.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
+       mp.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
        mp.run();
-       require(container.length() == 1);     
+       require(container.length() == 2);     
       
-    //    mp2 = new Parallel(2);
-    //    mp2.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
-    // //    mp2.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
-    //    mp2.run();
-    //    require(container.length() == 1);  
+       mp2 = new Parallel(2);
+       mp2.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
+       mp2.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
+       mp2.run();
+       require(container.length() == 4);  
 
-    //    container.push(true);
-    //    require(container.length() == 5);  
+       container.push(true);
+       require(container.length() == 5);  
     }
 
     function appender()  public {
@@ -165,8 +181,6 @@ contract ParallelizerArrayTest {
        container.push(true);
     }
 }
-
-
 
 contract MultiParaCumulativeU256 {
     U256Cumulative cumulative = new U256Cumulative(0, 100);     
@@ -284,23 +298,6 @@ contract MixedRecursiveParallelizerTest {
         container.push(true);
     }  
 }
-
-contract ForeachTest {
-    Bool container = new Bool();
-
-    Parallel mp2 = new Parallel(2);
-    Parallel mp = new Parallel(2);
-    function call() public  {  
-       mp2.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
-       mp2.run();
-       require(container.length() == 1);    
-    }
-
-    function appender()  public {
-       container.push(true);
-    }
-}
-
 
 
 // contract MixedRecursiveParallelizerTest {

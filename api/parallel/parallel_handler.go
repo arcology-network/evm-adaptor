@@ -24,52 +24,35 @@ type ParallelHandler struct {
 }
 
 func NewParallelHandler(ethApiRouter eucommon.EthApiRouter) *ParallelHandler {
-	return &ParallelHandler{
-		base.NewNoncommutativeBytesHandlers(ethApiRouter),
-		[]error{},
-		[]*execution.JobSequence{},
+	handler := &ParallelHandler{
+		erros:   []error{},
+		jobseqs: []*execution.JobSequence{},
 	}
+	handler.BytesHandlers = base.NewNoncommutativeBytesHandlers(ethApiRouter, handler)
+	return handler
 }
 
 func (this *ParallelHandler) Address() [20]byte { return eucommon.PARALLEL_HANDLER }
 
-// func (this *ParallelHandler) DeployedAt() *[20]byte { return this.BytesHandlers.DeployedAt() }
-
-func (this *ParallelHandler) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
-	if returned, called, fees := this.BytesHandlers.Call(caller, callee, input, origin, nonce); called {
-		return returned, called, fees
+func (this *ParallelHandler) Run(caller [20]byte, input []byte) ([]byte, bool, int64) {
+	input, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt64)
+	if err != nil {
+		return []byte{}, false, 0
 	}
 
-	signature := [4]byte{}
-	copy(signature[:], input)
-
-	switch signature {
-	case [4]byte{0xc0, 0x40, 0x62, 0x26}: // c0 40 62 26
-		return this.run(caller, callee, input[4:])
+	numThreads, err := abi.DecodeTo(input, 0, uint64(1), 2, 32)
+	if err != nil {
+		return []byte{}, false, 0
 	}
+	threads := common.Min(common.Min(uint8(numThreads), 1), math.MaxUint8)
 
-	return []byte{}, false, 0
-}
-
-// func (this *ParallelHandler) new(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-// 	return this.BytesHandlers.New(caller, input)
-// }
-
-// func (this *ParallelHandler) push(caller evmcommon.Address, input []byte, nonce uint64) ([]byte, bool, int64) {
-// 	path := this.BytesHandlers.Connector().Key(caller)
-// 	return this.BytesHandlers.Push(path, input)
-// }
-
-func (this *ParallelHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.BytesHandlers.Connector().Key(caller)
-
 	length, successful, fee := this.BytesHandlers.Length(path)
 	if !successful {
 		return []byte{}, successful, fee
 	}
 
-	generation := execution.NewGeneration(0, 4, []*execution.JobSequence{})
-
+	generation := execution.NewGeneration(0, threads, []*execution.JobSequence{})
 	fees := make([]int64, length)
 	this.erros = make([]error, length)
 	this.jobseqs = make([]*execution.JobSequence, length)

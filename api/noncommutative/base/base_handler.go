@@ -1,7 +1,6 @@
 package concurrentcontainer
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/arcology-network/common-lib/codec"
@@ -22,12 +21,14 @@ import (
 type BytesHandlers struct {
 	api       eucommon.EthApiRouter
 	connector *apicommon.CcurlConnector
+	handler   interface{}
 }
 
-func NewNoncommutativeBytesHandlers(api eucommon.EthApiRouter) *BytesHandlers {
+func NewNoncommutativeBytesHandlers(api eucommon.EthApiRouter, handler interface{}) *BytesHandlers {
 	return &BytesHandlers{
 		api:       api,
 		connector: apicommon.NewCCurlConnector("/containers/", api, api.Ccurl()),
+		handler:   handler,
 	}
 }
 
@@ -41,11 +42,10 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 	signature := [4]byte{}
 	copy(signature[:], input)
 
-	if signature == [4]byte{0xcd, 0xbf, 0x60, 0x8d} {
-		return this.New(caller, input)
-	}
-
 	switch signature {
+	case [4]byte{0xcd, 0xbf, 0x60, 0x8d}:
+		return this.New(caller, input)
+
 	case [4]byte{0x59, 0xe0, 0x2d, 0xd7}:
 		return this.Peek(caller, input[4:])
 
@@ -66,18 +66,15 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 
 	case [4]byte{0x8b, 0x28, 0x29, 0x47}: // 8b 28 29 47
 		return this.set(caller, input[4:])
+	}
 
-	case [4]byte{0xa4, 0x44, 0xf5, 0xe9}: // a4 44 f5 e9
-		return this.run(caller, input[4:])
+	if this.handler != nil {
+		return this.handler.(interface {
+			Run([20]byte, []byte) ([]byte, bool, int64)
+		}).Run(caller, input[4:])
 	}
 
 	return []byte{}, false, 0 // unknown
-}
-
-func (this *BytesHandlers) run(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	fmt.Println(caller)
-	fmt.Println(caller)
-	return []byte{}, false, 0
 }
 
 func (this *BytesHandlers) Api() eucommon.EthApiRouter { return this.api }

@@ -47,7 +47,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 
 	handlers := []eucommon.ApiCallHandler{
 		parallel.NewParallelHandler(api),
-		noncommutativeBytes.NewNoncommutativeBytesHandlers(api),
+		noncommutativeBytes.NewNoncommutativeBytesHandlers(api, nil),
 		cumulativeu256.NewU256CumulativeHandlers(api),
 		// cumulativei256.NewInt256CumulativeHandlers(api),
 		threading.NewThreadingHandler(api),

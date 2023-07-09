@@ -56,8 +56,8 @@ contract Base {
         address(API).call(abi.encodeWithSignature("clear()"));       
     }
 
-    function run(uint256 numThreads) public {
-        address(API).call(abi.encodeWithSignature("run()", numThreads));       
+    function foreach(bytes memory data) public {
+        address(API).call(abi.encodeWithSignature("foreach(bytes)", data));       
     }
     
     // function log(bytes memory elem) public { // 7a fa 62 38

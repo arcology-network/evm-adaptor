@@ -26,6 +26,26 @@ func TestParallelWithConflict(t *testing.T) {
 	}
 }
 
+func TestMultiGlobalParaSingleInUse(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MultiGlobalParaSingleInUse", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestMultiGlobalParaTest(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MultiGlobalPara", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestMultiLocalPara(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
@@ -96,41 +116,11 @@ func TestRecursiveParallelizerOnContainer(t *testing.T) {
 	}
 }
 
-// func TestMixedRecursiveParallelizer(t *testing.T) {
-// 	currentPath, _ := os.Getwd()
-// 	targetPath := filepath.Dir(currentPath) + "/api/"
-
-// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MixedRecursiveParallelizerTest", "call()", []byte{}, false)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
-
-// func TestParaContainerManipulation(t *testing.T) {
-// 	currentPath, _ := os.Getwd()
-// 	targetPath := filepath.Dir(currentPath) + "/api/"
-
-// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ParaContainerConcurrentPushTest", "call()", []byte{}, false)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
-
-// func TestMultiGlobalParaTest(t *testing.T) {
-// 	currentPath, _ := os.Getwd()
-// 	targetPath := filepath.Dir(currentPath) + "/api/"
-
-// 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MultiGlobalPara", "call()", []byte{}, false)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
-
-func TestForeachRun(t *testing.T) {
+func TestMixedRecursiveParallelizer(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "ForeachTest", "call()", []byte{}, false)
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_test.sol", "0.8.19", "MixedRecursiveParallelizerTest", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}

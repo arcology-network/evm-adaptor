@@ -27,12 +27,11 @@ contract Bytes {
         base.set(abi.encodeWithSignature("set(uint256,bytes)", idx, abi.encode(elem)));     
     }
 
-    function run(uint256 numThreads) public {
-        base.run(numThreads);
+    function foreach(bytes memory data) public {
+        base.foreach(data);
     }
 
     function clear() public { // 7a fa 62 38
         base.clear();
     }
-
 }
