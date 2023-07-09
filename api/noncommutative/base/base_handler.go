@@ -41,10 +41,11 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 	signature := [4]byte{}
 	copy(signature[:], input)
 
-	switch signature {
-	case [4]byte{0xcd, 0xbf, 0x60, 0x8d}: //cd bf 60 8d
-		return this.New(caller, input[4:])
+	if signature == [4]byte{0xcd, 0xbf, 0x60, 0x8d} {
+		return this.New(caller, input)
+	}
 
+	switch signature {
 	case [4]byte{0x59, 0xe0, 0x2d, 0xd7}:
 		return this.Peek(caller, input[4:])
 
@@ -75,13 +76,13 @@ func (this *BytesHandlers) DeployedAt() *[20]byte      { return &this.deployment
 
 func (this *BytesHandlers) New(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	this.deploymentAddr = caller
-	codeAddr := this.GetCodeAddress()
+	// codeAddr := this.GetCodeAddress()
 
 	connected := this.connector.New(
 		uint32(this.api.GetEU().(*execution.EU).Message().ID),   // Tx ID for conflict detection
 		types.Address(codec.Bytes20(this.deploymentAddr).Hex()), // Main contract address
 	)
-	return codeAddr[:], connected, 0 // Create a new container
+	return []byte{}, connected, 0 // Create a new container
 }
 
 // get the number of elements in the container
@@ -155,7 +156,8 @@ func (this *BytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, 
 
 // push a new element into the container
 func (this *BytesHandlers) push(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool, int64) {
-	return this.Push(caller, input, nonce)
+	path := this.connector.Key(caller) // BytesHandlers path
+	return this.Push(path, input)
 }
 
 func (this *BytesHandlers) pop(caller evmcommon.Address, _ []byte) ([]byte, bool, int64) {

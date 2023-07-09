@@ -1,11 +1,9 @@
 package concurrentcontainer
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/arcology-network/concurrenturl/noncommutative"
-	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 	"github.com/arcology-network/vm-adaptor/execution"
 )
@@ -40,16 +38,16 @@ func (this *BytesHandlers) Set(path string, idx uint64, bytes []byte) (bool, int
 	return false, 0
 }
 
-func (this *BytesHandlers) Push(caller evmcommon.Address, input []byte, nonce uint64) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // BytesHandlers path
+func (this *BytesHandlers) Push(path string, input []byte) ([]byte, bool, int64) {
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
 
-	if this.deploymentAddr != caller {
-		fmt.Println(caller[:])
-		fmt.Println(this.deploymentAddr[:])
-	}
+	// if this.deploymentAddr != caller {
+	// 	fmt.Println(caller[:])
+	// 	fmt.Println(this.deploymentAddr[:])
+	// 	panic("Mismatch !!!!!")
+	// }
 
 	value, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt)
 	if value == nil || err != nil {

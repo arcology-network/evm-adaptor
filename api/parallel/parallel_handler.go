@@ -62,7 +62,8 @@ func (this *ParallelHandler) new(caller evmcommon.Address, input []byte) ([]byte
 }
 
 func (this *ParallelHandler) push(caller evmcommon.Address, input []byte, nonce uint64) ([]byte, bool, int64) {
-	return this.BytesHandlers.Push(caller, input, nonce)
+	path := this.BytesHandlers.Connector().Key(caller)
+	return this.BytesHandlers.Push(path, input)
 }
 
 func (this *ParallelHandler) run(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {

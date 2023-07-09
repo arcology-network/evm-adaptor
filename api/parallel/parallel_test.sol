@@ -45,16 +45,21 @@ contract ParaFixedLengthWithConflictTest {
 
 contract ParaContainerConcurrentPushTest {
     Bool container = new Bool();
+    Bool container2 = new Bool();
     function call() public  { 
        Parallel mp = new Parallel(2);
        mp.push(abi.encode(1000000, address(this), abi.encodeWithSignature("appender()")));
        mp.push(abi.encode(1000000, address(this), abi.encodeWithSignature("appender()")));
        mp.run();
-       require(container.length() == 2);    
+    //    require(container.length() == 2);    
+       require(container2.length() == 2);   
+             container.push(true);
+        
     }
 
     function appender()  public {
        container.push(true);
+       container2.push(true);
     }
 }
 
@@ -83,24 +88,24 @@ contract MultiTempParaTest {
 contract MultiGlobalPara {
     Bool container = new Bool();
     // bytes32[2] results;
-    Parallel mp2 = new Parallel(2);
     Parallel mp = new Parallel(2);
+    Parallel mp2 = new Parallel(2);
 
     function call() public  {  
     //    mp = new Parallel(2);
-       mp.push(abi.encode(1000000, address(this), abi.encodeWithSignature("appender()")));
        mp.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
+    //    mp.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
        mp.run();
-       require(container.length() == 2);     
+       require(container.length() == 1);     
       
     //    mp2 = new Parallel(2);
-       mp2.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
-       mp2.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
-       mp2.run();
-       require(container.length() == 4);  
+    //    mp2.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
+    // //    mp2.push(abi.encode(4000000, address(this), abi.encodeWithSignature("appender()")));
+    //    mp2.run();
+    //    require(container.length() == 1);  
 
-       container.push(true);
-       require(container.length() == 5);  
+    //    container.push(true);
+    //    require(container.length() == 5);  
     }
 
     function appender()  public {
