@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/hex"
 	"strconv"
+	"sync/atomic"
 
 	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
@@ -15,6 +16,7 @@ import (
 	"github.com/arcology-network/vm-adaptor/api/threading"
 	execution "github.com/arcology-network/vm-adaptor/execution"
 
+	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	noncommutativeBytes "github.com/arcology-network/vm-adaptor/api/noncommutative/base"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
@@ -61,9 +63,8 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 		api.handlerDict[(handlers)[i].Address()] = v
 	}
 
-	api.ccurl.NewAccount( // A temp account for handling deferred calls
-		concurrenturl.SYSTEM,
-		api.ccurl.Platform.Eth10(),
+	api.ccurl.NewAccount(
+		ccurlcommon.SYSTEM,
 		hex.EncodeToString(codec.Bytes20(runtime.NewRuntimeHandler(api).Address()).Encode()),
 	)
 	return api
@@ -76,8 +77,13 @@ func (this *API) New(ccurl *concurrenturl.ConcurrentUrl, schedule interface{}) e
 	return api
 }
 
+func (this *API) CheckRuntimeConstrains() bool { // Execeeds the max recursion depth or the max sub processes
+	return this.Depth() < eucommon.MAX_RECURSIION_DEPTH &&
+		atomic.AddUint64(&eucommon.TotalSubProcesses, 1) <= eucommon.MAX_SUB_PROCESSES
+}
+
 func (this *API) Handlers() *map[[20]byte]eucommon.ApiCallHandler { return &this.handlerDict }
-func (this *API) IsLocal(txID uint32) bool                        { return txID == concurrenturl.SYSTEM } //A local tx
+func (this *API) IsLocal(txID uint32) bool                        { return txID == ccurlcommon.SYSTEM } //A local tx
 func (this *API) GetReserved() interface{}                        { return this.reserved }
 func (this *API) SetReserved(reserved interface{})                { this.reserved = reserved }
 

@@ -25,7 +25,7 @@ package int64
 // func NewInt256CumulativeHandlers(api eucommon.EthApiRouter) *Int256CumulativeHandlers {
 // 	return &Int256CumulativeHandlers{
 // 		api:       api,
-// 		connector: apicommon.NewCCurlConnector("/containers/", api, api.Ccurl()),
+// 		connector: apicommon.NewCCurlConnector("/container", api, api.Ccurl()),
 // 	}
 // }
 

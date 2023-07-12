@@ -18,7 +18,7 @@ func TestNoncommutativeU256Dynamic(t *testing.T) {
 func TestNonCommutativeU256Threading(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api"
-	err, _ := InvokeTestContract(targetPath, "noncommutative/u256/u256_test.sol", "0.8.19", "U256ThreadingTest", "call()", []byte{}, false)
+	err, _ := InvokeTestContract(targetPath, "noncommutative/u256/u256_test.sol", "0.8.19", "U256ParallelTest", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -27,7 +27,7 @@ func TestNonCommutativeU256Threading(t *testing.T) {
 func TestArrayThreading(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api"
-	err, _ := InvokeTestContract(targetPath, "noncommutative/u256/u256_test.sol", "0.8.19", "ArrayThreadingTest", "call()", []byte{}, false)
+	err, _ := InvokeTestContract(targetPath, "noncommutative/u256/u256_test.sol", "0.8.19", "ArrayParallelTest", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}

@@ -215,8 +215,7 @@ contract ThreadingDeploymentAddressTest {
 
     function deployer() public { //9e c6 69 25
         Threading mp = new Threading(1); 
-    }  
- 
+    }   
 }
 
 contract RecursiveThreadingTest {
@@ -242,8 +241,6 @@ contract RecursiveThreadingTest {
         results[0] = elem * 2; 
     }  
 }
-
-
 
 // contract MaxRecursiveThreadingTest {
 //     uint256[2] results;

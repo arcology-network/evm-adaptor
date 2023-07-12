@@ -2,7 +2,6 @@ package execution
 
 import (
 	"crypto/sha256"
-	"fmt"
 
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/common"
@@ -45,10 +44,6 @@ func (this *JobSequence) Run(config *Config, snapshotUrl ccurlinterfaces.Datasto
 		if i < len(this.StdMsgs)-1 {
 			snapshotUrl = this.ApiRouter.Ccurl().Snapshot(transitions)
 		}
-
-		fmt.Println(" ************************ ")
-		indexer.Univalues(results[i].Transitions).Print()
-		fmt.Println(" ************************ ")
 	}
 
 	return results
@@ -84,7 +79,7 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapsh
 			NewEVMTxContext(*stdMsg.Native),
 		)
 
-	indexer.Univalues(this.ApiRouter.Ccurl().Export()).Print()
+	// indexer.Univalues(this.ApiRouter.Ccurl().Export()).Print()
 
 	return &Result{
 		TxIndex:     uint32(stdMsg.ID),

@@ -66,9 +66,9 @@ func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []*Result {
 		}
 	}
 
-	common.Foreach(results, func(v **Result) { // Write the transitions back to the parent write cache
-		(*v).WriteTo(uint32(parentApiRouter.GetEU().(*EU).Message().ID), parentApiRouter.Ccurl().WriteCache()) // Merge the write cache to its parent
-	})
+	// common.Foreach(results, func(v **Result) { // Write the transitions back to the parent write cache
+	// 	(*v).WriteTo(uint32(parentApiRouter.GetEU().(*EU).Message().ID), parentApiRouter.Ccurl().WriteCache()) // Merge the write cache to its parent
+	// })
 
 	return results
 }

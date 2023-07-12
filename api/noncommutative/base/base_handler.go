@@ -27,7 +27,7 @@ type BytesHandlers struct {
 func NewNoncommutativeBytesHandlers(api eucommon.EthApiRouter, handler interface{}) *BytesHandlers {
 	return &BytesHandlers{
 		api:       api,
-		connector: apicommon.NewCCurlConnector("/containers/", api, api.Ccurl()),
+		connector: apicommon.NewCCurlConnector("/container", api, api.Ccurl()),
 		handler:   handler,
 	}
 }
@@ -89,7 +89,8 @@ func (this *BytesHandlers) New(caller evmcommon.Address, input []byte) ([]byte, 
 
 // get the number of elements in the container
 func (this *BytesHandlers) length(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	if length, successful, _ := this.Length(this.connector.Key(caller)); successful {
+	path := this.connector.Key(caller)
+	if length, successful, _ := this.Length(path); successful {
 		if encoded, err := abi.Encode(uint256.NewInt(length)); err == nil {
 			return encoded, true, 0
 		}

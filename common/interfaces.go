@@ -31,6 +31,8 @@ type EthApiRouter interface {
 	GetReserved() interface{}
 	SetReserved(interface{})
 
+	CheckRuntimeConstrains() bool
+
 	Depth() uint8
 	AddLog(key, value string)
 	Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64, blockhash evmcommon.Hash) (bool, []byte, bool, int64)

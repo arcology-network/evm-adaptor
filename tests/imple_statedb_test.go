@@ -8,6 +8,7 @@ import (
 
 	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
 	concurrenturl "github.com/arcology-network/concurrenturl"
+	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	ccapi "github.com/arcology-network/vm-adaptor/api"
@@ -18,7 +19,7 @@ import (
 func TestStateDBV2GetNonexistBalance(t *testing.T) {
 	db := cachedstorage.NewDataStore()
 	// meta:= commutative.NewPath()
-	db.Inject((&concurrenturl.Platform{}).Eth10Account(), commutative.NewPath())
+	db.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, commutative.NewPath())
 	url := concurrenturl.NewConcurrentUrl(db)
 
 	api := ccapi.NewAPI(url)
@@ -44,7 +45,7 @@ func TestStateDBV2GetNonexistBalance(t *testing.T) {
 func TestStateDBV2GetNonexistCode(t *testing.T) {
 	db := cachedstorage.NewDataStore()
 	meta := commutative.NewPath()
-	db.Inject((&concurrenturl.Platform{}).Eth10Account(), meta)
+	db.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, meta)
 	url := concurrenturl.NewConcurrentUrl(db)
 
 	api := ccapi.NewAPI(url)
@@ -70,7 +71,7 @@ func TestStateDBV2GetNonexistCode(t *testing.T) {
 func TestStateDBV2GetNonexistStorageState(t *testing.T) {
 	db := cachedstorage.NewDataStore()
 	meta := commutative.NewPath()
-	db.Inject((&concurrenturl.Platform{}).Eth10Account(), meta)
+	db.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, meta)
 	url := concurrenturl.NewConcurrentUrl(db)
 
 	api := ccapi.NewAPI(url)

@@ -24,7 +24,7 @@ type U256CumulativeHandlers struct {
 func NewU256CumulativeHandlers(api eucommon.EthApiRouter) *U256CumulativeHandlers {
 	return &U256CumulativeHandlers{
 		api:       api,
-		connector: apicommon.NewCCurlConnector("/containers/", api, api.Ccurl()),
+		connector: apicommon.NewCCurlConnector("/container", api, api.Ccurl()),
 	}
 }
 
@@ -40,30 +40,28 @@ func (this *U256CumulativeHandlers) Call(caller, callee [20]byte, input []byte, 
 	case [4]byte{0x1c, 0x64, 0x49, 0x9c}:
 		return this.new(caller, input[4:])
 
-	case [4]byte{0xee, 0xb8, 0xa8, 0xd3}:
+	case [4]byte{0x59, 0xe0, 0x2d, 0xd7}: // 59 e0 2d d7
 		return this.peek(caller, input[4:])
 
 	case [4]byte{0x6d, 0x4c, 0xe6, 0x3c}:
 		return this.get(caller, input[4:])
 
-	case [4]byte{0x65, 0x83, 0x52, 0x0e}:
+	case [4]byte{0xf8, 0x89, 0x79, 0x45}: // f8 89 79 45
 		return this.min(caller, input[4:])
 
-	case [4]byte{0xaa, 0x11, 0xc9, 0x26}:
+	case [4]byte{0x6a, 0xc5, 0xdb, 0x19}:
 		return this.max(caller, input[4:])
 
-	case [4]byte{0xaf, 0xc9, 0xfc, 0x46}:
+	case [4]byte{0x10, 0x03, 0xe2, 0xd2}: // 10 03 e2 d2
 		return this.add(caller, input[4:])
 
-	case [4]byte{0xd8, 0x94, 0x8b, 0x09}:
-		return this.sub(caller, input[4:])
+	case [4]byte{0x27, 0xee, 0x58, 0xa6}:
+		return this.sub(caller, input[4:]) //27 ee 58 a6
 	}
 	return []byte{}, false, 0
 }
 
 func (this *U256CumulativeHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	id := this.api.UUID()
-
 	txIndex := uint32(this.api.GetEU().(*execution.EU).Message().ID)
 	if !this.connector.New(txIndex, types.Address(codec.Bytes20(caller).Hex())) { // A new container
 		return []byte{}, false, 0
@@ -83,7 +81,7 @@ func (this *U256CumulativeHandlers) new(caller evmcommon.Address, input []byte) 
 	if _, err := this.api.Ccurl().Write(txIndex, key, newU256, true); err != nil {
 		return []byte{}, false, 0
 	}
-	return id, true, 0
+	return []byte{}, true, 0
 }
 
 func (this *U256CumulativeHandlers) get(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
@@ -138,7 +136,7 @@ func (this *U256CumulativeHandlers) set(caller evmcommon.Address, input []byte, 
 		return []byte{}, false, 0
 	}
 
-	delta, err := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
+	delta, err := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
 	if err != nil {
 		return []byte{}, false, 0
 	}

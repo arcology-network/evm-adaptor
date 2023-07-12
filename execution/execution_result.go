@@ -24,11 +24,19 @@ type Result struct {
 func (this *Result) WriteTo(newTxIdx uint32, targetCache *indexer.WriteCache) {
 	transitions := []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(TransitionFilter{Err: this.Err}))
 
-	newPathTrans := common.MoveIf(&transitions, func(v ccurlinterfaces.Univalue) bool {
+	newPathCreations := common.MoveIf(&transitions, func(v ccurlinterfaces.Univalue) bool {
 		return common.IsPath(*v.GetPath()) && !v.Preexist() // Move new path creation transitions
 	})
 
-	common.Foreach(newPathTrans, func(v *ccurlinterfaces.Univalue) {
+	// indexer.Univalues(newPathCreations).Print()
+	// fmt.Println(" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ", len(newPathCreations))
+	// newPathCreations = indexer.Univalues(indexer.Sorter(newPathCreations))
+	// indexer.Univalues(newPathCreations).Print()
+	// fmt.Println(" -------------------------------------------------------- ", len(newPathCreations))
+
+	// Not necessary at the moment, but good for the future if multiple level containers are available
+	newPathCreations = indexer.Univalues(indexer.Sorter(newPathCreations))
+	common.Foreach(newPathCreations, func(v *ccurlinterfaces.Univalue) {
 		(*v).SetTx(newTxIdx)      // use the parent tx index instead
 		(*v).WriteTo(targetCache) // Write back to the parent writecache
 	})

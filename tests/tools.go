@@ -19,6 +19,7 @@ import (
 	"github.com/arcology-network/evm/crypto"
 	"github.com/arcology-network/evm/params"
 
+	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	ccapi "github.com/arcology-network/vm-adaptor/api"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/compiler"
@@ -121,7 +122,7 @@ func MainTestConfig() *execution.Config {
 
 func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concurrenturl.ConcurrentUrl, []interfaces.Univalue) {
 	persistentDB := cachedstorage.NewDataStore()
-	persistentDB.Inject((&concurrenturl.Platform{}).Eth10Account(), commutative.NewPath())
+	persistentDB.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, commutative.NewPath())
 	db := ccurlstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
