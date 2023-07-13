@@ -3,6 +3,7 @@ package common
 
 import (
 	"github.com/arcology-network/concurrenturl"
+	"github.com/arcology-network/concurrenturl/interfaces"
 	"github.com/arcology-network/evm/common"
 
 	evmcommon "github.com/arcology-network/evm/common"
@@ -22,7 +23,8 @@ type EthApiRouter interface {
 	New(*concurrenturl.ConcurrentUrl, interface{}) EthApiRouter
 	Coinbase() evmcommon.Address
 
-	Handlers() *map[[20]byte]ApiCallHandler
+	StateFilter() StateFilter
+
 	SetEU(interface{})
 	GetEU() interface{}
 	VM() *vm.EVM
@@ -40,6 +42,12 @@ type EthApiRouter interface {
 	GetSerialNum(int) uint64
 	UUID() []byte
 	ElementUID() []byte
+}
+
+type StateFilter interface {
+	Raw() []interfaces.Univalue
+	ByType() ([]interfaces.Univalue, []interfaces.Univalue)
+	AddToIgnore(addr string)
 }
 
 type ILog interface {

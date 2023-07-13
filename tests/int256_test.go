@@ -35,11 +35,11 @@ func TestContractNoncommutativeInt256(t *testing.T) {
 	}
 
 	receipt, _, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
-	_, transitions := eu.Api().Ccurl().ExportAll()
+	_, transitions := eu.Api().StateFilter().ByType()
 
 	// msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
 	// receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg)) // Execute it
-	// _, transitions := eu.Api().Ccurl().ExportAll()
+	// _, transitions := eu.Api().StateFilter().ByType()
 	// ---------------
 
 	// t.Log("\n" + FormatTransitions(accesses))
@@ -73,11 +73,11 @@ func TestNoncommutativeInt256N(t *testing.T) {
 	}
 
 	receipt, _, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
-	_, transitions := eu.Api().Ccurl().ExportAll()
+	_, transitions := eu.Api().StateFilter().ByType()
 
 	// msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
 	// receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg)) // Execute it
-	// _, transitions := eu.Api().Ccurl().ExportAll()
+	// _, transitions := eu.Api().StateFilter().ByType()
 	// ---------------
 
 	// t.Log("\n" + FormatTransitions(accesses))

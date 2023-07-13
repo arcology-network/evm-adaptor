@@ -13,7 +13,6 @@ import (
 	cumulativeu256 "github.com/arcology-network/vm-adaptor/api/commutative/u256"
 	"github.com/arcology-network/vm-adaptor/api/parallel"
 	runtime "github.com/arcology-network/vm-adaptor/api/runtime"
-	"github.com/arcology-network/vm-adaptor/api/threading"
 	execution "github.com/arcology-network/vm-adaptor/execution"
 
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
@@ -35,6 +34,8 @@ type API struct {
 	ccurl       *concurrenturl.ConcurrentUrl
 
 	execResult *execution.Result
+
+	filter eucommon.StateFilter
 }
 
 func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
@@ -46,13 +47,13 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 		execResult:  &execution.Result{},
 		serialNums:  [4]uint64{},
 	}
+	api.filter = NewExportFilter(api)
 
 	handlers := []eucommon.ApiCallHandler{
 		parallel.NewParallelHandler(api),
 		noncommutativeBytes.NewNoncommutativeBytesHandlers(api, nil),
 		cumulativeu256.NewU256CumulativeHandlers(api),
 		// cumulativei256.NewInt256CumulativeHandlers(api),
-		threading.NewThreadingHandler(api),
 		runtime.NewRuntimeHandler(api),
 	}
 
@@ -73,7 +74,6 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 func (this *API) New(ccurl *concurrenturl.ConcurrentUrl, schedule interface{}) eucommon.EthApiRouter {
 	api := NewAPI(ccurl)
 	api.depth = this.depth + 1
-
 	return api
 }
 
@@ -82,10 +82,11 @@ func (this *API) CheckRuntimeConstrains() bool { // Execeeds the max recursion d
 		atomic.AddUint64(&eucommon.TotalSubProcesses, 1) <= eucommon.MAX_SUB_PROCESSES
 }
 
-func (this *API) Handlers() *map[[20]byte]eucommon.ApiCallHandler { return &this.handlerDict }
-func (this *API) IsLocal(txID uint32) bool                        { return txID == ccurlcommon.SYSTEM } //A local tx
-func (this *API) GetReserved() interface{}                        { return this.reserved }
-func (this *API) SetReserved(reserved interface{})                { this.reserved = reserved }
+func (this *API) StateFilter() eucommon.StateFilter { return this.filter }
+
+func (this *API) IsLocal(txID uint32) bool         { return txID == ccurlcommon.SYSTEM } //A local tx
+func (this *API) GetReserved() interface{}         { return this.reserved }
+func (this *API) SetReserved(reserved interface{}) { this.reserved = reserved }
 
 func (this *API) Depth() uint8                { return this.depth }
 func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }

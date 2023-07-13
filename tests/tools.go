@@ -2,6 +2,7 @@ package tests
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 
@@ -9,6 +10,7 @@ import (
 	commontypes "github.com/arcology-network/common-lib/types"
 	concurrenturl "github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/commutative"
+	"github.com/arcology-network/concurrenturl/indexer"
 	"github.com/arcology-network/concurrenturl/interfaces"
 	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
@@ -53,7 +55,7 @@ import (
 // 	}
 // 	msg := core.NewMessage(owner, nil, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
 // 	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{byte(nonce + 1), byte(nonce + 1), byte(nonce + 1)}), uint32(nonce+1), &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg))
-// 	_, transitions := eu.Api().Ccurl().ExportAll()
+// 	_, transitions := eu.Api().StateFilter().ByType()
 
 // 	return transitions, receipt, err
 // }
@@ -65,7 +67,7 @@ import (
 // 	}
 // 	msg := core.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
 // 	receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), uint32(nonce+1), &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg))
-// 	accesses, transitions := eu.Api().Ccurl().ExportAll()
+// 	accesses, transitions := eu.Api().StateFilter().ByType()
 // 	return accesses, transitions, receipt, err
 // }
 
@@ -87,7 +89,7 @@ import (
 // 	}
 // 	msg := core.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
 // 	receipt, _, _ := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), uint32(nonce+1), &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg))
-// 	_, transitions := eu.Api().Ccurl().ExportAll()
+// 	_, transitions := eu.Api().StateFilter().ByType()
 
 // 	return transitions, receipt
 // }
@@ -99,7 +101,7 @@ import (
 // 	}
 // 	msg := core.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
 // 	receipt, _, _ := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), uint32(nonce+1), &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg))
-// 	accesses, transitions := eu.Api().Ccurl().ExportAll()
+// 	accesses, transitions := eu.Api().StateFilter().ByType()
 
 // 	return accesses, transitions, receipt
 // }
@@ -137,8 +139,9 @@ func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concu
 	statedb.CreateAccount(eucommon.RUNTIME_HANDLER)
 	// statedb.AddBalance(eucommon.RUNTIME_HANDLER, new(big.Int).SetUint64(1e18))
 
-	// transitions := url.Export()
-	_, transitions := url.ExportAll()
+	_, transitions := api.StateFilter().ByType()
+	// indexer.Univalues(transitionsFiltered).Print()
+
 	// fmt.Println("\n" + eucommon.FormatTransitions(transitions))
 
 	// Deploy.
@@ -175,13 +178,24 @@ func InvokeTestContract(targetPath, file, version, contractName, funcName string
 	}
 
 	receipt, _, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
+
 	_, transitions := eu.Api().Ccurl().ExportAll()
+	indexer.Univalues(transitions).Print()
+	fmt.Println("|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
+	_, transitionsFiltered := eu.Api().StateFilter().ByType()
+	indexer.Univalues(transitionsFiltered).Print()
 
 	// msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, checkNonce) // Build the message
 	// receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg))       // Execute it
-	// _, transitions := eu.Api().Ccurl().ExportAll()
+	// _, transitions := eu.Api().StateFilter().ByType()
 
-	eu.Api().Ccurl().Import(transitions)
+	// _, transitions := url.ExportAll()
+	// indexer.Univalues(transitions).Print()
+	// fmt.Println("|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
+	// _, transitionsFiltered := api.StateFilter().ByType()
+	// indexer.Univalues(transitionsFiltered).Print()
+
+	eu.Api().Ccurl().Import(transitionsFiltered)
 	eu.Api().Ccurl().Sort()
 	eu.Api().Ccurl().Commit([]uint32{1})
 
@@ -214,11 +228,11 @@ func InvokeTestContract(targetPath, file, version, contractName, funcName string
 
 	var execResult *evmcore.ExecutionResult
 	receipt, execResult, err = eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
-	// _, transitions := eu.Api().Ccurl().ExportAll()
+	// _, transitions := eu.Api().StateFilter().ByType()
 
 	// msg = core.NewMessage(eucommon.Alice, &contractAddress, 1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
 	// receipt, execResult, _ := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg))
-	// _, transitions = eu.Api().Ccurl().ExportAll()
+	// _, transitions = eu.Api().StateFilter().ByType()
 
 	if receipt.Status != 1 {
 		return execResult.Err, eu

@@ -39,7 +39,7 @@ func TestContractAddress(t *testing.T) {
 	}
 
 	receipt, _, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
-	_, transitions := eu.Api().Ccurl().ExportAll()
+	_, transitions := eu.Api().StateFilter().ByType()
 
 	// ---------------
 

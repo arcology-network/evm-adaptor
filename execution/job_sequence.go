@@ -56,11 +56,6 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapsh
 
 	this.ApiRouter = this.ApiRouter.New(ccurl, this.ApiRouter.Schedule())
 
-	// handlerDict := this.ApiRouter.Handlers() // *map[[20]byte]ApiCallHandler
-	// if handler, ok := (*handlerDict)[(&ParallelHandler{}).Address()]; ok {
-	// 	this.BytesHandlers
-	// }
-
 	statedb := eth.NewImplStateDB(this.ApiRouter)                       // Eth state DB
 	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, uint32(stdMsg.ID)) // tx hash , block hash and tx index
 
@@ -79,12 +74,12 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapsh
 			NewEVMTxContext(*stdMsg.Native),
 		)
 
-	// indexer.Univalues(this.ApiRouter.Ccurl().Export()).Print()
+	indexer.Univalues(this.ApiRouter.StateFilter().Raw()).Print()
 
 	return &Result{
 		TxIndex:     uint32(stdMsg.ID),
 		TxHash:      common.IfThenDo1st(receipt != nil, func() evmcommon.Hash { return receipt.TxHash }, evmcommon.Hash{}),
-		Transitions: this.ApiRouter.Ccurl().Export(), // Transitions + Accesses
+		Transitions: this.ApiRouter.StateFilter().Raw(), // Transitions + Accesses
 		Err:         common.IfThenDo1st(prechkErr == nil, func() error { return evmResult.Err }, prechkErr),
 
 		Receipt:   receipt,

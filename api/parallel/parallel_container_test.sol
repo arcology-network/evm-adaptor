@@ -233,6 +233,28 @@ contract RecursiveParallelizerOnNativeArrayTest {
     }  
 }
 
+contract ParaFixedLengthWithConflictRemovedByLocalizerTest {
+    Bool container = new Bool();
+    function call() public {
+        Parallel mp = new Parallel(1);
+        mp.push(abi.encode(9999999, address(this), abi.encodeWithSignature("worker()"))); // Only one will go through
+        mp.push(abi.encode(9999999, address(this), abi.encodeWithSignature("worker()"))); // Only one will go through
+        mp.run();
+        require(container.length() == 1);
+    } 
+
+    function worker() public { //9e c6 69 25
+        Parallel mp2 = new Parallel(1); 
+        mp2.push(abi.encode(11111111, address(this), abi.encodeWithSignature("appender()")));
+        mp2.run();              
+    }  
+
+    function appender() public { 
+        container.push(true);
+    }  
+}
+
+
 contract RecursiveParallelizerOnContainerTest {
     uint256[2] results;
     Bool container = new Bool();
@@ -430,4 +452,3 @@ contract MaxRecursiveDepthOffLimitTest {
         container.push(true);              
     }    
 }
-

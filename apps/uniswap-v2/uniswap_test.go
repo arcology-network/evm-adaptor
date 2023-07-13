@@ -209,7 +209,7 @@ func TestUniswapFunctionTest(t *testing.T) {
 // 	}
 // 	msg := core.NewMessage(owner, nil, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
 // 	receipt, _, _ := eu.Run(evmcommon.BytesToHash([]byte{byte(nonce + 1), byte(nonce + 1), byte(nonce + 1)}), int(nonce+1), &msg, vmadaptor.NewEVMBlockContext(config), vmadaptor.NewEVMTxContext(msg))
-// 	_, transitions := eu.Api().Ccurl().ExportAll()
+// 	_, transitions := eu.Api().StateFilter().ByType()
 
 // 	return transitions, receipt
 // }
@@ -221,7 +221,7 @@ func TestUniswapFunctionTest(t *testing.T) {
 // 	}
 // 	msg := core.NewMessage(*from, to, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, checkNonce)
 // 	receipt, _, _ := eu.Run(evmcommon.BytesToHash([]byte{byte((nonce + 1) / 65536), byte((nonce + 1) / 256), byte((nonce + 1) % 256)}), int(nonce+1), &msg, vmadaptor.NewEVMBlockContext(config), vmadaptor.NewEVMTxContext(msg))
-// 	_, transitions := eu.Api().Ccurl().ExportAll()
+// 	_, transitions := eu.Api().StateFilter().ByType()
 
 // 	return transitions, receipt
 // }
