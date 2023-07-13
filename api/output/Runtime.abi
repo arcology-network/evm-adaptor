@@ -1,1 +1,0 @@
-[{"inputs":[{"internalType":"string","name":"property","type":"string"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"uuid","outputs":[{"internalType":"bytes","name":"args","type":"bytes"}],"stateMutability":"nonpayable","type":"function"}]
