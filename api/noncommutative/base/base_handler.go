@@ -45,7 +45,7 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 
 	switch signature {
 	case [4]byte{0xcd, 0xbf, 0x60, 0x8d}:
-		return this.New(caller, input)
+		return this.New(caller, input[4:])
 
 	case [4]byte{0x59, 0xe0, 0x2d, 0xd7}:
 		return this.Peek(caller, input[4:])
@@ -86,11 +86,12 @@ func (this *BytesHandlers) New(caller evmcommon.Address, input []byte) ([]byte, 
 		types.Address(codec.Bytes20(caller).Hex()),            // Main contract address
 	)
 
-	if this.api.VM().ArcologyNetworkAPIs.IsInConstructor() {
+	local, err := abi.DecodeTo(input, 0, bool(false), 1, 32)
+	if err == nil && local && this.api.VM().ArcologyNetworkAPIs.IsInConstructor() {
 		this.api.StateFilter().AddToIgnore(hex.EncodeToString(caller[:]))
 		return []byte{}, true, 0
 	}
-	// return []byte{}, false, 0
+	// // return []byte{}, false, 0
 
 	return caller[:], connected, 0 // Create a new container
 }

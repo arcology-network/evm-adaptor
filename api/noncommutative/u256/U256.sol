@@ -7,7 +7,7 @@ import "../base/Base.sol";
 contract U256 {
     Base base;
 
-    constructor() {  base = new Base(address(0x84)); }
+    constructor() {  base = new Base(address(0x84), false); }
     function length() public returns(uint256) { return base.length();}
 
     function pop() public returns(uint256) { // 80 26 32 97

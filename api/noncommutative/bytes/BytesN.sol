@@ -4,9 +4,9 @@ pragma solidity ^0.8.19;
 import "./Bytes.sol";
 
 contract BytesN {
-    Bytes array = new Bytes();
-    constructor  (uint length, bytes memory initialV) public {  
-        for (uint i = 0; i < length; i ++) {
+    Bytes array = new Bytes(address(0x84), false);
+    constructor (uint256 size, bytes memory initialV) {  
+        for (uint i = 0; i < size; i ++) {
             array.push(initialV);
         }
     }

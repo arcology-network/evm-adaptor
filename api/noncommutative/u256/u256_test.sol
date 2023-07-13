@@ -102,7 +102,7 @@ contract U256ParallelTest {
         container.push(uint256(30));
         require(container.length() == 3);
 
-        Parallel mp = new Parallel(1);
+        Parallel mp = new Parallel(1, false);
         mp.push(abi.encode(1000000, address(this), abi.encodeWithSignature("push(uint256)", 41)));
         mp.push(abi.encode(1000000, address(this), abi.encodeWithSignature("push(uint256)", 51)));
         require(mp.length() == 2);
@@ -172,7 +172,7 @@ contract ArrayParallelTest {
     }
 
     function call() public  {
-        Parallel mp = new Parallel(1);
+        Parallel mp = new Parallel(1, false);
         push(0, 11);
         push(0, 12);
 

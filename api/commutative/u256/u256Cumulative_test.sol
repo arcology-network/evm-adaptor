@@ -44,7 +44,7 @@ contract CumulativeU256Test {
 
 // contract ThreadingCumulativeU256 {
 // //    U256Cumulative cumulative = new U256Cumulative(0, 100); 
-//     Parallel mp = new Parallel(1);
+//     Parallel mp = new Parallel(1, false);
 //     constructor() {
 //         // require(cumulative.peek() == 0);
 //         // cumulative.add(1);
@@ -55,7 +55,7 @@ contract CumulativeU256Test {
 //     function call() public {
 //         // require(cumulative.peek() == 0);
 
-//         // Parallel mp = new Parallel(1);
+//         // Parallel mp = new Parallel(1, false);
 //         // mp.push(abi.encode(200000, address(this), abi.encodeWithSignature("add(uint256)", 2)));
 
 //         // mp.push(abi.encode(200000, address(this), abi.encodeWithSignature("add(uint256)", 2)));   
@@ -91,7 +91,7 @@ contract CumulativeU256Test {
 //     }
 
 //     // function call1() public {
-//     //     Parallel mp = new Parallel(1);
+//     //     Parallel mp = new Parallel(1, false);
 //     //     mp.push(abi.encode(200000, address(this), abi.encodeWithSignature("add(uint256)", 2)));
 //     //     mp.run();
 //     //     require(cumulative.get() == 2);   
@@ -118,7 +118,7 @@ contract CumulativeU256Test {
 // contract ThreadingCumulativeU256SameMpMulti {
 //     U256Cumulative cumulative = new U256Cumulative(0, 100);     
 //     function call() public {
-//         Parallel mp1 = new Parallel(2);
+//         Parallel mp1 = new Parallel(2, false);
 //         mp1.push(abi.encode(200000, address(this), abi.encodeWithSignature("add(uint256)", 2)));
 //         mp1.run();
 //         mp1.clear();
@@ -146,17 +146,17 @@ contract CumulativeU256Test {
 // contract ThreadingCumulativeU256DifferentMPMulti {
 //     U256Cumulative cumulative = new U256Cumulative(0, 100);     
 //     function call() public {
-//         // Parallel mp1 = new Parallel(2);
+//         // Parallel mp1 = new Parallel(2, false);
 //         // mp1.push(abi.encode(200000, address(this), abi.encodeWithSignature("add(uint256)", 2)));
 //         // mp1.run();
 //         // mp1.clear();
 
-//         // Parallel mp2 = new Parallel(1);
+//         // Parallel mp2 = new Parallel(1, false);
 //         // mp2.push(abi.encode(200000, address(this), abi.encodeWithSignature("add(uint256)", 2)));
 //         // mp2.run(); 
 //         // mp2.clear(); 
 
-//         // Parallel mp3 = new Parallel(1);
+//         // Parallel mp3 = new Parallel(1, false);
 //         // mp3.push(abi.encode(200000, address(this), abi.encodeWithSignature("sub(uint256)", 2)));
 //         // mp3.run();   
 

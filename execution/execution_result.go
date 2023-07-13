@@ -3,6 +3,8 @@ package execution
 import (
 	// "github.com/arcology-network/common-lib/codec"
 
+	"fmt"
+
 	common "github.com/arcology-network/common-lib/common"
 	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
@@ -24,15 +26,15 @@ type Result struct {
 func (this *Result) WriteTo(newTxIdx uint32, targetCache *indexer.WriteCache) {
 	transitions := []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(TransitionFilter{Err: this.Err}))
 
+	// Move new path creation transitions
 	newPathCreations := common.MoveIf(&transitions, func(v ccurlinterfaces.Univalue) bool {
-		return common.IsPath(*v.GetPath()) && !v.Preexist() // Move new path creation transitions
+		return common.IsPath(*v.GetPath()) && !v.Preexist()
 	})
 
-	// indexer.Univalues(newPathCreations).Print()
-	// fmt.Println(" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ", len(newPathCreations))
-	// newPathCreations = indexer.Univalues(indexer.Sorter(newPathCreations))
-	// indexer.Univalues(newPathCreations).Print()
-	// fmt.Println(" -------------------------------------------------------- ", len(newPathCreations))
+	// Remove changes to the existing paths
+	transitions = common.RemoveIf(&transitions, func(v ccurlinterfaces.Univalue) bool {
+		return common.IsPath(*v.GetPath())
+	})
 
 	// Not necessary at the moment, but good for the future if multiple level containers are available
 	newPathCreations = indexer.Univalues(indexer.Sorter(newPathCreations))
@@ -45,6 +47,15 @@ func (this *Result) WriteTo(newTxIdx uint32, targetCache *indexer.WriteCache) {
 		(*v).SetTx(newTxIdx)      // use the parent tx index instead
 		(*v).WriteTo(targetCache) // Write back to the parent writecache
 	})
+}
+
+func (this *Result) Print() {
+	fmt.Println("BranchID: ", this.BranchID)
+	fmt.Println("TxIndex: ", this.TxIndex)
+	fmt.Println("TxHash: ", this.TxHash)
+	fmt.Println()
+	indexer.Univalues(this.Transitions).Print()
+	fmt.Println("Error: ", this.Err)
 }
 
 type Results []*Result
@@ -63,10 +74,9 @@ func (this Results) SetGroupIDs(BranchID uint32) {
 	})
 }
 
-func (this Results) Detect() *map[uint32]uint64 {
+func (this Results) Detect() arbitrator.Conflicts {
 	if len(this) == 1 {
-		dict := make(map[uint32]uint64)
-		return &dict
+		return arbitrator.Conflicts{}
 	}
 
 	groupIDs := []uint32{}
@@ -79,7 +89,15 @@ func (this Results) Detect() *map[uint32]uint64 {
 	}
 
 	conflicInfo := arbitrator.Conflicts((&arbitrator.Arbitrator{}).Detect(groupIDs, accesseVec))
-	return conflicInfo.ToDict()
+	return conflicInfo
+}
+
+func (this Results) Print() {
+	fmt.Println("Execution Results: ")
+	for _, v := range this {
+		v.Print()
+		fmt.Println()
+	}
 }
 
 // func (this Results) DetectConflict() []*Result {

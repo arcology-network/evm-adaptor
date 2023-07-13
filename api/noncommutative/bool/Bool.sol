@@ -6,7 +6,7 @@ import "../base/Base.sol";
 contract Bool {
     Base base;
 
-    constructor() {  base = new Base(address(0x84)); }
+    constructor() {  base = new Base(address(0x84), false); }
     function length() public returns(uint256) { return base.length();}
 
     function pop() public returns(bool) { 
@@ -25,7 +25,7 @@ contract Bool {
         base.set(abi.encodeWithSignature("set(uint256,bytes)", idx, abi.encode(elem)));        
     }
 
-    function clear() public { // 7a fa 62 38
+    function clear() public { // 7a fa 6 2 38
         base.clear();
     }
 }

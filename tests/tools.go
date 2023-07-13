@@ -181,7 +181,8 @@ func InvokeTestContract(targetPath, file, version, contractName, funcName string
 
 	_, transitions := eu.Api().Ccurl().ExportAll()
 	indexer.Univalues(transitions).Print()
-	fmt.Println("|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
+	fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  Ignore addresses Removed  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+	fmt.Println()
 	_, transitionsFiltered := eu.Api().StateFilter().ByType()
 	indexer.Univalues(transitionsFiltered).Print()
 
