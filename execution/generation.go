@@ -2,7 +2,6 @@ package execution
 
 import (
 	"errors"
-	"fmt"
 
 	common "github.com/arcology-network/common-lib/common"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
@@ -59,15 +58,15 @@ func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []*Result {
 	conflicts := Results(results).Detect()
 	dict := conflicts.ToDict()
 
-	if len(*dict) > 0 {
-		Results(results).Detect()
-		fmt.Println("Warning: Conflict detected!", len(*dict))
-		conflicts.Print()
-	}
+	// if len(*dict) > 0 {
+	// 	Results(results).Detect()
+	// 	fmt.Println("Warning: Conflict detected!", len(*dict))
+	// 	conflicts.Print()
+	// }
 
 	for i := 0; i < len(results); i++ {
 		if _, conflict := (*dict)[results[i].TxIndex]; conflict {
-			results[i].Err = errors.New(ccurlcommon.ERR_ACCESS_CONFLICT)
+			results[i].Err = errors.New(ccurlcommon.WARN_ACCESS_CONFLICT)
 		}
 	}
 

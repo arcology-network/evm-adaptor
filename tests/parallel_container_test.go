@@ -166,11 +166,11 @@ func TestMaxRecursiveDepthOffLimits(t *testing.T) {
 	}
 }
 
-func TestMixedRecursiveMultiprocess(t *testing.T) {
+func TestMixedRecursiveMultiprocessWithConflict(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-	err, _ := InvokeTestContract(targetPath, "parallel/parallel_container_test.sol", "0.8.19", "MixedRecursiveMultiprocessTest", "call()", []byte{}, false)
+	err, _ := InvokeTestContract(targetPath, "parallel/parallel_container_test.sol", "0.8.19", "MixedRecursiveMultiprocessWithConflictTest", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}

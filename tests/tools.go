@@ -2,7 +2,6 @@ package tests
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 
@@ -10,7 +9,6 @@ import (
 	commontypes "github.com/arcology-network/common-lib/types"
 	concurrenturl "github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/commutative"
-	"github.com/arcology-network/concurrenturl/indexer"
 	"github.com/arcology-network/concurrenturl/interfaces"
 	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
@@ -179,22 +177,11 @@ func InvokeTestContract(targetPath, file, version, contractName, funcName string
 
 	receipt, _, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
 
-	_, transitions := eu.Api().Ccurl().ExportAll()
-	indexer.Univalues(transitions).Print()
-	fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  Ignore addresses Removed  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-	fmt.Println()
-	_, transitionsFiltered := eu.Api().StateFilter().ByType()
-	indexer.Univalues(transitionsFiltered).Print()
-
-	// msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, checkNonce) // Build the message
-	// receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg))       // Execute it
-	// _, transitions := eu.Api().StateFilter().ByType()
-
-	// _, transitions := url.ExportAll()
+	// _, transitions := eu.Api().Ccurl().ExportAll()
 	// indexer.Univalues(transitions).Print()
-	// fmt.Println("|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
-	// _, transitionsFiltered := api.StateFilter().ByType()
-	// indexer.Univalues(transitionsFiltered).Print()
+	// fmt.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  Ignore addresses Removed  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+	// fmt.Println()
+	_, transitionsFiltered := eu.Api().StateFilter().ByType()
 
 	eu.Api().Ccurl().Import(transitionsFiltered)
 	eu.Api().Ccurl().Sort()

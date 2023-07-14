@@ -22,7 +22,7 @@ func TestContainerPair(t *testing.T) {
 	project := filepath.Dir(currentPath)
 	targetPath := project + "/api/"
 
-	code, err := compiler.CompileContracts(targetPath, "noncommutative/combo/bytes_bool_test.sol", "0.8.19", "PairTest", false)
+	code, err := compiler.CompileContracts(targetPath, "combo/bytes_bool_test.sol", "0.8.19", "PairTest", false)
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}

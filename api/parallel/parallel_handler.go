@@ -91,7 +91,7 @@ func (this *ParallelHandler) Run(caller [20]byte, input []byte) ([]byte, bool, i
 		return []byte{}, false, fee
 	}
 
-	execution.Results(results).Print()
+	// execution.Results(results).Print()
 	common.Foreach(results, func(v **execution.Result) { // Write the transitions back to the parent write cache
 		(*v).WriteTo(uint32(this.Api().GetEU().(*execution.EU).Message().ID), this.Api().Ccurl().WriteCache()) // Merge the write cache to its parent
 	})

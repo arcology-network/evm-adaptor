@@ -4,33 +4,22 @@ pragma solidity ^0.8.19;
 
 import "../base/Base.sol";
 
-contract String {
-    Base base;
+contract String is Base {
+    constructor() Base(address(0x84), false) {}
 
-    event logMsg(string message);
+    function push(string memory elem) public virtual{ //9e c6 69 25
+        Base.pushBack(abi.encodeWithSignature("push(bytes)", abi.encode(elem)));
+    }    
 
-    constructor() {  base = new Base(address(0x84), false); }
-    function length() public returns(uint256) { return base.length();}
-
-    function pop() public returns(string memory) { 
-        return abi.decode(base.pop(), (string));  
+    function pop() public virtual returns(string memory) { // 80 26 32 97
+        return abi.decode(Base.popBack(), (string));  
     }
 
-    function push(string memory elem) public { 
-       base.push(abi.encodeWithSignature("push(bytes)", abi.encode(elem)));
-    }   
-
-    function get(uint256 idx) public returns(string memory)  { 
-        return abi.decode(base.get(idx), (string));
+    function get(uint256 idx) public virtual returns(string memory)  { // 31 fe 88 d0
+        return abi.decode(Base.getElem(idx), (string));  
     }
 
-    function set(uint256 idx, string memory elem) public {
-        base.set(abi.encodeWithSignature("set(uint256,bytes)", idx, abi.encode(elem)));        
-    }
-    
-    function clear() public { // 7a fa 62 38
-        base.clear();
+    function set(uint256 idx, string memory elem) public { // 7a fa 62 38
+        Base.setElem(abi.encodeWithSignature("set(uint256,bytes)", idx, abi.encode(elem)));     
     }
 }
-
-

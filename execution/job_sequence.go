@@ -2,7 +2,6 @@ package execution
 
 import (
 	"crypto/sha256"
-	"fmt"
 
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/common"
@@ -74,11 +73,12 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapsh
 			NewEVMBlockContext(config),
 			NewEVMTxContext(*stdMsg.Native),
 		)
-	fmt.Println("Raw ")
-	indexer.Univalues(this.ApiRouter.Ccurl().Export()).Print()
 
-	fmt.Println("Filtered")
-	indexer.Univalues(this.ApiRouter.StateFilter().Raw()).Print()
+	// fmt.Println("Raw ")
+	// indexer.Univalues(this.ApiRouter.Ccurl().Export()).Print()
+
+	// fmt.Println("Filtered")
+	// indexer.Univalues(this.ApiRouter.StateFilter().Raw()).Print()
 
 	return &Result{
 		TxIndex:     uint32(stdMsg.ID),

@@ -24,24 +24,24 @@ contract Base {
         return data;  
     } 
 
-    function pop() public virtual returns(bytes memory) { // 80 26 32 97
+    function popBack() public virtual returns(bytes memory) { // 80 26 32 97
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("pop()"));
         require(success);
         return abi.decode(data, (bytes)); 
     }
 
-    function push(bytes memory encoded) public virtual { //9e c6 69 25
+    function pushBack(bytes memory encoded) public virtual { //9e c6 69 25
         (bool success,) = address(API).call(encoded);
         require(success);
     }  
 
-    function get(uint256 idx) public virtual returns(bytes memory) { // 31 fe 88 d0
+    function getElem(uint256 idx) public virtual returns(bytes memory) { // 31 fe 88 d0
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("get(uint256)", idx));
         require(success);
         return abi.decode(data, (bytes));  
     }
 
-    function set(bytes memory encoded) public { // 7a fa 62 38
+    function setElem(bytes memory encoded) public { // 7a fa 62 38
         (bool success,) = address(API).call(encoded);
         require(success);
     }
