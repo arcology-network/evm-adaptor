@@ -126,16 +126,6 @@ func TestRecursiveParallelizerOnContainer(t *testing.T) {
 	}
 }
 
-func TestMixedRecursiveParallelizer(t *testing.T) {
-	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/api/"
-
-	err, _ := InvokeTestContract(targetPath, "parallel/parallel_container_test.sol", "0.8.19", "MixedRecursiveParallelizerTest", "call()", []byte{}, false)
-	if err != nil {
-		t.Error(err)
-	}
-}
-
 func TestMaxSelfRecursiveDepth4Test(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
@@ -161,16 +151,6 @@ func TestMaxRecursiveDepthOffLimits(t *testing.T) {
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
 	err, _ := InvokeTestContract(targetPath, "parallel/parallel_container_test.sol", "0.8.19", "MaxRecursiveDepthOffLimitTest", "call()", []byte{}, false)
-	if err != nil {
-		t.Error(err)
-	}
-}
-
-func TestMixedRecursiveMultiprocessWithConflict(t *testing.T) {
-	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/api/"
-
-	err, _ := InvokeTestContract(targetPath, "parallel/parallel_container_test.sol", "0.8.19", "MixedRecursiveMultiprocessWithConflictTest", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}

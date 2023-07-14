@@ -19,7 +19,7 @@ contract AddressTest {
 
         require(container.get(0) == addr1);
         require(container.get(1) == addr2);
-
+ 
         container.set(0, addr3);
         container.set(1, addr4);
 

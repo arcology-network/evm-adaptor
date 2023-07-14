@@ -11,8 +11,9 @@ contract MixedRecursiveMultiprocessTest {
     U256Cumulative cumulative = new U256Cumulative(0, 100);  
     U256Cumulative cumulative2 = new U256Cumulative(50, 80);  
 
-    Parallel mp = new Parallel(1);
+    Parallel mp;
     function call() public {
+		mp = new Parallel(1);
         cumulative.add(50);
         container.push(true);
         mp.push(abi.encode(9999999, address(this), abi.encodeWithSignature("add()"))); // Only one will go through

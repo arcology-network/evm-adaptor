@@ -11,7 +11,7 @@ import (
 	evmcore "github.com/arcology-network/evm/core"
 
 	"github.com/arcology-network/vm-adaptor/abi"
-	base "github.com/arcology-network/vm-adaptor/api/noncommutative/base"
+	basetype "github.com/arcology-network/vm-adaptor/api/noncommutative/base"
 	execution "github.com/arcology-network/vm-adaptor/execution"
 
 	eucommon "github.com/arcology-network/vm-adaptor/common"
@@ -19,7 +19,7 @@ import (
 
 // APIs under the concurrency namespace
 type ParallelHandler struct {
-	*base.BytesHandlers
+	*basetype.BytesHandlers
 	erros   []error
 	jobseqs []*execution.JobSequence
 }
@@ -29,7 +29,7 @@ func NewParallelHandler(ethApiRouter eucommon.EthApiRouter) *ParallelHandler {
 		erros:   []error{},
 		jobseqs: []*execution.JobSequence{},
 	}
-	handler.BytesHandlers = base.NewNoncommutativeBytesHandlers(ethApiRouter, handler)
+	handler.BytesHandlers = basetype.NewBaseTypeHandlers(ethApiRouter, handler)
 	return handler
 }
 

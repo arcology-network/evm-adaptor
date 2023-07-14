@@ -2,9 +2,8 @@
 pragma solidity ^0.8.19;
 
 contract Runtime {
-    // address constant private API = address(0xa0); 
-    constructor (string memory property) {
-        address(0xa0).call(abi.encodeWithSignature("set(string)", property));     
+    constructor (bytes memory property) {      // address constant private API = address(0xa0); 
+        address(0xa0).call(property);     
     }
 
     function uuid() public returns(bytes memory args) {
@@ -13,15 +12,6 @@ contract Runtime {
     }
 }
 
-contract Localizer is Runtime{ 
-    constructor() Runtime("local=true"){}
+contract Localizer is Runtime { 
+    constructor() Runtime(abi.encodeWithSignature("reset()")){}
 }
-
-
-// library runtimelib {
-//     address constant private API = address(0xa0); 
-//     function set(string calldata property) public returns(bool) {
-//         (bool ok,) = address(API).call(abi.encodeWithSignature("set(string)", property));     
-//         return ok;
-//     }
-// }
