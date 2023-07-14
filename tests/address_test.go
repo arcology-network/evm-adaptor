@@ -14,7 +14,7 @@ import (
 	execution "github.com/arcology-network/vm-adaptor/execution"
 )
 
-func TestContractAddress(t *testing.T) {
+func TestAddressContainer(t *testing.T) {
 	eu, config, _, _, _ := NewTestEU()
 
 	// ================================== Compile the contract ==================================
@@ -39,12 +39,12 @@ func TestContractAddress(t *testing.T) {
 	}
 
 	receipt, _, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
-	_, transitions := eu.Api().StateFilter().ByType()
+	// _, transitions := eu.Api().StateFilter().ByType()
 
 	// ---------------
 
 	// t.Log("\n" + FormatTransitions(accesses))
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	// t.Log(receipt)
 	// contractAddress := receipt.ContractAddress
 	if receipt.Status != 1 || err != nil {

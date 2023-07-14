@@ -35,21 +35,6 @@ func NewParallelHandler(ethApiRouter eucommon.EthApiRouter) *ParallelHandler {
 
 func (this *ParallelHandler) Address() [20]byte { return eucommon.PARALLEL_HANDLER }
 
-// func (this *ParallelHandler) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
-// 	signature := [4]byte{}
-// 	copy(signature[:], input)
-
-// 	switch signature {
-// 	case [4]byte{0x95, 0x07, 0xd3, 0x9a}: // 95 07 d3 9a
-// 		return this.get(caller, input[4:])
-// 	}
-// 	return this.BytesHandlers.Call(caller, callee, input, origin, nonce)
-// }
-
-// func (this *ParallelHandler) get(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-// 	return []byte{}, false, 0
-// }
-
 func (this *ParallelHandler) Run(caller [20]byte, input []byte) ([]byte, bool, int64) {
 	atomic.AddUint64(&eucommon.TotalSubProcesses, 1)
 	if !this.Api().CheckRuntimeConstrains() {

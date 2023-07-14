@@ -1,7 +1,6 @@
 package concurrentcontainer
 
 import (
-	"encoding/hex"
 	"math"
 
 	"github.com/arcology-network/common-lib/codec"
@@ -86,11 +85,11 @@ func (this *BytesHandlers) New(caller evmcommon.Address, input []byte) ([]byte, 
 		types.Address(codec.Bytes20(caller).Hex()),            // Main contract address
 	)
 
-	local, err := abi.DecodeTo(input, 0, bool(false), 1, 32)
-	if err == nil && local && this.api.VM().ArcologyNetworkAPIs.IsInConstructor() {
-		this.api.StateFilter().AddToIgnore(hex.EncodeToString(caller[:]))
-		return []byte{}, true, 0
-	}
+	// local, err := abi.DecodeTo(input, 0, bool(false), 1, 32)
+	// if err == nil && local && this.api.VM().ArcologyNetworkAPIs.IsInConstructor() {
+	// 	this.api.StateFilter().AddToAutoReversion(hex.EncodeToString(caller[:]))
+	// 	return []byte{}, true, 0
+	// }
 	// // return []byte{}, false, 0
 
 	return caller[:], connected, 0 // Create a new container

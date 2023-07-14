@@ -6,54 +6,66 @@ import "../noncommutative/bool/Bool.sol";
 import "../commutative/u256/U256Cumulative.sol";
 
 
-contract Deployee is Localizer{ 
-    uint256[2] public num ;    
-    constructor() {
-        num[0] = 11;
-        num[1] = 12;
-        require(
-            num[0] == 11 && 
-            num[1] == 12        
-        );
-    }    
-
-    function check() public returns(bool){
-        return (num[0] == 11);
+contract ResettableDeployer {
+    // uint256 public immutable a;
+    // This is a valid constructor
+    TestResettable resettable;
+    constructor () {
+        resettable = new TestResettable();
+        resettable.set();
+    }
+    
+    // This is invalid and will not compile
+    function afterCheck () public {
+        resettable.afterCheck();
     }
 }
 
-contract NonLocalizedDeployee { 
-    uint256[2] public num ;    
-    constructor() {
-        num[0] = 11;
-        num[1] = 12;
-        require(
-            num[0] == 11 && 
-            num[1] == 12        
-        );
-    }    
+contract TestResettable is Resettable {
+    uint256 [2] public array; 
+    constructor () {
+        array[0] = 10;
+        array[1] = 11;     
+    }
 
-    function check() public returns(bool){
-        return (num[0] == 11);
+    function set() public {
+        require(array[0] == 10);
+        require(array[1] == 11);   
+    }
+
+    function afterCheck() public {
+        require(array[0] == 10);
+        require(array[1] == 11);   
+        reset();  
+
+        require(array[0] == 10);
+        require(array[1] == 11);   
+        
+        array[0] = 100;
+        array[1] = 111;
+   
+        require(array[0] == 100);
+        require(array[1] == 111);
+        reset();  
+
+        require(array[0] == 10);
+        require(array[1] == 11);  
     }
 }
 
 
-contract Deployer { 
-   Deployee localizedDeployee;
-   NonLocalizedDeployee nonLocalizedDeployee; 
 
-   constructor() {
-       localizedDeployee = new Deployee();
-       nonLocalizedDeployee = new NonLocalizedDeployee();
 
-       require(localizedDeployee.check());
-       require(nonLocalizedDeployee.check());    
-  }
 
-  function afterCheck() public {
-    // localizedDeployee.check();
-    require(localizedDeployee.check());
-    require(nonLocalizedDeployee.check());
-  }
-}
+// contract TestImmutable {
+//     // uint256 public immutable a;
+//     // This is a valid constructor
+//     constructor () {
+//         address(0xa0).call(abi.encodeWithSignature("Reset()"));
+//     }
+    
+//     // This is invalid and will not compile
+//     function afterCheck () public {
+//         address(0xa0).call(abi.encodeWithSignature("Reset()"));
+//     }
+// }

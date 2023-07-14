@@ -5,9 +5,9 @@ contract Base {
     address public immutable API;// = address(0x84);    
     event logMsg(string message);
 
-    constructor (address addr, bool local) {
+    constructor (address addr) {
         API = addr;
-        (bool success,) = address(API).call(abi.encodeWithSignature("new()", local));       
+        (bool success,) = address(API).call(abi.encodeWithSignature("new()", true));       
         require(success);
     }
 

@@ -55,7 +55,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 		t.Error("Error: Deploy KittyCore failed:", err)
 		return
 	}
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	coreAddress := receipt.ContractAddress
 	t.Log(coreAddress)
@@ -67,7 +67,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 		t.Error("Error: Deploy SaleClockAuction failed:", err)
 		return
 	}
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	saleAddress := receipt.ContractAddress
 	t.Log(saleAddress)
@@ -79,7 +79,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 		t.Error("Error: Deploy SiringClockAuction failed:", err)
 		return
 	}
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	sireAddress := receipt.ContractAddress
 	t.Log(sireAddress)
@@ -91,7 +91,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 		t.Error("Error: Deploy GeneScience failed:", err)
 		return
 	}
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	geneAddress := receipt.ContractAddress
 	t.Log(geneAddress)
@@ -101,35 +101,35 @@ func TestParallelKittiesPerf(t *testing.T) {
 	// Call setSaleAuctionAddress.
 	eu, config = tests.Prepare(db, 10000004, transitions, []uint32{4})
 	acc, transitions, receipt := tests.RunEx(eu, config, &ceoAddress, &coreAddress, 4, true, "setSaleAuctionAddress(address)", saleAddress.Bytes())
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	accesses = append(accesses, acc...)
 
 	// Call setSiringAuctionAddress.
 	eu, config = tests.Prepare(db, 10000005, transitions, []uint32{5})
 	acc, transitions, receipt = tests.RunEx(eu, config, &ceoAddress, &coreAddress, 5, true, "setSiringAuctionAddress(address)", sireAddress.Bytes())
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	accesses = append(accesses, acc...)
 
 	// Call setGeneScienceAddress.
 	eu, config = tests.Prepare(db, 10000006, transitions, []uint32{6})
 	acc, transitions, receipt = tests.RunEx(eu, config, &ceoAddress, &coreAddress, 6, true, "setGeneScienceAddress(address)", geneAddress.Bytes())
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	accesses = append(accesses, acc...)
 
 	// Call setCOO.
 	eu, config = tests.Prepare(db, 10000007, transitions, []uint32{7})
 	acc, transitions, receipt = tests.RunEx(eu, config, &ceoAddress, &coreAddress, 7, true, "setCOO(address)", cooAddress.Bytes())
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	accesses = append(accesses, acc...)
 
 	// Call setCFO.
 	eu, config = tests.Prepare(db, 10000008, transitions, []uint32{8})
 	acc, transitions, receipt = tests.RunEx(eu, config, &ceoAddress, &coreAddress, 8, true, "setCFO(address)", cfoAddress.Bytes())
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	accesses = append(accesses, acc...)
 
@@ -143,7 +143,7 @@ func TestParallelKittiesPerf(t *testing.T) {
 	// Call unpause.
 	eu, config = tests.Prepare(db, 10000009, transitions, []uint32{9})
 	transitions, receipt = tests.Run(eu, config, &ceoAddress, &coreAddress, 9, true, "unpause()")
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	PrintMemUsage()
@@ -240,7 +240,7 @@ func TestParallelKittiesTransfer(t *testing.T) {
 		t.Error("Error: Deploy KittyCore failed:", err)
 		return
 	}
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	coreAddress := receipt.ContractAddress
 	t.Log(coreAddress)
@@ -252,7 +252,7 @@ func TestParallelKittiesTransfer(t *testing.T) {
 		t.Error("Error: Deploy SaleClockAuction failed:", err)
 		return
 	}
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	saleAddress := receipt.ContractAddress
 	t.Log(saleAddress)
@@ -264,7 +264,7 @@ func TestParallelKittiesTransfer(t *testing.T) {
 		t.Error("Error: Deploy SiringClockAuction failed:", err)
 		return
 	}
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	sireAddress := receipt.ContractAddress
 	t.Log(sireAddress)
@@ -276,7 +276,7 @@ func TestParallelKittiesTransfer(t *testing.T) {
 		t.Error("Error: Deploy GeneScience failed:", err)
 		return
 	}
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	geneAddress := receipt.ContractAddress
 	t.Log(geneAddress)
@@ -284,43 +284,43 @@ func TestParallelKittiesTransfer(t *testing.T) {
 	// Call setSaleAuctionAddress.
 	eu, config = tests.Prepare(db, 10000004, transitions, []uint32{4})
 	transitions, receipt = tests.Run(eu, config, &ceoAddress, &coreAddress, 4, true, "setSaleAuctionAddress(address)", saleAddress.Bytes())
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Call setSiringAuctionAddress.
 	eu, config = tests.Prepare(db, 10000005, transitions, []uint32{5})
 	transitions, receipt = tests.Run(eu, config, &ceoAddress, &coreAddress, 5, true, "setSiringAuctionAddress(address)", sireAddress.Bytes())
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Call setGeneScienceAddress.
 	eu, config = tests.Prepare(db, 10000006, transitions, []uint32{6})
 	transitions, receipt = tests.Run(eu, config, &ceoAddress, &coreAddress, 6, true, "setGeneScienceAddress(address)", geneAddress.Bytes())
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Call setCOO.
 	eu, config = tests.Prepare(db, 10000007, transitions, []uint32{7})
 	transitions, receipt = tests.Run(eu, config, &ceoAddress, &coreAddress, 7, true, "setCOO(address)", cooAddress.Bytes())
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Call setCFO.
 	eu, config = tests.Prepare(db, 10000008, transitions, []uint32{8})
 	transitions, receipt = tests.Run(eu, config, &ceoAddress, &coreAddress, 8, true, "setCFO(address)", cfoAddress.Bytes())
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Call unpause.
 	eu, config = tests.Prepare(db, 10000009, transitions, []uint32{9})
 	transitions, receipt = tests.Run(eu, config, &ceoAddress, &coreAddress, 9, true, "unpause()")
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 
 	// Call createPromoKitty. Assign a kitty to ceo.
 	eu, config = tests.Prepare(db, 10000010, transitions, []uint32{10})
 	transitions, receipt = tests.Run(eu, config, &cooAddress, &coreAddress, 0, true, "createPromoKitty(uint256,address)", []byte{1}, ceoAddress.Bytes())
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	kittyId := receipt.Logs[0].Data[:32]
 	t.Log(kittyId)
@@ -328,7 +328,7 @@ func TestParallelKittiesTransfer(t *testing.T) {
 	// Call transfer. Transfer ceo's kitty to cfo.
 	eu, config = tests.Prepare(db, 10000011, transitions, []uint32{1})
 	transitions, receipt = tests.Run(eu, config, &ceoAddress, &coreAddress, 10, true, "transfer(address,uint256)", cfoAddress.Bytes(), kittyId)
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 }
 

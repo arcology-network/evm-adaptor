@@ -40,7 +40,7 @@ func TestSlotHash(t *testing.T) {
 // 	// ---------------
 
 // 	// t.Log("\n" + FormatTransitions(accesses))
-// 	t.Log("\n" + eucommon.FormatTransitions(transitions))
+// 	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 // 	t.Log(receipt)
 // 	// contractAddress := receipt.ContractAddress
 // 	if receipt.Status != 1 || err != nil {

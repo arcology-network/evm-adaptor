@@ -108,8 +108,8 @@ contract MultiGlobalParaSingleInUse {
 
 contract MultiGlobalPara {
     Bool container = new Bool();
-
-    Parallel mp ;
+    
+    Parallel mp ; 
     Parallel mp2;
     function call() public  {  
        mp = new Parallel(2);
@@ -210,7 +210,7 @@ contract MultiParaCumulativeU256 {
 
     function sub(uint256 elem) public { //9e c6 69 25
         cumulative.sub(elem);
-    }  
+    }   
 }
 
 contract RecursiveParallelizerOnNativeArrayTest {

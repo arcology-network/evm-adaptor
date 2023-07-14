@@ -6,11 +6,11 @@ import (
 	"testing"
 )
 
-func TestLocalizer(t *testing.T) {
+func TestResettable(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
-	err, _ := InvokeTestContract(targetPath, "runtime/runtime_test.sol", "0.8.19", "Deployer", "afterCheck()", []byte{}, false)
+	err, _ := InvokeTestContract(targetPath, "runtime/runtime_test.sol", "0.8.19", "ResettableDeployer", "afterCheck()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}

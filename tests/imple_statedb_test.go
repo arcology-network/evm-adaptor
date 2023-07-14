@@ -2,7 +2,6 @@ package tests
 
 import (
 	"bytes"
-	"fmt"
 	"math/big"
 	"testing"
 
@@ -12,7 +11,6 @@ import (
 	commutative "github.com/arcology-network/concurrenturl/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	ccapi "github.com/arcology-network/vm-adaptor/api"
-	euCommon "github.com/arcology-network/vm-adaptor/common"
 	eth "github.com/arcology-network/vm-adaptor/eth"
 )
 
@@ -28,7 +26,7 @@ func TestStateDBV2GetNonexistBalance(t *testing.T) {
 	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 1)
 	statedb.CreateAccount(account)
 	_, transitions := url.ExportAll()
-	fmt.Println("\n" + euCommon.FormatTransitions(transitions))
+	// fmt.Println("\n" + euCommon.FormatTransitions(transitions))
 	url.Import(transitions)
 	url.Sort()
 	url.Commit([]uint32{1})
@@ -54,7 +52,7 @@ func TestStateDBV2GetNonexistCode(t *testing.T) {
 	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 1)
 	statedb.CreateAccount(account)
 	_, transitions := url.ExportAll()
-	fmt.Println("\n" + euCommon.FormatTransitions(transitions))
+	// fmt.Println("\n" + euCommon.FormatTransitions(transitions))
 	url.Import(transitions)
 	url.Sort()
 	url.Commit([]uint32{1})
@@ -80,7 +78,7 @@ func TestStateDBV2GetNonexistStorageState(t *testing.T) {
 	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 1)
 	statedb.CreateAccount(account)
 	_, transitions := url.ExportAll()
-	fmt.Println("\n" + euCommon.FormatTransitions(transitions))
+	// fmt.Println("\n" + euCommon.FormatTransitions(transitions))
 	url.Import(transitions)
 	url.Sort()
 	url.Commit([]uint32{1})

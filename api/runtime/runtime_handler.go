@@ -31,7 +31,10 @@ func (this *RuntimeHandler) Call(caller, callee [20]byte, input []byte, _ [20]by
 	copy(signature[:], input)
 
 	switch signature {
-	case [4]byte{0xd8, 0x26, 0xf8, 0x8f}: // d8 26 f8 8f
+	// case [4]byte{0xd3, 0x01, 0xe8, 0xfe}: // d3 01 e8 fe
+	// 	return this.undo(caller, input[4:])
+
+	case [4]byte{0x64, 0x23, 0xdb, 0x34}: // d3 01 e8 fe
 		return this.reset(caller, input[4:])
 
 	case [4]byte{0xbb, 0x07, 0xe8, 0x5d}: // bb 07 e8 5d
@@ -41,12 +44,17 @@ func (this *RuntimeHandler) Call(caller, callee [20]byte, input []byte, _ [20]by
 	return []byte{}, false, 0
 }
 
+// func (this *RuntimeHandler) undo(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+// 	if this.api.VM().ArcologyNetworkAPIs.IsInConstructor() {
+// 		this.api.StateFilter().AddToAutoReversion(hex.EncodeToString(caller[:]))
+// 		return []byte{}, true, 0
+// 	}
+// 	return []byte{}, true, 0
+// }
+
 func (this *RuntimeHandler) reset(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	if this.api.VM().ArcologyNetworkAPIs.IsInConstructor() {
-		this.api.StateFilter().AddToIgnore(hex.EncodeToString(caller[:]))
-		return []byte{}, true, 0
-	}
-	return []byte{}, false, 0
+	this.api.StateFilter().RemoveByAddress(hex.EncodeToString(caller[:]))
+	return []byte{}, true, 0
 }
 
 func (this *RuntimeHandler) uuid(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {

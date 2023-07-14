@@ -57,7 +57,7 @@ func TestNativeContractSameBlock(t *testing.T) {
 	_, transitions := url.ExportAll()
 	eu, config := tests.Prepare(db, 10000000, transitions, []uint32{0})
 	transitions, receipt, err := tests.Deploy(eu, config, eucommon.Owner, 0, bytecode)
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	address := receipt.ContractAddress
 	t.Log(address)
@@ -127,7 +127,7 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 	_, transitions := url.ExportAll()
 	eu, config := tests.Prepare(db, 10000000, transitions, []uint32{0})
 	transitions, receipt, err := tests.Deploy(eu, config, eucommon.Owner, 0, bytecode)
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	address := receipt.ContractAddress
 	t.Log(address)
@@ -138,7 +138,7 @@ func TestNativeContractAcrossBlocks(t *testing.T) {
 	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{1})
 	// encoded, _ := abi.Encode(uint64(2))
 	_, transitions, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "incrementX()")
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	t.Log(receipt)
 	if receipt.Status != 1 || err != nil {
 		t.Error("Error: Failed to call incrementX()!!!", err)

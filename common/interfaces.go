@@ -47,7 +47,8 @@ type EthApiRouter interface {
 type StateFilter interface {
 	Raw() []interfaces.Univalue
 	ByType() ([]interfaces.Univalue, []interfaces.Univalue)
-	AddToIgnore(addr string)
+	AddToAutoReversion(addr string)
+	RemoveByAddress(string)
 }
 
 type ILog interface {

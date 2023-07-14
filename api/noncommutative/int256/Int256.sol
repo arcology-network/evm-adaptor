@@ -5,7 +5,7 @@ pragma solidity ^0.8.19;
 import "../base/Base.sol";
 
 contract Int256 is Base {
-    constructor() Base(address(0x84), false) {}
+    constructor() Base(address(0x84)) {}
 
     function push(int256 elem) public virtual{ //9e c6 69 25
         Base.pushBack(abi.encodeWithSignature("push(bytes)", abi.encode(elem)));

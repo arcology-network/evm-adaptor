@@ -25,7 +25,7 @@ func TestBaseContainer(t *testing.T) {
 
 	targetPath := project + "/api/"
 
-	code, err := compiler.CompileContracts(targetPath, "base/base_test.sol", "0.8.19", "BaseTest", false)
+	code, err := compiler.CompileContracts(targetPath, "noncommutative/base/base_test.sol", "0.8.19", "BaseTest", false)
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}
@@ -46,7 +46,7 @@ func TestBaseContainer(t *testing.T) {
 	// receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg)) // Execute it
 	// _, transitions := eu.Api().StateFilter().ByType()
 
-	t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + eucommon.FormatTransitions(transitions))
 	// t.Log(receipt)
 
 	if receipt.Status != 1 || err != nil {

@@ -5,16 +5,16 @@ import "../runtime/Runtime.sol";
 import "../noncommutative/base/Base.sol";
 
 
-contract Parallel is Base {
+contract Parallel is Base, AutoRevert  {
     uint256 numThreads = 1;
-    constructor (uint256 threads) Base(address(0xb0), true) {
+    constructor (uint256 threads) Base(address(0xb0)) {
         numThreads = threads; 
     }
 
     function push(bytes memory elem) public virtual { //9e c6 69 25
         Base.pushBack(abi.encodeWithSignature("push(bytes)", abi.encode(elem)));
     }    
-
+ 
     function pop() public virtual returns(bytes memory) { // 80 26 32 97
         return abi.decode(Base.popBack(), (bytes));  
     }
