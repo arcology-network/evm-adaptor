@@ -2,15 +2,18 @@
 pragma solidity ^0.8.19;
 
 contract Runtime {
-    address constant API = address(0xa0) ;    
+    constructor (bytes memory property) {      // address constant private API = address(0xa0); 
+        address(0xa0).call(property);     
+    }
+
     function uuid() public returns(bytes memory args) {
-        (,bytes memory id) = address(API).call(abi.encodeWithSignature("uuid()"));     
+        (,bytes memory id) = address(0xa0).call(abi.encodeWithSignature("uuid()"));     
         return id;
     }
 }
 
-contract Resettable is Runtime { 
+contract Resettable { 
     function reset() public {
-        address(API).call(abi.encodeWithSignature("Reset()"));     
+        address(0xa0).call(abi.encodeWithSignature("Reset()"));     
     }
 }

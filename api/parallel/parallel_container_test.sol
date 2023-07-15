@@ -288,6 +288,7 @@ contract MaxRecursiveDepth4Test {
         mp2.push(abi.encode(41111111, address(this), abi.encodeWithSignature("add2()")));
 
         mp2.run();
+        mp2.reset();
         container.push(true);              
     } 
 
@@ -296,6 +297,7 @@ contract MaxRecursiveDepth4Test {
         mp2.push(abi.encode(21111111, address(this), abi.encodeWithSignature("add3()")));
         mp2.push(abi.encode(21111111, address(this), abi.encodeWithSignature("add3()")));
         mp2.run();
+        mp2.reset();
         container.push(true);              
     } 
 
@@ -322,6 +324,7 @@ contract MaxSelfRecursiveDepth4Test {
         mp2.push(abi.encode(41111111, address(this), abi.encodeWithSignature("add()")));
         mp2.push(abi.encode(41111111, address(this), abi.encodeWithSignature("add()")));
         mp2.run();
+        mp2.reset();
         container.push(true);              
     }    
 }
@@ -340,7 +343,7 @@ contract MaxRecursiveDepthOffLimitTest {
         mp.push(abi.encode(9999999, address(this), abi.encodeWithSignature("add()")));
         mp.push(abi.encode(9999999, address(this), abi.encodeWithSignature("add()"))); 
         mp.run();
-
+  
         require(container.length() == 31); // 1 + (2 + 4 + 8 + 16) 
         // require(cumulative.get() == 50);
     } 
@@ -350,8 +353,8 @@ contract MaxRecursiveDepthOffLimitTest {
         Parallel mp2 = new Parallel(1); 
         mp2.push(abi.encode(41111111, address(this), abi.encodeWithSignature("add()")));
         mp2.push(abi.encode(41111111, address(this), abi.encodeWithSignature("add()")));
-
         mp2.run();
+        mp2.reset();
         container.push(true);              
     }    
 }
@@ -368,14 +371,15 @@ contract ParaFixedLengthWithConflictRemovedByLocalizerTest {
         require(container.length() == 2);
 
         appender();
-        require(container.length() == 3);   
+        require(container.length() == 3);
     } 
 
     function worker() public { //9e c6 69 25
         Parallel mp2 = new Parallel(2); 
         mp2.push(abi.encode(1999999, address(this), abi.encodeWithSignature("appender()")));
         mp2.run();   
-    }  
+        mp2.reset();
+    }   
 
     function appender() public { 
         container.push(true);

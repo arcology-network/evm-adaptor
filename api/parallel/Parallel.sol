@@ -5,11 +5,11 @@ import "../runtime/Runtime.sol";
 import "../noncommutative/base/Base.sol";
 
 
-contract Parallel is Base, AutoRevert  {
+contract Parallel is Base, Resettable  {
     uint256 numThreads = 1;
     constructor (uint256 threads) Base(address(0xb0)) {
         numThreads = threads; 
-    }
+    } 
 
     function push(bytes memory elem) public virtual { //9e c6 69 25
         Base.pushBack(abi.encodeWithSignature("push(bytes)", abi.encode(elem)));
