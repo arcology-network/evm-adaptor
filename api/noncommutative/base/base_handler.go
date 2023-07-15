@@ -7,7 +7,6 @@ import (
 	"github.com/arcology-network/common-lib/types"
 
 	"github.com/arcology-network/concurrenturl/interfaces"
-	"github.com/arcology-network/concurrenturl/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 	"github.com/arcology-network/vm-adaptor/common"
@@ -169,7 +168,8 @@ func (this *BytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, 
 }
 
 func (this *BytesHandlers) rand(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	return this.api.ElementUID(), true, 0
+	randNum := this.api.ElementUID()
+	return randNum, true, 0
 }
 
 // push a new element into the container
@@ -185,16 +185,13 @@ func (this *BytesHandlers) insert(caller evmcommon.Address, input []byte) ([]byt
 		return []byte{}, false, 0
 	}
 
-	if key, value, err := abi.Parse2(input, []byte{}, 0, math.MaxInt, []byte{}, 1, math.MaxInt); err != nil {
-		_, err = this.api.Ccurl().Write(uint32(this.api.GetEU().(*execution.EU).Message().ID), string(key), noncommutative.NewBytes(value), true)
-		return []byte{}, err == nil, 0
-	}
+	key, value, err := abi.Parse2(input,
+		[]byte{}, 2, math.MaxInt,
+		[]byte{}, 2, math.MaxInt,
+	)
 
-	if key, value, err := abi.Parse2(input,
-		[]byte{}, 0, math.MaxInt,
-		[]byte{}, 1, math.MaxInt,
-	); err != nil {
-		return this.Insert(path, string(key), value)
+	if err == nil {
+		return this.Insert(path+string(key), value)
 	}
 
 	return []byte{}, false, 0

@@ -11,7 +11,7 @@ contract Multiprocess is Base, Revertible  {
     } 
 
     function push(bytes memory elem) public virtual { //9e c6 69 25
-        Base.pushBack(abi.encode(elem));
+        Base.insert(Base.rand(), abi.encode(elem));
     }    
  
     function pop() public virtual returns(bytes memory) { // 80 26 32 97

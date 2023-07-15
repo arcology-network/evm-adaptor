@@ -13,8 +13,8 @@ contract Base {
     }
 
     function rand() public returns(bytes memory args) {
-        (,bytes memory id) = address(0xa0).call(abi.encodeWithSignature("rand()"));     
-        return id;
+        (,bytes memory randome) = address(API).call(abi.encodeWithSignature("rand()"));     
+        return randome;
     }
 
     function length() public returns(uint256) {  // 58 94 13 33
@@ -35,11 +35,6 @@ contract Base {
         require(success);
         return abi.decode(data, (bytes)); 
     }
-
-    function pushBack(bytes memory elem) public virtual { //9e c6 69 25
-        (bool success,) = address(API).call(abi.encodeWithSignature("push(bytes)", elem));
-        require(success);
-    }  
 
     function insert(bytes memory key, bytes memory value) public { //9e c6 69 25
         address(API).call(abi.encodeWithSignature("insert(bytes,bytes)", key, value));

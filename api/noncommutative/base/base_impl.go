@@ -49,13 +49,13 @@ func (this *BytesHandlers) Push(path string, input []byte) ([]byte, bool, int64)
 	}
 
 	key := path + string(this.api.ElementUID())
-	return this.Insert(path, string(key), value)
+	return this.Insert(key, value)
 
 	// _, err = this.api.Ccurl().Write(uint32(this.api.GetEU().(*execution.EU).Message().ID), key, noncommutative.NewBytes(value), true)
 	// return []byte{}, err == nil, 0
 }
 
-func (this *BytesHandlers) Insert(path string, key string, value []byte) ([]byte, bool, int64) {
+func (this *BytesHandlers) Insert(key string, value []byte) ([]byte, bool, int64) {
 	_, err := this.api.Ccurl().Write(uint32(this.api.GetEU().(*execution.EU).Message().ID), string(key), noncommutative.NewBytes(value), true)
 	return []byte{}, err == nil, 0
 }
