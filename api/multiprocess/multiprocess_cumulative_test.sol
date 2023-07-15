@@ -11,9 +11,9 @@ contract MixedRecursiveMultiprocessTest {
     U256Cumulative cumulative = new U256Cumulative(0, 100);  
     U256Cumulative cumulative2 = new U256Cumulative(50, 80);  
 
-    Parallel mp;
+    Multiprocess mp;
     function call() public {
-		mp = new Parallel(1);
+		mp = new Multiprocess(1);
         cumulative.add(50);
         container.push(true);
         mp.push(abi.encode(9999999, address(this), abi.encodeWithSignature("add()"))); // Only one will go through
@@ -30,7 +30,7 @@ contract MixedRecursiveMultiprocessTest {
 
     function add() public { //9e c6 69 25
         cumulative.add(10);
-        Parallel mp2 = new Parallel(1); 
+        Multiprocess mp2 = new Multiprocess(1); 
         mp2.push(abi.encode(11111111, address(this), abi.encodeWithSignature("add2()")));
         mp2.run();
         container.push(true);              
@@ -57,7 +57,7 @@ contract ParallelCumulativeU256 {
 		function call() public {
 			require(cumulative.peek() == 0);
 	
-			Parallel mp = new Parallel(1);
+			Multiprocess mp = new Multiprocess(1);
 			mp.push(abi.encode(200000, address(this), abi.encodeWithSignature("add(uint256)", 2)));
 	
 			mp.push(abi.encode(200000, address(this), abi.encodeWithSignature("add(uint256)", 2)));   
@@ -93,7 +93,7 @@ contract ParallelCumulativeU256 {
 		}
 	
 		function call1() public {
-		    Parallel mp = new Parallel(1);
+		    Multiprocess mp = new Multiprocess(1);
 		    mp.push(abi.encode(200000, address(this), abi.encodeWithSignature("add(uint256)", 2)));
 		    mp.run();
 		    require(cumulative.get() == 2);   
@@ -120,7 +120,7 @@ contract ParallelCumulativeU256 {
 	contract ThreadingCumulativeU256SameMpMulti {
 		U256Cumulative cumulative = new U256Cumulative(0, 100);     
 		function call() public {
-			Parallel mp1 = new Parallel(2);
+			Multiprocess mp1 = new Multiprocess(2);
 			mp1.push(abi.encode(200000, address(this), abi.encodeWithSignature("add(uint256)", 2)));
 			mp1.run();
 			mp1.clear();

@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import "../runtime/Runtime.sol";
 import "../noncommutative/base/Base.sol";
 
-contract Parallel is Base, Resettable  {
+contract Multiprocess is Base, Resettable  {
     uint256 numThreads = 1;
     constructor (uint256 threads) Base(address(0xb0)) {
         numThreads = threads; 

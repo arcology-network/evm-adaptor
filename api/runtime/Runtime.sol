@@ -13,7 +13,7 @@ contract Runtime {
 }
 
 contract Resettable { 
-    function reset() public {
+    function revert() public {
         address(0xa0).call(abi.encodeWithSignature("Reset()"));     
     }
 }

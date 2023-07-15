@@ -36,7 +36,7 @@ contract TestResettable is Resettable {
     function afterCheck() public {
         require(array[0] == 10);
         require(array[1] == 11);   
-        reset();  
+        revert();  
 
         require(array[0] == 10);
         require(array[1] == 11);   
@@ -46,7 +46,7 @@ contract TestResettable is Resettable {
    
         require(array[0] == 100);
         require(array[1] == 111);
-        reset();  
+        revert();  
 
         require(array[0] == 10);
         require(array[1] == 11);  
