@@ -15,7 +15,7 @@ type RuntimeHandler struct {
 	connector *apicommon.CcurlConnector
 }
 
-func NewRuntimeHandler(ethApiRouter eucommon.EthApiRouter) *RuntimeHandler {
+func NewHandler(ethApiRouter eucommon.EthApiRouter) *RuntimeHandler {
 	return &RuntimeHandler{
 		api:       ethApiRouter,
 		connector: apicommon.NewCCurlConnector("/native/local/", ethApiRouter, ethApiRouter.Ccurl()),

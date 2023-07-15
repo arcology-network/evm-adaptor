@@ -24,7 +24,7 @@ type BytesHandlers struct {
 	handler   interface{}
 }
 
-func NewBaseTypeHandlers(api eucommon.EthApiRouter, handler interface{}) *BytesHandlers {
+func NewHandler(api eucommon.EthApiRouter, handler interface{}) *BytesHandlers {
 	return &BytesHandlers{
 		api:       api,
 		connector: apicommon.NewCCurlConnector("/container", api, api.Ccurl()),

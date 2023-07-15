@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import "./U256Cumulative.sol";
-import "../../parallel/Parallel.sol";
+import "../../multiprocess/Multiprocess.sol";
 
 contract CumulativeU256Test {
     U256Cumulative cumulative ;

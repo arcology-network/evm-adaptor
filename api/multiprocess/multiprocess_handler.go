@@ -24,12 +24,12 @@ type ParallelHandler struct {
 	jobseqs []*execution.JobSequence
 }
 
-func NewParallelHandler(ethApiRouter eucommon.EthApiRouter) *ParallelHandler {
+func NewHandler(ethApiRouter eucommon.EthApiRouter) *ParallelHandler {
 	handler := &ParallelHandler{
 		erros:   []error{},
 		jobseqs: []*execution.JobSequence{},
 	}
-	handler.BytesHandlers = basetype.NewBaseTypeHandlers(ethApiRouter, handler)
+	handler.BytesHandlers = basetype.NewHandler(ethApiRouter, handler)
 	return handler
 }
 

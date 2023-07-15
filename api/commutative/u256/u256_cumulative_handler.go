@@ -21,7 +21,7 @@ type U256CumulativeHandlers struct {
 	connector *apicommon.CcurlConnector
 }
 
-func NewU256CumulativeHandlers(api eucommon.EthApiRouter) *U256CumulativeHandlers {
+func NewHandler(api eucommon.EthApiRouter) *U256CumulativeHandlers {
 	return &U256CumulativeHandlers{
 		api:       api,
 		connector: apicommon.NewCCurlConnector("/container", api, api.Ccurl()),

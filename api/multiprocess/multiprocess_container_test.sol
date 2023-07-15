@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-import "./Parallel.sol";
+import "./Multiprocess.sol";
 import "../commutative/u256/U256Cumulative.sol";
 import "../noncommutative/bool/Bool.sol";
 
