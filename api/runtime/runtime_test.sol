@@ -36,7 +36,7 @@ contract TestResettable is Revertible {
     function afterCheck() public {
         require(array[0] == 10);
         require(array[1] == 11);   
-        revert();  
+        rollback();  
 
         require(array[0] == 10);
         require(array[1] == 11);   
@@ -46,7 +46,7 @@ contract TestResettable is Revertible {
    
         require(array[0] == 100);
         require(array[1] == 111);
-        revert();  
+        rollback();  
 
         require(array[0] == 10);
         require(array[1] == 11);  

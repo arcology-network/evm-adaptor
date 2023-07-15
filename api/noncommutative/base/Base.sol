@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
+// import "../../runtime/Runtime.sol";
 
 contract Base {
     address public immutable API;// = address(0x84);    
@@ -9,6 +10,11 @@ contract Base {
         API = addr;
         (bool success,) = address(API).call(abi.encodeWithSignature("new()", true));       
         require(success);
+    }
+
+    function rand() public returns(bytes memory args) {
+        (,bytes memory id) = address(0xa0).call(abi.encodeWithSignature("rand()"));     
+        return id;
     }
 
     function length() public returns(uint256) {  // 58 94 13 33
@@ -47,8 +53,6 @@ contract Base {
 
     function setElem(uint256 idx, bytes memory encoded) public { // 7a fa 62 38
         address(API).call(abi.encodeWithSignature("set(uint256,bytes)", idx, encoded));     
-        // (bool success,) = address(API).call(encoded);
-        // require(success);
     }
 
     //Return True if the queue is empty, False otherwise. 

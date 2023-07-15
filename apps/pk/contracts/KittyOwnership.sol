@@ -188,7 +188,7 @@ contract KittyOwnership is KittyBase, ERC721 {
                 }
             }
         }
-        revert();
+        rollback();
     }
     */
 }

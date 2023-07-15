@@ -50,6 +50,9 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 	case [4]byte{0x59, 0xe0, 0x2d, 0xd7}:
 		return this.PeekLength(caller, input[4:])
 
+	case [4]byte{0x3b, 0x3d, 0xca, 0x76}: // 3b 3d ca 76
+		return this.rand(caller, input[4:])
+
 	case [4]byte{0x7d, 0xac, 0xda, 0x03}: // 7d ac da 03
 		return this.push(caller, input[4:], origin, nonce)
 
@@ -163,6 +166,10 @@ func (this *BytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, 
 		return []byte{}, true, fee
 	}
 	return []byte{}, false, 0
+}
+
+func (this *BytesHandlers) rand(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	return this.api.ElementUID(), true, 0
 }
 
 // push a new element into the container

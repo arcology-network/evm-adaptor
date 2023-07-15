@@ -288,7 +288,7 @@ contract MaxRecursiveDepth4Test {
         mp2.push(abi.encode(41111111, address(this), abi.encodeWithSignature("add2()")));
 
         mp2.run();
-        mp2.revert();
+        mp2.rollback();
         container.push(true);              
     } 
 
@@ -297,7 +297,7 @@ contract MaxRecursiveDepth4Test {
         mp2.push(abi.encode(21111111, address(this), abi.encodeWithSignature("add3()")));
         mp2.push(abi.encode(21111111, address(this), abi.encodeWithSignature("add3()")));
         mp2.run();
-        mp2.revert();
+        mp2.rollback();
         container.push(true);              
     } 
 
@@ -324,7 +324,7 @@ contract MaxSelfRecursiveDepth4Test {
         mp2.push(abi.encode(41111111, address(this), abi.encodeWithSignature("add()")));
         mp2.push(abi.encode(41111111, address(this), abi.encodeWithSignature("add()")));
         mp2.run();
-        mp2.revert();
+        mp2.rollback();
         container.push(true);              
     }     
 }
@@ -354,7 +354,7 @@ contract MaxRecursiveDepthOffLimitTest {
         mp2.push(abi.encode(41111111, address(this), abi.encodeWithSignature("add()")));
         mp2.push(abi.encode(41111111, address(this), abi.encodeWithSignature("add()")));
         mp2.run();
-        mp2.revert();
+        mp2.rollback();
         container.push(true);              
     }    
 }
@@ -378,7 +378,7 @@ contract ParaFixedLengthWithConflictRemovedByLocalizerTest {
         Multiprocess mp2 = new Multiprocess(2); 
         mp2.push(abi.encode(1999999, address(this), abi.encodeWithSignature("appender()")));
         mp2.run();   
-        mp2.revert();
+        mp2.rollback();
     }   
 
     function appender() public { 
