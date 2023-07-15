@@ -7,6 +7,7 @@ import (
 	"github.com/arcology-network/common-lib/types"
 
 	"github.com/arcology-network/concurrenturl/interfaces"
+	"github.com/arcology-network/concurrenturl/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 	"github.com/arcology-network/vm-adaptor/common"
@@ -47,7 +48,7 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 		return this.New(caller, input[4:])
 
 	case [4]byte{0x59, 0xe0, 0x2d, 0xd7}:
-		return this.Peek(caller, input[4:])
+		return this.PeekLength(caller, input[4:])
 
 	case [4]byte{0x7d, 0xac, 0xda, 0x03}: // 7d ac da 03
 		return this.push(caller, input[4:], origin, nonce)
@@ -60,6 +61,9 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 
 	case [4]byte{0xa4, 0xec, 0xe5, 0x2c}: // a4 ec e5 2c
 		return this.pop(caller, input[4:])
+
+	case [4]byte{0x20, 0xba, 0x5b, 0x60}: // 20 ba 5b 60
+		return this.insert(caller, input[4:])
 
 	case [4]byte{0x52, 0xef, 0xea, 0x6e}: // 52 ef ea 6e
 		return this.clear(caller, input[4:])
@@ -107,7 +111,7 @@ func (this *BytesHandlers) length(caller evmcommon.Address, input []byte) ([]byt
 }
 
 // get the intial length of the container
-func (this *BytesHandlers) Peek(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BytesHandlers) PeekLength(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // BytesHandlers path
 	if len(path) == 0 {
 		return []byte{}, false, 0
@@ -149,11 +153,7 @@ func (this *BytesHandlers) get(caller evmcommon.Address, input []byte) ([]byte, 
 
 func (this *BytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
-
-	idx, bytes, err := abi.Parse2(input,
-		uint64(0), 1, 32,
-		[]byte{}, 2, math.MaxInt,
-	)
+	idx, bytes, err := abi.Parse2(input, uint64(0), 1, 32, []byte{}, 2, math.MaxInt)
 
 	if err != nil {
 		return []byte{}, false, 0
@@ -169,6 +169,28 @@ func (this *BytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, 
 func (this *BytesHandlers) push(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // BytesHandlers path
 	return this.Push(path, input)
+}
+
+// push a new element into the container
+func (this *BytesHandlers) insert(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	path := this.connector.Key(caller) // BytesHandlers path
+	if len(path) == 0 {
+		return []byte{}, false, 0
+	}
+
+	if key, value, err := abi.Parse2(input, []byte{}, 0, math.MaxInt, []byte{}, 1, math.MaxInt); err != nil {
+		_, err = this.api.Ccurl().Write(uint32(this.api.GetEU().(*execution.EU).Message().ID), string(key), noncommutative.NewBytes(value), true)
+		return []byte{}, err == nil, 0
+	}
+
+	if key, value, err := abi.Parse2(input,
+		[]byte{}, 0, math.MaxInt,
+		[]byte{}, 1, math.MaxInt,
+	); err != nil {
+		return this.Insert(path, string(key), value)
+	}
+
+	return []byte{}, false, 0
 }
 
 func (this *BytesHandlers) pop(caller evmcommon.Address, _ []byte) ([]byte, bool, int64) {

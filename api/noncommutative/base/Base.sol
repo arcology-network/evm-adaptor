@@ -30,9 +30,13 @@ contract Base {
         return abi.decode(data, (bytes)); 
     }
 
-    function pushBack(bytes memory encoded) public virtual { //9e c6 69 25
-        (bool success,) = address(API).call(encoded);
+    function pushBack(bytes memory elem) public virtual { //9e c6 69 25
+        (bool success,) = address(API).call(abi.encodeWithSignature("push(bytes)", elem));
         require(success);
+    }  
+
+    function insert(bytes memory key, bytes memory value) public { //9e c6 69 25
+        address(API).call(abi.encodeWithSignature("insert(bytes,bytes)", key, value));
     }  
 
     function getElem(uint256 idx) public virtual returns(bytes memory) { // 31 fe 88 d0
@@ -41,9 +45,10 @@ contract Base {
         return abi.decode(data, (bytes));  
     }
 
-    function setElem(bytes memory encoded) public { // 7a fa 62 38
-        (bool success,) = address(API).call(encoded);
-        require(success);
+    function setElem(uint256 idx, bytes memory encoded) public { // 7a fa 62 38
+        address(API).call(abi.encodeWithSignature("set(uint256,bytes)", idx, encoded));     
+        // (bool success,) = address(API).call(encoded);
+        // require(success);
     }
 
     //Return True if the queue is empty, False otherwise. 

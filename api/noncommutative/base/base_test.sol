@@ -72,7 +72,7 @@ contract BaseTest {
         if (data.length > 0) {
             return abi.decode(data, (uint256));   
         }
-        return 0;   
+        return 0;    
     }
 
     function length() public returns(uint256) {

@@ -7,7 +7,7 @@ contract Bytes32 is Base {
     constructor() Base(address(0x84)) {}
 
     function push(bytes32 elem) public virtual{ //9e c6 69 25
-        Base.pushBack(abi.encodeWithSignature("push(bytes)", abi.encode(elem)));
+        Base.pushBack(abi.encode(elem));
     }    
 
     function pop() public virtual returns(bytes32) { // 80 26 32 97
@@ -19,6 +19,6 @@ contract Bytes32 is Base {
     }
 
     function set(uint256 idx, bytes32 elem) public { // 7a fa 62 38
-        Base.setElem(abi.encodeWithSignature("set(uint256,bytes)", idx, abi.encode(elem)));     
+        Base.setElem(idx, abi.encode(elem));
     }
 }

@@ -21,7 +21,7 @@ contract ResettableDeployer {
     }
 }
 
-contract TestResettable is Resettable {
+contract TestResettable is Revertible {
     uint256 [2] public array; 
     constructor () {
         array[0] = 10;

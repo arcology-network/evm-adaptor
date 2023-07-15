@@ -8,7 +8,7 @@ import "../noncommutative/bool/Bool.sol";
 contract ParaNativeAssignmentTest {
     uint256[2] results;
     function call() public  { 
-       Multiprocess mp = new Multiprocess(2);
+       Multiprocess mp = new Multiprocess(2); 
        mp.push(abi.encode(50000, address(this), abi.encodeWithSignature("assigner(uint256)", 0)));
        mp.push(abi.encode(50000, address(this), abi.encodeWithSignature("assigner(uint256)", 1)));
        require(mp.length() == 2);
@@ -21,8 +21,8 @@ contract ParaNativeAssignmentTest {
     function assigner(uint256 v)  public {
         results[v] = v + 10;
     }
-}
-
+}  
+ 
 contract ParaFixedLengthWithConflictTest {  
      uint256[2] results;
      function call() public  { 
@@ -326,7 +326,7 @@ contract MaxSelfRecursiveDepth4Test {
         mp2.run();
         mp2.revert();
         container.push(true);              
-    }    
+    }     
 }
 
 contract MaxRecursiveDepthOffLimitTest {

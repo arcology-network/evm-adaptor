@@ -29,5 +29,5 @@ contract AddressTest {
         require(container.pop() == addr4);
         require(container.pop() == addr3);
         require(container.length() == 0); 
-    }
-}
+    } 
+} 
