@@ -61,6 +61,9 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 	case [4]byte{0x95, 0x07, 0xd3, 0x9a}: // 95 07 d3 9a
 		return this.get(caller, input[4:])
 
+	case [4]byte{0xe9, 0x1e, 0xa7, 0x22}:
+		return this.find(caller, input[4:])
+
 	case [4]byte{0xa4, 0xec, 0xe5, 0x2c}: // a4 ec e5 2c
 		return this.pop(caller, input[4:])
 
@@ -90,14 +93,6 @@ func (this *BytesHandlers) New(caller evmcommon.Address, input []byte) ([]byte, 
 		uint32(this.api.GetEU().(*execution.EU).Message().ID), // Tx ID for conflict detection
 		types.Address(codec.Bytes20(caller).Hex()),            // Main contract address
 	)
-
-	// local, err := abi.DecodeTo(input, 0, bool(false), 1, 32)
-	// if err == nil && local && this.api.VM().ArcologyNetworkAPIs.IsInConstructor() {
-	// 	this.api.StateFilter().AddToAutoReversion(hex.EncodeToString(caller[:]))
-	// 	return []byte{}, true, 0
-	// }
-	// // return []byte{}, false, 0
-
 	return caller[:], connected, 0 // Create a new container
 }
 
@@ -150,6 +145,25 @@ func (this *BytesHandlers) get(caller evmcommon.Address, input []byte) ([]byte, 
 			return encoded, true, 0
 		}
 	}
+	return []byte{}, false, 0
+}
+
+// push a new element into the container
+func (this *BytesHandlers) find(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	path := this.connector.Key(caller) // BytesHandlers path
+	if len(path) == 0 {
+		return []byte{}, false, 0
+	}
+
+	key, err := abi.DecodeTo(input, 0, []byte{}, 2, 32)
+	if err != nil {
+		return []byte{}, false, 0
+	}
+
+	if err == nil {
+		return this.Insert(path, (key))
+	}
+
 	return []byte{}, false, 0
 }
 

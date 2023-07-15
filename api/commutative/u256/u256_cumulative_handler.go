@@ -108,8 +108,8 @@ func (this *U256CumulativeHandlers) peek(caller evmcommon.Address, input []byte)
 	}
 
 	// Peek the initial value
-	value, _, err := this.api.Ccurl().DoAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, func(v interface{}) interface{} {
-		return []interface{}{uint32(0), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()}
+	value, _, err := this.api.Ccurl().DoAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
+		return uint32(0), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()
 	})
 
 	if value != nil && err == nil {
@@ -153,8 +153,8 @@ func (this *U256CumulativeHandlers) min(caller evmcommon.Address, input []byte) 
 		return []byte{}, false, 0
 	}
 
-	value, _, err := this.api.Ccurl().DoAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, func(v interface{}) interface{} {
-		return []interface{}{uint32(1), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()}
+	value, _, err := this.api.Ccurl().DoAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
+		return uint32(1), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()
 	})
 
 	if value != nil && err == nil {
@@ -172,8 +172,8 @@ func (this *U256CumulativeHandlers) max(caller evmcommon.Address, input []byte) 
 		return []byte{}, false, 0
 	}
 
-	value, _, err := this.api.Ccurl().DoAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, func(v interface{}) interface{} {
-		return []interface{}{uint32(1), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()}
+	value, _, err := this.api.Ccurl().DoAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
+		return uint32(1), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()
 	})
 
 	if value != nil && err == nil {
