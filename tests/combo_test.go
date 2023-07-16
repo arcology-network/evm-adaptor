@@ -63,3 +63,13 @@ func TestSetTest(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestMapTest(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "combo/map_test.sol", "0.8.19", "MapTest", "", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}

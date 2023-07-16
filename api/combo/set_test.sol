@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-import "./set.sol";
+import "./Set.sol";
 
 contract SetTest {
     U256Set set = new U256Set();
