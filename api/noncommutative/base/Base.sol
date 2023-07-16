@@ -12,6 +12,11 @@ contract Base {
         require(success);
     }
 
+    function uid() public returns(bytes memory args) {
+        (,bytes memory randome) = address(API).call(abi.encodeWithSignature("uid()"));     
+        return randome;
+    }
+
     function rand() public returns(bytes memory args) {
         (,bytes memory randome) = address(API).call(abi.encodeWithSignature("rand()"));     
         return randome;
@@ -40,10 +45,18 @@ contract Base {
         address(API).call(abi.encodeWithSignature("insert(bytes,bytes)", key, value));
     }  
 
-    function getElem(uint256 idx) public virtual returns(bytes memory) { // 31 fe 88 d0
+    function  getElem(uint256 idx) public virtual returns(bytes memory) { // 31 fe 88 d0
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("get(uint256)", idx));
         require(success);
         return abi.decode(data, (bytes));  
+    }
+
+    function find(bytes memory key) public returns(uint256) { // 7a fa 62 38
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("find(bytes)", key));     
+        if (success) {
+            return abi.decode(data, (uint256));
+        }
+        return type(uint256).max;
     }
 
     function setElem(uint256 idx, bytes memory encoded) public { // 7a fa 62 38

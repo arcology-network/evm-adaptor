@@ -21,14 +21,14 @@ func (this *BytesHandlers) Length(path string) (uint64, bool, int64) {
 }
 
 // // get the number of elements in the container
-func (this *BytesHandlers) Get(path string, idx uint64) ([]byte, bool, int64) {
+func (this *BytesHandlers) GetIndex(path string, idx uint64) ([]byte, bool, int64) {
 	if value, _, err := this.api.Ccurl().ReadAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, idx); err == nil && value != nil {
 		return value.([]byte), true, 0
 	}
 	return []byte{}, false, 0
 }
 
-func (this *BytesHandlers) Set(path string, idx uint64, bytes []byte) (bool, int64) {
+func (this *BytesHandlers) SetIndex(path string, idx uint64, bytes []byte) (bool, int64) {
 	if len(path) > 0 {
 		value := noncommutative.NewBytes(bytes)
 		if _, err := this.api.Ccurl().WriteAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, idx, value, true); err == nil {
@@ -36,6 +36,30 @@ func (this *BytesHandlers) Set(path string, idx uint64, bytes []byte) (bool, int
 		}
 	}
 	return false, 0
+}
+
+func (this *BytesHandlers) GetKey(path string) ([]byte, bool, int64) {
+	if value, fees := this.api.Ccurl().Read(uint32(this.api.GetEU().(*execution.EU).Message().ID), path); value != nil {
+		return value.([]byte), true, int64(fees)
+	}
+	return []byte{}, false, 0
+}
+
+func (this *BytesHandlers) SetKey(path string, bytes []byte) (bool, int64) {
+	if len(path) > 0 {
+		value := noncommutative.NewBytes(bytes)
+		if _, err := this.api.Ccurl().Write(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, value, true); err == nil {
+			return true, 0
+		}
+	}
+	return false, 0
+}
+
+func (this *BytesHandlers) Find(path, key string) (uint64, int64) {
+	if idx, _ := this.api.Ccurl().Find(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, string(key)); idx != nil {
+		return idx.(uint64), 0
+	}
+	return math.MaxInt64, 0
 }
 
 func (this *BytesHandlers) Push(path string, input []byte) ([]byte, bool, int64) {
