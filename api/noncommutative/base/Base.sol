@@ -3,17 +3,16 @@ pragma solidity ^0.8.19;
 // import "../../runtime/Runtime.sol";
 
 contract Base {
-    address public immutable API;// = address(0x84);    
+    address internal API = address(0x84);    
     event logMsg(string message);
 
-    constructor (address addr) {
-        API = addr;
+    constructor () {
         (bool success,) = address(API).call(abi.encodeWithSignature("new()", true));       
         require(success);
     }
 
-    function uid() public returns(bytes memory args) {
-        (,bytes memory randome) = address(API).call(abi.encodeWithSignature("uid()"));     
+    function pid() public returns(bytes memory args) {
+        (,bytes memory randome) = address(API).call(abi.encodeWithSignature("pid()"));     
         return randome;
     }
 
@@ -36,9 +35,25 @@ contract Base {
     } 
 
     function popBack() public virtual returns(bytes memory) { // 80 26 32 97
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("pop()"));
-        require(success);
-        return abi.decode(data, (bytes)); 
+        bytes memory v = getIndex(length() - 1);
+        delIndex(length() - 1);
+        return v;
+    }
+
+    function setIndex(uint256 idx, bytes memory encoded) public { // 7a fa 62 38
+        address(API).call(abi.encodeWithSignature("setIndex(uint256,bytes)", idx, encoded));     
+    }
+
+    function setKey(bytes memory key, bytes memory elem) public {
+        address(API).call(abi.encodeWithSignature("setKey(bytes,bytes)", key, elem));
+    }
+
+    function delIndex(uint256 idx) public { // 7a fa 62 38
+        address(API).call(abi.encodeWithSignature("delIndex(uint256)", idx));     
+    }
+
+    function delKey(bytes memory key) public {
+        address(API).call(abi.encodeWithSignature("delKey(bytes)", key));
     }
 
     function getIndex(uint256 idx) public virtual returns(bytes memory) { // 31 fe 88 d0
@@ -49,25 +64,12 @@ contract Base {
         return data;
     }
 
-    function setIndex(uint256 idx, bytes memory encoded) public { // 7a fa 62 38
-        address(API).call(abi.encodeWithSignature("setIndex(uint256,bytes)", idx, encoded));     
-    }
-
     function getKey(bytes memory key) public returns(bytes memory)  {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("getKey(bytes)", key));
         if (success) {
             return abi.decode(data, (bytes));  
         }
         return data;
-    }
-
-    function setKey(bytes memory key, bytes memory elem) public {
-        address(API).call(abi.encodeWithSignature("setKey(bytes,bytes)", key, elem));
-    }
-
-    //Return True if the queue is empty, False otherwise. 
-    function  empty() public returns(bool)  {
-        return length() == 0;
     }
 
     // Clear the data
@@ -78,8 +80,4 @@ contract Base {
     function foreach(bytes memory data) public {
         address(API).call(abi.encodeWithSignature("foreach(bytes)", data));       
     }
-    
-    // function log(bytes memory elem) public { // 7a fa 62 38
-    //     address(API).call(abi.encodeWithSignature("log()", elem));     
-    // }
 }

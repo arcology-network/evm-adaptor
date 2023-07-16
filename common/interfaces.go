@@ -30,9 +30,6 @@ type EthApiRouter interface {
 	VM() *vm.EVM
 	Schedule() interface{}
 
-	GetReserved() interface{}
-	SetReserved(interface{})
-
 	CheckRuntimeConstrains() bool
 
 	Depth() uint8
@@ -40,6 +37,7 @@ type EthApiRouter interface {
 	Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64, blockhash evmcommon.Hash) (bool, []byte, bool, int64)
 
 	GetSerialNum(int) uint64
+	Pid() [32]byte
 	UUID() []byte
 	ElementUID() []byte
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-contract Runtime {
+contract Runtime {    
     function exists(bytes memory key) public returns(bool) {
         (,bytes memory id) = address(0xa0).call(abi.encodeWithSignature("exists(bytes)", key));
         return abi.decode(id, (bool));

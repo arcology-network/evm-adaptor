@@ -28,7 +28,7 @@ type API struct {
 
 	schedule interface{}
 	eu       *execution.EU
-	reserved interface{}
+	// reserved interface{}
 
 	handlerDict map[[20]byte]eucommon.ApiCallHandler // APIs under the atomic namespace
 	ccurl       *concurrenturl.ConcurrentUrl
@@ -84,10 +84,6 @@ func (this *API) CheckRuntimeConstrains() bool { // Execeeds the max recursion d
 
 func (this *API) StateFilter() eucommon.StateFilter { return this.filter }
 
-func (this *API) IsLocal(txID uint32) bool         { return txID == ccurlcommon.SYSTEM } //A local tx
-func (this *API) GetReserved() interface{}         { return this.reserved }
-func (this *API) SetReserved(reserved interface{}) { this.reserved = reserved }
-
 func (this *API) Depth() uint8                { return this.depth }
 func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }
 func (this *API) Origin() evmcommon.Address   { return this.eu.VM().TxContext.Origin }
@@ -110,13 +106,18 @@ func (this *API) GetSerialNum(idx int) uint64 {
 	return v
 }
 
+func (this *API) Pid() [32]byte {
+	return this.eu.Message().TxHash
+}
+
 func (this *API) ElementUID() []byte {
-	return []byte(hex.EncodeToString(this.eu.Message().TxHash[:8]) + "-" + strconv.Itoa(int(this.GetSerialNum(eucommon.ELEMENT_ID))))
+	instanceID := this.Pid()
+	return []byte(hex.EncodeToString(instanceID[:8]) + "-" + strconv.Itoa(int(this.GetSerialNum(eucommon.ELEMENT_ID))))
 }
 
 // Generate an UUID based on transaction hash and the counter
 func (this *API) UUID() []byte {
-	id := codec.Bytes32(this.eu.Message().TxHash).UUID(this.GetSerialNum(eucommon.UUID))
+	id := codec.Bytes32(this.Pid()).UUID(this.GetSerialNum(eucommon.UUID))
 	return id[:8]
 }
 

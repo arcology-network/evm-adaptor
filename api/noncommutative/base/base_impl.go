@@ -1,6 +1,7 @@
 package concurrentcontainer
 
 import (
+	"github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl/noncommutative"
 	"github.com/arcology-network/vm-adaptor/execution"
 )
@@ -27,7 +28,7 @@ func (this *BytesHandlers) GetIndex(path string, idx uint64) ([]byte, bool, int6
 
 func (this *BytesHandlers) SetIndex(path string, idx uint64, bytes []byte) (bool, int64) {
 	if len(path) > 0 {
-		value := noncommutative.NewBytes(bytes)
+		value := common.IfThen(bytes == nil, nil, noncommutative.NewBytes(bytes))
 		if _, err := this.api.Ccurl().WriteAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, idx, value, true); err == nil {
 			return true, 0
 		}
@@ -36,8 +37,8 @@ func (this *BytesHandlers) SetIndex(path string, idx uint64, bytes []byte) (bool
 }
 
 func (this *BytesHandlers) GetKey(path string) ([]byte, bool, int64) {
-	if value, fees := this.api.Ccurl().Read(uint32(this.api.GetEU().(*execution.EU).Message().ID), path); value != nil {
-		return value.([]byte), true, int64(fees)
+	if value, _ := this.api.Ccurl().Read(uint32(this.api.GetEU().(*execution.EU).Message().ID), path); value != nil {
+		return value.([]byte), true, 0
 	}
 	return []byte{}, false, 0
 }

@@ -5,7 +5,7 @@ pragma solidity ^0.8.19;
 import "../base/Base.sol";
 
 contract String is Base {
-    constructor() Base(address(0x84)) {}
+    constructor() {}
 
     function push(string memory elem) public virtual{ //9e c6 69 25
          Base.setKey(Base.rand(), abi.encode(elem));

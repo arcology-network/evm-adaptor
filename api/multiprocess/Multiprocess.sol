@@ -6,7 +6,8 @@ import "../noncommutative/base/Base.sol";
 
 contract Multiprocess is Base, Revertible  {
     uint256 numThreads = 1;
-    constructor (uint256 threads) Base(address(0xb0)) {
+    constructor (uint256 threads) {
+        Base.API = address(0xb0);
         numThreads = threads; 
     } 
 
