@@ -73,7 +73,7 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 	case [4]byte{0x90, 0xd2, 0x44, 0xd8}: //  90 d2 44 d8
 		return this.delIndex(caller, input[4:])
 
-	case [4]byte{0x98, 0xbd, 0x6b, 0x44}:
+	case [4]byte{0x37, 0x79, 0xc0, 0x34}:
 		return this.delKey(caller, input[4:])
 
 	case [4]byte{0x52, 0xef, 0xea, 0x6e}:
@@ -168,7 +168,17 @@ func (this *BytesHandlers) getKey(caller evmcommon.Address, input []byte) ([]byt
 	}
 
 	if key, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt); err == nil {
-		return this.GetKey(path + string(key))
+		str := eucommon.ToValidName(key)
+		bytes, successful, _ := this.GetKey(path + str)
+
+		if len(bytes) > 0 && successful {
+			if encoded, err := abi.Encode(bytes); err == nil { // Encode the result
+				offset := [32]byte{}
+				offset[len(offset)-1] = uint8(len(offset))
+				encoded = append(offset[:], encoded...)
+				return encoded, true, 0
+			}
+		}
 	}
 	return []byte{}, false, 0
 }
@@ -204,7 +214,8 @@ func (this *BytesHandlers) setKey(caller evmcommon.Address, input []byte) ([]byt
 	)
 
 	if err == nil {
-		successful, _ := this.SetKey(path+string(key), value)
+		str := eucommon.ToValidName(key)
+		successful, _ := this.SetKey(path+str, value)
 		return []byte{}, successful, 0
 	}
 
@@ -225,9 +236,10 @@ func (this *BytesHandlers) delIndex(caller evmcommon.Address, input []byte) ([]b
 func (this *BytesHandlers) delKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 
-	key, err := abi.DecodeTo(input, 0, []byte{}, 1, 32)
+	key, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt)
 	if err == nil {
-		if successful, fee := this.SetKey(path+string(key), nil); successful {
+		str := eucommon.ToValidName(key)
+		if successful, fee := this.SetKey(path+str, nil); successful {
 			return []byte{}, true, fee
 		}
 	}

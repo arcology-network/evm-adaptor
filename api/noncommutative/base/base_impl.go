@@ -45,7 +45,7 @@ func (this *BytesHandlers) GetKey(path string) ([]byte, bool, int64) {
 
 func (this *BytesHandlers) SetKey(path string, bytes []byte) (bool, int64) {
 	if len(path) > 0 {
-		value := noncommutative.NewBytes(bytes)
+		value := common.IfThen(bytes == nil, nil, noncommutative.NewBytes(bytes))
 		if _, err := this.api.Ccurl().Write(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, value, true); err == nil {
 			return true, 0
 		}

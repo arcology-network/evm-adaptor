@@ -54,12 +54,12 @@ func TestContainerPair(t *testing.T) {
 	}
 }
 
-// func TestSetTest(t *testing.T) {
-// 	currentPath, _ := os.Getwd()
-// 	targetPath := filepath.Dir(currentPath) + "/api/"
+func TestSetTest(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
 
-// 	err, _ := InvokeTestContract(targetPath, "combo/set_test.sol", "0.8.19", "SetTest", "", []byte{}, false)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
+	err, _ := InvokeTestContract(targetPath, "combo/set_test.sol", "0.8.19", "SetTest", "", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
