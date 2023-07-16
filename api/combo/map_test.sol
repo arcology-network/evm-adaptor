@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import "./Map.sol";
+import "../multiprocess/Multiprocess.sol";
 
 contract MapTest {
     U256Map map = new U256Map();
@@ -32,3 +33,35 @@ contract MapTest {
         require(!map.exist(11));
     }
 }
+
+contract ConcurrenctMapTest {
+    U256Map map = new U256Map();
+    function call() public  { 
+       Multiprocess mp = new Multiprocess(2); 
+       mp.push(abi.encode(50000, address(this), abi.encodeWithSignature("assigner(uint256)", 11)));
+       mp.push(abi.encode(50000, address(this), abi.encodeWithSignature("assigner(uint256)", 33)));
+       require(mp.length() == 2);
+
+        (,uint256 v) = map.get(11);
+        require(v == 110); 
+
+        (,v) = map.get(33);
+        require(v == 330); 
+
+        map.del(11);
+        require(map.length() == 1); 
+        require(!map.exist(11));
+
+        (,v) = map.get(33);
+        require(v == 330); 
+        map.del(33);
+        require(map.length() == 0); 
+
+        require(!map.exist(11));
+        require(!map.exist(33));
+    }
+
+    function assigner(uint256 v)  public {
+        map.set(v, v * 10);
+    }
+} 

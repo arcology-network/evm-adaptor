@@ -54,7 +54,7 @@ func TestContainerPair(t *testing.T) {
 	}
 }
 
-func TestSetTest(t *testing.T) {
+func TestBasicSet(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
@@ -64,11 +64,21 @@ func TestSetTest(t *testing.T) {
 	}
 }
 
-func TestMapTest(t *testing.T) {
+func TestBasicMap(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/api/"
 
 	err, _ := InvokeTestContract(targetPath, "combo/map_test.sol", "0.8.19", "MapTest", "", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestConcurrentMap(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := filepath.Dir(currentPath) + "/api/"
+
+	err, _ := InvokeTestContract(targetPath, "combo/map_test.sol", "0.8.19", "ConcurrenctMapTest", "", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
