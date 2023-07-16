@@ -41,10 +41,6 @@ contract Base {
         return abi.decode(data, (bytes)); 
     }
 
-    function insert(bytes memory key, bytes memory value) public { //9e c6 69 25
-        address(API).call(abi.encodeWithSignature("insert(bytes,bytes)", key, value));
-    }  
-
     function getIndex(uint256 idx) public virtual returns(bytes memory) { // 31 fe 88 d0
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("getIndex(uint256)", idx));
         if (success) {

@@ -73,12 +73,8 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 	case [4]byte{0xa4, 0xec, 0xe5, 0x2c}: // a4 ec e5 2c
 		return this.pop(caller, input[4:])
 
-	case [4]byte{0x20, 0xba, 0x5b, 0x60}:
-		return this.insert(caller, input[4:])
-
 	case [4]byte{0x52, 0xef, 0xea, 0x6e}:
 		return this.clear(caller, input[4:])
-
 	}
 
 	if this.handler != nil {
@@ -179,7 +175,7 @@ func (this *BytesHandlers) getKey(caller evmcommon.Address, input []byte) ([]byt
 }
 
 // push a new element into the container
-func (this *BytesHandlers) insert(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BytesHandlers) setKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // BytesHandlers path
 	if len(path) == 0 {
 		return []byte{}, false, 0
@@ -195,21 +191,6 @@ func (this *BytesHandlers) insert(caller evmcommon.Address, input []byte) ([]byt
 		return []byte{}, successful, 0
 	}
 
-	return []byte{}, false, 0
-}
-
-func (this *BytesHandlers) setKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // Build container path
-	if len(path) == 0 {
-		return []byte{}, false, 0
-	}
-
-	if key, bytes, err := abi.Parse2(
-		input, []byte{}, 2, math.MaxInt,
-		[]byte{}, 2, math.MaxInt); err == nil {
-		success, fee := this.SetKey(path+string(key), bytes)
-		return []byte{}, success, fee
-	}
 	return []byte{}, false, 0
 }
 

@@ -8,7 +8,7 @@ contract String is Base {
     constructor() Base(address(0x84)) {}
 
     function push(string memory elem) public virtual{ //9e c6 69 25
-         Base.insert(Base.rand(), abi.encode(elem));
+         Base.setKey(Base.rand(), abi.encode(elem));
     }    
 
     function pop() public virtual returns(string memory) { // 80 26 32 97
