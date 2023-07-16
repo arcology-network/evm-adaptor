@@ -71,6 +71,11 @@ contract BaseLinearTest {
         require(peek() == 1); 
     }
 
+    function rand() public returns(bytes memory args) {
+        (,bytes memory randome) = address(API).call(abi.encodeWithSignature("rand()"));     
+        return randome;
+    }
+
     function peek() public returns(uint256) {
         (,bytes memory data) = address(API).call(abi.encodeWithSignature("peek()"));
         if (data.length > 0) {
@@ -92,8 +97,7 @@ contract BaseLinearTest {
     }
 
     function push(bytes memory elem) public {
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("push(bytes)", elem));
-        require(success, "Bytes.push() Failed");
+        setKey(rand(), (elem));
     }   
     
     function setIndex(uint256 idx, bytes memory encoded) public { // 7a fa 62 38

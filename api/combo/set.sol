@@ -24,7 +24,7 @@ contract U256Set is Base {
     }    
 
     function del(uint256 key) public { // 80 26 32 97
-        Base.setKey(Base.rand(), abi.encode(key));  
+        Base.delKey((abi.encodePacked(key)));  
     }
 
     function length(uint256 idx) public virtual  returns(bool)  { // 31 fe 88 d0
