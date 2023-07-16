@@ -15,10 +15,10 @@ contract Bytes is Base {
     }
 
     function get(uint256 idx) public virtual returns(bytes memory)  { // 31 fe 88 d0
-        return Base.getElem(idx);  
+        return Base.getIndex(idx);  
     }
 
     function set(uint256 idx, bytes memory elem) public { // 7a fa 62 38
-        Base.setElem(idx, abi.encodePacked(elem));
+        Base.setIndex(idx, abi.encodePacked(elem));
     }
 }

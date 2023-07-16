@@ -16,10 +16,10 @@ contract U256 is Base {
     }
 
     function get(uint256 idx) public virtual returns(uint256)  { // 31 fe 88 d0
-        return abi.decode(Base.getElem(idx), (uint256));  
+        return abi.decode(Base.getIndex(idx), (uint256));  
     }
 
     function set(uint256 idx, uint256 elem) public { // 7a fa 62 38
-        Base.setElem(idx, abi.encode(elem));
+        Base.setIndex(idx, abi.encode(elem));
     }
 }

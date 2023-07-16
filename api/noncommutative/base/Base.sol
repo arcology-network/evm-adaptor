@@ -45,10 +45,28 @@ contract Base {
         address(API).call(abi.encodeWithSignature("insert(bytes,bytes)", key, value));
     }  
 
-    function  getElem(uint256 idx) public virtual returns(bytes memory) { // 31 fe 88 d0
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("get(uint256)", idx));
-        require(success);
-        return abi.decode(data, (bytes));  
+    function getIndex(uint256 idx) public virtual returns(bytes memory) { // 31 fe 88 d0
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("getIndex(uint256)", idx));
+        if (success) {
+            return abi.decode(data, (bytes));  
+        }
+        return data;
+    }
+
+    function setIndex(uint256 idx, bytes memory encoded) public { // 7a fa 62 38
+        address(API).call(abi.encodeWithSignature("setIndex(uint256,bytes)", idx, encoded));     
+    }
+
+    function getKey(bytes memory key) public returns(bytes memory)  {
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("getKey(bytes)", key));
+        if (success) {
+            return abi.decode(data, (bytes));  
+        }
+        return data;
+    }
+
+    function setKey(bytes memory key, bytes memory elem) public {
+        address(API).call(abi.encodeWithSignature("setKey(bytes,bytes)", key, elem));
     }
 
     function find(bytes memory key) public returns(uint256) { // 7a fa 62 38
@@ -57,10 +75,6 @@ contract Base {
             return abi.decode(data, (uint256));
         }
         return type(uint256).max;
-    }
-
-    function setElem(uint256 idx, bytes memory encoded) public { // 7a fa 62 38
-        address(API).call(abi.encodeWithSignature("set(uint256,bytes)", idx, encoded));     
     }
 
     //Return True if the queue is empty, False otherwise. 

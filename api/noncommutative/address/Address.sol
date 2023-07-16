@@ -16,10 +16,10 @@ contract Address is Base {
     }
 
     function get(uint256 idx) public virtual returns(address)  { // 31 fe 88 d0
-        return abi.decode(Base.getElem(idx), (address));  
+        return abi.decode(Base.getIndex(idx), (address));  
     }
 
     function set(uint256 idx, address elem) public { // 7a fa 62 38
-        Base.setElem(idx, abi.encode(elem));
+        Base.setIndex(idx, abi.encode(elem));
     }
 }

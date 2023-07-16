@@ -61,16 +61,16 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}: // 1f 7b 6d 32
 		return this.length(caller, input[4:])
 
-	case [4]byte{0x95, 0x07, 0xd3, 0x9a}: // 95 07 d3 9a
+	case [4]byte{0x8e, 0x7c, 0xb6, 0xe1}: // 8e 7c b6 e1
 		return this.getIndex(caller, input[4:])
 
-	case [4]byte{0x8b, 0x28, 0x29, 0x47}: // 8b 28 29 47
+	case [4]byte{0xaf, 0x4b, 0xaa, 0x7d}: // af 4b aa 7d
 		return this.setIndex(caller, input[4:])
 
 	case [4]byte{0x7f, 0xed, 0x84, 0xf2}: //7f ed 84 f2
 		return this.getKey(caller, input[4:])
 
-	case [4]byte{0x21, 0x8e, 0xbf, 0xa3}: // 21 8e bf a3
+	case [4]byte{0xc2, 0x78, 0xb7, 0x99}: // c2 78 b7 99
 		return this.setKey(caller, input[4:])
 
 	case [4]byte{0xe9, 0x1e, 0xa7, 0x22}:
@@ -79,10 +79,10 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 	case [4]byte{0xa4, 0xec, 0xe5, 0x2c}: // a4 ec e5 2c
 		return this.pop(caller, input[4:])
 
-	case [4]byte{0x20, 0xba, 0x5b, 0x60}: // 20 ba 5b 60
+	case [4]byte{0x20, 0xba, 0x5b, 0x60}:
 		return this.insert(caller, input[4:])
 
-	case [4]byte{0x52, 0xef, 0xea, 0x6e}: // 52 ef ea 6e
+	case [4]byte{0x52, 0xef, 0xea, 0x6e}:
 		return this.clear(caller, input[4:])
 
 	}
