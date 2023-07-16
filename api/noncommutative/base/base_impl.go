@@ -1,10 +1,7 @@
 package concurrentcontainer
 
 import (
-	"math"
-
 	"github.com/arcology-network/concurrenturl/noncommutative"
-	abi "github.com/arcology-network/vm-adaptor/abi"
 	"github.com/arcology-network/vm-adaptor/execution"
 )
 
@@ -53,33 +50,4 @@ func (this *BytesHandlers) SetKey(path string, bytes []byte) (bool, int64) {
 		}
 	}
 	return false, 0
-}
-
-func (this *BytesHandlers) Find(path, key string) (uint64, int64) {
-	if idx, _ := this.api.Ccurl().Find(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, string(key)); idx != nil {
-		return idx.(uint64), 0
-	}
-	return math.MaxInt64, 0
-}
-
-func (this *BytesHandlers) Push(path string, input []byte) ([]byte, bool, int64) {
-	if len(path) == 0 {
-		return []byte{}, false, 0
-	}
-
-	value, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt)
-	if value == nil || err != nil {
-		return []byte{}, false, 0
-	}
-
-	key := path + string(this.api.ElementUID())
-	return this.Insert(key, value)
-
-	// _, err = this.api.Ccurl().Write(uint32(this.api.GetEU().(*execution.EU).Message().ID), key, noncommutative.NewBytes(value), true)
-	// return []byte{}, err == nil, 0
-}
-
-func (this *BytesHandlers) Insert(key string, value []byte) ([]byte, bool, int64) {
-	_, err := this.api.Ccurl().Write(uint32(this.api.GetEU().(*execution.EU).Message().ID), string(key), noncommutative.NewBytes(value), true)
-	return []byte{}, err == nil, 0
 }

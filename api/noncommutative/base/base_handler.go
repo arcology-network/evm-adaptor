@@ -53,7 +53,7 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 		return this.rand(caller, input[4:])
 
 	case [4]byte{0x7d, 0xac, 0xda, 0x03}: // 7d ac da 03
-		return this.push(caller, input[4:], origin, nonce)
+		return this.push(caller, input[4:]) // push
 
 	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}: // 1f 7b 6d 32
 		return this.length(caller, input[4:])
@@ -154,8 +154,8 @@ func (this *BytesHandlers) getIndex(caller evmcommon.Address, input []byte) ([]b
 
 func (this *BytesHandlers) setIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
-	idx, bytes, err := abi.Parse2(input, uint64(0), 1, 32, []byte{}, 2, math.MaxInt)
 
+	idx, bytes, err := abi.Parse2(input, uint64(0), 1, 32, []byte{}, 2, math.MaxInt)
 	if err != nil {
 		return []byte{}, false, 0
 	}
@@ -178,30 +178,6 @@ func (this *BytesHandlers) getKey(caller evmcommon.Address, input []byte) ([]byt
 	return []byte{}, false, 0
 }
 
-func (this *BytesHandlers) setKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // Build container path
-	if len(path) == 0 {
-		return []byte{}, false, 0
-	}
-
-	if key, bytes, err := abi.Parse2(input, []byte{}, 2, math.MaxInt, []byte{}, 2, math.MaxInt); err == nil {
-		success, fee := this.SetKey(path+string(key), bytes)
-		return []byte{}, success, fee
-	}
-	return []byte{}, false, 0
-}
-
-func (this *BytesHandlers) rand(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	randNum := this.api.ElementUID()
-	return randNum, true, 0
-}
-
-// push a new element into the container
-func (this *BytesHandlers) push(caller evmcommon.Address, input []byte, origin evmcommon.Address, nonce uint64) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // BytesHandlers path
-	return this.Push(path, input)
-}
-
 // push a new element into the container
 func (this *BytesHandlers) insert(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // BytesHandlers path
@@ -215,10 +191,43 @@ func (this *BytesHandlers) insert(caller evmcommon.Address, input []byte) ([]byt
 	)
 
 	if err == nil {
-		return this.Insert(path+string(key), value)
+		successful, _ := this.SetKey(path+string(key), value)
+		return []byte{}, successful, 0
 	}
 
 	return []byte{}, false, 0
+}
+
+func (this *BytesHandlers) setKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	path := this.connector.Key(caller) // Build container path
+	if len(path) == 0 {
+		return []byte{}, false, 0
+	}
+
+	if key, bytes, err := abi.Parse2(
+		input, []byte{}, 2, math.MaxInt,
+		[]byte{}, 2, math.MaxInt); err == nil {
+		success, fee := this.SetKey(path+string(key), bytes)
+		return []byte{}, success, fee
+	}
+	return []byte{}, false, 0
+}
+
+func (this *BytesHandlers) rand(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	randNum := this.api.ElementUID()
+	return randNum, true, 0
+}
+
+// push a new element into the container
+func (this *BytesHandlers) push(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	path := this.connector.Key(caller) // BytesHandlers path
+	value, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt)
+	if value == nil || err != nil {
+		return []byte{}, false, 0
+	}
+
+	success, _ := this.SetKey(path+string(this.api.ElementUID()), value)
+	return []byte{}, success, 0
 }
 
 func (this *BytesHandlers) pop(caller evmcommon.Address, _ []byte) ([]byte, bool, int64) {
