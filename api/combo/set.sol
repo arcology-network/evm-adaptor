@@ -9,15 +9,19 @@ contract U256Set is Base {
    constructor() Base(address(0x84)) {}
 
    function exist(uint256 key) public virtual returns(bool) { //9e c6 69 25
-        return Base.find(abi.encode(key)) < type(uint256).max;
+        return get(key) != type(uint256).max;
     }
 
-    function insert(uint256 elem) public { // 80 26 32 97
-        Base.insert(Base.rand(), abi.encode(elem));  
+    function insert(uint256 key) public { // 80 26 32 97
+        Base.setKey(Base.rand(), abi.encode(key));  
     }
 
-    function get(uint256 elem) public virtual { //9e c6 69 25
-         return abi.decode(Base.getKey(idx), (bool));  
+    function get(uint256 key) public virtual returns(uint256){ //9e c6 69 25
+        bytes memory data = Base.getKey(abi.encode(key));
+        if (data.length > 0) {
+           return abi.decode(data, (uint256));  
+        }
+       return type(uint256).max;
     }    
 
     function length(uint256 idx) public virtual  returns(bool)  { // 31 fe 88 d0

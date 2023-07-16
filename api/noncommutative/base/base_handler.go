@@ -46,9 +46,6 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 	case [4]byte{0xcd, 0xbf, 0x60, 0x8d}:
 		return this.New(caller, input[4:])
 
-	case [4]byte{0xf5, 0x14, 0xce, 0x26}: //f5 14 ce 36
-		return this.byKey(caller, input[4:])
-
 	case [4]byte{0x59, 0xe0, 0x2d, 0xd7}:
 		return this.PeekLength(caller, input[4:])
 
@@ -72,9 +69,6 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 
 	case [4]byte{0xc2, 0x78, 0xb7, 0x99}: // c2 78 b7 99
 		return this.setKey(caller, input[4:])
-
-	case [4]byte{0xe9, 0x1e, 0xa7, 0x22}:
-		return this.find(caller, input[4:])
 
 	case [4]byte{0xa4, 0xec, 0xe5, 0x2c}: // a4 ec e5 2c
 		return this.pop(caller, input[4:])
@@ -133,21 +127,6 @@ func (this *BytesHandlers) PeekLength(caller evmcommon.Address, input []byte) ([
 		}
 	}
 	return []byte{}, false, int64(fees)
-}
-
-func (this *BytesHandlers) byKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller)
-
-	key, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt64)
-	if err != nil {
-		return []byte{}, false, 0
-	}
-
-	path = path + string(key)
-	if value, _ := this.api.Ccurl().Read(uint32(this.api.GetEU().(*execution.EU).Message().ID), path); err == nil && value != nil {
-		return value.([]byte), true, 0
-	}
-	return []byte{}, false, 0
 }
 
 func (this *BytesHandlers) getIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
@@ -209,26 +188,6 @@ func (this *BytesHandlers) setKey(caller evmcommon.Address, input []byte) ([]byt
 		success, fee := this.SetKey(path+string(key), bytes)
 		return []byte{}, success, fee
 	}
-	return []byte{}, false, 0
-}
-
-// push a new element into the container
-func (this *BytesHandlers) find(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // BytesHandlers path
-	if len(path) == 0 {
-		return []byte{}, false, 0
-	}
-
-	key, err := abi.DecodeTo(input, 0, []byte{}, 2, 32)
-	if err != nil {
-		return []byte{}, false, 0
-	}
-
-	if idx, _ := this.Find(path, string(key)); idx < math.MaxUint64 {
-		encoded, err := abi.Encode(idx)
-		return encoded, err == nil, 0
-	}
-
 	return []byte{}, false, 0
 }
 

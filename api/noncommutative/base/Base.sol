@@ -69,14 +69,6 @@ contract Base {
         address(API).call(abi.encodeWithSignature("setKey(bytes,bytes)", key, elem));
     }
 
-    function find(bytes memory key) public returns(uint256) { // 7a fa 62 38
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("find(bytes)", key));     
-        if (success) {
-            return abi.decode(data, (uint256));
-        }
-        return type(uint256).max;
-    }
-
     //Return True if the queue is empty, False otherwise. 
     function  empty() public returns(bool)  {
         return length() == 0;

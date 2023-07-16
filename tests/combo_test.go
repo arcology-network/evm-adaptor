@@ -52,5 +52,14 @@ func TestContainerPair(t *testing.T) {
 	if receipt.Status != 1 || err != nil {
 		t.Error("Error: Deployment failed!!!", err)
 	}
-
 }
+
+// func TestSetTest(t *testing.T) {
+// 	currentPath, _ := os.Getwd()
+// 	targetPath := filepath.Dir(currentPath) + "/api/"
+
+// 	err, _ := InvokeTestContract(targetPath, "combo/set_test.sol", "0.8.19", "SetTest", "", []byte{}, false)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// }
