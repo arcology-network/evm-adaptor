@@ -26,7 +26,7 @@ func TestSlotHash(t *testing.T) {
 
 // 	// ================================== Compile the contract ==================================
 // 	currentPath, _ := os.Getwd()
-// 	project := filepath.Dir(currentPath)
+// 	project := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib")
 // 	code, err := compiler.CompileContracts(project+"/apps", "/storagenative/local_test.sol", "0.8.19", "LocalTest", false)
 // 	if err != nil || len(code) == 0 {
 // 		t.Error(err)

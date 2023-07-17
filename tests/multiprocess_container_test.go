@@ -2,13 +2,14 @@ package tests
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 )
 
 func TestParallelBasic(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "ParaNativeAssignmentTest", "call()", []byte{}, false)
 	if err != nil {
@@ -18,7 +19,7 @@ func TestParallelBasic(t *testing.T) {
 
 func TestParallelWithConflict(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "ParaFixedLengthWithConflictTest", "call()", []byte{}, false)
 	if err != nil {
@@ -28,7 +29,7 @@ func TestParallelWithConflict(t *testing.T) {
 
 func TestParaFixedLengthWithConflictRollback(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "ParaFixedLengthWithConflictRollbackTest", "call()", []byte{}, false)
 	if err != nil {
@@ -38,7 +39,7 @@ func TestParaFixedLengthWithConflictRollback(t *testing.T) {
 
 func TestMultiGlobalParaSingleInUse(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "MultiGlobalParaSingleInUse", "call()", []byte{}, false)
 	if err != nil {
@@ -48,7 +49,7 @@ func TestMultiGlobalParaSingleInUse(t *testing.T) {
 
 func TestMultiGlobalParaTest(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "MultiGlobalPara", "call()", []byte{}, false)
 	if err != nil {
@@ -58,7 +59,7 @@ func TestMultiGlobalParaTest(t *testing.T) {
 
 func TestMultiLocalPara(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "MultiTempParaTest", "call()", []byte{}, false)
 	if err != nil {
@@ -68,7 +69,7 @@ func TestMultiLocalPara(t *testing.T) {
 
 func TestParaMultiWithClear(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "MultiLocalParaTestWithClear", "call()", []byte{}, false)
 	if err != nil {
@@ -78,7 +79,7 @@ func TestParaMultiWithClear(t *testing.T) {
 
 func TestMultiParaCumulativeU256(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "MultiParaCumulativeU256", "call()", []byte{}, false)
 	if err != nil {
@@ -88,7 +89,7 @@ func TestMultiParaCumulativeU256(t *testing.T) {
 
 func TestParallelizerArray(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "ParallelizerArrayTest", "call()", []byte{}, false)
 	if err != nil {
@@ -98,7 +99,7 @@ func TestParallelizerArray(t *testing.T) {
 
 func TestMultipleParallelArray(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "MultiParaCumulativeU256", "call()", []byte{}, false)
 	if err != nil {
@@ -108,7 +109,7 @@ func TestMultipleParallelArray(t *testing.T) {
 
 func TestRecursiveParallelizerOnNativeArray(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "RecursiveParallelizerOnNativeArrayTest", "call()", []byte{}, false)
 	if err != nil {
@@ -118,7 +119,7 @@ func TestRecursiveParallelizerOnNativeArray(t *testing.T) {
 
 func TestRecursiveParallelizerOnContainer(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "RecursiveParallelizerOnContainerTest", "call()", []byte{}, false)
 	if err != nil {
@@ -128,7 +129,7 @@ func TestRecursiveParallelizerOnContainer(t *testing.T) {
 
 func TestMaxSelfRecursiveDepth4Test(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "MaxSelfRecursiveDepth4Test", "call()", []byte{}, false)
 	if err != nil {
@@ -138,7 +139,7 @@ func TestMaxSelfRecursiveDepth4Test(t *testing.T) {
 
 func TestMaxSelfRecursiveDepth(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "MaxRecursiveDepth4Test", "call()", []byte{}, false)
 	if err != nil {
@@ -148,7 +149,7 @@ func TestMaxSelfRecursiveDepth(t *testing.T) {
 
 func TestMaxRecursiveDepthOffLimits(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/lib/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "MaxRecursiveDepthOffLimitTest", "call()", []byte{}, false)
 	if err != nil {

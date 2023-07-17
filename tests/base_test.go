@@ -3,6 +3,7 @@ package tests
 import (
 	"math/big"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -21,7 +22,7 @@ func TestBaseContainer(t *testing.T) {
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
-	project := filepath.Dir(currentPath)
+	project := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib")
 
 	targetPath := project + "/lib/"
 

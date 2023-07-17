@@ -3,6 +3,7 @@ package tests
 import (
 	"math/big"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -18,7 +19,7 @@ func TestContractNoncommutativeInt256(t *testing.T) {
 	eu, config, _, _, _ := NewTestEU()
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
-	project := filepath.Dir(currentPath)
+	project := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib")
 	targetPath := project + "/lib/"
 
 	code, err := compiler.CompileContracts(targetPath, "int256/int256_test.sol", "0.8.19", "Int256Test", false)
@@ -56,7 +57,7 @@ func TestNoncommutativeInt256N(t *testing.T) {
 
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
-	project := filepath.Dir(currentPath)
+	project := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib")
 	targetPath := project + "/lib"
 
 	code, err := compiler.CompileContracts(targetPath, "int256/int256N_test.sol", "0.8.19", "Int64NTest", false)
