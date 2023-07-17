@@ -1,4 +1,4 @@
-package concurrency
+package api
 
 import (
 	"encoding/hex"
@@ -6,30 +6,30 @@ import (
 
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
-	apicommon "github.com/arcology-network/vm-adaptor/api/common"
+
 	"github.com/arcology-network/vm-adaptor/common"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/execution"
 )
 
 // APIs under the concurrency namespace
-type RuntimeHandler struct {
+type RuntimeHandlers struct {
 	api       eucommon.EthApiRouter
-	connector *apicommon.CcurlConnector
+	connector *CcurlConnector
 }
 
-func NewHandler(ethApiRouter eucommon.EthApiRouter) *RuntimeHandler {
-	return &RuntimeHandler{
+func NewRuntimeHandlers(ethApiRouter eucommon.EthApiRouter) *RuntimeHandlers {
+	return &RuntimeHandlers{
 		api:       ethApiRouter,
-		connector: apicommon.NewCCurlConnector("/native/local/", ethApiRouter, ethApiRouter.Ccurl()),
+		connector: NewCCurlConnector("/native/local/", ethApiRouter, ethApiRouter.Ccurl()),
 	}
 }
 
-func (this *RuntimeHandler) Address() [20]byte {
+func (this *RuntimeHandlers) Address() [20]byte {
 	return common.RUNTIME_HANDLER
 }
 
-func (this *RuntimeHandler) Call(caller, callee [20]byte, input []byte, _ [20]byte, nonce uint64) ([]byte, bool, int64) {
+func (this *RuntimeHandlers) Call(caller, callee [20]byte, input []byte, _ [20]byte, nonce uint64) ([]byte, bool, int64) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
@@ -50,7 +50,7 @@ func (this *RuntimeHandler) Call(caller, callee [20]byte, input []byte, _ [20]by
 	return []byte{}, false, 0
 }
 
-// func (this *RuntimeHandler) undo(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+// func (this *RuntimeHandlers) undo(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 // 	if this.api.VM().ArcologyNetworkAPIs.IsInConstructor() {
 // 		this.api.StateFilter().AddToAutoReversion(hex.EncodeToString(caller[:]))
 // 		return []byte{}, true, 0
@@ -58,7 +58,7 @@ func (this *RuntimeHandler) Call(caller, callee [20]byte, input []byte, _ [20]by
 // 	return []byte{}, true, 0
 // }
 
-func (this *RuntimeHandler) exists(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *RuntimeHandlers) exists(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
@@ -73,11 +73,11 @@ func (this *RuntimeHandler) exists(caller evmcommon.Address, input []byte) ([]by
 	return []byte{}, false, 0
 }
 
-func (this *RuntimeHandler) reset(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *RuntimeHandlers) reset(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	this.api.StateFilter().RemoveByAddress(hex.EncodeToString(caller[:]))
 	return []byte{}, true, 0
 }
 
-func (this *RuntimeHandler) uuid(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *RuntimeHandlers) uuid(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	return this.api.ElementUID(), true, 0
 }

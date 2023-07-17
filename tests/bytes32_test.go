@@ -20,7 +20,7 @@ func TestContractBytes32(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	targetPath := project + "/api/noncommutative"
+	targetPath := project + "/lib"
 
 	code, err := compiler.CompileContracts(targetPath, "bytes32/bytes32_test.sol", "0.8.19", "Bytes32Test", false)
 	if err != nil || len(code) == 0 {

@@ -1,4 +1,4 @@
-package concurrentcontainer
+package api
 
 import (
 	"math"
@@ -13,32 +13,31 @@ import (
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/execution"
 
-	apicommon "github.com/arcology-network/vm-adaptor/api/common"
 	"github.com/holiman/uint256"
 )
 
 // APIs under the concurrency namespace
-type BytesHandlers struct {
+type BaseHandlers struct {
 	api       eucommon.EthApiRouter
-	connector *apicommon.CcurlConnector
+	connector *CcurlConnector
 	handler   interface{}
 }
 
-func NewHandler(api eucommon.EthApiRouter, handler interface{}) *BytesHandlers {
-	return &BytesHandlers{
+func NewBaseHandlers(api eucommon.EthApiRouter, handler interface{}) *BaseHandlers {
+	return &BaseHandlers{
 		api:       api,
-		connector: apicommon.NewCCurlConnector("/container", api, api.Ccurl()),
+		connector: NewCCurlConnector("/container", api, api.Ccurl()),
 		handler:   handler,
 	}
 }
 
-func (this *BytesHandlers) Address() [20]byte {
+func (this *BaseHandlers) Address() [20]byte {
 	return common.BYTES_HANDLER
 }
 
-func (this *BytesHandlers) Connector() *apicommon.CcurlConnector { return this.connector }
+func (this *BaseHandlers) Connector() *CcurlConnector { return this.connector }
 
-func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
+func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
@@ -89,9 +88,9 @@ func (this *BytesHandlers) Call(caller, callee [20]byte, input []byte, origin [2
 	return []byte{}, false, 0 // unknown
 }
 
-func (this *BytesHandlers) Api() eucommon.EthApiRouter { return this.api }
+func (this *BaseHandlers) Api() eucommon.EthApiRouter { return this.api }
 
-func (this *BytesHandlers) New(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) New(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	connected := this.connector.New(
 		uint32(this.api.GetEU().(*execution.EU).Message().ID), // Tx ID for conflict detection
 		types.Address(codec.Bytes20(caller).Hex()),            // Main contract address
@@ -99,18 +98,18 @@ func (this *BytesHandlers) New(caller evmcommon.Address, input []byte) ([]byte, 
 	return caller[:], connected, 0 // Create a new container
 }
 
-func (this *BytesHandlers) pid(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) pid(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	pidNum := this.api.Pid()
 	return pidNum[:], true, 0
 }
 
-func (this *BytesHandlers) rand(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) rand(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	randNum := this.api.ElementUID()
 	return randNum, true, 0
 }
 
 // getIndex the number of elements in the container
-func (this *BytesHandlers) length(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) length(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller)
 	if length, successful, _ := this.Length(path); successful {
 		if encoded, err := abi.Encode(uint256.NewInt(length)); err == nil {
@@ -121,8 +120,8 @@ func (this *BytesHandlers) length(caller evmcommon.Address, input []byte) ([]byt
 }
 
 // getIndex the intial length of the container
-func (this *BytesHandlers) peekLength(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // BytesHandlers path
+func (this *BaseHandlers) peekLength(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	path := this.connector.Key(caller) // BaseHandlers path
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
@@ -138,7 +137,7 @@ func (this *BytesHandlers) peekLength(caller evmcommon.Address, input []byte) ([
 	return []byte{}, false, int64(fees)
 }
 
-func (this *BytesHandlers) getIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) getIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
@@ -161,7 +160,7 @@ func (this *BytesHandlers) getIndex(caller evmcommon.Address, input []byte) ([]b
 	return []byte{}, false, 0
 }
 
-func (this *BytesHandlers) getKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) getKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
@@ -183,7 +182,7 @@ func (this *BytesHandlers) getKey(caller evmcommon.Address, input []byte) ([]byt
 	return []byte{}, false, 0
 }
 
-func (this *BytesHandlers) setIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) setIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 
 	idx, bytes, err := abi.Parse2(input,
@@ -202,8 +201,8 @@ func (this *BytesHandlers) setIndex(caller evmcommon.Address, input []byte) ([]b
 }
 
 // push a new element into the container
-func (this *BytesHandlers) setKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // BytesHandlers path
+func (this *BaseHandlers) setKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	path := this.connector.Key(caller) // BaseHandlers path
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
@@ -222,7 +221,7 @@ func (this *BytesHandlers) setKey(caller evmcommon.Address, input []byte) ([]byt
 	return []byte{}, false, 0
 }
 
-func (this *BytesHandlers) delIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) delIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32)
 	if err == nil {
@@ -233,7 +232,7 @@ func (this *BytesHandlers) delIndex(caller evmcommon.Address, input []byte) ([]b
 	return []byte{}, false, 0
 }
 
-func (this *BytesHandlers) delKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) delKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 
 	key, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt)
@@ -246,7 +245,7 @@ func (this *BytesHandlers) delKey(caller evmcommon.Address, input []byte) ([]byt
 	return []byte{}, false, 0
 }
 
-func (this *BytesHandlers) clear(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) clear(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0

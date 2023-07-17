@@ -1,4 +1,4 @@
-package parallel
+package api
 
 import (
 	"errors"
@@ -11,31 +11,30 @@ import (
 	evmcore "github.com/arcology-network/evm/core"
 
 	"github.com/arcology-network/vm-adaptor/abi"
-	basetype "github.com/arcology-network/vm-adaptor/api/noncommutative/base"
 	execution "github.com/arcology-network/vm-adaptor/execution"
 
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
 
 // APIs under the concurrency namespace
-type ParallelHandler struct {
-	*basetype.BytesHandlers
+type MultiprocessHandlers struct {
+	*BaseHandlers
 	erros   []error
 	jobseqs []*execution.JobSequence
 }
 
-func NewHandler(ethApiRouter eucommon.EthApiRouter) *ParallelHandler {
-	handler := &ParallelHandler{
+func NewMultiprocessHandlers(ethApiRouter eucommon.EthApiRouter) *MultiprocessHandlers {
+	handler := &MultiprocessHandlers{
 		erros:   []error{},
 		jobseqs: []*execution.JobSequence{},
 	}
-	handler.BytesHandlers = basetype.NewHandler(ethApiRouter, handler)
+	handler.BaseHandlers = NewBaseHandlers(ethApiRouter, handler)
 	return handler
 }
 
-func (this *ParallelHandler) Address() [20]byte { return eucommon.PARALLEL_HANDLER }
+func (this *MultiprocessHandlers) Address() [20]byte { return eucommon.PARALLEL_HANDLER }
 
-func (this *ParallelHandler) Run(caller [20]byte, input []byte) ([]byte, bool, int64) {
+func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bool, int64) {
 	atomic.AddUint64(&eucommon.TotalSubProcesses, 1)
 	if !this.Api().CheckRuntimeConstrains() {
 		return []byte{}, false, 0
@@ -84,7 +83,7 @@ func (this *ParallelHandler) Run(caller [20]byte, input []byte) ([]byte, bool, i
 	return []byte{}, true, common.Sum(fees, int64(0))
 }
 
-func (this *ParallelHandler) toJobSeq(input []byte) (*execution.JobSequence, error) {
+func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence, error) {
 	input, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt64)
 	if err != nil {
 		return nil, errors.New("Error: Unrecognizable input format")
@@ -100,18 +99,18 @@ func (this *ParallelHandler) toJobSeq(input []byte) (*execution.JobSequence, err
 	}
 
 	newJobSeq := &execution.JobSequence{
-		ID:        this.BytesHandlers.Api().GetSerialNum(eucommon.SUB_PROCESS),
-		ApiRouter: this.BytesHandlers.Api(),
+		ID:        this.BaseHandlers.Api().GetSerialNum(eucommon.SUB_PROCESS),
+		ApiRouter: this.BaseHandlers.Api(),
 	}
 
 	addr := evmcommon.Address(calleeAddr)
 	evmMsg := evmcore.NewMessage( // Build the message
-		this.BytesHandlers.Api().Origin(),
+		this.BaseHandlers.Api().Origin(),
 		&addr,
 		0,
 		new(big.Int).SetUint64(0), // Amount to transfer
 		gasLimit,
-		this.BytesHandlers.Api().GetEU().(*execution.EU).Message().Native.GasPrice, // gas price
+		this.BaseHandlers.Api().GetEU().(*execution.EU).Message().Native.GasPrice, // gas price
 		funCall,
 		nil,
 		false, // Don't checking nonce
@@ -120,7 +119,7 @@ func (this *ParallelHandler) toJobSeq(input []byte) (*execution.JobSequence, err
 	stdMsg := &execution.StandardMessage{
 		ID:     newJobSeq.ID, // this is the problem !!!!
 		Native: &evmMsg,
-		TxHash: newJobSeq.DeriveNewHash(this.BytesHandlers.Api().GetEU().(*execution.EU).Message().TxHash),
+		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(*execution.EU).Message().TxHash),
 	}
 
 	newJobSeq.StdMsgs = []*execution.StandardMessage{stdMsg}

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
 
-import "../noncommutative/bytes/Bytes.sol";
-import "../noncommutative/bool/Bool.sol";
+import "../bytes/Bytes.sol";
+import "../bool/Bool.sol";
 
 contract PairTest {
     Bytes bytesContainer = new Bytes();

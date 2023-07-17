@@ -21,7 +21,7 @@ func TestBoolContainer(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
 
-	targetPath := project + "/api/noncommutative"
+	targetPath := project + "/lib/"
 
 	code, err := compiler.CompileContracts(targetPath, "bool/bool_test.sol", "0.8.19", "BoolTest", false)
 	if err != nil || len(code) == 0 {
@@ -62,7 +62,7 @@ func TestContractBoolN(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
 
-	targetPath := project + "/api/noncommutative"
+	targetPath := project + "/lib/"
 
 	code, err := compiler.CompileContracts(targetPath, "bool/booln_test.sol", "0.8.19", "BoolNTest", false)
 	if err != nil || len(code) == 0 {

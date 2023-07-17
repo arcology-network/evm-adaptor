@@ -13,19 +13,19 @@ package int64
 // 	"github.com/arcology-network/vm-adaptor/common"
 // 	eucommon "github.com/arcology-network/vm-adaptor/common"
 
-// 	apicommon "github.com/arcology-network/vm-adaptor/api/common"
+//
 // )
 
 // // APIs under the concurrency namespace
 // type Int256CumulativeHandlers struct {
 // 	api       eucommon.EthApiRouter
-// 	connector *apicommon.CcurlConnector
+// 	connector *CcurlConnector
 // }
 
 // func NewInt256CumulativeHandlers(api eucommon.EthApiRouter) *Int256CumulativeHandlers {
 // 	return &Int256CumulativeHandlers{
 // 		api:       api,
-// 		connector: apicommon.NewCCurlConnector("/container", api, api.Ccurl()),
+// 		connector: NewCCurlConnector("/container", api, api.Ccurl()),
 // 	}
 // }
 

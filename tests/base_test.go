@@ -23,9 +23,9 @@ func TestBaseContainer(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
 
-	targetPath := project + "/api/"
+	targetPath := project + "/lib/"
 
-	code, err := compiler.CompileContracts(targetPath, "noncommutative/base/base_test.sol", "0.8.19", "BaseLinearTest", false)
+	code, err := compiler.CompileContracts(targetPath, "/base/base_test.sol", "0.8.19", "BaseLinearTest", false)
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}

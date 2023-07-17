@@ -19,7 +19,7 @@ func TestContractNoncommutativeInt256(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	targetPath := project + "/api/noncommutative"
+	targetPath := project + "/lib/"
 
 	code, err := compiler.CompileContracts(targetPath, "int256/int256_test.sol", "0.8.19", "Int256Test", false)
 	if err != nil || len(code) == 0 {
@@ -57,7 +57,7 @@ func TestNoncommutativeInt256N(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	targetPath := project + "/api/noncommutative"
+	targetPath := project + "/lib"
 
 	code, err := compiler.CompileContracts(targetPath, "int256/int256N_test.sol", "0.8.19", "Int64NTest", false)
 	if err != nil || len(code) == 0 {

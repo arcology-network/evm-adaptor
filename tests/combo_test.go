@@ -20,7 +20,7 @@ func TestContainerPair(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	targetPath := project + "/api/"
+	targetPath := project + "/lib/"
 
 	code, err := compiler.CompileContracts(targetPath, "combo/bytes_bool_test.sol", "0.8.19", "PairTest", false)
 	if err != nil || len(code) == 0 {
@@ -37,11 +37,11 @@ func TestContainerPair(t *testing.T) {
 	}
 
 	receipt, _, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
-	// _, transitions := eu.Api().StateFilter().ByType()
+	// _, transitions := eu.lib().StateFilter().ByType()
 
 	// msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
 	// receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg)) // Execute it
-	// _, transitions := eu.Api().StateFilter().ByType()
+	// _, transitions := eu.lib().StateFilter().ByType()
 
 	// ---------------
 
@@ -56,7 +56,7 @@ func TestContainerPair(t *testing.T) {
 
 func TestBasicSet(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/api/"
+	targetPath := filepath.Dir(currentPath) + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "combo/set_test.sol", "0.8.19", "SetTest", "", []byte{}, false)
 	if err != nil {
@@ -66,7 +66,7 @@ func TestBasicSet(t *testing.T) {
 
 func TestBasicMap(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/api/"
+	targetPath := filepath.Dir(currentPath) + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "combo/map_test.sol", "0.8.19", "MapTest", "", []byte{}, false)
 	if err != nil {
@@ -76,7 +76,7 @@ func TestBasicMap(t *testing.T) {
 
 func TestConcurrentMap(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/api/"
+	targetPath := filepath.Dir(currentPath) + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "combo/map_test.sol", "0.8.19", "ConcurrenctMapTest", "", []byte{}, false)
 	if err != nil {

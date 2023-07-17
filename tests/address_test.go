@@ -20,7 +20,7 @@ func TestAddressContainer(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	targetPath := project + "/api/noncommutative"
+	targetPath := project + "/lib/"
 
 	code, err := compiler.CompileContracts(targetPath, "address/address_test.sol", "0.8.19", "AddressTest", false)
 

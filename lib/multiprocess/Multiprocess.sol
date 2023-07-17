@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import "../runtime/Runtime.sol";
-import "../noncommutative/base/Base.sol";
+import "../bool/Bool.sol";
 
 contract Multiprocess is Base, Revertible  {
     uint256 numThreads = 1;

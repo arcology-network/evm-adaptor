@@ -1,4 +1,4 @@
-package common
+package api
 
 import (
 	"github.com/arcology-network/common-lib/codec"

@@ -10,13 +10,8 @@ import (
 	"github.com/arcology-network/concurrenturl"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/vm"
-	cumulativeu256 "github.com/arcology-network/vm-adaptor/api/commutative/u256"
-	parallel "github.com/arcology-network/vm-adaptor/api/multiprocess"
-	runtime "github.com/arcology-network/vm-adaptor/api/runtime"
 	execution "github.com/arcology-network/vm-adaptor/execution"
 
-	ccurlcommon "github.com/arcology-network/concurrenturl/common"
-	basetype "github.com/arcology-network/vm-adaptor/api/noncommutative/base"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
 
@@ -50,11 +45,11 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	api.filter = NewExportFilter(api)
 
 	handlers := []eucommon.ApiCallHandler{
-		parallel.NewHandler(api),
-		basetype.NewHandler(api, nil),
-		cumulativeu256.NewHandler(api),
+		NewMultiprocessHandlers(api),
+		NewBaseHandlers(api, nil),
+		NewU256CumulativeHandlers(api),
 		// cumulativei256.NewInt256CumulativeHandlers(api),
-		runtime.NewHandler(api),
+		NewRuntimeHandlers(api),
 	}
 
 	for i, v := range handlers {
@@ -64,10 +59,10 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 		api.handlerDict[(handlers)[i].Address()] = v
 	}
 
-	api.ccurl.NewAccount(
-		ccurlcommon.SYSTEM,
-		hex.EncodeToString(codec.Bytes20(runtime.NewHandler(api).Address()).Encode()),
-	)
+	// api.ccurl.NewAccount(
+	// 	ccurlcommon.SYSTEM,
+	// 	hex.EncodeToString(codec.Bytes20(runtime.NewHandler(api).Address()).Encode()),
+	// )
 	return api
 }
 

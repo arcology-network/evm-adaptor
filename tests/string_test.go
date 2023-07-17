@@ -20,7 +20,7 @@ func TestContractString(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	targetPath := project + "/api/noncommutative"
+	targetPath := project + "/lib/"
 
 	code, err := compiler.CompileContracts(targetPath, "string/string_test.sol", "0.8.19", "StringTest", false)
 	if err != nil || len(code) == 0 {

@@ -20,7 +20,7 @@ func TestBytesContainer(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	targetPath := project + "/api/noncommutative"
+	targetPath := project + "/lib/"
 
 	code, err := compiler.CompileContracts(targetPath, "bytes/bytes_test.sol", "0.8.19", "ByteTest", false)
 	if err != nil || len(code) == 0 {
@@ -60,7 +60,7 @@ func TestBytesContainerFixedLength(t *testing.T) {
 	// ================================== Compile the contract ==================================
 	currentPath, _ := os.Getwd()
 	project := filepath.Dir(currentPath)
-	targetPath := project + "/api/noncommutative"
+	targetPath := project + "/lib/"
 
 	code, err := compiler.CompileContracts(targetPath, "bytes/bytesN_test.sol", "0.8.19", "BytesNTest", false)
 	if err != nil || len(code) == 0 {
