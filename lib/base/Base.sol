@@ -17,11 +17,11 @@ contract Base is Runtime{
     }
 
     // The initial length of the container at the current block height
-    // function peek() public returns(bytes memory)  {
-    //     (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("peek()"));
-    //     require(success);
-    //     return data;  
-    // } 
+    function peek() public returns(bytes memory)  {
+        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("peek()"));
+        require(success);
+        return data;  
+    } 
 
     function popBack() public virtual returns(bytes memory) { // 80 26 32 97
         bytes memory v = getIndex(length() - 1);

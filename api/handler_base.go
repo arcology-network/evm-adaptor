@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/hex"
 	"math"
 
 	"github.com/arcology-network/common-lib/codec"
@@ -51,8 +52,8 @@ func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20
 	case [4]byte{0xf1, 0x06, 0x84, 0x54}: // f1 06 84 54
 		return this.pid(caller, input[4:])
 
-	case [4]byte{0x3b, 0x3d, 0xca, 0x76}: // 3b 3d ca 76
-		return this.rand(caller, input[4:])
+	// case [4]byte{0x3b, 0x3d, 0xca, 0x76}: // 3b 3d ca 76
+	// 	return this.rand(caller, input[4:])
 
 	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}: // 1f 7b 6d 32
 		return this.length(caller, input[4:])
@@ -100,13 +101,13 @@ func (this *BaseHandlers) New(caller evmcommon.Address, input []byte) ([]byte, b
 
 func (this *BaseHandlers) pid(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	pidNum := this.api.Pid()
-	return pidNum[:], true, 0
+	return []byte(hex.EncodeToString(pidNum[:])), true, 0
 }
 
-func (this *BaseHandlers) rand(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	randNum := this.api.ElementUID()
-	return randNum, true, 0
-}
+// func (this *BaseHandlers) rand(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+// 	randNum := this.api.ElementUID()
+// 	return randNum, true, 0
+// }
 
 // getIndex the number of elements in the container
 func (this *BaseHandlers) length(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {

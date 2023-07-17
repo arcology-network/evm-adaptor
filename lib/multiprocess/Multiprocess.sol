@@ -6,12 +6,15 @@ import "../bool/Bool.sol";
 
 contract Multiprocess is Base, Revertible {
     uint256 numThreads = 1;
+    uint256 serial = 0; 
     constructor (uint256 threads) {
         Base.API = address(0xb0);
         numThreads = threads; 
     } 
 
     function push(bytes memory elem) public virtual { //9e c6 69 25
+        // serial++;
+        // Base.setKey(bytes.concat(uuid(), "-", abi.encodePacked(serial)), abi.encode(elem));
         Base.setKey(uuid(), abi.encode(elem));
     }    
  

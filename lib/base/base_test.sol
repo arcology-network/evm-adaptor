@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
+import "../runtime/Runtime.sol";
 
-contract BaseLinearTest {    
+contract BaseLinearTest is Runtime{    
     address constant public API = address(0x84); 
 
     uint[] public arr2 = [1, 2, 3];
     bytes private id;
 
-    event logMsg(string message);
+    // event logMsg(string message);
 
     constructor() {
         (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("new()"));       
@@ -71,11 +72,6 @@ contract BaseLinearTest {
         require(peek() == 1); 
     }
 
-    function rand() public returns(bytes memory args) {
-        (,bytes memory randome) = address(API).call(abi.encodeWithSignature("rand()"));     
-        return randome;
-    }
-
     function peek() public returns(uint256) {
         (,bytes memory data) = address(API).call(abi.encodeWithSignature("peek()"));
         if (data.length > 0) {
@@ -97,7 +93,7 @@ contract BaseLinearTest {
     }
 
     function push(bytes memory elem) public {
-        setKey(rand(), (elem));
+        setKey(uuid(), (elem));
     }   
     
     function setIndex(uint256 idx, bytes memory encoded) public { // 7a fa 62 38
