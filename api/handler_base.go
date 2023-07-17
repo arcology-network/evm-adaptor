@@ -52,9 +52,6 @@ func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20
 	case [4]byte{0xf1, 0x06, 0x84, 0x54}: // f1 06 84 54
 		return this.pid(caller, input[4:])
 
-	// case [4]byte{0x3b, 0x3d, 0xca, 0x76}: // 3b 3d ca 76
-	// 	return this.rand(caller, input[4:])
-
 	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}: // 1f 7b 6d 32
 		return this.length(caller, input[4:])
 

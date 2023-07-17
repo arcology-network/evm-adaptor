@@ -14,7 +14,7 @@ import (
 	"github.com/arcology-network/evm/crypto"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/compiler"
-	execution "github.com/arcology-network/vm-adaptor/execution"
+	"github.com/arcology-network/vm-adaptor/execution"
 )
 
 func TestBaseContainer(t *testing.T) {
@@ -26,7 +26,7 @@ func TestBaseContainer(t *testing.T) {
 
 	targetPath := project + "/lib/"
 
-	code, err := compiler.CompileContracts(targetPath, "/base/base_test.sol", "0.8.19", "BaseLinearTest", false)
+	code, err := compiler.CompileContracts(targetPath, "/base/base_test.sol", "0.8.19", "BaseTest", false)
 	if err != nil || len(code) == 0 {
 		t.Error("Error: Failed to generate the byte code")
 	}
@@ -65,7 +65,7 @@ func TestBaseContainer(t *testing.T) {
 	// if err != nil {
 	// 	fmt.Print(err)
 	// }
-	return
+	// return
 
 	data := crypto.Keccak256([]byte("call()"))[:4]
 	msg = core.NewMessage(eucommon.Alice, &contractAddress, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
