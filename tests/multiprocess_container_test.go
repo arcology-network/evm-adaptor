@@ -26,11 +26,11 @@ func TestParallelWithConflict(t *testing.T) {
 	}
 }
 
-func TestParaFixedLengthWithConflictRemovedByLocalizer(t *testing.T) {
+func TestParaFixedLengthWithConflictRollback(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/lib/"
 
-	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "ParaFixedLengthWithConflictRemovedByLocalizerTest", "call()", []byte{}, false)
+	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_container_test.sol", "0.8.19", "ParaFixedLengthWithConflictRollbackTest", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}

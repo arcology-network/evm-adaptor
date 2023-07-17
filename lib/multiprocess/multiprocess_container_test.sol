@@ -359,7 +359,7 @@ contract MaxRecursiveDepthOffLimitTest {
     }    
 }
 
-contract ParaFixedLengthWithConflictRemovedByLocalizerTest {
+contract ParaFixedLengthWithConflictRollbackTest {
     Bool container = new Bool();
     // Bool container2 = new Bool();
     function call() public {

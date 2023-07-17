@@ -2,8 +2,8 @@
 pragma solidity ^0.8.19;
 
 import "./Runtime.sol";
-import "../noncommutative/bool/Bool.sol";
-import "../commutative/u256/U256Cumulative.sol";
+import "../bool/Bool.sol";
+import "../u256cum/U256Cum.sol";
 
 
 contract ResettableDeployer {

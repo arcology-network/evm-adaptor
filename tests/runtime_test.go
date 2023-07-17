@@ -8,7 +8,7 @@ import (
 
 func TestResettable(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/api/"
+	targetPath := filepath.Dir(currentPath) + "/lib/"
 
 	err, _ := InvokeTestContract(targetPath, "runtime/runtime_test.sol", "0.8.19", "ResettableDeployer", "afterCheck()", []byte{}, false)
 	if err != nil {
