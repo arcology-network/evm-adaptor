@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import "../runtime/Runtime.sol";
 import "../bool/Bool.sol";
 
-contract Multiprocess is Base, Revertible  {
+contract Multiprocess is Base, Revertible {
     uint256 numThreads = 1;
     constructor (uint256 threads) {
         Base.API = address(0xb0);
@@ -12,7 +12,7 @@ contract Multiprocess is Base, Revertible  {
     } 
 
     function push(bytes memory elem) public virtual { //9e c6 69 25
-        Base.setKey(Base.rand(), abi.encode(elem));
+        Base.setKey(uuid(), abi.encode(elem));
     }    
  
     function pop() public virtual returns(bytes memory) { // 80 26 32 97

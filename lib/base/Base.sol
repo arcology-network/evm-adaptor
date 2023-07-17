@@ -1,24 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
-// import "../../runtime/Runtime.sol";
+import "../runtime/Runtime.sol";
 
-contract Base {
+contract Base is Runtime{
     address internal API = address(0x84);    
-    event logMsg(string message);
 
     constructor () {
         (bool success,) = address(API).call(abi.encodeWithSignature("new()", true));       
         require(success);
-    }
-
-    function pid() public returns(bytes memory args) {
-        (,bytes memory randome) = address(API).call(abi.encodeWithSignature("pid()"));     
-        return randome;
-    }
-
-    function rand() public returns(bytes memory args) {
-        (,bytes memory randome) = address(API).call(abi.encodeWithSignature("rand()"));     
-        return randome;
     }
 
     function length() public returns(uint256) {  // 58 94 13 33
@@ -28,11 +17,11 @@ contract Base {
     }
 
     // The initial length of the container at the current block height
-    function peek() public returns(bytes memory)  {
-        (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("peek()"));
-        require(success);
-        return data;  
-    } 
+    // function peek() public returns(bytes memory)  {
+    //     (bool success, bytes memory data) = address(API).call(abi.encodeWithSignature("peek()"));
+    //     require(success);
+    //     return data;  
+    // } 
 
     function popBack() public virtual returns(bytes memory) { // 80 26 32 97
         bytes memory v = getIndex(length() - 1);

@@ -7,7 +7,7 @@ contract Bytes is Base {
     constructor() {}
 
     function push(bytes memory elem) public virtual { //9e c6 69 25
-        Base.setKey(Base.rand(), abi.encodePacked(elem));
+        Base.setKey(uuid(), abi.encodePacked(elem));
     }    
 
     function pop() public virtual returns(bytes memory) { // 80 26 32 97

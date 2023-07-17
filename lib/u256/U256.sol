@@ -8,7 +8,7 @@ contract U256 is Base {
     constructor() {}
 
     function push(uint256 elem) public virtual{ //9e c6 69 25
-       Base.setKey(Base.rand(), abi.encode(elem));
+       Base.setKey(uuid(), abi.encode(elem));
     }    
 
     function pop() public virtual returns(uint256) { // 80 26 32 97

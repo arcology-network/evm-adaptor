@@ -7,7 +7,7 @@ contract Bool is Base {
     constructor() {}
 
     function push(bool elem) public virtual { //9e c6 69 25
-        Base.setKey(Base.rand(), abi.encode(elem));
+        Base.setKey(uuid(), abi.encode(elem));
     }    
 
     function pop() public virtual returns(bool) { // 80 26 32 97

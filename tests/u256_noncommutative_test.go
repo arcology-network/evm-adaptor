@@ -15,7 +15,7 @@ func TestU256Dynamic(t *testing.T) {
 	}
 }
 
-func TestU256Threading(t *testing.T) {
+func TestU256Multiprocess(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/lib"
 	err, _ := InvokeTestContract(targetPath, "/u256/u256_test.sol", "0.8.19", "U256ParallelTest", "call()", []byte{}, false)
@@ -24,7 +24,7 @@ func TestU256Threading(t *testing.T) {
 	}
 }
 
-func TestArrayThreading(t *testing.T) {
+func TestArrayMultiprocess(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := filepath.Dir(currentPath) + "/lib"
 	err, _ := InvokeTestContract(targetPath, "/u256/u256_test.sol", "0.8.19", "ArrayParallelTest", "call()", []byte{}, false)
