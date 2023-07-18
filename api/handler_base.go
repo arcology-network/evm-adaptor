@@ -55,23 +55,29 @@ func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20
 	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}: // 1f 7b 6d 32
 		return this.length(caller, input[4:])
 
+	case [4]byte{0x6a, 0x3a, 0x16, 0xbd}: // =========  6a 3a 16 bd
+		return this.indexByKey(caller, input[4:])
+
+	case [4]byte{0xb7, 0xc5, 0x64, 0x6c}: // b7c5646c
+		return this.keyByIndex(caller, input[4:])
+
 	case [4]byte{0x8e, 0x7c, 0xb6, 0xe1}: // 8e 7c b6 e1
-		return this.getIndex(caller, input[4:])
+		return this.getByIndex(caller, input[4:])
 
 	case [4]byte{0xaf, 0x4b, 0xaa, 0x7d}: // af 4b aa 7d
-		return this.setIndex(caller, input[4:])
+		return this.setByIndex(caller, input[4:])
 
 	case [4]byte{0x7f, 0xed, 0x84, 0xf2}: //7f ed 84 f2
-		return this.getKey(caller, input[4:])
+		return this.getByKey(caller, input[4:])
 
 	case [4]byte{0xc2, 0x78, 0xb7, 0x99}: // c2 78 b7 99
-		return this.setKey(caller, input[4:])
+		return this.setByKey(caller, input[4:])
 
 	case [4]byte{0x90, 0xd2, 0x44, 0xd8}: //  90 d2 44 d8
-		return this.delIndex(caller, input[4:])
+		return this.delByIndex(caller, input[4:])
 
 	case [4]byte{0x37, 0x79, 0xc0, 0x34}:
-		return this.delKey(caller, input[4:])
+		return this.delByKey(caller, input[4:])
 
 	case [4]byte{0x52, 0xef, 0xea, 0x6e}:
 		return this.clear(caller, input[4:])
@@ -106,7 +112,7 @@ func (this *BaseHandlers) pid(caller evmcommon.Address, input []byte) ([]byte, b
 // 	return randNum, true, 0
 // }
 
-// getIndex the number of elements in the container
+// getByIndex the number of elements in the container
 func (this *BaseHandlers) length(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller)
 	if length, successful, _ := this.Length(path); successful {
@@ -117,7 +123,7 @@ func (this *BaseHandlers) length(caller evmcommon.Address, input []byte) ([]byte
 	return []byte{}, false, 0
 }
 
-// getIndex the intial length of the container
+// getByIndex the intial length of the container
 func (this *BaseHandlers) peekLength(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // BaseHandlers path
 	if len(path) == 0 {
@@ -135,7 +141,7 @@ func (this *BaseHandlers) peekLength(caller evmcommon.Address, input []byte) ([]
 	return []byte{}, false, int64(fees)
 }
 
-func (this *BaseHandlers) getIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) getByIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
@@ -146,7 +152,7 @@ func (this *BaseHandlers) getIndex(caller evmcommon.Address, input []byte) ([]by
 		return []byte{}, false, 0
 	}
 
-	values, successful, _ := this.GetIndex(path, idx)
+	values, successful, _ := this.GetByIndex(path, idx)
 	if len(values) > 0 && successful {
 		if encoded, err := abi.Encode(values); err == nil { // Encode the result
 			offset := [32]byte{}
@@ -158,15 +164,15 @@ func (this *BaseHandlers) getIndex(caller evmcommon.Address, input []byte) ([]by
 	return []byte{}, false, 0
 }
 
-func (this *BaseHandlers) getKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) getByKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
 
-	if key, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt); err == nil {
+	if key, err := abi.DecodeTo(input, 1, []byte{}, 2, math.MaxInt); err == nil && len(key) > 0 {
 		str := eucommon.ToValidName(key)
-		bytes, successful, _ := this.GetKey(path + str)
+		bytes, successful, _ := this.GetByKey(path + str)
 
 		if len(bytes) > 0 && successful {
 			if encoded, err := abi.Encode(bytes); err == nil { // Encode the result
@@ -180,7 +186,7 @@ func (this *BaseHandlers) getKey(caller evmcommon.Address, input []byte) ([]byte
 	return []byte{}, false, 0
 }
 
-func (this *BaseHandlers) setIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) setByIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 
 	idx, bytes, err := abi.Parse2(input,
@@ -192,14 +198,14 @@ func (this *BaseHandlers) setIndex(caller evmcommon.Address, input []byte) ([]by
 		return []byte{}, false, 0
 	}
 
-	if successful, fee := this.SetIndex(path, idx, bytes); successful {
+	if successful, fee := this.SetByIndex(path, idx, bytes); successful {
 		return []byte{}, true, fee
 	}
 	return []byte{}, false, 0
 }
 
 // push a new element into the container
-func (this *BaseHandlers) setKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) setByKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // BaseHandlers path
 	if len(path) == 0 {
 		return []byte{}, false, 0
@@ -212,31 +218,66 @@ func (this *BaseHandlers) setKey(caller evmcommon.Address, input []byte) ([]byte
 
 	if err == nil {
 		str := eucommon.ToValidName(key)
-		successful, _ := this.SetKey(path+str, value)
+		successful, _ := this.SetByKey(path+str, value)
 		return []byte{}, successful, 0
 	}
 
 	return []byte{}, false, 0
 }
 
-func (this *BaseHandlers) delIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) indexByKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	path := this.connector.Key(caller) // BaseHandlers path
+	if len(path) == 0 {
+		return []byte{}, false, 0
+	}
+
+	if key, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt); err == nil {
+		index, _ := this.IndexOf(path, string(key))
+		if encoded, err := abi.Encode(index); err == nil { // Encode the result
+			return encoded, true, 0
+		}
+	}
+	return []byte{}, false, 0
+}
+
+// 4223b5c2
+func (this *BaseHandlers) keyByIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	path := this.connector.Key(caller) // BaseHandlers path
+	if len(path) == 0 {
+		return []byte{}, false, 0
+	}
+
+	if index, err := abi.DecodeTo(input, 0, uint64(0), 2, 32); err == nil {
+		key, _ := this.KeyAt(path, index)
+		bytes := []byte(key)
+		if encoded, err := abi.Encode(bytes); err == nil { // Encode the result
+			offset := [32]byte{}
+			offset[len(offset)-1] = uint8(len(offset))
+			encoded = append(offset[:], encoded...)
+			return encoded, true, 0
+		}
+	}
+	return []byte{}, false, 0
+}
+
+func (this *BaseHandlers) delByIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32)
 	if err == nil {
-		if successful, fee := this.SetIndex(path, idx, nil); successful {
+		if successful, fee := this.SetByIndex(path, idx, nil); successful {
 			return []byte{}, true, fee
 		}
 	}
 	return []byte{}, false, 0
 }
 
-func (this *BaseHandlers) delKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *BaseHandlers) delByKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 
 	key, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt)
 	if err == nil {
 		str := eucommon.ToValidName(key)
-		if successful, fee := this.SetKey(path+str, nil); successful {
+		if successful, fee := this.SetByKey(path+str, nil); successful {
 			return []byte{}, true, fee
 		}
 	}

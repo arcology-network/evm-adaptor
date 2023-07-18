@@ -12,7 +12,7 @@ type ExecutionLog struct {
 	Value string `json:"value"`
 }
 
-func (this *ExecutionLog) GetKey() string {
+func (this *ExecutionLog) GetByKey() string {
 	return this.Key
 }
 

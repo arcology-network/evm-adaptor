@@ -62,7 +62,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 	this.erros = make([]error, length)
 	this.jobseqs = make([]*execution.JobSequence, length)
 	for i := uint64(0); i < length; i++ {
-		data, successful, fee := this.GetIndex(path, uint64(i))
+		data, successful, fee := this.GetByIndex(path, uint64(i))
 		if fees[i] = fee; successful {
 			this.jobseqs[i], this.erros[i] = this.toJobSeq(data)
 		}

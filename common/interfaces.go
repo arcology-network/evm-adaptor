@@ -50,7 +50,7 @@ type StateFilter interface {
 }
 
 type ILog interface {
-	GetKey() string
+	GetByKey() string
 	GetValue() string
 }
 
