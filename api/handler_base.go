@@ -231,9 +231,9 @@ func (this *BaseHandlers) indexByKey(caller evmcommon.Address, input []byte) ([]
 		return []byte{}, false, 0
 	}
 
-	if key, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt); err == nil {
+	if key, err := abi.DecodeTo(input, 1, []byte{}, 2, math.MaxInt); err == nil {
 		index, _ := this.IndexOf(path, string(key))
-		if encoded, err := abi.Encode(index); err == nil { // Encode the result
+		if encoded, err := abi.Encode(index); index != math.MaxUint64 && err == nil { // Encode the result
 			return encoded, true, 0
 		}
 	}
@@ -247,7 +247,7 @@ func (this *BaseHandlers) keyByIndex(caller evmcommon.Address, input []byte) ([]
 		return []byte{}, false, 0
 	}
 
-	if index, err := abi.DecodeTo(input, 0, uint64(0), 2, 32); err == nil {
+	if index, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {
 		key, _ := this.KeyAt(path, index)
 		bytes := []byte(key)
 		if encoded, err := abi.Encode(bytes); err == nil { // Encode the result
