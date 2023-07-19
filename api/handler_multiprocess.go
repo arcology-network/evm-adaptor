@@ -1,7 +1,6 @@
 package api
 
 import (
-	"errors"
 	"math"
 	"math/big"
 	"sync/atomic"
@@ -35,8 +34,7 @@ func NewMultiprocessHandlers(ethApiRouter eucommon.EthApiRouter) *MultiprocessHa
 func (this *MultiprocessHandlers) Address() [20]byte { return eucommon.PARALLEL_HANDLER }
 
 func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bool, int64) {
-	atomic.AddUint64(&eucommon.TotalSubProcesses, 1)
-	if !this.Api().CheckRuntimeConstrains() {
+	if atomic.AddUint64(&eucommon.TotalSubProcesses, 1); !this.Api().CheckRuntimeConstrains() {
 		return []byte{}, false, 0
 	}
 
@@ -62,9 +60,9 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 	this.erros = make([]error, length)
 	this.jobseqs = make([]*execution.JobSequence, length)
 	for i := uint64(0); i < length; i++ {
-		data, successful, fee := this.GetByIndex(path, uint64(i))
+		funCall, successful, fee := this.GetByIndex(path, uint64(i))
 		if fees[i] = fee; successful {
-			this.jobseqs[i], this.erros[i] = this.toJobSeq(data)
+			this.jobseqs[i], this.erros[i] = this.toJobSeq(funCall)
 		}
 		generation.Add(this.jobseqs[i])
 	}
@@ -84,11 +82,6 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 }
 
 func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence, error) {
-	input, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt64)
-	if err != nil {
-		return nil, errors.New("Error: Unrecognizable input format")
-	}
-
 	gasLimit, calleeAddr, funCall, err := abi.Parse3(input,
 		uint64(0), 1, 32,
 		[20]byte{}, 1, 32,
