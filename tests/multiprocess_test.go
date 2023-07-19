@@ -195,3 +195,23 @@ func TestCumulativeU256ThreadingMultiTimes(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestU256ParaCompute(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
+
+	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_cum_test.sol", "0.8.19", "U256ParaCompute", "calculate()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestUint256ParaCompute(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
+
+	err, _ := InvokeTestContract(targetPath, "multiprocess/multiprocess_cum_test.sol", "0.8.19", "CumulativeU256ParaCompute", "calculate()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}

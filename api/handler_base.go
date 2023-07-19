@@ -107,11 +107,6 @@ func (this *BaseHandlers) pid(caller evmcommon.Address, input []byte) ([]byte, b
 	return []byte(hex.EncodeToString(pidNum[:])), true, 0
 }
 
-// func (this *BaseHandlers) rand(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-// 	randNum := this.api.ElementUID()
-// 	return randNum, true, 0
-// }
-
 // getByIndex the number of elements in the container
 func (this *BaseHandlers) length(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller)
