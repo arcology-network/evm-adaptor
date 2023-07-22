@@ -11,7 +11,7 @@ func TestContainerPair(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
 
-	err, _ := InvokeTestContract(targetPath, "pair/bytes_bool_test.sol", "0.8.19", "PairTest", "", []byte{}, false)
+	err, _ := InvokeTestContract(targetPath, "array/bytes_bool_test.sol", "0.8.19", "PairTest", "", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}

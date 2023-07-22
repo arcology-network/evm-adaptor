@@ -47,7 +47,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 	if err != nil {
 		return []byte{}, false, 0
 	}
-	threads := common.Min(common.Min(uint8(numThreads), 1), math.MaxUint8)
+	threads := common.Min(common.Max(uint8(numThreads), 1), math.MaxUint8) // [1, 255]
 
 	path := this.Connector().Key(caller)
 	length, successful, fee := this.Length(path)
@@ -66,9 +66,9 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 		}
 		generation.Add(this.jobseqs[i])
 	}
-
 	results := generation.Run(this.Api())
 
+	// Sub processes may have been spawned during the execution, recheck it.
 	if !this.Api().CheckRuntimeConstrains() {
 		return []byte{}, false, fee
 	}
