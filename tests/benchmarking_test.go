@@ -12,6 +12,6 @@ func BenchmarkReverseString10k(b *testing.B) {
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
 
 	for i := 0; i < 10; i++ {
-		InvokeTestContract(targetPath, "multiprocess/mp_benchmarking.sol", "0.8.19", "MpBenchmarking", "benchmarkReverseString10k()", []byte{}, false)
+		DeployThenInvoke(targetPath, "multiprocess/mp_benchmarking.sol", "0.8.19", "MpBenchmarking", "benchmarkReverseString10k()", []byte{}, false)
 	}
 }

@@ -27,7 +27,7 @@ func (this *RuntimeHandlers) Address() [20]byte {
 	return common.RUNTIME_HANDLER
 }
 
-func (this *RuntimeHandlers) Call(caller, callee [20]byte, input []byte, _ [20]byte, nonce uint64) ([]byte, bool, int64) {
+func (this *RuntimeHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
@@ -42,7 +42,6 @@ func (this *RuntimeHandlers) Call(caller, callee [20]byte, input []byte, _ [20]b
 	case [4]byte{0xbb, 0x07, 0xe8, 0x5d}: // bb 07 e8 5d
 		return this.uuid(caller, callee, input[4:])
 	}
-
 	return []byte{}, false, 0
 }
 

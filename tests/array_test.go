@@ -10,7 +10,7 @@ import (
 func TestAddressContainer(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
-	err, _ := InvokeTestContract(targetPath, "array/address_test.sol", "0.8.19", "AddressTest", "", []byte{}, false)
+	err, _, _ := DeployThenInvoke(targetPath, "array/address_test.sol", "0.8.19", "AddressTest", "", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -19,7 +19,7 @@ func TestAddressContainer(t *testing.T) {
 func TestBoolContainer(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
-	err, _ := InvokeTestContract(targetPath, "array/bool_test.sol", "0.8.19", "BoolTest", "", []byte{}, false)
+	err, _, _ := DeployThenInvoke(targetPath, "array/bool_test.sol", "0.8.19", "BoolTest", "", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -28,7 +28,7 @@ func TestBoolContainer(t *testing.T) {
 func TestBytesContainer(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
-	err, _ := InvokeTestContract(targetPath, "array/bytes_test.sol", "0.8.19", "ByteTest", "", []byte{}, false)
+	err, _, _ := DeployThenInvoke(targetPath, "array/bytes_test.sol", "0.8.19", "ByteTest", "", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -37,7 +37,7 @@ func TestBytesContainer(t *testing.T) {
 func TestContractBytes32(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
-	err, _ := InvokeTestContract(targetPath, "array/bytes32_test.sol", "0.8.19", "Bytes32Test", "", []byte{}, false)
+	err, _, _ := DeployThenInvoke(targetPath, "array/bytes32_test.sol", "0.8.19", "Bytes32Test", "", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -46,7 +46,7 @@ func TestContractBytes32(t *testing.T) {
 func TestContractNoncommutativeInt256(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
-	err, _ := InvokeTestContract(targetPath, "array/int256_test.sol", "0.8.19", "Int256Test", "", []byte{}, false)
+	err, _, _ := DeployThenInvoke(targetPath, "array/int256_test.sol", "0.8.19", "Int256Test", "", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -55,7 +55,7 @@ func TestContractNoncommutativeInt256(t *testing.T) {
 func TestContractString(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
-	err, _ := InvokeTestContract(targetPath, "array/string_test.sol", "0.8.19", "StringTest", "", []byte{}, false)
+	err, _, _ := DeployThenInvoke(targetPath, "array/string_test.sol", "0.8.19", "StringTest", "", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -65,7 +65,7 @@ func TestCumulativeU256(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
 
-	err, _ := InvokeTestContract(targetPath, "commutative/u256Cum_test.sol", "0.8.19", "CumulativeU256Test", "", []byte{}, false)
+	err, _, _ := DeployThenInvoke(targetPath, "commutative/u256Cum_test.sol", "0.8.19", "CumulativeU256Test", "", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -74,7 +74,7 @@ func TestCumulativeU256(t *testing.T) {
 func TestU256Dynamic(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib"
-	err, _ := InvokeTestContract(targetPath, "/multiprocess/mp_u256_test.sol", "0.8.19", "U256ParallelTest", "", []byte{}, false)
+	err, _, _ := DeployThenInvoke(targetPath, "/multiprocess/mp_u256_test.sol", "0.8.19", "U256ParallelTest", "", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -83,7 +83,7 @@ func TestU256Dynamic(t *testing.T) {
 func TestU256Multiprocess(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib"
-	err, _ := InvokeTestContract(targetPath, "/multiprocess/mp_u256_test.sol", "0.8.19", "U256ParallelTest", "call()", []byte{}, false)
+	err, _, _ := DeployThenInvoke(targetPath, "/multiprocess/mp_u256_test.sol", "0.8.19", "U256ParallelTest", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -92,7 +92,7 @@ func TestU256Multiprocess(t *testing.T) {
 func TestArrayMultiprocess(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib"
-	err, _ := InvokeTestContract(targetPath, "/multiprocess/mp_u256_test.sol", "0.8.19", "ArrayParallelTest", "call()", []byte{}, false)
+	err, _, _ := DeployThenInvoke(targetPath, "/multiprocess/mp_u256_test.sol", "0.8.19", "ArrayParallelTest", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}

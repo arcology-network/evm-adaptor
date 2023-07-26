@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/hex"
+	"fmt"
 	"strconv"
 	"sync/atomic"
 
@@ -45,6 +46,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	api.filter = NewExportFilter(api)
 
 	handlers := []eucommon.ApiCallHandler{
+		NewIoHandlers(api),
 		NewMultiprocessHandlers(api),
 		NewBaseHandlers(api, nil),
 		NewU256CumulativeHandlers(api),
@@ -54,7 +56,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 
 	for i, v := range handlers {
 		if _, ok := api.handlerDict[(handlers)[i].Address()]; ok {
-			panic("Error: Duplicate handler addresses found!!")
+			panic("Error: Duplicate handler addresses found!! " + fmt.Sprint((handlers)[i].Address()))
 		}
 		api.handlerDict[(handlers)[i].Address()] = v
 	}

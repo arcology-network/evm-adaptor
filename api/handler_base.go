@@ -32,10 +32,7 @@ func NewBaseHandlers(api eucommon.EthApiRouter, handler interface{}) *BaseHandle
 	}
 }
 
-func (this *BaseHandlers) Address() [20]byte {
-	return common.BYTES_HANDLER
-}
-
+func (this *BaseHandlers) Address() [20]byte          { return common.BYTES_HANDLER }
 func (this *BaseHandlers) Connector() *CcurlConnector { return this.connector }
 
 func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {

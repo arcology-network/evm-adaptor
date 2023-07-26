@@ -31,7 +31,7 @@ func NewMultiprocessHandlers(ethApiRouter eucommon.EthApiRouter) *MultiprocessHa
 	return handler
 }
 
-func (this *MultiprocessHandlers) Address() [20]byte { return eucommon.PARALLEL_HANDLER }
+func (this *MultiprocessHandlers) Address() [20]byte { return eucommon.MULTIPROCESS_HANDLER }
 
 func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bool, int64) {
 	if atomic.AddUint64(&eucommon.TotalSubProcesses, 1); !this.Api().CheckRuntimeConstrains() {
