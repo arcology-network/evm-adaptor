@@ -10,6 +10,7 @@ import (
 	"github.com/arcology-network/evm/core"
 	evmcore "github.com/arcology-network/evm/core"
 	"github.com/arcology-network/evm/core/types"
+	evmcoretypes "github.com/arcology-network/evm/core/types"
 	"github.com/arcology-network/evm/core/vm"
 	"github.com/arcology-network/evm/crypto"
 	"github.com/arcology-network/evm/params"
@@ -49,7 +50,7 @@ func (this *EU) SetRuntimeContext(statedb vm.StateDB, api eucommon.EthApiRouter)
 	this.evm.ArcologyNetworkAPIs.APIs = api
 }
 
-func (this *EU) Run(stdmsg *StandardMessage, blockContext vm.BlockContext, txContext vm.TxContext) (*types.Receipt, *evmcore.ExecutionResult, error) {
+func (this *EU) Run(stdmsg *StandardMessage, blockContext vm.BlockContext, txContext vm.TxContext) (*evmcoretypes.Receipt, *evmcore.ExecutionResult, error) {
 	this.statedb.(*eth.ImplStateDB).PrepareFormer(stdmsg.TxHash, ethCommon.Hash{}, uint32(stdmsg.ID))
 
 	this.evm.Context = blockContext

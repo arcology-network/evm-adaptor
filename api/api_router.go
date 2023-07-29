@@ -2,19 +2,17 @@ package api
 
 import (
 	"encoding/hex"
+	"fmt"
 	"strconv"
+	"sync/atomic"
 
 	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl"
 	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/evm/core/vm"
-	cumulativeu256 "github.com/arcology-network/vm-adaptor/api/commutative/u256"
-	runtime "github.com/arcology-network/vm-adaptor/api/runtime"
 	execution "github.com/arcology-network/vm-adaptor/execution"
 
-	noncommutativeBytes "github.com/arcology-network/vm-adaptor/api/noncommutative/base"
-	threading "github.com/arcology-network/vm-adaptor/api/threading"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
 
@@ -26,12 +24,14 @@ type API struct {
 
 	schedule interface{}
 	eu       *execution.EU
-	reserved interface{}
+	// reserved interface{}
 
 	handlerDict map[[20]byte]eucommon.ApiCallHandler // APIs under the atomic namespace
 	ccurl       *concurrenturl.ConcurrentUrl
 
 	execResult *execution.Result
+
+	filter eucommon.StateFilter
 }
 
 func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
@@ -43,27 +43,28 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 		execResult:  &execution.Result{},
 		serialNums:  [4]uint64{},
 	}
+	api.filter = NewExportFilter(api)
 
 	handlers := []eucommon.ApiCallHandler{
-		noncommutativeBytes.NewNoncommutativeBytesHandlers(api),
-		cumulativeu256.NewU256CumulativeHandlers(api),
+		NewIoHandlers(api),
+		NewMultiprocessHandlers(api),
+		NewBaseHandlers(api, nil),
+		NewU256CumulativeHandlers(api),
 		// cumulativei256.NewInt256CumulativeHandlers(api),
-		threading.NewThreadingHandler(api),
-		runtime.NewRuntimeHandler(api),
+		NewRuntimeHandlers(api),
 	}
 
 	for i, v := range handlers {
 		if _, ok := api.handlerDict[(handlers)[i].Address()]; ok {
-			panic("Error: Duplicate handler addresses found!!")
+			panic("Error: Duplicate handler addresses found!! " + fmt.Sprint((handlers)[i].Address()))
 		}
 		api.handlerDict[(handlers)[i].Address()] = v
 	}
 
-	api.ccurl.NewAccount( // A temp account for handling deferred calls
-		concurrenturl.SYSTEM,
-		api.ccurl.Platform.Eth10(),
-		hex.EncodeToString(codec.Bytes20(runtime.NewRuntimeHandler(api).Address()).Encode()),
-	)
+	// api.ccurl.NewAccount(
+	// 	ccurlcommon.SYSTEM,
+	// 	hex.EncodeToString(codec.Bytes20(runtime.NewHandler(api).Address()).Encode()),
+	// )
 	return api
 }
 
@@ -73,9 +74,12 @@ func (this *API) New(ccurl *concurrenturl.ConcurrentUrl, schedule interface{}) e
 	return api
 }
 
-func (this *API) IsLocal(txID uint32) bool         { return txID == concurrenturl.SYSTEM } //A local tx
-func (this *API) GetReserved() interface{}         { return this.reserved }
-func (this *API) SetReserved(reserved interface{}) { this.reserved = reserved }
+func (this *API) CheckRuntimeConstrains() bool { // Execeeds the max recursion depth or the max sub processes
+	return this.Depth() < eucommon.MAX_RECURSIION_DEPTH &&
+		atomic.AddUint64(&eucommon.TotalSubProcesses, 1) <= eucommon.MAX_SUB_PROCESSES
+}
+
+func (this *API) StateFilter() eucommon.StateFilter { return this.filter }
 
 func (this *API) Depth() uint8                { return this.depth }
 func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }
@@ -94,17 +98,23 @@ func (this *API) SetEU(eu interface{}) { this.eu = eu.(*execution.EU) }
 func (this *API) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }
 
 func (this *API) GetSerialNum(idx int) uint64 {
+	v := this.serialNums[idx]
 	this.serialNums[idx]++
-	return this.serialNums[idx]
+	return v
+}
+
+func (this *API) Pid() [32]byte {
+	return this.eu.Message().TxHash
 }
 
 func (this *API) ElementUID() []byte {
-	return []byte(hex.EncodeToString(this.eu.Message().TxHash[:8]) + "-" + strconv.Itoa(int(this.GetSerialNum(eucommon.ELEMENT_ID))))
+	instanceID := this.Pid()
+	return []byte(hex.EncodeToString(instanceID[:8]) + "-" + strconv.Itoa(int(this.GetSerialNum(eucommon.ELEMENT_ID))))
 }
 
 // Generate an UUID based on transaction hash and the counter
 func (this *API) UUID() []byte {
-	id := codec.Bytes32(this.eu.Message().TxHash).UUID(this.GetSerialNum(eucommon.UUID))
+	id := codec.Bytes32(this.Pid()).UUID(this.GetSerialNum(eucommon.UUID))
 	return id[:8]
 }
 

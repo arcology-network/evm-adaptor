@@ -7,6 +7,7 @@ import (
 	codec "github.com/arcology-network/common-lib/codec"
 	commonlib "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl"
+	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	vmCommon "github.com/arcology-network/vm-adaptor/common"
@@ -23,35 +24,35 @@ func (this *EthCCurlConnector) AccountExist(url *concurrenturl.ConcurrentUrl, ac
 }
 
 func (this *EthCCurlConnector) AccountRootPath(account evmcommon.Address) string {
-	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), codec.Bytes20(account).Hex(), "/")
+	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, codec.Bytes20(account).Hex(), "/")
 }
 
 func (this *EthCCurlConnector) StorageRootPath(account evmcommon.Address) string {
-	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), codec.Bytes20(account).Hex(), "/storage/native/")
+	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, codec.Bytes20(account).Hex(), "/storage/native/")
 }
 
 func (this *EthCCurlConnector) BalancePath(account evmcommon.Address) string {
-	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), codec.Bytes20(account).Hex(), "/balance")
+	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, codec.Bytes20(account).Hex(), "/balance")
 }
 
 func (this *EthCCurlConnector) NoncePath(account evmcommon.Address) string {
-	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), codec.Bytes20(account).Hex(), "/nonce")
+	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, codec.Bytes20(account).Hex(), "/nonce")
 }
 
 func (this *EthCCurlConnector) CodePath(account evmcommon.Address) string {
-	return commonlib.StrCat(this.ccurl.Platform.Eth10Account(), codec.Bytes20(account).Hex(), "/code")
+	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, codec.Bytes20(account).Hex(), "/code")
 }
 
 func getAccountRootPath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], account[:])
-	return commonlib.StrCat(url.Platform.Eth10Account(), codec.Bytes20(account).Hex(), "/")
+	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, codec.Bytes20(account).Hex(), "/")
 }
 
 func getStorageRootPath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], account[:])
-	return commonlib.StrCat(url.Platform.Eth10Account(), string(accHex[:]), "/storage/native/")
+	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(accHex[:]), "/storage/native/")
 }
 
 func getLocalStorageKeyPath(api vmCommon.EthApiRouter, account evmcommon.Address, key evmcommon.Hash) string {
@@ -60,31 +61,31 @@ func getLocalStorageKeyPath(api vmCommon.EthApiRouter, account evmcommon.Address
 
 	mem := api.VM().ArcologyNetworkAPIs.CallContext.Memory.Data()
 	fmt.Print(len(mem))
-	return api.Ccurl().Platform.Eth10Account() + string(accHex[:]) + "/storage/native/local/" + "0"
+	return ccurlcommon.ETH10_ACCOUNT_PREFIX + string(accHex[:]) + "/storage/native/local/" + "0"
 }
 
 func getStorageKeyPath(api vmCommon.EthApiRouter, account evmcommon.Address, key evmcommon.Hash) string {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], account[:])
-	return commonlib.StrCat(api.Ccurl().Platform.Eth10Account(), string(accHex[:]), "/storage/native/", key.Hex())
+	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(accHex[:]), "/storage/native/", key.Hex())
 }
 
 func getBalancePath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], account[:])
-	return commonlib.StrCat(url.Platform.Eth10Account(), string(accHex[:]), "/balance")
+	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(accHex[:]), "/balance")
 }
 
 func getNoncePath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], account[:])
-	return commonlib.StrCat(url.Platform.Eth10Account(), string(accHex[:]), "/nonce")
+	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(accHex[:]), "/nonce")
 }
 
 func getCodePath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], account[:])
-	return commonlib.StrCat(url.Platform.Eth10Account(), string(accHex[:]), "/code")
+	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(accHex[:]), "/code")
 }
 
 func accountExist(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, tid uint32) bool {
@@ -94,7 +95,7 @@ func accountExist(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, t
 }
 
 func createAccount(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, tid uint32) {
-	if err := url.NewAccount(tid, url.Platform.Eth10(), codec.Bytes20(account).Hex()); err != nil {
+	if err := url.NewAccount(tid, codec.Bytes20(account).Hex()); err != nil {
 		panic(err)
 	}
 

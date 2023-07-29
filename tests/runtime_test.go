@@ -2,15 +2,16 @@ package tests
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 )
 
-func TestLocalizer(t *testing.T) {
+func TestResettable(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := filepath.Dir(currentPath) + "/api/"
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
 
-	err, _ := InvokeTestContract(targetPath, "runtime/runtime_test.sol", "0.8.19", "LocalizerTest", "", []byte{}, false)
+	err, _, _ := DeployThenInvoke(targetPath, "storage/storage_test.sol", "0.8.19", "ResettableDeployer", "afterCheck()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}

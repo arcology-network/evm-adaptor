@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	codec "github.com/arcology-network/common-lib/codec"
-	"github.com/arcology-network/concurrenturl"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
 	noncommutative "github.com/arcology-network/concurrenturl/noncommutative"
 	"github.com/arcology-network/evm/common"
@@ -298,9 +297,9 @@ func (this *ImplStateDB) Set(eac EthAccountCache, esc EthStorageCache) {
 	// TODO
 }
 
-func GetAccountPathSize(url *concurrenturl.ConcurrentUrl) int {
-	return len(url.Platform.Eth10()) + 2*evmcommon.AddressLength
-}
+// func GetAccountPathSize(url *concurrenturl.ConcurrentUrl) int {
+// 	return len(url.Platform.Eth10()) + 2*evmcommon.AddressLength
+// }
 
 // func ExportOnFailure(
 // 	db urlcommon.DatastoreInterface,

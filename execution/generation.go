@@ -2,6 +2,8 @@ package execution
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	common "github.com/arcology-network/common-lib/common"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
@@ -14,14 +16,14 @@ import (
 // APIs under the concurrency namespace
 type Generation struct {
 	ID         uint32
-	maxThreads uint8
+	numThreads uint8
 	jobs       []*JobSequence // para jobs
 }
 
-func NewGeneration(id uint32, maxThreads uint8, jobs []*JobSequence) *Generation {
+func NewGeneration(id uint32, numThreads uint8, jobs []*JobSequence) *Generation {
 	return &Generation{
 		ID:         id,
-		maxThreads: maxThreads,
+		numThreads: numThreads,
 		jobs:       jobs,
 	}
 }
@@ -39,36 +41,37 @@ func (this *Generation) Add(job *JobSequence) bool {
 }
 
 func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []*Result {
-	preTransitions := indexer.Univalues(common.Clone(parentApiRouter.Ccurl().Export())).To(indexer.ITCTransition{})
+	preTransitions := indexer.Univalues(common.Clone(parentApiRouter.StateFilter().Raw())).To(indexer.ITCTransition{})
 	snapshot := parentApiRouter.Ccurl().Snapshot(preTransitions)
-
 	config := NewConfig().SetCoinbase(parentApiRouter.Coinbase())
-	// common.ParallelForeach(this.jobs, this.maxThreads, func(job **JobSequence) *JobSequence {
-	// 	(**job).Results = (**job).Run(config, snapshot)
-	// 	return (*job)
-	// })
 
-	for i := 0; i < len(this.jobs); i++ {
-		this.jobs[i].Results = this.jobs[i].Run(config, snapshot)
+	t0 := time.Now()
+	worker := func(start, end, idx int, args ...interface{}) {
+		for i := start; i < end; i++ {
+			this.jobs[i].Results = this.jobs[i].Run(config, snapshot)
+		}
 	}
+	common.ParallelWorker(len(this.jobs), int(this.numThreads), worker)
+
+	fmt.Println(time.Since(t0))
+	// for i := 0; i < len(this.jobs); i++ {
+	// 	this.jobs[i].Results = this.jobs[i].Run(config, snapshot)
+	// }
 
 	// Detect potential conflicts
 	results := common.Concate(this.jobs, func(job *JobSequence) []*Result { return job.Results })
-
-	dict := Results(results).Detect()
-	if len(*dict) > 0 {
-		Results(results).Detect()
-	}
+	conflicts := Results(results).Detect()
+	dict := conflicts.ToDict()
 
 	for i := 0; i < len(results); i++ {
 		if _, conflict := (*dict)[results[i].TxIndex]; conflict {
-			results[i].Err = errors.New(ccurlcommon.ERR_ACCESS_CONFLICT)
+			results[i].Err = errors.New(ccurlcommon.WARN_ACCESS_CONFLICT)
 		}
 	}
 
-	common.Foreach(results, func(v **Result) { // Write the transitions back to the parent write cache
-		(*v).WriteTo(uint32(parentApiRouter.GetEU().(*EU).Message().ID), parentApiRouter.Ccurl().WriteCache()) // Merge the write cache to its parent
-	})
+	// common.Foreach(results, func(v **Result) { // Write the transitions back to the parent write cache
+	// 	(*v).WriteTo(uint32(parentApiRouter.GetEU().(*EU).Message().ID), parentApiRouter.Ccurl().WriteCache()) // Merge the write cache to its parent
+	// })
 
 	return results
 }

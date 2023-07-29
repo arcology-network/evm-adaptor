@@ -44,7 +44,6 @@ func (this *JobSequence) Run(config *Config, snapshotUrl ccurlinterfaces.Datasto
 		if i < len(this.StdMsgs)-1 {
 			snapshotUrl = this.ApiRouter.Ccurl().Snapshot(transitions)
 		}
-
 	}
 
 	return results
@@ -56,6 +55,7 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapsh
 		this.ApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
 
 	this.ApiRouter = this.ApiRouter.New(ccurl, this.ApiRouter.Schedule())
+
 	statedb := eth.NewImplStateDB(this.ApiRouter)                       // Eth state DB
 	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, uint32(stdMsg.ID)) // tx hash , block hash and tx index
 
@@ -74,12 +74,10 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapsh
 			NewEVMTxContext(*stdMsg.Native),
 		)
 
-	// indexer.Univalues(this.ApiRouter.Ccurl().Export()).Print()
-
 	return &Result{
 		TxIndex:     uint32(stdMsg.ID),
 		TxHash:      common.IfThenDo1st(receipt != nil, func() evmcommon.Hash { return receipt.TxHash }, evmcommon.Hash{}),
-		Transitions: this.ApiRouter.Ccurl().Export(), // Transitions + Accesses
+		Transitions: this.ApiRouter.StateFilter().Raw(), // Transitions + Accesses
 		Err:         common.IfThenDo1st(prechkErr == nil, func() error { return evmResult.Err }, prechkErr),
 
 		Receipt:   receipt,
