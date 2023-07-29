@@ -78,7 +78,7 @@ func (this *U256CumHandlers) new(caller evmcommon.Address, input []byte) ([]byte
 	}
 
 	newU256 := commutative.NewU256(min.(*uint256.Int), max.(*uint256.Int))
-	if _, err := this.api.Ccurl().Write(txIndex, key, newU256); err != nil {
+	if _, err := this.api.Ccurl().Write(txIndex, key, newU256, true); err != nil {
 		return []byte{}, false, 0
 	}
 	return []byte{}, true, 0
@@ -143,7 +143,7 @@ func (this *U256CumHandlers) set(caller evmcommon.Address, input []byte, isPosit
 
 	value := commutative.NewU256Delta(delta.(*uint256.Int), isPositive)
 
-	_, v := this.api.Ccurl().WriteAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, value)
+	_, v := this.api.Ccurl().WriteAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, value, true)
 	return []byte{}, v == nil, 0
 }
 

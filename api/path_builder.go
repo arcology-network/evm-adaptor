@@ -46,7 +46,7 @@ func (this *CcurlConnector) newContainerRoot(account types.Address, txIndex uint
 	containerRoot := this.key(account)
 
 	if value, _ := this.ccurl.Peek(containerRoot); value == nil {
-		_, err := this.ccurl.Write(txIndex, containerRoot, commutative.NewPath()) // Create a new container
+		_, err := this.ccurl.Write(txIndex, containerRoot, commutative.NewPath(), true) // Create a new container
 		return err == nil
 	}
 	return true // Already exists
