@@ -12,11 +12,16 @@ replace github.com/arcology-network/urlarbitrator-engine => ../urlarbitrator-eng
 
 // github.com/arcology-network/common-lib v1.7.1
 // github.com/arcology-network/concurrenturl v1.7.1
-require github.com/arcology-network/urlarbitrator-engine v1.7.1
+// require github.com/arcology-network/urlarbitrator-engine v1.7.1
 
 // github.com/arcology-network/evm v0.0.0-20221110011616-1cdc0ab27c8e
 
-require github.com/holiman/uint256 v1.2.2
+require (
+	github.com/arcology-network/common-lib v0.0.0-00010101000000-000000000000
+	github.com/arcology-network/evm v0.0.0-00010101000000-000000000000
+	github.com/arcology-network/urlarbitrator-engine v0.0.0-00010101000000-000000000000
+	github.com/holiman/uint256 v1.2.2
+)
 
 // require github.com/arcology-network/concurrenturl v1.7.1 // indirect
 
@@ -56,30 +61,22 @@ require (
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 )
 
-require (
-	github.com/arcology-network/common-lib v1.7.1
-	github.com/arcology-network/concurrenturl v0.0.0-00010101000000-000000000000
-	github.com/arcology-network/evm v0.0.0-20221110011616-1cdc0ab27c8e
-)
+// github.com/arcology-network/common-lib v1.7.1
+require github.com/arcology-network/concurrenturl v0.0.0-00010101000000-000000000000
 
 require (
 	github.com/DataDog/zstd v1.5.2 // indirect
-	github.com/arcology-network/3rd-party v1.7.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/cockroachdb/errors v1.9.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20230209160836-829675f94811 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
-	github.com/deckarep/golang-set v0.0.0-20180603214616-504e848d77ea // indirect
 	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
-	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -88,7 +85,6 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.39.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
-	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
 )
