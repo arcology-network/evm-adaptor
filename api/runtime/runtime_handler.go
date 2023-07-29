@@ -76,7 +76,7 @@ func (this *RuntimeHandler) localize(caller, callee evmcommon.Address, input []b
 	path = strings.TrimSuffix(path, "/")
 
 	value := noncommutative.NewBytes([]byte{})
-	if _, err := this.api.Ccurl().Write(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, value, false); err == nil {
+	if _, err := this.api.Ccurl().Write(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, value); err == nil {
 		return []byte{}, true, 0
 	}
 	return []byte{}, false, 0

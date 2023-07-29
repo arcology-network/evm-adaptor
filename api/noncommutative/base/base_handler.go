@@ -152,7 +152,7 @@ func (this *BytesHandlers) set(caller evmcommon.Address, input []byte) ([]byte, 
 	}
 
 	value := noncommutative.NewBytes(bytes.([]byte))
-	if _, err := this.api.Ccurl().WriteAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, idx, value, true); err == nil {
+	if _, err := this.api.Ccurl().WriteAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, idx, value); err == nil {
 		return []byte{}, true, 0
 	}
 	return []byte{}, false, 0
@@ -171,7 +171,7 @@ func (this *BytesHandlers) push(caller evmcommon.Address, input []byte, origin e
 		return []byte{}, false, 0
 	}
 
-	_, err = this.api.Ccurl().Write(uint32(this.api.GetEU().(*execution.EU).Message().ID), key, noncommutative.NewBytes(value.([]byte)), true)
+	_, err = this.api.Ccurl().Write(uint32(this.api.GetEU().(*execution.EU).Message().ID), key, noncommutative.NewBytes(value.([]byte)))
 	return []byte{}, err == nil, 0
 }
 
@@ -181,7 +181,7 @@ func (this *BytesHandlers) pop(caller evmcommon.Address, input []byte) ([]byte, 
 		return []byte{}, false, 0
 	}
 
-	if value, _, err := this.api.Ccurl().PopBack(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, true); err != nil {
+	if value, _, err := this.api.Ccurl().PopBack(uint32(this.api.GetEU().(*execution.EU).Message().ID), path); err != nil {
 		return []byte{}, false, 0
 	} else {
 		if value != nil {

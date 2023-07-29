@@ -55,7 +55,7 @@ func (this *ImplStateDB) AddBalance(addr evmcommon.Address, amount *big.Int) {
 	}
 
 	if delta, ok := commutative.NewU256DeltaFromBigInt(amount); ok {
-		if _, err := this.api.Ccurl().Write(this.tid, getBalancePath(this.api.Ccurl(), addr), delta, true); err == nil {
+		if _, err := this.api.Ccurl().Write(this.tid, getBalancePath(this.api.Ccurl(), addr), delta); err == nil {
 			return
 		}
 	}
@@ -107,7 +107,7 @@ func (this *ImplStateDB) SetNonce(addr evmcommon.Address, nonce uint64) {
 		createAccount(this.api.Ccurl(), addr, this.tid)
 	}
 
-	if _, err := this.api.Ccurl().Write(this.tid, getNoncePath(this.api.Ccurl(), addr), commutative.NewUint64Delta(1), true); err != nil {
+	if _, err := this.api.Ccurl().Write(this.tid, getNoncePath(this.api.Ccurl(), addr), commutative.NewUint64Delta(1)); err != nil {
 		panic(err)
 	}
 }
@@ -136,7 +136,7 @@ func (this *ImplStateDB) SetCode(addr evmcommon.Address, code []byte) {
 		createAccount(this.api.Ccurl(), addr, this.tid)
 	}
 
-	if _, err := this.api.Ccurl().Write(this.tid, getCodePath(this.api.Ccurl(), addr), noncommutative.NewBytes(code), true); err != nil {
+	if _, err := this.api.Ccurl().Write(this.tid, getCodePath(this.api.Ccurl(), addr), noncommutative.NewBytes(code)); err != nil {
 		panic(err)
 	}
 }
@@ -178,7 +178,7 @@ func (this *ImplStateDB) SetState(addr evmcommon.Address, key, value evmcommon.H
 	// this.api.Ccurl().IfExists(localPath)
 
 	path := getStorageKeyPath(this.api, addr, key)
-	if _, err := this.api.Ccurl().Write(this.tid, path, noncommutative.NewBytes(value.Bytes()), true); err != nil {
+	if _, err := this.api.Ccurl().Write(this.tid, path, noncommutative.NewBytes(value.Bytes())); err != nil {
 		panic(err)
 	}
 }
