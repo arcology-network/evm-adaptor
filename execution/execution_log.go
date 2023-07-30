@@ -3,8 +3,6 @@ package execution
 import (
 	"encoding/json"
 	"fmt"
-
-	ethCommon "github.com/arcology-network/3rd-party/eth/common"
 )
 
 type ExecutionLog struct {
@@ -21,7 +19,7 @@ func (this *ExecutionLog) GetValue() string {
 }
 
 type ExecutionLogs struct {
-	Txhash ethCommon.Hash `json:"txhash"`
+	Txhash [32]byte       `json:"txhash"`
 	Logs   []ExecutionLog `json:"this"`
 }
 

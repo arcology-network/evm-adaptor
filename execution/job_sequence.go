@@ -74,12 +74,6 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapsh
 			NewEVMTxContext(*stdMsg.Native),
 		)
 
-	// fmt.Println("Raw ")
-	// indexer.Univalues(this.ApiRouter.Ccurl().Export()).Print()
-
-	// fmt.Println("Filtered")
-	// indexer.Univalues(this.ApiRouter.StateFilter().Raw()).Print()
-
 	return &Result{
 		TxIndex:     uint32(stdMsg.ID),
 		TxHash:      common.IfThenDo1st(receipt != nil, func() evmcommon.Hash { return receipt.TxHash }, evmcommon.Hash{}),
