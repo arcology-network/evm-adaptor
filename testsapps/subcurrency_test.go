@@ -25,36 +25,30 @@ func TestSubcurrencyMint(t *testing.T) {
 		t.Error(err)
 		return
 	}
-
 	coinAddress := receipt.ContractAddress
 
-	var execResult *evmcore.ExecutionResult
-	err, eu, execResult, receipt = tests.CallContract(eu, receipt.ContractAddress, crypto.Keccak256([]byte("getter()"))[:4], 0, false)
-
-	code, err := compiler.CompileContracts(targetPath, "examples/subcurrency/subcurrency_test.sol", "0.8.19", "SubcurrencyCaller", false)
-	if err != nil || len(code) == 0 {
+	callerCode, err := compiler.CompileContracts(targetPath, "examples/subcurrency/subcurrency_test.sol", "0.8.19", "SubcurrencyCaller", false)
+	if err != nil || len(callerCode) == 0 {
 		t.Error(err)
 	}
-
-	// data := crypto.Keccak256([]byte(funcName))[:4]
-	// tests.CallContract(eu, receipt.ContractAddress, []byte{}, false)
 
 	config := tests.MainTestConfig()
 	config.Coinbase = &eucommon.Coinbase
 	config.BlockNumber = new(big.Int).SetUint64(10000000)
 	config.Time = new(big.Int).SetUint64(10000000)
-	err, eu, execResult, receipt = tests.CallContract(eu, coinAddress, crypto.Keccak256([]byte("getter()"))[:4], 0, false)
-	err, config, eu, receipt = tests.DepolyContract(eu, config, code, "", []byte{}, 2, false)
+	err, config, eu, receipt = tests.DepolyContract(eu, config, callerCode, "", []byte{}, 2, false)
 	if err != nil || receipt.Status != 1 {
 		t.Error(err)
 	}
-	// err, eu, execResult, receipt = tests.CallContract(eu, coinAddress, crypto.Keccak256([]byte("getter()"))[:4], 0, false)
 
 	addr := codec.Bytes32{}.Decode(common.PadLeft(coinAddress[:], 0, 32)).(codec.Bytes32) // Callee contract address
 	funCall := crypto.Keccak256([]byte("call(address)"))[:4]
 	funCall = append(funCall, addr[:]...)
+
+	var execResult *evmcore.ExecutionResult
 	err, eu, execResult, receipt = tests.CallContract(eu, receipt.ContractAddress, funCall, 0, false)
 	if receipt.Status != 1 {
 		t.Error(execResult.Err)
 	}
+
 }

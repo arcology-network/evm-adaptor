@@ -42,6 +42,7 @@ func (this *Generation) Add(job *JobSequence) bool {
 
 func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []*Result {
 	preTransitions := indexer.Univalues(common.Clone(parentApiRouter.StateFilter().Raw())).To(indexer.ITCTransition{})
+
 	snapshot := parentApiRouter.Ccurl().Snapshot(preTransitions)
 	config := NewConfig().SetCoinbase(parentApiRouter.Coinbase())
 
