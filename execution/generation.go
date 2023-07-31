@@ -2,8 +2,6 @@ package execution
 
 import (
 	"errors"
-	"fmt"
-	"time"
 
 	common "github.com/arcology-network/common-lib/common"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
@@ -46,15 +44,14 @@ func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []*Result {
 	snapshot := parentApiRouter.Ccurl().Snapshot(preTransitions)
 	config := NewConfig().SetCoinbase(parentApiRouter.Coinbase())
 
-	t0 := time.Now()
+	// t0 := time.Now()
 	worker := func(start, end, idx int, args ...interface{}) {
 		for i := start; i < end; i++ {
 			this.jobs[i].Results = this.jobs[i].Run(config, snapshot)
 		}
 	}
 	common.ParallelWorker(len(this.jobs), int(this.numThreads), worker)
-
-	fmt.Println(time.Since(t0))
+	// fmt.Println(time.Since(t0))
 	// for i := 0; i < len(this.jobs); i++ {
 	// 	this.jobs[i].Results = this.jobs[i].Run(config, snapshot)
 	// }

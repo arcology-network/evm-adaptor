@@ -59,6 +59,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 	fees := make([]int64, length)
 	this.erros = make([]error, length)
 	this.jobseqs = make([]*execution.JobSequence, length)
+
 	for i := uint64(0); i < length; i++ {
 		funCall, successful, fee := this.GetByIndex(path, uint64(i))
 		if fees[i] = fee; successful {
