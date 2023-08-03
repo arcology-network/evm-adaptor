@@ -17,8 +17,8 @@ replace github.com/arcology-network/urlarbitrator-engine => ../urlarbitrator-eng
 // github.com/arcology-network/evm v0.0.0-20221110011616-1cdc0ab27c8e
 
 require (
-	github.com/arcology-network/common-lib v0.0.0-00010101000000-000000000000
-	github.com/arcology-network/evm v0.0.0-00010101000000-000000000000
+	github.com/arcology-network/common-lib v1.7.1
+	github.com/arcology-network/evm v0.0.0-20221110011616-1cdc0ab27c8e
 	github.com/arcology-network/urlarbitrator-engine v0.0.0-00010101000000-000000000000
 	github.com/holiman/uint256 v1.2.2
 )
@@ -65,8 +65,8 @@ require (
 require github.com/arcology-network/concurrenturl v0.0.0-00010101000000-000000000000
 
 require (
-	git.sr.ht/~sbinet/gg v0.4.1 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
+	github.com/arcology-network/3rd-party v1.7.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/cockroachdb/errors v1.9.1 // indirect
@@ -87,7 +87,5 @@ require (
 	github.com/prometheus/common v0.39.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
-	golang.org/x/image v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
-	gonum.org/v1/plot v0.13.0 // indirect
 )

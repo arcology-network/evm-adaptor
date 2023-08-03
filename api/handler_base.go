@@ -146,12 +146,7 @@ func (this *BaseHandlers) getByIndex(caller evmcommon.Address, input []byte) ([]
 
 	values, successful, _ := this.GetByIndex(path, idx)
 	if len(values) > 0 && successful {
-		if encoded, err := abi.Encode(values); err == nil { // Encode the result
-			offset := [32]byte{}
-			offset[len(offset)-1] = uint8(len(offset))
-			encoded = append(offset[:], encoded...)
-			return encoded, true, 0
-		}
+		return values, true, 0
 	}
 	return []byte{}, false, 0
 }
@@ -162,17 +157,11 @@ func (this *BaseHandlers) getByKey(caller evmcommon.Address, input []byte) ([]by
 		return []byte{}, false, 0
 	}
 
-	if key, err := abi.DecodeTo(input, 1, []byte{}, 2, math.MaxInt); err == nil && len(key) > 0 {
+	if key, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt); err == nil && len(key) > 0 {
 		str := eucommon.ToValidName(key)
 		bytes, successful, _ := this.GetByKey(path + str)
-
 		if len(bytes) > 0 && successful {
-			if encoded, err := abi.Encode(bytes); err == nil { // Encode the result
-				offset := [32]byte{}
-				offset[len(offset)-1] = uint8(len(offset))
-				encoded = append(offset[:], encoded...)
-				return encoded, true, 0
-			}
+			return bytes, true, 0
 		}
 	}
 	return []byte{}, false, 0
@@ -223,7 +212,7 @@ func (this *BaseHandlers) indexByKey(caller evmcommon.Address, input []byte) ([]
 		return []byte{}, false, 0
 	}
 
-	if key, err := abi.DecodeTo(input, 1, []byte{}, 2, math.MaxInt); err == nil {
+	if key, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt); err == nil {
 		index, _ := this.IndexOf(path, string(key))
 		if encoded, err := abi.Encode(index); index != math.MaxUint64 && err == nil { // Encode the result
 			return encoded, true, 0
@@ -241,13 +230,7 @@ func (this *BaseHandlers) keyByIndex(caller evmcommon.Address, input []byte) ([]
 
 	if index, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {
 		key, _ := this.KeyAt(path, index)
-		bytes := []byte(key)
-		if encoded, err := abi.Encode(bytes); err == nil { // Encode the result
-			offset := [32]byte{}
-			offset[len(offset)-1] = uint8(len(offset))
-			encoded = append(offset[:], encoded...)
-			return encoded, true, 0
-		}
+		return []byte(key), true, 0
 	}
 	return []byte{}, false, 0
 }

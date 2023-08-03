@@ -15,12 +15,12 @@ func Parse2[T0, T1 any](input []byte,
 
 	decodedv0, err := DecodeTo(input, 0, _v0, _depth0, _len0)
 	if err != nil {
-		return _v0, _v1, errors.New("Error: Failed to decode v0")
+		return _v0, _v1, errors.New("Error: Failed to decode the first")
 	}
 
 	decodedv1, err := DecodeTo(input, 1, _v1, _depth1, _len1)
 	if err != nil {
-		return _v0, _v1, errors.New("Error: Failed to decode v1")
+		return _v0, _v1, errors.New("Error: Failed to decode the second")
 	}
 	return decodedv0, decodedv1, nil
 }
