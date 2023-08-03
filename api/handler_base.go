@@ -230,7 +230,8 @@ func (this *BaseHandlers) keyByIndex(caller evmcommon.Address, input []byte) ([]
 
 	if index, err := abi.DecodeTo(input, 0, uint64(0), 1, 32); err == nil {
 		key, _ := this.KeyAt(path, index)
-		return []byte(key), true, 0
+		v, _ := hex.DecodeString(key)
+		return v, true, 0
 	}
 	return []byte{}, false, 0
 }
