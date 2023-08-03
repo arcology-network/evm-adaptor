@@ -158,7 +158,7 @@ func (this *BaseHandlers) getByKey(caller evmcommon.Address, input []byte) ([]by
 	}
 
 	if key, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt); err == nil && len(key) > 0 {
-		str := eucommon.ToValidName(key)
+		str := hex.EncodeToString(key)
 		bytes, successful, _ := this.GetByKey(path + str)
 		if len(bytes) > 0 && successful {
 			return bytes, true, 0
@@ -198,7 +198,7 @@ func (this *BaseHandlers) setByKey(caller evmcommon.Address, input []byte) ([]by
 	)
 
 	if err == nil {
-		str := eucommon.ToValidName(key)
+		str := hex.EncodeToString(key)
 		successful, _ := this.SetByKey(path+str, value)
 		return []byte{}, successful, 0
 	}
@@ -213,7 +213,7 @@ func (this *BaseHandlers) indexByKey(caller evmcommon.Address, input []byte) ([]
 	}
 
 	if key, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt); err == nil {
-		index, _ := this.IndexOf(path, string(key))
+		index, _ := this.IndexOf(path, hex.EncodeToString(key))
 		if encoded, err := abi.Encode(index); index != math.MaxUint64 && err == nil { // Encode the result
 			return encoded, true, 0
 		}
@@ -252,7 +252,7 @@ func (this *BaseHandlers) delByKey(caller evmcommon.Address, input []byte) ([]by
 
 	key, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt)
 	if err == nil {
-		str := eucommon.ToValidName(key)
+		str := hex.EncodeToString(key)
 		if successful, fee := this.SetByKey(path+str, nil); successful {
 			return []byte{}, true, fee
 		}

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/hex"
 	"fmt"
 	"strconv"
 	"sync/atomic"
@@ -109,7 +108,8 @@ func (this *API) Pid() [32]byte {
 
 func (this *API) ElementUID() []byte {
 	instanceID := this.Pid()
-	return []byte(hex.EncodeToString(instanceID[:8]) + "-" + strconv.Itoa(int(this.GetSerialNum(eucommon.ELEMENT_ID))))
+	serial := strconv.Itoa(int(this.GetSerialNum(eucommon.ELEMENT_ID)))
+	return []byte(append(instanceID[:8], []byte(serial)...))
 }
 
 // Generate an UUID based on transaction hash and the counter
