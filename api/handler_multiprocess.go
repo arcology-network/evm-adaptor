@@ -43,7 +43,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 		return []byte{}, false, 0
 	}
 
-	numThreads, err := abi.DecodeTo(input, 0, uint64(1), 2, 32)
+	numThreads, err := abi.DecodeTo(input, 0, uint64(1), 1, 8)
 	if err != nil {
 		return []byte{}, false, 0
 	}
