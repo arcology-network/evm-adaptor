@@ -59,9 +59,7 @@ func (this *EU) Run(stdmsg *StandardMessage, blockContext vm.BlockContext, txCon
 
 	gasPool := core.GasPool(math.MaxUint64)
 	result, err := core.ApplyMessage(this.evm, this.stdMsg.Native, &gasPool) // Execute the transcation
-	// if err != nil {
-	// 	return nil, nil, err // Failed in Precheck before tx execution started
-	// }
+
 	if err != nil {
 		result = &core.ExecutionResult{
 			Err: err,
@@ -88,15 +86,6 @@ func (this *EU) Run(stdmsg *StandardMessage, blockContext vm.BlockContext, txCon
 	}
 	receipt.Logs = this.statedb.(*eth.ImplStateDB).GetLogs(stdmsg.TxHash)
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
-	// accesses, transitions := this.api.Ccurl().ExportAll()
-
-	// if result.Failed() { // Failed
-	// 	accesses = accesses[:0]
-	// 	common.RemoveIf(&transitions, func(val interfaces.Univalue) bool {
-	// 		path := val.GetPath()
-	// 		return len(*path) <= 5 || (*path)[len(*path)-5:] != "nonce" // Keep nonce transitions only, nonce needs to increment anyway.
-	// 	})
-	// }
 
 	return receipt, result, err
 }

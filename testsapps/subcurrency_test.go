@@ -44,11 +44,11 @@ func TestSubcurrencyMint(t *testing.T) {
 	}
 
 	addr := codec.Bytes32{}.Decode(common.PadLeft(coinAddress[:], 0, 32)).(codec.Bytes32) // Callee contract address
-	funCall := crypto.Keccak256([]byte("call1(address)"))[:4]
+	funCall := crypto.Keccak256([]byte("call(address)"))[:4]
 	funCall = append(funCall, addr[:]...)
 
 	var execResult *evmcore.ExecutionResult
-	err, eu, execResult, receipt = tests.CallContract(eu, [20]byte{}, funCall, 0, false)
+	err, eu, execResult, receipt = tests.CallContract(eu, receipt.ContractAddress, funCall, 0, false)
 	if receipt.Status != 1 {
 		t.Error(execResult.Err)
 	}
