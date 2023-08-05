@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/hex"
 	"math"
 	"strings"
 	"sync/atomic"
@@ -81,12 +82,12 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 
 	for i := 0; i < len(results); i++ {
 		common.Foreach(results[i].Transitions, func(univ *interfaces.Univalue) {
-			if (univ) != nil {
+			if (univ) == nil {
 				return
 			}
 
 			path := *(*univ).GetPath()
-			if (strings.Contains(path, string(results[i].From[:])) || strings.Contains(path, string(results[i].Config.Coinbase[:]))) &&
+			if (strings.Contains(path, hex.EncodeToString(results[i].From[:])) || strings.Contains(path, hex.EncodeToString(results[i].Config.Coinbase[:]))) &&
 				strings.Contains(path, "/balance") {
 				(*univ).GetUnimeta().(*univalue.Unimeta).SetPersistent(true) // Keep balance transitions regardless execution status
 			}
