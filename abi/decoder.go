@@ -47,6 +47,34 @@ func Parse3[T0, T1, T2 any](input []byte,
 	return decodedv0, decodedv1, decodedv2, nil
 }
 
+func Parse4[T0, T1, T2, T3 any](input []byte,
+	_v0 T0, _depth0 uint8, _len0 int,
+	_v1 T1, _depth1 uint8, _len1 int,
+	_v2 T2, _depth2 uint8, _len2 int,
+	_v3 T3, _depth3 uint8, _len3 int) (T0, T1, T2, T3, error) {
+
+	decodedv0, err := DecodeTo(input, 0, _v0, _depth0, _len0)
+	if err != nil {
+		return _v0, _v1, _v2, _v3, errors.New("Error: Failed to decode v0")
+	}
+
+	decodedv1, err := DecodeTo(input, 1, _v1, _depth1, _len1)
+	if err != nil {
+		return _v0, _v1, _v2, _v3, errors.New("Error: Failed to decode v1")
+	}
+
+	decodedv2, err := DecodeTo(input, 2, _v2, _depth2, _len2)
+	if err != nil {
+		return _v0, _v1, _v2, _v3, errors.New("Error: Failed to parse v2")
+	}
+
+	decodedv3, err := DecodeTo(input, 3, _v3, _depth3, _len3)
+	if err != nil {
+		return _v0, _v1, _v2, _v3, errors.New("Error: Failed to parse v3")
+	}
+	return decodedv0, decodedv1, decodedv2, decodedv3, nil
+}
+
 func DecodeTo[T any](raw []byte, idx int, initv T, depth uint8, maxLength int) (T, error) {
 	v, err := Decode(raw, idx, initv, depth, maxLength)
 	if err == nil {

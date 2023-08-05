@@ -52,9 +52,6 @@ func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []*Result {
 	}
 	common.ParallelWorker(len(this.jobs), int(this.numThreads), worker)
 	// fmt.Println(time.Since(t0))
-	// for i := 0; i < len(this.jobs); i++ {
-	// 	this.jobs[i].Results = this.jobs[i].Run(config, snapshot)
-	// }
 
 	// Detect potential conflicts
 	results := common.Concate(this.jobs, func(job *JobSequence) []*Result { return job.Results })
@@ -66,11 +63,6 @@ func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []*Result {
 			results[i].Err = errors.New(ccurlcommon.WARN_ACCESS_CONFLICT)
 		}
 	}
-
-	// common.Foreach(results, func(v **Result) { // Write the transitions back to the parent write cache
-	// 	(*v).WriteTo(uint32(parentApiRouter.GetEU().(*EU).Message().ID), parentApiRouter.Ccurl().WriteCache()) // Merge the write cache to its parent
-	// })
-
 	return results
 }
 
