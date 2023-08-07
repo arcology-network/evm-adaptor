@@ -3,14 +3,18 @@ package execution
 import (
 	// "github.com/arcology-network/common-lib/codec"
 
+	"encoding/hex"
 	"fmt"
+	"strings"
 
+	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
 	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	evmcore "github.com/arcology-network/evm/core"
 	evmTypes "github.com/arcology-network/evm/core/types"
+	"github.com/holiman/uint256"
 )
 
 type Result struct {
@@ -25,7 +29,29 @@ type Result struct {
 	Err         error
 }
 
+func (this *Result) AdjusteBalance(transitions []ccurlinterfaces.Univalue) {
+	if this.EvmResult != nil && this.Err == nil { // Successful execution
+		return
+	}
+
+	_, senderBalance := common.FindFirstIf(transitions, func(v ccurlinterfaces.Univalue) bool {
+		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") && strings.Contains(*v.GetPath(), hex.EncodeToString(this.From[:]))
+	})
+
+	_, coinbaseBalance := common.FindFirstIf(transitions, func(v ccurlinterfaces.Univalue) bool {
+		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") || strings.Contains(*v.GetPath(), hex.EncodeToString(this.Config.Coinbase[:]))
+	})
+
+	(*senderBalance).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(uint256.NewInt(this.Receipt.GasUsed)))
+	(*senderBalance).Value().(ccurlinterfaces.Type).SetDeltaSign(false)
+
+	(*coinbaseBalance).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(uint256.NewInt(this.Receipt.GasUsed)))
+	(*coinbaseBalance).Value().(ccurlinterfaces.Type).SetDeltaSign(true)
+}
+
 func (this *Result) WriteTo(newTxIdx uint32, targetCache *indexer.WriteCache) {
+	this.AdjusteBalance(this.Transitions)
+
 	transitions := []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(
 		TransitionFilter{
 			Err:      this.Err,
