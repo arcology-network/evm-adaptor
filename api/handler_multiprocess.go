@@ -1,14 +1,10 @@
 package api
 
 import (
-	"encoding/hex"
 	"math"
-	"strings"
 	"sync/atomic"
 
 	"github.com/arcology-network/common-lib/common"
-	"github.com/arcology-network/concurrenturl/interfaces"
-	"github.com/arcology-network/concurrenturl/univalue"
 	evmcommon "github.com/arcology-network/evm/common"
 	evmcore "github.com/arcology-network/evm/core"
 	"github.com/holiman/uint256"
@@ -55,6 +51,8 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 
 	path := this.Connector().Key(caller)
 	length, successful, fee := this.Length(path)
+	length = common.Min(eucommon.MAX_VM_INSTANCES, length)
+
 	if !successful {
 		return []byte{}, successful, fee
 	}
@@ -79,24 +77,11 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 	}
 
 	// execution.Results(results).Print()
-
 	for i := 0; i < len(results); i++ {
-		common.Foreach(results[i].Transitions, func(univ *interfaces.Univalue) {
-			if (univ) == nil {
-				return
-			}
-
-			path := *(*univ).GetPath()
-			if (strings.Contains(path, hex.EncodeToString(results[i].From[:])) || strings.Contains(path, hex.EncodeToString(results[i].Config.Coinbase[:]))) &&
-				strings.Contains(path, "/balance") {
-				(*univ).GetUnimeta().(*univalue.Unimeta).SetPersistent(true) // Keep balance transitions regardless execution status
-			}
-		})
-
 		results[i].WriteTo(uint32(this.Api().GetEU().(*execution.EU).Message().ID), this.Api().Ccurl().WriteCache()) // Merge the write cache to its parent
 	}
 
-	return []byte{}, true, common.Sum(fees, int64(0))
+	return []byte{}, true, common.Sum[int64](fees)
 }
 
 func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence, error) {

@@ -26,7 +26,13 @@ type Result struct {
 }
 
 func (this *Result) WriteTo(newTxIdx uint32, targetCache *indexer.WriteCache) {
-	transitions := []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(TransitionFilter{Err: this.Err}))
+	transitions := []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(
+		TransitionFilter{
+			Err:      this.Err,
+			Sender:   this.From,
+			Coinbase: *this.Config.Coinbase,
+		},
+	))
 
 	// Move new path creation transitions
 	newPathCreations := common.MoveIf(&transitions, func(v ccurlinterfaces.Univalue) bool {

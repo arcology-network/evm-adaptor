@@ -75,7 +75,7 @@ func (this *API) New(ccurl *concurrenturl.ConcurrentUrl, schedule interface{}) e
 
 func (this *API) CheckRuntimeConstrains() bool { // Execeeds the max recursion depth or the max sub processes
 	return this.Depth() < eucommon.MAX_RECURSIION_DEPTH &&
-		atomic.AddUint64(&eucommon.TotalSubProcesses, 1) <= eucommon.MAX_SUB_PROCESSES
+		atomic.AddUint64(&eucommon.TotalSubProcesses, 1) <= eucommon.MAX_VM_INSTANCES
 }
 
 func (this *API) StateFilter() eucommon.StateFilter { return this.filter }

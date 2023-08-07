@@ -2,7 +2,7 @@ package common
 
 const (
 	MAX_RECURSIION_DEPTH = uint8(4)
-	MAX_SUB_PROCESSES    = uint64(2048)
+	MAX_VM_INSTANCES     = uint64(2048)
 )
 
 const (
