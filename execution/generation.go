@@ -62,7 +62,7 @@ func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []*Result {
 	// Detect potential conflicts
 	results := common.Concate(this.jobs, func(job *JobSequence) []*Result { return job.Results })
 	conflicts := Results(results).Detect()
-	dict := conflicts.ToDict()
+	dict, _ := conflicts.ToDict()
 
 	for i := 0; i < len(results); i++ {
 		if _, conflict := (*dict)[results[i].TxIndex]; conflict {
