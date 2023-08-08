@@ -20,6 +20,7 @@ func TestSubcurrencyMint(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join((path.Dir(filepath.Dir(currentPath))), "concurrentlib/")
 
+	// Deploy coin contract
 	err, eu, receipt := tests.DeployThenInvoke(targetPath, "examples/subcurrency/Subcurrency.sol", "0.8.19", "Coin", "", []byte{}, false)
 	if err != nil {
 		t.Error(err)
@@ -27,6 +28,7 @@ func TestSubcurrencyMint(t *testing.T) {
 	}
 	coinAddress := receipt.ContractAddress
 
+	// Deploy the caller contrat
 	callerCode, err := compiler.CompileContracts(targetPath, "examples/subcurrency/subcurrency_test.sol", "0.8.19", "SubcurrencyCaller", false)
 	if err != nil || len(callerCode) == 0 {
 		t.Error(err)

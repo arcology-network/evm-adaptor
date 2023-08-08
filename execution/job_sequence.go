@@ -41,6 +41,7 @@ func (this *JobSequence) Run(config *Config, snapshotUrl ccurlinterfaces.Datasto
 	for i, msg := range this.StdMsgs {
 		results[i] = this.execute(msg, config, snapshotUrl) // What happens if it fails
 		transitions := indexer.Univalues(common.Clone(results[i].Transitions)).To(indexer.ITCTransition{})
+
 		if i < len(this.StdMsgs)-1 {
 			snapshotUrl = this.ApiRouter.Ccurl().Snapshot(transitions)
 		}
@@ -79,9 +80,10 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapsh
 		TxHash:      common.IfThenDo1st(receipt != nil, func() evmcommon.Hash { return receipt.TxHash }, evmcommon.Hash{}),
 		Transitions: this.ApiRouter.StateFilter().Raw(), // Transitions + Accesses
 		Err:         common.IfThenDo1st(prechkErr == nil, func() error { return evmResult.Err }, prechkErr),
-
-		Receipt:   receipt,
-		EvmResult: evmResult,
+		From:        stdMsg.Native.From,
+		Config:      config,
+		Receipt:     receipt,
+		EvmResult:   evmResult,
 	}
 }
 

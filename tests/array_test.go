@@ -43,7 +43,16 @@ func TestContractBytes32(t *testing.T) {
 	}
 }
 
-func TestContractNoncommutativeInt256(t *testing.T) {
+func TestContractU256(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
+	err, _, _ := DeployThenInvoke(targetPath, "array/u256_test.sol", "0.8.19", "U256Test", "", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestContractInt256(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
 	err, _, _ := DeployThenInvoke(targetPath, "array/int256_test.sol", "0.8.19", "Int256Test", "", []byte{}, false)

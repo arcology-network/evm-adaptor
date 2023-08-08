@@ -1,27 +1,33 @@
 package execution
 
 import (
+	"encoding/hex"
 	"strings"
 
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
+	"github.com/arcology-network/concurrenturl/univalue"
 )
 
 // APIs under the concurrency namespace
 type TransitionFilter struct {
-	indexer.IPCTransition
-	Err error
+	indexer.ITCTransition
+	Sender   [20]byte
+	Coinbase [20]byte
+	Err      error
 }
 
 // Remove nonce
 func (this TransitionFilter) From(univ ccurlinterfaces.Univalue) interface{} {
-	v := indexer.IPCTransition{Err: this.Err}.From(univ)
-	if v == nil || v.(ccurlinterfaces.Univalue).Value() == nil {
-		return v
+	path := *univ.GetPath()
+	if (strings.HasSuffix(path, "/balance") || strings.HasSuffix(path, "/nonce")) &&
+		(strings.Contains(path, hex.EncodeToString(this.Sender[:])) || strings.Contains(path, hex.EncodeToString(this.Coinbase[:]))) {
+		univ.GetUnimeta().(*univalue.Unimeta).SetPersistent(true) // Keep balance transitions regardless the execution status
 	}
 
-	if strings.HasSuffix(*v.(ccurlinterfaces.Univalue).GetPath(), "/nonce") {
-		return nil
+	v := indexer.ITCTransition{Err: this.Err}.From(univ)
+	if v == nil || v.(ccurlinterfaces.Univalue).Value() == nil {
+		return v
 	}
 	return v
 }

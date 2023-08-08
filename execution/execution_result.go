@@ -3,28 +3,62 @@ package execution
 import (
 	// "github.com/arcology-network/common-lib/codec"
 
+	"encoding/hex"
 	"fmt"
+	"strings"
 
+	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
 	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	evmcore "github.com/arcology-network/evm/core"
 	evmTypes "github.com/arcology-network/evm/core/types"
+	"github.com/holiman/uint256"
 )
 
 type Result struct {
 	BranchID    uint32
 	TxIndex     uint32
 	TxHash      [32]byte
+	From        [20]byte
+	Config      *Config
 	Transitions []ccurlinterfaces.Univalue
 	Receipt     *evmTypes.Receipt
 	EvmResult   *evmcore.ExecutionResult
 	Err         error
 }
 
+func (this *Result) AdjusteBalance(transitions []ccurlinterfaces.Univalue) {
+	if this.EvmResult != nil && this.Err == nil { // Successful execution
+		return
+	}
+
+	_, senderBalance := common.FindFirstIf(transitions, func(v ccurlinterfaces.Univalue) bool {
+		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") && strings.Contains(*v.GetPath(), hex.EncodeToString(this.From[:]))
+	})
+
+	_, coinbaseBalance := common.FindFirstIf(transitions, func(v ccurlinterfaces.Univalue) bool {
+		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") || strings.Contains(*v.GetPath(), hex.EncodeToString(this.Config.Coinbase[:]))
+	})
+
+	(*senderBalance).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(uint256.NewInt(this.Receipt.GasUsed)))
+	(*senderBalance).Value().(ccurlinterfaces.Type).SetDeltaSign(false)
+
+	(*coinbaseBalance).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(uint256.NewInt(this.Receipt.GasUsed)))
+	(*coinbaseBalance).Value().(ccurlinterfaces.Type).SetDeltaSign(true)
+}
+
 func (this *Result) WriteTo(newTxIdx uint32, targetCache *indexer.WriteCache) {
-	transitions := []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(TransitionFilter{Err: this.Err}))
+	this.AdjusteBalance(this.Transitions)
+
+	transitions := []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(
+		TransitionFilter{
+			Err:      this.Err,
+			Sender:   this.From,
+			Coinbase: *this.Config.Coinbase,
+		},
+	))
 
 	// Move new path creation transitions
 	newPathCreations := common.MoveIf(&transitions, func(v ccurlinterfaces.Univalue) bool {
@@ -99,42 +133,3 @@ func (this Results) Print() {
 		fmt.Println()
 	}
 }
-
-// func (this Results) DetectConflict() []*Result {
-// 	if len(this) == 1 {
-// 		return this
-// 	}
-
-// 	groupIDs := []uint32{}
-// 	accesseVec := []ccurlinterfaces.Univalue{}
-// 	for _, v := range this {
-// 		if v.Err == nil {
-// 			groupIDs = append(groupIDs, common.Fill(make([]uint32, len(v.Transitions)), v.BranchID)...)
-// 			accesseVec = append(accesseVec, indexer.Univalues(common.Clone(v.Transitions)).To(indexer.IPCAccess{})...)
-// 		}
-// 	}
-
-// 	conflicInfo := arbitrator.Conflicts((&arbitrator.Arbitrator{}).Detect(groupIDs, accesseVec))
-// 	dict := conflicInfo.ToDict()
-
-// 	if len(dict) > 0 {
-// 		fmt.Println("Conflict")
-// 	}
-
-// 	for i := 0; i < len(this); i++ {
-// 		if _, conflict := (dict)[this[i].TxIndex]; conflict {
-// 			this[i].Err = errors.New("Error: Conflicts detected in state accesses")
-// 		}
-// 	}
-// 	return this
-// }
-
-// func (this Results) ToSequence() *Sequence {
-// 	if this[0].Spawned == nil {
-// 		return nil
-// 	}
-
-// 	predecessors := make([][32]byte, 0, len(this))
-// 	common.Foreach(this, func(v **Result) { predecessors = append(predecessors, (**v).Spawned.TxHash) })
-// 	return NewSequence([32]byte{}, predecessors, []*StandardMessage{this[0].Spawned}, true)
-// }

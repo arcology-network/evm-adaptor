@@ -2,8 +2,6 @@ package execution
 
 import (
 	"errors"
-	"fmt"
-	"time"
 
 	common "github.com/arcology-network/common-lib/common"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
@@ -46,34 +44,24 @@ func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []*Result {
 	snapshot := parentApiRouter.Ccurl().Snapshot(preTransitions)
 	config := NewConfig().SetCoinbase(parentApiRouter.Coinbase())
 
-	t0 := time.Now()
+	// t0 := time.Now()
 	worker := func(start, end, idx int, args ...interface{}) {
 		for i := start; i < end; i++ {
 			this.jobs[i].Results = this.jobs[i].Run(config, snapshot)
 		}
 	}
 	common.ParallelWorker(len(this.jobs), int(this.numThreads), worker)
-
-	fmt.Println(time.Since(t0))
-	// for i := 0; i < len(this.jobs); i++ {
-	// 	this.jobs[i].Results = this.jobs[i].Run(config, snapshot)
-	// }
+	// fmt.Println(time.Since(t0))
 
 	// Detect potential conflicts
 	results := common.Concate(this.jobs, func(job *JobSequence) []*Result { return job.Results })
-	conflicts := Results(results).Detect()
-	dict, _ := conflicts.ToDict()
+	dict, _ := Results(results).Detect().ToDict()
 
 	for i := 0; i < len(results); i++ {
 		if _, conflict := (*dict)[results[i].TxIndex]; conflict {
 			results[i].Err = errors.New(ccurlcommon.WARN_ACCESS_CONFLICT)
 		}
 	}
-
-	// common.Foreach(results, func(v **Result) { // Write the transitions back to the parent write cache
-	// 	(*v).WriteTo(uint32(parentApiRouter.GetEU().(*EU).Message().ID), parentApiRouter.Ccurl().WriteCache()) // Merge the write cache to its parent
-	// })
-
 	return results
 }
 

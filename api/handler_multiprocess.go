@@ -2,12 +2,12 @@ package api
 
 import (
 	"math"
-	"math/big"
 	"sync/atomic"
 
 	"github.com/arcology-network/common-lib/common"
 	evmcommon "github.com/arcology-network/evm/common"
 	evmcore "github.com/arcology-network/evm/core"
+	"github.com/holiman/uint256"
 
 	"github.com/arcology-network/vm-adaptor/abi"
 	execution "github.com/arcology-network/vm-adaptor/execution"
@@ -43,7 +43,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 		return []byte{}, false, 0
 	}
 
-	numThreads, err := abi.DecodeTo(input, 0, uint64(1), 2, 32)
+	numThreads, err := abi.DecodeTo(input, 0, uint64(1), 1, 8)
 	if err != nil {
 		return []byte{}, false, 0
 	}
@@ -51,6 +51,8 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 
 	path := this.Connector().Key(caller)
 	length, successful, fee := this.Length(path)
+	length = common.Min(eucommon.MAX_VM_INSTANCES, length)
+
 	if !successful {
 		return []byte{}, successful, fee
 	}
@@ -59,6 +61,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 	fees := make([]int64, length)
 	this.erros = make([]error, length)
 	this.jobseqs = make([]*execution.JobSequence, length)
+
 	for i := uint64(0); i < length; i++ {
 		funCall, successful, fee := this.GetByIndex(path, uint64(i))
 		if fees[i] = fee; successful {
@@ -74,18 +77,21 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 	}
 
 	// execution.Results(results).Print()
-	common.Foreach(results, func(v **execution.Result) { // Write the transitions back to the parent write cache
-		(*v).WriteTo(uint32(this.Api().GetEU().(*execution.EU).Message().ID), this.Api().Ccurl().WriteCache()) // Merge the write cache to its parent
-	})
+	for i := 0; i < len(results); i++ {
+		results[i].WriteTo(uint32(this.Api().GetEU().(*execution.EU).Message().ID), this.Api().Ccurl().WriteCache()) // Merge the write cache to its parent
+	}
 
-	return []byte{}, true, common.Sum(fees, int64(0))
+	return []byte{}, true, common.Sum[int64](fees)
 }
 
 func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence, error) {
-	gasLimit, calleeAddr, funCall, err := abi.Parse3(input,
+	gasLimit, value, calleeAddr, funCall, err := abi.Parse4(input,
 		uint64(0), 1, 32,
+		uint256.NewInt(0), 1, 32,
 		[20]byte{}, 1, 32,
 		[]byte{}, 2, math.MaxInt64)
+
+	// fmt.Print(value)
 
 	if err != nil {
 		return nil, err
@@ -101,7 +107,7 @@ func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence
 		this.BaseHandlers.Api().Origin(),
 		&addr,
 		0,
-		new(big.Int).SetUint64(0), // Amount to transfer
+		value.ToBig(), // Amount to transfer
 		gasLimit,
 		this.BaseHandlers.Api().GetEU().(*execution.EU).Message().Native.GasPrice, // gas price
 		funCall,
