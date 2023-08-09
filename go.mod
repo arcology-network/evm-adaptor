@@ -18,7 +18,7 @@ replace github.com/arcology-network/urlarbitrator-engine => ../urlarbitrator-eng
 
 require (
 	github.com/arcology-network/common-lib v1.7.1
-	github.com/arcology-network/evm v0.0.0-20221110011616-1cdc0ab27c8e
+	github.com/arcology-network/evm v1.7.1
 	github.com/arcology-network/urlarbitrator-engine v0.0.0-00010101000000-000000000000
 	github.com/holiman/uint256 v1.2.2
 )
@@ -66,7 +66,6 @@ require github.com/arcology-network/concurrenturl v0.0.0-00010101000000-00000000
 
 require (
 	github.com/DataDog/zstd v1.5.2 // indirect
-	github.com/arcology-network/3rd-party v1.7.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/cockroachdb/errors v1.9.1 // indirect

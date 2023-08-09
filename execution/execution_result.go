@@ -52,9 +52,13 @@ func (this *Result) ImmunizeGasTransition(transitions []ccurlinterfaces.Univalue
 	(*coinbaseBalance).GetUnimeta().(*univalue.Unimeta).SetPersistent(true)
 }
 
-func (this *Result) WriteTo(newTxIdx uint32, targetCache *indexer.WriteCache) {
+func (this *Result) Filter() []ccurlinterfaces.Univalue {
 	this.ImmunizeGasTransition(this.Transitions)
-	transitions := []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(indexer.ITCTransition{Err: this.Err}))
+	return []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(indexer.ITCTransition{Err: this.Err}))
+}
+
+func (this *Result) WriteTo(newTxIdx uint32, targetCache *indexer.WriteCache) {
+	transitions := this.Filter()
 
 	// Move new path creation transitions
 	newPathCreations := common.MoveIf(&transitions, func(v ccurlinterfaces.Univalue) bool {

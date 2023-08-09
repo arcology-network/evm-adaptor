@@ -40,7 +40,7 @@ func (this *JobSequence) Run(config *Config, snapshotUrl ccurlinterfaces.Datasto
 
 	for i, msg := range this.StdMsgs {
 		results[i] = this.execute(msg, config, snapshotUrl) // What happens if it fails
-		transitions := indexer.Univalues(common.Clone(results[i].Transitions)).To(indexer.ITCTransition{})
+		transitions := results[i].Filter()
 
 		if i < len(this.StdMsgs)-1 {
 			snapshotUrl = this.ApiRouter.Ccurl().Snapshot(transitions)
