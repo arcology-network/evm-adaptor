@@ -12,6 +12,7 @@ import (
 	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
+	"github.com/arcology-network/concurrenturl/univalue"
 	evmcore "github.com/arcology-network/evm/core"
 	evmTypes "github.com/arcology-network/evm/core/types"
 	"github.com/holiman/uint256"
@@ -29,7 +30,7 @@ type Result struct {
 	Err         error
 }
 
-func (this *Result) AdjusteBalance(transitions []ccurlinterfaces.Univalue) {
+func (this *Result) ImmunizeGasTransition(transitions []ccurlinterfaces.Univalue) {
 	if this.EvmResult != nil && this.Err == nil { // Successful execution
 		return
 	}
@@ -44,21 +45,16 @@ func (this *Result) AdjusteBalance(transitions []ccurlinterfaces.Univalue) {
 
 	(*senderBalance).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(uint256.NewInt(this.Receipt.GasUsed)))
 	(*senderBalance).Value().(ccurlinterfaces.Type).SetDeltaSign(false)
+	(*senderBalance).GetUnimeta().(*univalue.Unimeta).SetPersistent(true)
 
 	(*coinbaseBalance).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(uint256.NewInt(this.Receipt.GasUsed)))
 	(*coinbaseBalance).Value().(ccurlinterfaces.Type).SetDeltaSign(true)
+	(*coinbaseBalance).GetUnimeta().(*univalue.Unimeta).SetPersistent(true)
 }
 
 func (this *Result) WriteTo(newTxIdx uint32, targetCache *indexer.WriteCache) {
-	this.AdjusteBalance(this.Transitions)
-
-	transitions := []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(
-		TransitionFilter{
-			Err:      this.Err,
-			Sender:   this.From,
-			Coinbase: *this.Config.Coinbase,
-		},
-	))
+	this.ImmunizeGasTransition(this.Transitions)
+	transitions := []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(indexer.ITCTransition{Err: this.Err}))
 
 	// Move new path creation transitions
 	newPathCreations := common.MoveIf(&transitions, func(v ccurlinterfaces.Univalue) bool {
