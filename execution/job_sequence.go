@@ -40,13 +40,8 @@ func (this *JobSequence) Run(config *Config, snapshotUrl ccurlinterfaces.Datasto
 
 	for i, msg := range this.StdMsgs {
 		results[i] = this.execute(msg, config, snapshotUrl) // What happens if it fails
-		transitions := results[i].FilterTransitions()
-
-		if i < len(this.StdMsgs)-1 {
-			snapshotUrl = this.ApiRouter.Ccurl().Snapshot(transitions)
-		}
+		results[i].FilterTransitions()                      // Flag the failed transactions
 	}
-
 	return results
 }
 
@@ -81,7 +76,7 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapsh
 		Transitions: this.ApiRouter.StateFilter().Raw(), // Transitions + Accesses
 		Err:         common.IfThenDo1st(prechkErr == nil, func() error { return evmResult.Err }, prechkErr),
 		From:        stdMsg.Native.From,
-		Config:      config,
+		Coinbase:    *config.Coinbase,
 		Receipt:     receipt,
 		EvmResult:   evmResult,
 	}

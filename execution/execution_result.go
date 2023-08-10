@@ -19,18 +19,32 @@ import (
 )
 
 type Result struct {
-	BranchID    uint32
+	BranchID    uint32 // == Group ID
 	TxIndex     uint32
 	TxHash      [32]byte
 	From        [20]byte
-	Config      *Config
+	Coinbase    [20]byte
 	Transitions []ccurlinterfaces.Univalue
 	Receipt     *evmTypes.Receipt
 	EvmResult   *evmcore.ExecutionResult
 	Err         error
 }
 
-func (this *Result) ImmunizeGasTransition() {
+func (this *Result) BreakdownBalanceTransition(balanceTransition ccurlinterfaces.Univalue, gasDelta *uint256.Int, isCredit bool) ccurlinterfaces.Univalue {
+	if delta := (*uint256.Int)(balanceTransition.Value().(ccurlinterfaces.Type).Delta().(*codec.Uint256)); delta.Cmp(gasDelta) > 0 {
+		transfer := delta.Sub(delta, (*uint256.Int)(gasDelta))                                  // balance - gas
+		(balanceTransition).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(transfer)) // Won't change the initial value at all.
+		(balanceTransition).Value().(ccurlinterfaces.Type).SetDeltaSign(false)
+
+		newGasTransition := balanceTransition.Clone().(ccurlinterfaces.Univalue)
+		newGasTransition.Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(gasDelta))
+		newGasTransition.Value().(ccurlinterfaces.Type).SetDeltaSign(isCredit) // Minus
+		return newGasTransition
+	}
+	return nil
+}
+
+func (this *Result) Postprocess() {
 	if this.EvmResult != nil && this.Err == nil { // SkipSuccessful execution
 		return
 	}
@@ -38,18 +52,20 @@ func (this *Result) ImmunizeGasTransition() {
 	_, senderBalance := common.FindFirstIf(this.Transitions, func(v ccurlinterfaces.Univalue) bool {
 		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") && strings.Contains(*v.GetPath(), hex.EncodeToString(this.From[:]))
 	})
+	senderGasTransition := this.BreakdownBalanceTransition(*senderBalance, uint256.NewInt(this.Receipt.GasUsed), false)
+	this.Transitions = append(this.Transitions, senderGasTransition)
+
+	if senderGasTransition := this.BreakdownBalanceTransition(*senderBalance, uint256.NewInt(this.Receipt.GasUsed), false); senderGasTransition == nil {
+		this.Transitions = append(this.Transitions, senderGasTransition)
+	}
 
 	_, coinbaseBalance := common.FindFirstIf(this.Transitions, func(v ccurlinterfaces.Univalue) bool {
-		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") || strings.Contains(*v.GetPath(), hex.EncodeToString(this.Config.Coinbase[:]))
+		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") || strings.Contains(*v.GetPath(), hex.EncodeToString(this.Coinbase[:]))
 	})
 
-	(*senderBalance).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(uint256.NewInt(this.Receipt.GasUsed)))
-	(*senderBalance).Value().(ccurlinterfaces.Type).SetDeltaSign(false)
-	(*senderBalance).GetUnimeta().(*univalue.Unimeta).SetPersistent(true)
-
-	(*coinbaseBalance).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(uint256.NewInt(this.Receipt.GasUsed)))
-	(*coinbaseBalance).Value().(ccurlinterfaces.Type).SetDeltaSign(true)
-	(*coinbaseBalance).GetUnimeta().(*univalue.Unimeta).SetPersistent(true)
+	if coinbaseGasTransition := this.BreakdownBalanceTransition(*coinbaseBalance, uint256.NewInt(this.Receipt.GasUsed), true); coinbaseGasTransition == nil {
+		this.Transitions = append(this.Transitions, coinbaseGasTransition)
+	}
 
 	common.Foreach(this.Transitions, func(v *ccurlinterfaces.Univalue) {
 		if v != nil {
@@ -65,12 +81,12 @@ func (this *Result) ImmunizeGasTransition() {
 }
 
 func (this *Result) FilterTransitions() []ccurlinterfaces.Univalue {
-	this.ImmunizeGasTransition()
+	this.Postprocess()
 	return []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(indexer.ITCTransition{Err: this.Err}))
 }
 
 func (this *Result) WriteTo(newTxIdx uint32, targetCache *indexer.WriteCache) {
-	transitions := this.FilterTransitions()
+	transitions := this.FilterTransitions() // All the failed transitions have been processed by now, filter again for the conflict ones.
 
 	// Move new path creation transitions
 	newPathCreations := common.MoveIf(&transitions, func(v ccurlinterfaces.Univalue) bool {
@@ -96,7 +112,7 @@ func (this *Result) WriteTo(newTxIdx uint32, targetCache *indexer.WriteCache) {
 }
 
 func (this *Result) Print() {
-	fmt.Println("BranchID: ", this.BranchID)
+	// fmt.Println("BranchID: ", this.BranchID)
 	fmt.Println("TxIndex: ", this.TxIndex)
 	fmt.Println("TxHash: ", this.TxHash)
 	fmt.Println()
@@ -112,12 +128,6 @@ func (this Results) Transitions() []ccurlinterfaces.Univalue {
 		all = append(all, (**v).Transitions...)
 	})
 	return all
-}
-
-func (this Results) SetGroupIDs(BranchID uint32) {
-	common.Foreach(this, func(v **Result) {
-		(**v).BranchID = BranchID
-	})
 }
 
 func (this Results) Detect() arbitrator.Conflicts {
