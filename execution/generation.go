@@ -61,7 +61,10 @@ func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []*Result {
 		if _, conflict := (*dict)[results[i].TxIndex]; conflict {
 			results[i].Err = errors.New(ccurlcommon.WARN_ACCESS_CONFLICT)
 		}
+		results[i].ImmunizeGasTransition()
 	}
+
+	// this.ImmunizeGasTransition(this.Transitions)
 	return results
 }
 

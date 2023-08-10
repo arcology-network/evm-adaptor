@@ -30,16 +30,16 @@ type Result struct {
 	Err         error
 }
 
-func (this *Result) ImmunizeGasTransition(transitions []ccurlinterfaces.Univalue) {
-	if this.EvmResult != nil && this.Err == nil { // Successful execution
+func (this *Result) ImmunizeGasTransition() {
+	if this.EvmResult != nil && this.Err == nil { // SkipSuccessful execution
 		return
 	}
 
-	_, senderBalance := common.FindFirstIf(transitions, func(v ccurlinterfaces.Univalue) bool {
+	_, senderBalance := common.FindFirstIf(this.Transitions, func(v ccurlinterfaces.Univalue) bool {
 		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") && strings.Contains(*v.GetPath(), hex.EncodeToString(this.From[:]))
 	})
 
-	_, coinbaseBalance := common.FindFirstIf(transitions, func(v ccurlinterfaces.Univalue) bool {
+	_, coinbaseBalance := common.FindFirstIf(this.Transitions, func(v ccurlinterfaces.Univalue) bool {
 		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") || strings.Contains(*v.GetPath(), hex.EncodeToString(this.Config.Coinbase[:]))
 	})
 
@@ -50,10 +50,22 @@ func (this *Result) ImmunizeGasTransition(transitions []ccurlinterfaces.Univalue
 	(*coinbaseBalance).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(uint256.NewInt(this.Receipt.GasUsed)))
 	(*coinbaseBalance).Value().(ccurlinterfaces.Type).SetDeltaSign(true)
 	(*coinbaseBalance).GetUnimeta().(*univalue.Unimeta).SetPersistent(true)
+
+	common.Foreach(this.Transitions, func(v *ccurlinterfaces.Univalue) {
+		if v != nil {
+			return
+		}
+
+		path := (*v).GetPath()
+		if strings.HasSuffix(*path, "/nonce") && strings.Contains(*path, hex.EncodeToString(this.From[:])) {
+			(*v).GetUnimeta().(*univalue.Unimeta).SetPersistent(true)
+
+		}
+	})
 }
 
 func (this *Result) FilterTransitions() []ccurlinterfaces.Univalue {
-	this.ImmunizeGasTransition(this.Transitions)
+	this.ImmunizeGasTransition()
 	return []ccurlinterfaces.Univalue(indexer.Univalues(common.Clone(this.Transitions)).To(indexer.ITCTransition{Err: this.Err}))
 }
 
