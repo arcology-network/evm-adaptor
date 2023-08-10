@@ -33,12 +33,13 @@ type Result struct {
 func (this *Result) BreakdownBalanceTransition(balanceTransition ccurlinterfaces.Univalue, gasDelta *uint256.Int, isCredit bool) ccurlinterfaces.Univalue {
 	if delta := (*uint256.Int)(balanceTransition.Value().(ccurlinterfaces.Type).Delta().(*codec.Uint256)); delta.Cmp(gasDelta) > 0 {
 		transfer := delta.Sub(delta, (*uint256.Int)(gasDelta))                                  // balance - gas
-		(balanceTransition).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(transfer)) // Won't change the initial value at all.
+		(balanceTransition).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(transfer)) // Set the transfer, Won't change the initial value.
 		(balanceTransition).Value().(ccurlinterfaces.Type).SetDeltaSign(false)
 
 		newGasTransition := balanceTransition.Clone().(ccurlinterfaces.Univalue)
 		newGasTransition.Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(gasDelta))
-		newGasTransition.Value().(ccurlinterfaces.Type).SetDeltaSign(isCredit) // Minus
+		newGasTransition.Value().(ccurlinterfaces.Type).SetDeltaSign(isCredit)
+		newGasTransition.GetUnimeta().(*univalue.Unimeta).SetPersistent(true)
 		return newGasTransition
 	}
 	return nil
@@ -52,8 +53,6 @@ func (this *Result) Postprocess() {
 	_, senderBalance := common.FindFirstIf(this.Transitions, func(v ccurlinterfaces.Univalue) bool {
 		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") && strings.Contains(*v.GetPath(), hex.EncodeToString(this.From[:]))
 	})
-	senderGasTransition := this.BreakdownBalanceTransition(*senderBalance, uint256.NewInt(this.Receipt.GasUsed), false)
-	this.Transitions = append(this.Transitions, senderGasTransition)
 
 	if senderGasTransition := this.BreakdownBalanceTransition(*senderBalance, uint256.NewInt(this.Receipt.GasUsed), false); senderGasTransition == nil {
 		this.Transitions = append(this.Transitions, senderGasTransition)
