@@ -6,8 +6,9 @@ import (
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl"
+	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
 	"github.com/arcology-network/concurrenturl/commutative"
-	"github.com/arcology-network/concurrenturl/indexer"
+	indexer "github.com/arcology-network/concurrenturl/indexer"
 
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	evmcommon "github.com/arcology-network/evm/common"
@@ -19,11 +20,14 @@ import (
 )
 
 type JobSequence struct {
-	ID        uint64
-	PreTxs    []uint32
-	StdMsgs   []*StandardMessage
-	Results   []*Result
-	ApiRouter eucommon.EthApiRouter
+	ID               uint32 // group id
+	PreTxs           []uint32
+	StdMsgs          []*StandardMessage
+	Results          []*Result
+	ApiRouter        eucommon.EthApiRouter
+	RecordBuffer     []ccurlinterfaces.Univalue
+	TransitionBuffer []ccurlinterfaces.Univalue
+	ImmunedBuffer    []ccurlinterfaces.Univalue
 }
 
 func (this *JobSequence) DeriveNewHash(seed [32]byte) [32]byte {
@@ -35,31 +39,45 @@ func (this *JobSequence) DeriveNewHash(seed [32]byte) [32]byte {
 
 func (this *JobSequence) Length() int { return len(this.StdMsgs) }
 
-func (this *JobSequence) Run(config *Config, snapshotUrl ccurlinterfaces.Datastore) []*Result { //
+func (this *JobSequence) Run(config *Config, mainApi eucommon.EthApiRouter) []*Result { //
 	results := make([]*Result, len(this.StdMsgs))
+	this.ApiRouter = mainApi.New((&concurrenturl.ConcurrentUrl{}).New(indexer.NewWriteCache(mainApi.Ccurl().WriteCache())), this.ApiRouter.Schedule())
 
 	for i, msg := range this.StdMsgs {
-		results[i] = this.execute(msg, config, snapshotUrl) // What happens if it fails
-		results[i].FilterTransitions()                      // Flag the failed transactions
+		pendingApi := this.ApiRouter.New((&concurrenturl.ConcurrentUrl{}).New(indexer.NewWriteCache(this.ApiRouter.Ccurl().WriteCache())), this.ApiRouter.Schedule())
+		pendingApi.DecrementDepth()
+
+		results[i] = this.execute(msg, config, pendingApi)          // What happens if it fails
+		transitions, immunedTransitions := results[i].Transitions() // Filter the failed transactions
+		this.ImmunedBuffer = append(this.ImmunedBuffer, immunedTransitions...)
+		this.ApiRouter.Ccurl().WriteCache().AddTransitions(transitions) // merge transitions to the main cache here !!!
 	}
+	this.RecordBuffer = indexer.Univalues(this.ApiRouter.Ccurl().Export()).To(indexer.IPCAccess{})
+
+	this.TransitionBuffer = append(this.TransitionBuffer, indexer.Univalues(this.ApiRouter.Ccurl().Export()).To(indexer.ITCTransition{})...)
+	this.TransitionBuffer = append(this.TransitionBuffer, this.ImmunedBuffer...)
+
 	return results
 }
 
-func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapshotUrl ccurlinterfaces.Datastore) *Result { //
-	ccurl := (&concurrenturl.ConcurrentUrl{}).New(
-		indexer.NewWriteCache(snapshotUrl, this.ApiRouter.Ccurl().Platform),
-		this.ApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
+func (this *JobSequence) FlagError(err error) {
+	for i := 0; i < len(this.Results); i++ {
+		this.Results[i].Err = err // Flag the transitions for the WriteTo().
+	}
 
-	this.ApiRouter = this.ApiRouter.New(ccurl, this.ApiRouter.Schedule())
+	this.RecordBuffer = this.RecordBuffer[:0]
+	this.TransitionBuffer = this.ImmunedBuffer
+}
 
-	statedb := eth.NewImplStateDB(this.ApiRouter)                       // Eth state DB
+func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, api eucommon.EthApiRouter) *Result { //
+	statedb := eth.NewImplStateDB(api)                                  // Eth state DB
 	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, uint32(stdMsg.ID)) // tx hash , block hash and tx index
 
 	eu := NewEU(
 		config.ChainConfig,
 		vm.Config{},
 		statedb,
-		this.ApiRouter, // Tx hash, tx id and url
+		api, // Tx hash, tx id and url
 	)
 
 	// var prechkErr error
@@ -71,14 +89,14 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapsh
 		)
 
 	return &Result{
-		TxIndex:     uint32(stdMsg.ID),
-		TxHash:      common.IfThenDo1st(receipt != nil, func() evmcommon.Hash { return receipt.TxHash }, evmcommon.Hash{}),
-		Transitions: this.ApiRouter.StateFilter().Raw(), // Transitions + Accesses
-		Err:         common.IfThenDo1st(prechkErr == nil, func() error { return evmResult.Err }, prechkErr),
-		From:        stdMsg.Native.From,
-		Coinbase:    *config.Coinbase,
-		Receipt:     receipt,
-		EvmResult:   evmResult,
+		TxIndex:          uint32(stdMsg.ID),
+		TxHash:           common.IfThenDo1st(receipt != nil, func() evmcommon.Hash { return receipt.TxHash }, evmcommon.Hash{}),
+		rawStateAccesses: api.StateFilter().Raw(), // Transitions + Accesses
+		Err:              common.IfThenDo1st(prechkErr == nil, func() error { return evmResult.Err }, prechkErr),
+		From:             stdMsg.Native.From,
+		Coinbase:         *config.Coinbase,
+		Receipt:          receipt,
+		EvmResult:        evmResult,
 	}
 }
 
@@ -110,4 +128,36 @@ func (this *JobSequence) RefundTo(payer, recipent ccurlinterfaces.Univalue, amou
 	payer.IncrementDeltaWrites(1)
 
 	return amount, nil
+}
+
+type JobSequences []*JobSequence
+
+func (this JobSequences) Detect() arbitrator.Conflicts {
+	if len(this) == 1 {
+		return arbitrator.Conflicts{}
+	}
+
+	accesseVec := common.ConcateDo(this,
+		func(job *JobSequence) uint64 { return uint64(len(job.RecordBuffer)) },
+		func(job *JobSequence) []ccurlinterfaces.Univalue { return job.RecordBuffer },
+	)
+
+	groupIdBuffer := common.ConcateDo(this,
+		func(job *JobSequence) uint64 { return uint64(len(job.RecordBuffer)) },
+		func(job *JobSequence) []uint32 { return common.Fill(make([]uint32, len(job.RecordBuffer)), job.ID) },
+	)
+
+	// groupIdBuffer := make([]uint32, len(accesseVec))
+	// common.ConcateToBuffer(this, &groupIdBuffer, func(job *JobSequence) []uint32 { return common.Fill(make([]uint32, len(accesseVec)), job.ID) })
+
+	conflicInfo := arbitrator.Conflicts((&arbitrator.Arbitrator{}).Detect(groupIdBuffer, accesseVec))
+	return conflicInfo
+}
+
+func (this JobSequences) ProcessConflicts(dict *map[uint32]uint64, err error) {
+	for i := 0; i < len(this); i++ {
+		if _, ok := (*dict)[this[i].ID]; ok {
+			this[i].FlagError(err)
+		}
+	}
 }

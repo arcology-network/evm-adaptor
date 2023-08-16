@@ -27,7 +27,7 @@ func TestParallelWithConflict(t *testing.T) {
 	}
 }
 
-func TestParaFixedLengthWithConflictRollback(t *testing.T) {
+func TestParaFixedLengthWithConflictAndRollback(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
 

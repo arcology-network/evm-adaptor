@@ -4,10 +4,11 @@ import (
 	"errors"
 
 	common "github.com/arcology-network/common-lib/common"
-	ccurlcommon "github.com/arcology-network/concurrenturl/common"
-	indexer "github.com/arcology-network/concurrenturl/indexer"
 
 	// evmeu "github.com/arcology-network/vm-adaptor"
+	ccurlcommon "github.com/arcology-network/concurrenturl/common"
+	indexer "github.com/arcology-network/concurrenturl/indexer"
+	"github.com/arcology-network/concurrenturl/interfaces"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
 
@@ -27,7 +28,8 @@ func NewGeneration(id uint32, numThreads uint8, jobs []*JobSequence) *Generation
 }
 
 // func (this *Generation) BranchID() uint32 { return this.branchID }
-func (this *Generation) Length() uint64 { return uint64(len(this.jobs)) }
+func (this *Generation) Length() uint64       { return uint64(len(this.jobs)) }
+func (this *Generation) Jobs() []*JobSequence { return this.jobs }
 
 func (this *Generation) At(idx uint64) *JobSequence {
 	return common.IfThenDo1st(idx < uint64(len(this.jobs)), func() *JobSequence { return this.jobs[idx] }, nil)
@@ -38,31 +40,33 @@ func (this *Generation) Add(job *JobSequence) bool {
 	return true
 }
 
-func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []*Result {
-	preTransitions := indexer.Univalues(common.Clone(parentApiRouter.StateFilter().Raw())).To(indexer.ITCTransition{})
-
-	snapshot := parentApiRouter.Ccurl().Snapshot(preTransitions)
+func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []interfaces.Univalue {
 	config := NewConfig().SetCoinbase(parentApiRouter.Coinbase())
 
 	// t0 := time.Now()
 	worker := func(start, end, idx int, args ...interface{}) {
 		for i := start; i < end; i++ {
-			this.jobs[i].Results = this.jobs[i].Run(config, snapshot)
+			this.jobs[i].Results = this.jobs[i].Run(config, parentApiRouter)
 		}
 	}
 	common.ParallelWorker(len(this.jobs), int(this.numThreads), worker)
 	// fmt.Println(time.Since(t0))
 
-	// Detect potential conflicts
-	results := common.Concate(this.jobs, func(job *JobSequence) []*Result { return job.Results })
-	dict, _ := Results(results).Detect().ToDict()
+	_, groupDict, _ := JobSequences(this.jobs).Detect().ToDict()
+	JobSequences(this.jobs).ProcessConflicts(groupDict, errors.New(ccurlcommon.WARN_ACCESS_CONFLICT))
 
-	for i := 0; i < len(results); i++ {
-		if _, conflict := (*dict)[results[i].TxIndex]; conflict {
-			results[i].Err = errors.New(ccurlcommon.WARN_ACCESS_CONFLICT) // Flag the transitions for the WriteTo().
-		}
-	}
-	return results
+	//no filtering here !!!
+
+	transitions := common.ConcateDo(this.jobs,
+		func(v *JobSequence) uint64 {
+			return uint64(len((*v).TransitionBuffer))
+		},
+
+		func(v *JobSequence) []interfaces.Univalue {
+			return (*v).TransitionBuffer
+		},
+	)
+	return indexer.Univalues(transitions).To(indexer.ITCTransition{})
 }
 
 func (this *Generation) Clear() uint64 {

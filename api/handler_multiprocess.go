@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 
 	"github.com/arcology-network/common-lib/common"
+	"github.com/arcology-network/concurrenturl/interfaces"
 	evmcommon "github.com/arcology-network/evm/common"
 	evmcore "github.com/arcology-network/evm/core"
 	"github.com/holiman/uint256"
@@ -69,18 +70,18 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 		}
 		generation.Add(this.jobseqs[i])
 	}
-	results := generation.Run(this.Api())
+	transitions := generation.Run(this.Api())
 
 	// Sub processes may have been spawned during the execution, recheck it.
 	if !this.Api().CheckRuntimeConstrains() {
 		return []byte{}, false, fee
 	}
 
-	// execution.Results(results).Print()
-	for i := 0; i < len(results); i++ {
-		results[i].WriteTo(uint32(this.Api().GetEU().(*execution.EU).Message().ID), this.Api().Ccurl().WriteCache()) // Merge the write cache to its parent
-	}
+	// Unify tx IDs c
+	mainTxID := uint32(this.Api().GetEU().(*execution.EU).Message().ID)
+	common.Foreach(transitions, func(v *interfaces.Univalue) { (*v).SetTx(mainTxID) })
 
+	this.Api().Ccurl().WriteCache().AddTransitions(transitions) // Merge the write cache to the main cache
 	return []byte{}, true, common.Sum[int64](fees)
 }
 
@@ -91,23 +92,22 @@ func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence
 		[20]byte{}, 1, 32,
 		[]byte{}, 2, math.MaxInt64)
 
-	// fmt.Print(value)
-
 	if err != nil {
 		return nil, err
 	}
 
 	newJobSeq := &execution.JobSequence{
-		ID:        this.BaseHandlers.Api().GetSerialNum(eucommon.SUB_PROCESS),
+		ID:        uint32(this.BaseHandlers.Api().GetSerialNum(eucommon.SUB_PROCESS)),
 		ApiRouter: this.BaseHandlers.Api(),
 	}
 
+	transfer := value.ToBig()
 	addr := evmcommon.Address(calleeAddr)
 	evmMsg := evmcore.NewMessage( // Build the message
 		this.BaseHandlers.Api().Origin(),
 		&addr,
 		0,
-		value.ToBig(), // Amount to transfer
+		transfer, // Amount to transfer
 		gasLimit,
 		this.BaseHandlers.Api().GetEU().(*execution.EU).Message().Native.GasPrice, // gas price
 		funCall,
@@ -116,7 +116,7 @@ func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence
 	)
 
 	stdMsg := &execution.StandardMessage{
-		ID:     newJobSeq.ID, // this is the problem !!!!
+		ID:     uint64(newJobSeq.ID), // this is the problem !!!!
 		Native: &evmMsg,
 		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(*execution.EU).Message().TxHash),
 	}

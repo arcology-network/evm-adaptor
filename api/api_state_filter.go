@@ -35,7 +35,7 @@ func (this *StateFilter) AddToAutoReversion(addr string) {
 	}
 }
 
-func (this *StateFilter) filterTransitions(transitions *[]interfaces.Univalue) []interfaces.Univalue {
+func (this *StateFilter) filterByAddress(transitions *[]interfaces.Univalue) []interfaces.Univalue {
 	if len(this.ignoreAddresses) == 0 {
 		return *transitions
 	}
@@ -51,11 +51,11 @@ func (this *StateFilter) filterTransitions(transitions *[]interfaces.Univalue) [
 
 func (this *StateFilter) Raw() []interfaces.Univalue {
 	transitions := this.api.Ccurl().Export()
-	return this.filterTransitions(&transitions)
+	return this.filterByAddress(&transitions)
 }
 
 func (this *StateFilter) ByType() ([]interfaces.Univalue, []interfaces.Univalue) {
 	accesses, transitions := this.api.Ccurl().ExportAll()
-	return this.filterTransitions(&accesses),
-		this.filterTransitions(&transitions)
+	return this.filterByAddress(&accesses),
+		this.filterByAddress(&transitions)
 }
