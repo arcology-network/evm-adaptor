@@ -53,13 +53,14 @@ func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []interfaces.
 	common.ParallelWorker(len(this.jobs), int(this.numThreads), worker)
 	// fmt.Println(time.Since(t0))
 
-	_, groupDict, _ := this.Detect(this.jobs).ToDict()
+	txDict, groupDict, _ := this.Detect(this.jobs).ToDict()
 	common.Foreach(this.jobs, func(job **JobSequence) {
 		if _, ok := (*groupDict)[(**job).ID]; ok {
-			(**job).FlagError(errors.New(ccurlcommon.WARN_ACCESS_CONFLICT))
+			(**job).FlagConflict(txDict, errors.New(ccurlcommon.WARN_ACCESS_CONFLICT))
 		}
 	})
 
+	// Export clear transitions
 	return common.ConcateDo(this.jobs,
 		func(v *JobSequence) uint64 {
 			return uint64(len((*v).TransitionBuffer))

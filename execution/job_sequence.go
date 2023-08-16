@@ -8,6 +8,7 @@ import (
 	"github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/commutative"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
+	"github.com/arcology-network/concurrenturl/interfaces"
 
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	evmcommon "github.com/arcology-network/evm/common"
@@ -26,7 +27,7 @@ type JobSequence struct {
 	ApiRouter        eucommon.EthApiRouter
 	RecordBuffer     []ccurlinterfaces.Univalue
 	TransitionBuffer []ccurlinterfaces.Univalue
-	ImmunedBuffer    []ccurlinterfaces.Univalue
+	immunedBuffer    []ccurlinterfaces.Univalue
 }
 
 func (this *JobSequence) DeriveNewHash(seed [32]byte) [32]byte {
@@ -46,25 +47,30 @@ func (this *JobSequence) Run(config *Config, mainApi eucommon.EthApiRouter) []*R
 		pendingApi := this.ApiRouter.New((&concurrenturl.ConcurrentUrl{}).New(indexer.NewWriteCache(this.ApiRouter.Ccurl().WriteCache())), this.ApiRouter.Schedule())
 		pendingApi.DecrementDepth()
 
-		results[i] = this.execute(msg, config, pendingApi) // What happens if it fails
-		this.ImmunedBuffer = append(this.ImmunedBuffer, results[i].immunedTransitions...)
+		results[i] = this.execute(msg, config, pendingApi)                         // What happens if it fails
 		this.ApiRouter.Ccurl().WriteCache().AddTransitions(results[i].transitions) // merge transitions to the main cache here !!!
 	}
+
 	this.RecordBuffer = indexer.Univalues(this.ApiRouter.Ccurl().Export()).To(indexer.IPCAccess{})
 
-	this.TransitionBuffer = append(this.TransitionBuffer, indexer.Univalues(this.ApiRouter.Ccurl().Export()).To(indexer.ITCTransition{})...)
-	this.TransitionBuffer = append(this.TransitionBuffer, this.ImmunedBuffer...)
+	this.immunedBuffer = common.Concate(this.Results,
+		func(v *Result) []interfaces.Univalue {
+			return (*v).immunedTransitions
+		},
+	)
 
+	this.TransitionBuffer = append(this.TransitionBuffer, indexer.Univalues(this.ApiRouter.Ccurl().Export()).To(indexer.ITCTransition{})...)
+	this.TransitionBuffer = append(this.TransitionBuffer, this.immunedBuffer...)
 	return results
 }
 
-func (this *JobSequence) FlagError(err error) {
+func (this *JobSequence) FlagConflict(dict *map[uint32]uint64, err error) {
 	for i := 0; i < len(this.Results); i++ {
 		this.Results[i].Err = err // Flag the transitions for the WriteTo().
 	}
 
 	this.RecordBuffer = this.RecordBuffer[:0]
-	this.TransitionBuffer = this.ImmunedBuffer
+	this.TransitionBuffer = this.immunedBuffer
 }
 
 func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, api eucommon.EthApiRouter) *Result { //
