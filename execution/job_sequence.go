@@ -47,7 +47,6 @@ func (this *JobSequence) Run(config *Config, mainApi eucommon.EthApiRouter) []*R
 		pendingApi.DecrementDepth()
 
 		results[i] = this.execute(msg, config, pendingApi) // What happens if it fails
-		// transitions, _ := results[i].Transitions()         // Filter the failed transactions
 		this.ImmunedBuffer = append(this.ImmunedBuffer, results[i].immunedTransitions...)
 		this.ApiRouter.Ccurl().WriteCache().AddTransitions(results[i].transitions) // merge transitions to the main cache here !!!
 	}

@@ -81,12 +81,6 @@ func (this *Result) Postprocess() *Result {
 	return this
 }
 
-func (this *Result) Transitions() ([]ccurlinterfaces.Univalue, []ccurlinterfaces.Univalue) {
-	this.Postprocess()
-	transitions := indexer.Univalues(common.Clone(this.rawStateAccesses))
-	return transitions.To(indexer.ITCTransition{Err: this.Err}), this.immunedTransitions
-}
-
 func (this *Result) Print() {
 	// fmt.Println("GroupID: ", this.GroupID)
 	fmt.Println("TxIndex: ", this.TxIndex)
