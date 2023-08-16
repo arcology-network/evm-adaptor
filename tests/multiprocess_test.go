@@ -245,3 +245,13 @@ func TestParaRwConflict(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestParaSubbranchConflict(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
+
+	err, _, _ := DeployThenInvoke(targetPath, "multiprocess/multiprocess_test.sol", "0.8.19", "ParaSubbranchConflictTest", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
