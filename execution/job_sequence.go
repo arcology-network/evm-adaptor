@@ -46,10 +46,10 @@ func (this *JobSequence) Run(config *Config, mainApi eucommon.EthApiRouter) []*R
 		pendingApi := this.ApiRouter.New((&concurrenturl.ConcurrentUrl{}).New(indexer.NewWriteCache(this.ApiRouter.Ccurl().WriteCache())), this.ApiRouter.Schedule())
 		pendingApi.DecrementDepth()
 
-		results[i] = this.execute(msg, config, pendingApi)          // What happens if it fails
-		transitions, immunedTransitions := results[i].Transitions() // Filter the failed transactions
-		this.ImmunedBuffer = append(this.ImmunedBuffer, immunedTransitions...)
-		this.ApiRouter.Ccurl().WriteCache().AddTransitions(transitions) // merge transitions to the main cache here !!!
+		results[i] = this.execute(msg, config, pendingApi) // What happens if it fails
+		// transitions, _ := results[i].Transitions()         // Filter the failed transactions
+		this.ImmunedBuffer = append(this.ImmunedBuffer, results[i].immunedTransitions...)
+		this.ApiRouter.Ccurl().WriteCache().AddTransitions(results[i].transitions) // merge transitions to the main cache here !!!
 	}
 	this.RecordBuffer = indexer.Univalues(this.ApiRouter.Ccurl().Export()).To(indexer.IPCAccess{})
 
@@ -87,7 +87,7 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, api eu
 			NewEVMTxContext(*stdMsg.Native),
 		)
 
-	return &Result{
+	return (&Result{
 		TxIndex:          uint32(stdMsg.ID),
 		TxHash:           common.IfThenDo1st(receipt != nil, func() evmcommon.Hash { return receipt.TxHash }, evmcommon.Hash{}),
 		rawStateAccesses: api.StateFilter().Raw(), // Transitions + Accesses
@@ -96,7 +96,7 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, api eu
 		Coinbase:         *config.Coinbase,
 		Receipt:          receipt,
 		EvmResult:        evmResult,
-	}
+	}).Postprocess()
 }
 
 func (this *JobSequence) CalcualteRefund() uint64 {

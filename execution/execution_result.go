@@ -25,6 +25,7 @@ type Result struct {
 	Coinbase           [20]byte
 	rawStateAccesses   []ccurlinterfaces.Univalue
 	immunedTransitions []ccurlinterfaces.Univalue
+	transitions        []ccurlinterfaces.Univalue
 	Receipt            *evmTypes.Receipt
 	EvmResult          *evmcore.ExecutionResult
 	Err                error
@@ -45,7 +46,7 @@ func (this *Result) BreakdownBalanceTransition(balanceTransition ccurlinterfaces
 	return nil
 }
 
-func (this *Result) Postprocess() {
+func (this *Result) Postprocess() *Result {
 	_, senderBalance := common.FindFirstIf(this.rawStateAccesses, func(v ccurlinterfaces.Univalue) bool {
 		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") && strings.Contains(*v.GetPath(), hex.EncodeToString(this.From[:]))
 	})
@@ -72,6 +73,12 @@ func (this *Result) Postprocess() {
 			(*v).GetUnimeta().(*univalue.Unimeta).SetPersistent(true)
 		}
 	})
+
+	if this.Err == nil {
+		this.transitions = indexer.Univalues(this.rawStateAccesses).To(indexer.ITCTransition{Err: this.Err})
+		this.transitions = common.MoveIf(&this.transitions, func(v ccurlinterfaces.Univalue) bool { return !v.Persistent() })
+	}
+	return this
 }
 
 func (this *Result) Transitions() ([]ccurlinterfaces.Univalue, []ccurlinterfaces.Univalue) {
