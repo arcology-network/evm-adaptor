@@ -6,9 +6,10 @@ import (
 	common "github.com/arcology-network/common-lib/common"
 
 	// evmeu "github.com/arcology-network/vm-adaptor"
+	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
-	indexer "github.com/arcology-network/concurrenturl/indexer"
 	"github.com/arcology-network/concurrenturl/interfaces"
+	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
 
@@ -52,12 +53,14 @@ func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []interfaces.
 	common.ParallelWorker(len(this.jobs), int(this.numThreads), worker)
 	// fmt.Println(time.Since(t0))
 
-	_, groupDict, _ := JobSequences(this.jobs).Detect().ToDict()
-	JobSequences(this.jobs).ProcessConflicts(groupDict, errors.New(ccurlcommon.WARN_ACCESS_CONFLICT))
+	_, groupDict, _ := this.Detect(this.jobs).ToDict()
+	common.Foreach(this.jobs, func(job **JobSequence) {
+		if _, ok := (*groupDict)[(**job).ID]; ok {
+			(**job).FlagError(errors.New(ccurlcommon.WARN_ACCESS_CONFLICT))
+		}
+	})
 
-	//no filtering here !!!
-
-	transitions := common.ConcateDo(this.jobs,
+	return common.ConcateDo(this.jobs,
 		func(v *JobSequence) uint64 {
 			return uint64(len((*v).TransitionBuffer))
 		},
@@ -66,7 +69,26 @@ func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []interfaces.
 			return (*v).TransitionBuffer
 		},
 	)
-	return indexer.Univalues(transitions).To(indexer.ITCTransition{})
+	// return indexer.Univalues(transitions).To(indexer.ITCTransition{})
+}
+
+func (*Generation) Detect(jobs []*JobSequence) arbitrator.Conflicts {
+	if len(jobs) == 1 {
+		return arbitrator.Conflicts{}
+	}
+
+	accesseVec := common.ConcateDo(jobs,
+		func(job *JobSequence) uint64 { return uint64(len(job.RecordBuffer)) },
+		func(job *JobSequence) []ccurlinterfaces.Univalue { return job.RecordBuffer },
+	)
+
+	groupIdBuffer := common.ConcateDo(jobs,
+		func(job *JobSequence) uint64 { return uint64(len(job.RecordBuffer)) },
+		func(job *JobSequence) []uint32 { return common.Fill(make([]uint32, len(job.RecordBuffer)), job.ID) },
+	)
+
+	return arbitrator.Conflicts((&arbitrator.Arbitrator{}).Detect(groupIdBuffer, accesseVec))
+	// return conflicInfo
 }
 
 func (this *Generation) Clear() uint64 {

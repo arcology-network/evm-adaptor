@@ -6,7 +6,6 @@ import (
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl"
-	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
 	"github.com/arcology-network/concurrenturl/commutative"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 
@@ -128,36 +127,4 @@ func (this *JobSequence) RefundTo(payer, recipent ccurlinterfaces.Univalue, amou
 	payer.IncrementDeltaWrites(1)
 
 	return amount, nil
-}
-
-type JobSequences []*JobSequence
-
-func (this JobSequences) Detect() arbitrator.Conflicts {
-	if len(this) == 1 {
-		return arbitrator.Conflicts{}
-	}
-
-	accesseVec := common.ConcateDo(this,
-		func(job *JobSequence) uint64 { return uint64(len(job.RecordBuffer)) },
-		func(job *JobSequence) []ccurlinterfaces.Univalue { return job.RecordBuffer },
-	)
-
-	groupIdBuffer := common.ConcateDo(this,
-		func(job *JobSequence) uint64 { return uint64(len(job.RecordBuffer)) },
-		func(job *JobSequence) []uint32 { return common.Fill(make([]uint32, len(job.RecordBuffer)), job.ID) },
-	)
-
-	// groupIdBuffer := make([]uint32, len(accesseVec))
-	// common.ConcateToBuffer(this, &groupIdBuffer, func(job *JobSequence) []uint32 { return common.Fill(make([]uint32, len(accesseVec)), job.ID) })
-
-	conflicInfo := arbitrator.Conflicts((&arbitrator.Arbitrator{}).Detect(groupIdBuffer, accesseVec))
-	return conflicInfo
-}
-
-func (this JobSequences) ProcessConflicts(dict *map[uint32]uint64, err error) {
-	for i := 0; i < len(this); i++ {
-		if _, ok := (*dict)[this[i].ID]; ok {
-			this[i].FlagError(err)
-		}
-	}
 }
