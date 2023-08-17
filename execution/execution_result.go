@@ -18,17 +18,17 @@ import (
 )
 
 type Result struct {
-	GroupID            uint32 // == Group ID
-	TxIndex            uint32
-	TxHash             [32]byte
-	From               [20]byte
-	Coinbase           [20]byte
-	rawStateAccesses   []ccurlinterfaces.Univalue
-	immunedTransitions []ccurlinterfaces.Univalue
-	transitions        []ccurlinterfaces.Univalue
-	Receipt            *evmTypes.Receipt
-	EvmResult          *evmcore.ExecutionResult
-	Err                error
+	GroupID          uint32 // == Group ID
+	TxIndex          uint32
+	TxHash           [32]byte
+	From             [20]byte
+	Coinbase         [20]byte
+	rawStateAccesses []ccurlinterfaces.Univalue
+	// immunedTransitions []ccurlinterfaces.Univalue
+	// transitions        []ccurlinterfaces.Univalue
+	Receipt   *evmTypes.Receipt
+	EvmResult *evmcore.ExecutionResult
+	Err       error
 }
 
 func (this *Result) BreakdownBalanceTransition(balanceTransition ccurlinterfaces.Univalue, gasDelta *uint256.Int, isCredit bool) ccurlinterfaces.Univalue {
@@ -52,7 +52,7 @@ func (this *Result) Postprocess() *Result {
 	})
 
 	if senderGasTransition := this.BreakdownBalanceTransition(*senderBalance, uint256.NewInt(this.Receipt.GasUsed), false); senderGasTransition != nil {
-		this.immunedTransitions = append(this.immunedTransitions, senderGasTransition)
+		this.rawStateAccesses = append(this.rawStateAccesses, senderGasTransition)
 	}
 
 	_, coinbaseBalance := common.FindFirstIf(this.rawStateAccesses, func(v ccurlinterfaces.Univalue) bool {
@@ -60,7 +60,7 @@ func (this *Result) Postprocess() *Result {
 	})
 
 	if coinbaseGasTransition := this.BreakdownBalanceTransition(*coinbaseBalance, uint256.NewInt(this.Receipt.GasUsed), true); coinbaseGasTransition != nil {
-		this.immunedTransitions = append(this.immunedTransitions, coinbaseGasTransition)
+		this.rawStateAccesses = append(this.rawStateAccesses, coinbaseGasTransition)
 	}
 
 	common.Foreach(this.rawStateAccesses, func(v *ccurlinterfaces.Univalue) {
@@ -74,11 +74,15 @@ func (this *Result) Postprocess() *Result {
 		}
 	})
 
-	if this.Err == nil {
-		this.transitions = indexer.Univalues(this.rawStateAccesses).To(indexer.ITCTransition{Err: this.Err})
-		this.transitions = common.MoveIf(&this.transitions, func(v ccurlinterfaces.Univalue) bool { return !v.Persistent() })
-	}
+	this.rawStateAccesses = this.Transitions()
 	return this
+}
+
+func (this *Result) Transitions() []ccurlinterfaces.Univalue {
+	if this.Err != nil {
+		return common.MoveIf(&this.rawStateAccesses, func(v ccurlinterfaces.Univalue) bool { return v.Persistent() })
+	}
+	return this.rawStateAccesses
 }
 
 func (this *Result) Print() {

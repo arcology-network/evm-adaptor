@@ -44,52 +44,31 @@ func (this *Generation) Add(job *JobSequence) bool {
 func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []interfaces.Univalue {
 	config := NewConfig().SetCoinbase(parentApiRouter.Coinbase())
 
+	groupIDs := make([][]uint32, len(this.jobs))
+	records := make([][]ccurlinterfaces.Univalue, len(this.jobs))
 	// t0 := time.Now()
 	worker := func(start, end, idx int, args ...interface{}) {
 		for i := start; i < end; i++ {
-			this.jobs[i].Results = this.jobs[i].Run(config, parentApiRouter)
+			groupIDs[i], records[i] = this.jobs[i].Run(config, parentApiRouter)
 		}
 	}
 	common.ParallelWorker(len(this.jobs), int(this.numThreads), worker)
 	// fmt.Println(time.Since(t0))
 
-	txDict, groupDict, _ := this.Detect(this.jobs).ToDict()
-	common.Foreach(this.jobs, func(job **JobSequence) {
-		if _, ok := (*groupDict)[(**job).ID]; ok {
-			(**job).FlagConflict(txDict, errors.New(ccurlcommon.WARN_ACCESS_CONFLICT))
+	txDict, groupDict, _ := this.Detect(groupIDs, records).ToDict()
+	return common.Concate(this.jobs, func(seq *JobSequence) []interfaces.Univalue {
+		if _, ok := (*groupDict)[(*seq).ID]; ok {
+			(*seq).FlagConflict(txDict, errors.New(ccurlcommon.WARN_ACCESS_CONFLICT))
 		}
+		return (*seq).GetClearedTransition()
 	})
-
-	// Export clear transitions
-	return common.ConcateDo(this.jobs,
-		func(v *JobSequence) uint64 {
-			return uint64(len((*v).TransitionBuffer))
-		},
-
-		func(v *JobSequence) []interfaces.Univalue {
-			return (*v).TransitionBuffer
-		},
-	)
-	// return indexer.Univalues(transitions).To(indexer.ITCTransition{})
 }
 
-func (*Generation) Detect(jobs []*JobSequence) arbitrator.Conflicts {
-	if len(jobs) == 1 {
+func (*Generation) Detect(groupIDs [][]uint32, records [][]interfaces.Univalue) arbitrator.Conflicts {
+	if len(records) == 1 {
 		return arbitrator.Conflicts{}
 	}
-
-	accesseVec := common.ConcateDo(jobs,
-		func(job *JobSequence) uint64 { return uint64(len(job.RecordBuffer)) },
-		func(job *JobSequence) []ccurlinterfaces.Univalue { return job.RecordBuffer },
-	)
-
-	groupIdBuffer := common.ConcateDo(jobs,
-		func(job *JobSequence) uint64 { return uint64(len(job.RecordBuffer)) },
-		func(job *JobSequence) []uint32 { return common.Fill(make([]uint32, len(job.RecordBuffer)), job.ID) },
-	)
-
-	return arbitrator.Conflicts((&arbitrator.Arbitrator{}).Detect(groupIdBuffer, accesseVec))
-	// return conflicInfo
+	return arbitrator.Conflicts((&arbitrator.Arbitrator{}).Detect(common.Flatten(groupIDs), common.Flatten(records)))
 }
 
 func (this *Generation) Clear() uint64 {

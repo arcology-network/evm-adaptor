@@ -8,7 +8,6 @@ import (
 	"github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/commutative"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
-	"github.com/arcology-network/concurrenturl/interfaces"
 
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	evmcommon "github.com/arcology-network/evm/common"
@@ -20,14 +19,14 @@ import (
 )
 
 type JobSequence struct {
-	ID               uint32 // group id
-	PreTxs           []uint32
-	StdMsgs          []*StandardMessage
-	Results          []*Result
-	ApiRouter        eucommon.EthApiRouter
-	RecordBuffer     []ccurlinterfaces.Univalue
-	TransitionBuffer []ccurlinterfaces.Univalue
-	immunedBuffer    []ccurlinterfaces.Univalue
+	ID           uint32 // group id
+	PreTxs       []uint32
+	StdMsgs      []*StandardMessage
+	Results      []*Result
+	ApiRouter    eucommon.EthApiRouter
+	RecordBuffer []ccurlinterfaces.Univalue
+	// TransitionBuffer []ccurlinterfaces.Univalue
+	// immunedBuffer    []ccurlinterfaces.Univalue
 }
 
 func (this *JobSequence) DeriveNewHash(seed [32]byte) [32]byte {
@@ -39,38 +38,45 @@ func (this *JobSequence) DeriveNewHash(seed [32]byte) [32]byte {
 
 func (this *JobSequence) Length() int { return len(this.StdMsgs) }
 
-func (this *JobSequence) Run(config *Config, mainApi eucommon.EthApiRouter) []*Result { //
-	results := make([]*Result, len(this.StdMsgs))
+func (this *JobSequence) Run(config *Config, mainApi eucommon.EthApiRouter) ([]uint32, []ccurlinterfaces.Univalue) { //
+	this.Results = make([]*Result, len(this.StdMsgs))
 	this.ApiRouter = mainApi.New((&concurrenturl.ConcurrentUrl{}).New(indexer.NewWriteCache(mainApi.Ccurl().WriteCache())), this.ApiRouter.Schedule())
 
 	for i, msg := range this.StdMsgs {
 		pendingApi := this.ApiRouter.New((&concurrenturl.ConcurrentUrl{}).New(indexer.NewWriteCache(this.ApiRouter.Ccurl().WriteCache())), this.ApiRouter.Schedule())
 		pendingApi.DecrementDepth()
 
-		results[i] = this.execute(msg, config, pendingApi)                         // What happens if it fails
-		this.ApiRouter.Ccurl().WriteCache().AddTransitions(results[i].transitions) // merge transitions to the main cache here !!!
+		this.Results[i] = this.execute(msg, config, pendingApi)                              // What happens if it fails
+		this.ApiRouter.Ccurl().WriteCache().AddTransitions(this.Results[i].rawStateAccesses) // merge transitions to the main cache here !!!
 	}
 
-	this.RecordBuffer = indexer.Univalues(this.ApiRouter.Ccurl().Export()).To(indexer.IPCAccess{})
+	records := indexer.Univalues(this.ApiRouter.Ccurl().Export()).To(indexer.IPCAccess{})
+	return common.Fill(make([]uint32, len(records)), this.ID), records
+}
 
-	this.immunedBuffer = common.Concate(this.Results,
-		func(v *Result) []interfaces.Univalue {
-			return (*v).immunedTransitions
+func (this *JobSequence) GetClearedTransition() []ccurlinterfaces.Univalue {
+	if idx, _ := common.FindFirstIf(this.Results, func(v *Result) bool { return v.Err != nil }); idx < 0 {
+		return this.ApiRouter.Ccurl().Export() // No conflict, export the write cache directly
+	}
+
+	// Reconcate the transitions
+	trans := common.Concate(this.Results,
+		func(v *Result) []ccurlinterfaces.Univalue {
+			return v.Transitions()
 		},
 	)
-
-	this.TransitionBuffer = append(this.TransitionBuffer, indexer.Univalues(this.ApiRouter.Ccurl().Export()).To(indexer.ITCTransition{})...)
-	this.TransitionBuffer = append(this.TransitionBuffer, this.immunedBuffer...)
-	return results
+	return trans
 }
 
 func (this *JobSequence) FlagConflict(dict *map[uint32]uint64, err error) {
-	for i := 0; i < len(this.Results); i++ {
+	first, _ := common.FindFirstIf(this.Results, func(r *Result) bool {
+		_, ok := (*dict)[r.TxIndex]
+		return ok
+	})
+
+	for i := first; i < len(this.Results); i++ {
 		this.Results[i].Err = err // Flag the transitions for the WriteTo().
 	}
-
-	this.RecordBuffer = this.RecordBuffer[:0]
-	this.TransitionBuffer = this.immunedBuffer
 }
 
 func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, api eucommon.EthApiRouter) *Result { //
