@@ -7,7 +7,7 @@ import (
 	"github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/commutative"
-	"github.com/arcology-network/concurrenturl/indexer"
+	indexer "github.com/arcology-network/concurrenturl/indexer"
 
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	evmcommon "github.com/arcology-network/evm/common"
@@ -19,11 +19,14 @@ import (
 )
 
 type JobSequence struct {
-	ID        uint64
-	PreTxs    []uint32
-	StdMsgs   []*StandardMessage
-	Results   []*Result
-	ApiRouter eucommon.EthApiRouter
+	ID           uint32 // group id
+	PreTxs       []uint32
+	StdMsgs      []*StandardMessage
+	Results      []*Result
+	ApiRouter    eucommon.EthApiRouter
+	RecordBuffer []ccurlinterfaces.Univalue
+	// TransitionBuffer []ccurlinterfaces.Univalue
+	// immunedBuffer    []ccurlinterfaces.Univalue
 }
 
 func (this *JobSequence) DeriveNewHash(seed [32]byte) [32]byte {
@@ -35,36 +38,56 @@ func (this *JobSequence) DeriveNewHash(seed [32]byte) [32]byte {
 
 func (this *JobSequence) Length() int { return len(this.StdMsgs) }
 
-func (this *JobSequence) Run(config *Config, snapshotUrl ccurlinterfaces.Datastore) []*Result { //
-	results := make([]*Result, len(this.StdMsgs))
+func (this *JobSequence) Run(config *Config, mainApi eucommon.EthApiRouter) ([]uint32, []ccurlinterfaces.Univalue) { //
+	this.Results = make([]*Result, len(this.StdMsgs))
+	this.ApiRouter = mainApi.New((&concurrenturl.ConcurrentUrl{}).New(indexer.NewWriteCache(mainApi.Ccurl().WriteCache())), this.ApiRouter.Schedule())
 
 	for i, msg := range this.StdMsgs {
-		results[i] = this.execute(msg, config, snapshotUrl) // What happens if it fails
-		transitions := results[i].FilterTransitions()
+		pendingApi := this.ApiRouter.New((&concurrenturl.ConcurrentUrl{}).New(indexer.NewWriteCache(this.ApiRouter.Ccurl().WriteCache())), this.ApiRouter.Schedule())
+		pendingApi.DecrementDepth()
 
-		if i < len(this.StdMsgs)-1 {
-			snapshotUrl = this.ApiRouter.Ccurl().Snapshot(transitions)
-		}
+		this.Results[i] = this.execute(msg, config, pendingApi)                              // What happens if it fails
+		this.ApiRouter.Ccurl().WriteCache().AddTransitions(this.Results[i].rawStateAccesses) // merge transitions to the main cache here !!!
 	}
 
-	return results
+	records := indexer.Univalues(this.ApiRouter.Ccurl().Export()).To(indexer.IPCAccess{})
+	return common.Fill(make([]uint32, len(records)), this.ID), records
 }
 
-func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapshotUrl ccurlinterfaces.Datastore) *Result { //
-	ccurl := (&concurrenturl.ConcurrentUrl{}).New(
-		indexer.NewWriteCache(snapshotUrl, this.ApiRouter.Ccurl().Platform),
-		this.ApiRouter.Ccurl().Platform) // Init a write cache only since it doesn't need the importers
+func (this *JobSequence) GetClearedTransition() []ccurlinterfaces.Univalue {
+	if idx, _ := common.FindFirstIf(this.Results, func(v *Result) bool { return v.Err != nil }); idx < 0 {
+		return this.ApiRouter.Ccurl().Export() // No conflict, export the write cache directly
+	}
 
-	this.ApiRouter = this.ApiRouter.New(ccurl, this.ApiRouter.Schedule())
+	// Reconcate the transitions
+	trans := common.Concate(this.Results,
+		func(v *Result) []ccurlinterfaces.Univalue {
+			return v.Transitions()
+		},
+	)
+	return trans
+}
 
-	statedb := eth.NewImplStateDB(this.ApiRouter)                       // Eth state DB
+func (this *JobSequence) FlagConflict(dict *map[uint32]uint64, err error) {
+	first, _ := common.FindFirstIf(this.Results, func(r *Result) bool {
+		_, ok := (*dict)[r.TxIndex]
+		return ok
+	})
+
+	for i := first; i < len(this.Results); i++ {
+		this.Results[i].Err = err // Flag the transitions for the WriteTo().
+	}
+}
+
+func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, api eucommon.EthApiRouter) *Result { //
+	statedb := eth.NewImplStateDB(api)                                  // Eth state DB
 	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, uint32(stdMsg.ID)) // tx hash , block hash and tx index
 
 	eu := NewEU(
 		config.ChainConfig,
 		vm.Config{},
 		statedb,
-		this.ApiRouter, // Tx hash, tx id and url
+		api, // Tx hash, tx id and url
 	)
 
 	// var prechkErr error
@@ -75,16 +98,16 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, snapsh
 			NewEVMTxContext(*stdMsg.Native),
 		)
 
-	return &Result{
-		TxIndex:     uint32(stdMsg.ID),
-		TxHash:      common.IfThenDo1st(receipt != nil, func() evmcommon.Hash { return receipt.TxHash }, evmcommon.Hash{}),
-		Transitions: this.ApiRouter.StateFilter().Raw(), // Transitions + Accesses
-		Err:         common.IfThenDo1st(prechkErr == nil, func() error { return evmResult.Err }, prechkErr),
-		From:        stdMsg.Native.From,
-		Config:      config,
-		Receipt:     receipt,
-		EvmResult:   evmResult,
-	}
+	return (&Result{
+		TxIndex:          uint32(stdMsg.ID),
+		TxHash:           common.IfThenDo1st(receipt != nil, func() evmcommon.Hash { return receipt.TxHash }, evmcommon.Hash{}),
+		rawStateAccesses: api.StateFilter().Raw(), // Transitions + Accesses
+		Err:              common.IfThenDo1st(prechkErr == nil, func() error { return evmResult.Err }, prechkErr),
+		From:             stdMsg.Native.From,
+		Coinbase:         *config.Coinbase,
+		Receipt:          receipt,
+		EvmResult:        evmResult,
+	}).Postprocess()
 }
 
 func (this *JobSequence) CalcualteRefund() uint64 {

@@ -80,6 +80,13 @@ func (this *API) CheckRuntimeConstrains() bool { // Execeeds the max recursion d
 
 func (this *API) StateFilter() eucommon.StateFilter { return this.filter }
 
+func (this *API) DecrementDepth() uint8 {
+	if this.depth > 0 {
+		this.depth--
+	}
+	return this.depth
+}
+
 func (this *API) Depth() uint8                { return this.depth }
 func (this *API) Coinbase() evmcommon.Address { return this.eu.VM().Context.Coinbase }
 func (this *API) Origin() evmcommon.Address   { return this.eu.VM().TxContext.Origin }

@@ -1,17 +1,14 @@
 package tests
 
 import (
-	"errors"
 	"math/big"
 
 	"github.com/arcology-network/common-lib/cachedstorage"
-	commontypes "github.com/arcology-network/common-lib/types"
 	concurrenturl "github.com/arcology-network/concurrenturl"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	"github.com/arcology-network/concurrenturl/commutative"
 	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
-	"github.com/arcology-network/evm/core"
 	evmcore "github.com/arcology-network/evm/core"
 	evmcoretypes "github.com/arcology-network/evm/core/types"
 	ccapi "github.com/arcology-network/vm-adaptor/api"
@@ -77,37 +74,37 @@ func NewContract(accounts []evmcommon.Address, owner [20]byte, targetPath, file,
 	}
 }
 
-func (this *Contract) Deploy(msgSender [20]byte, nonce uint64) ([]byte, error) {
-	data, err := this.Invoke(msgSender, evmcommon.Hex2Bytes(this.code))
-	this.address = this.receipt.ContractAddress
-	this.Apply()
-	return data, err
-}
+// func (this *Contract) Deploy(msgSender [20]byte, nonce uint64) ([]byte, error) {
+// 	data, err := this.Invoke(msgSender, evmcommon.Hex2Bytes(this.code))
+// 	this.address = this.receipt.ContractAddress
+// 	this.Apply()
+// 	return data, err
+// }
 
-func (this *Contract) Invoke(msgSender [20]byte, funcCall []byte) ([]byte, error) {
-	msg := core.NewMessage(msgSender, &this.address, 10+1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), funcCall, nil, false)
-	stdMsg := &execution.StandardMessage{
-		ID:     1,
-		TxHash: [32]byte{1, 1, 1},
-		Native: &msg, // Build the message
-		Source: commontypes.TX_SOURCE_LOCAL,
-	}
+// func (this *Contract) Invoke(msgSender [20]byte, funcCall []byte) ([]byte, error) {
+// 	msg := core.NewMessage(msgSender, &this.address, 10+1, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), funcCall, nil, false)
+// 	stdMsg := &execution.StandardMessage{
+// 		ID:     1,
+// 		TxHash: [32]byte{1, 1, 1},
+// 		Native: &msg, // Build the message
+// 		Source: commontypes.TX_SOURCE_LOCAL,
+// 	}
 
-	config := MainTestConfig()
-	config.Coinbase = &eucommon.Coinbase
-	config.BlockNumber = new(big.Int).SetUint64(10000000)
-	config.Time = new(big.Int).SetUint64(10000000)
+// 	config := MainTestConfig()
+// 	config.Coinbase = &eucommon.Coinbase
+// 	config.BlockNumber = new(big.Int).SetUint64(10000000)
+// 	config.Time = new(big.Int).SetUint64(10000000)
 
-	this.receipt, this.execResult, this.err = this.eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
-	if this.err != nil || this.receipt.Status != 1 {
-		return nil, errors.New("Error: Deployment failed!!!")
-	}
-	return this.execResult.ReturnData, nil
-}
+// 	this.receipt, this.execResult, this.err = this.eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
+// 	if this.err != nil || this.receipt.Status != 1 {
+// 		return nil, errors.New("Error: Deployment failed!!!")
+// 	}
+// 	return this.execResult.ReturnData, nil
+// }
 
-func (this *Contract) Apply() {
-	_, transitionsFiltered := this.eu.Api().StateFilter().ByType()
-	this.eu.Api().Ccurl().Import(transitionsFiltered)
-	this.eu.Api().Ccurl().Sort()
-	this.eu.Api().Ccurl().Commit([]uint32{1})
-}
+// func (this *Contract) Apply() {
+// 	_, transitionsFiltered := this.eu.Api().StateFilter().ByType()
+// 	this.eu.Api().Ccurl().Import(transitionsFiltered)
+// 	this.eu.Api().Ccurl().Sort()
+// 	this.eu.Api().Ccurl().Commit([]uint32{1})
+// }

@@ -32,6 +32,7 @@ type EthApiRouter interface {
 
 	CheckRuntimeConstrains() bool
 
+	DecrementDepth() uint8
 	Depth() uint8
 	AddLog(key, value string)
 	Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64, blockhash evmcommon.Hash) (bool, []byte, bool, int64)
