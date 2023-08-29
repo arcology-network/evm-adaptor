@@ -24,14 +24,12 @@ type Result struct {
 	From             [20]byte
 	Coinbase         [20]byte
 	rawStateAccesses []ccurlinterfaces.Univalue
-	// immunedTransitions []ccurlinterfaces.Univalue
-	// transitions        []ccurlinterfaces.Univalue
-	Receipt   *evmTypes.Receipt
-	EvmResult *evmcore.ExecutionResult
-	Err       error
+	Receipt          *evmTypes.Receipt
+	EvmResult        *evmcore.ExecutionResult
+	Err              error
 }
 
-func (this *Result) BreakdownBalanceTransition(balanceTransition ccurlinterfaces.Univalue, gasDelta *uint256.Int, isCredit bool) ccurlinterfaces.Univalue {
+func (this *Result) GenGasTransition(balanceTransition ccurlinterfaces.Univalue, gasDelta *uint256.Int, isCredit bool) ccurlinterfaces.Univalue {
 	if delta := (*uint256.Int)(balanceTransition.Value().(ccurlinterfaces.Type).Delta().(*codec.Uint256)); delta.Cmp(gasDelta) >= 0 {
 		transfer := delta.Sub(delta, (*uint256.Int)(gasDelta))                                  // balance - gas
 		(balanceTransition).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(transfer)) // Set the transfer, Won't change the initial value.
@@ -51,7 +49,7 @@ func (this *Result) Postprocess() *Result {
 		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") && strings.Contains(*v.GetPath(), hex.EncodeToString(this.From[:]))
 	})
 
-	if senderGasTransition := this.BreakdownBalanceTransition(*senderBalance, uint256.NewInt(this.Receipt.GasUsed), false); senderGasTransition != nil {
+	if senderGasTransition := this.GenGasTransition(*senderBalance, uint256.NewInt(this.Receipt.GasUsed), false); senderGasTransition != nil {
 		this.rawStateAccesses = append(this.rawStateAccesses, senderGasTransition)
 	}
 
@@ -59,8 +57,10 @@ func (this *Result) Postprocess() *Result {
 		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") || strings.Contains(*v.GetPath(), hex.EncodeToString(this.Coinbase[:]))
 	})
 
-	if coinbaseGasTransition := this.BreakdownBalanceTransition(*coinbaseBalance, uint256.NewInt(this.Receipt.GasUsed), true); coinbaseGasTransition != nil {
-		this.rawStateAccesses = append(this.rawStateAccesses, coinbaseGasTransition)
+	if *(*senderBalance).GetPath() != *(*coinbaseBalance).GetPath() {
+		if coinbaseGasTransition := this.GenGasTransition(*coinbaseBalance, uint256.NewInt(this.Receipt.GasUsed), true); coinbaseGasTransition != nil {
+			this.rawStateAccesses = append(this.rawStateAccesses, coinbaseGasTransition)
+		}
 	}
 
 	common.Foreach(this.rawStateAccesses, func(v *ccurlinterfaces.Univalue) {
