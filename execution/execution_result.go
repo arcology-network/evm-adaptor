@@ -26,12 +26,13 @@ type Result struct {
 	rawStateAccesses []ccurlinterfaces.Univalue
 	Receipt          *evmTypes.Receipt
 	EvmResult        *evmcore.ExecutionResult
+	stdMsg           *StandardMessage
 	Err              error
 }
 
 func (this *Result) GenGasTransition(balanceTransition ccurlinterfaces.Univalue, gasDelta *uint256.Int, isCredit bool) ccurlinterfaces.Univalue {
-	if delta := (*uint256.Int)(balanceTransition.Value().(ccurlinterfaces.Type).Delta().(*codec.Uint256)); delta.Cmp(gasDelta) >= 0 {
-		transfer := delta.Sub(delta, (*uint256.Int)(gasDelta))                                  // balance - gas
+	if diff := (*uint256.Int)(balanceTransition.Value().(ccurlinterfaces.Type).Delta().(*codec.Uint256)); diff.Cmp(gasDelta) >= 0 {
+		transfer := diff.Sub(diff, (*uint256.Int)(gasDelta))                                    // balance - gas
 		(balanceTransition).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(transfer)) // Set the transfer, Won't change the initial value.
 		(balanceTransition).Value().(ccurlinterfaces.Type).SetDeltaSign(false)
 		//
@@ -49,16 +50,17 @@ func (this *Result) Postprocess() *Result {
 		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") && strings.Contains(*v.GetPath(), hex.EncodeToString(this.From[:]))
 	})
 
-	if senderGasTransition := this.GenGasTransition(*senderBalance, uint256.NewInt(this.Receipt.GasUsed), false); senderGasTransition != nil {
+	gasUsedInWei := uint256.NewInt(1).Mul(uint256.NewInt(this.Receipt.GasUsed), uint256.NewInt(this.stdMsg.Native.GasPrice.Uint64()))
+	if senderGasTransition := this.GenGasTransition(*senderBalance, gasUsedInWei, false); senderGasTransition != nil {
 		this.rawStateAccesses = append(this.rawStateAccesses, senderGasTransition)
 	}
 
 	_, coinbaseBalance := common.FindFirstIf(this.rawStateAccesses, func(v ccurlinterfaces.Univalue) bool {
-		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") || strings.Contains(*v.GetPath(), hex.EncodeToString(this.Coinbase[:]))
+		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") && strings.Contains(*v.GetPath(), hex.EncodeToString(this.Coinbase[:]))
 	})
 
 	if *(*senderBalance).GetPath() != *(*coinbaseBalance).GetPath() {
-		if coinbaseGasTransition := this.GenGasTransition(*coinbaseBalance, uint256.NewInt(this.Receipt.GasUsed), true); coinbaseGasTransition != nil {
+		if coinbaseGasTransition := this.GenGasTransition(*coinbaseBalance, gasUsedInWei, true); coinbaseGasTransition != nil {
 			this.rawStateAccesses = append(this.rawStateAccesses, coinbaseGasTransition)
 		}
 	}

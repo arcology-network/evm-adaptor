@@ -107,6 +107,7 @@ func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, api eu
 		Coinbase:         *config.Coinbase,
 		Receipt:          receipt,
 		EvmResult:        evmResult,
+		stdMsg:           stdMsg,
 	}).Postprocess()
 }
 
