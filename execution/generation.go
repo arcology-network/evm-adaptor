@@ -50,6 +50,7 @@ func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []interfaces.
 	worker := func(start, end, idx int, args ...interface{}) {
 		for i := start; i < end; i++ {
 			groupIDs[i], records[i] = this.jobs[i].Run(config, parentApiRouter)
+			//	indexer.Univalues(records[i]).Sort(groupIDs[i]) // Debugging only
 		}
 	}
 	common.ParallelWorker(len(this.jobs), int(this.numThreads), worker)
