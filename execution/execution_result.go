@@ -48,6 +48,10 @@ func (this *Result) GenGasTransition(rawTransition ccurlinterfaces.Univalue, gas
 }
 
 func (this *Result) Postprocess() *Result {
+	if len(this.rawStateAccesses) == 0 {
+		return this
+	}
+
 	_, senderBalance := common.FindFirstIf(this.rawStateAccesses, func(v ccurlinterfaces.Univalue) bool {
 		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") && strings.Contains(*v.GetPath(), hex.EncodeToString(this.From[:]))
 	})

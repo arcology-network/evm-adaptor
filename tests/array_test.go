@@ -92,7 +92,16 @@ func TestU256Multiprocess(t *testing.T) {
 func TestArrayMultiprocess(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib"
-	err, _, _ := DeployThenInvoke(targetPath, "/multiprocess/mp_u256_test.sol", "0.8.19", "ArrayParallelTest", "call()", []byte{}, false)
+	err, _, _ := DeployThenInvoke(targetPath, "/multiprocess/mp_u256_test.sol", "0.8.19", "U256ArrayParallelTest", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestParallelArrayPush(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib"
+	err, _, _ := DeployThenInvoke(targetPath, "/multiprocess/multiprocess_test.sol", "0.8.19", "ParaNativeArrayPushbackTest", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
