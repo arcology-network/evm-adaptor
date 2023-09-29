@@ -50,8 +50,8 @@ func (this *JobSequence) Run(config *Config, mainApi eucommon.EthApiRouter) ([]u
 		this.ApiRouter.Ccurl().WriteCache().AddTransitions(this.Results[i].rawStateAccesses) // merge transitions to the main cache here !!!
 	}
 
-	records := indexer.Univalues(this.ApiRouter.Ccurl().Export()).To(indexer.IPCAccess{})
-	return common.Fill(make([]uint32, len(records)), this.ID), records
+	accessRecords := indexer.Univalues(this.ApiRouter.Ccurl().Export()).To(indexer.IPCAccess{}) // Accumulated transitions from the map
+	return common.Fill(make([]uint32, len(accessRecords)), this.ID), accessRecords
 }
 
 func (this *JobSequence) GetClearedTransition() []ccurlinterfaces.Univalue {
@@ -59,7 +59,7 @@ func (this *JobSequence) GetClearedTransition() []ccurlinterfaces.Univalue {
 		return this.ApiRouter.Ccurl().Export() // No conflict, export the write cache directly
 	}
 
-	// Reconcate the transitions
+	// Reconcate the clear transitions
 	trans := common.Concate(this.Results,
 		func(v *Result) []ccurlinterfaces.Univalue {
 			return v.Transitions()

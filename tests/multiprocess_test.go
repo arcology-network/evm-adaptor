@@ -195,7 +195,7 @@ func TestCumulativeU256Case1(t *testing.T) {
 	}
 }
 
-func TestCumulativeU256ThreadingMultiTimes(t *testing.T) {
+func TestCumulativeU256ThreadingMultiRuns(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
 
