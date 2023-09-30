@@ -55,7 +55,7 @@ func (this *Result) Postprocess() *Result {
 		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") && strings.Contains(*v.GetPath(), hex.EncodeToString(this.From[:]))
 	})
 
-	gasUsedInWei := uint256.NewInt(1).Mul(uint256.NewInt(this.Receipt.GasUsed), uint256.NewInt((*this.stdMsg.Native).GasPrice().Uint64()))
+	gasUsedInWei := uint256.NewInt(1).Mul(uint256.NewInt(this.Receipt.GasUsed), uint256.NewInt(this.stdMsg.Native.GasPrice.Uint64()))
 	if senderGasTransition := this.GenGasTransition(*senderBalance, gasUsedInWei, false); senderGasTransition != nil {
 		this.immuned = append(this.immuned, senderGasTransition)
 	}
