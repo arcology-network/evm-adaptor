@@ -7,7 +7,6 @@ import (
 	"github.com/arcology-network/concurrenturl/commutative"
 	"github.com/arcology-network/concurrenturl/interfaces"
 	urltype "github.com/arcology-network/concurrenturl/univalue"
-	arbitrator "github.com/arcology-network/urlarbitrator-engine/go-wrapper"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -86,33 +85,33 @@ func FormatTransitions(transitions []interfaces.Univalue) string {
 	return str
 }
 
-func DetectConflict(transitions []interfaces.Univalue) ([]uint32, []uint32, []bool) {
-	length := len(transitions)
-	txs := make([]uint32, length)
-	paths := make([]string, length)
-	reads := make([]uint32, length)
-	writes := make([]uint32, length)
-	composite := make([]bool, length)
-	uniqueTxsDict := make(map[uint32]struct{})
-	for i, t := range transitions {
-		txs[i] = t.(*urltype.Univalue).GetTx()
-		paths[i] = *(t.(*urltype.Univalue).GetPath())
-		reads[i] = t.(*urltype.Univalue).Reads()
-		writes[i] = t.(*urltype.Univalue).Writes()
-		composite[i] = t.(*urltype.Univalue).Reads() == 0 && t.(*urltype.Univalue).Writes() == 0 && t.(*urltype.Univalue).DeltaWrites() >= 0
-		uniqueTxsDict[txs[i]] = struct{}{}
-	}
+// func DetectConflict(transitions []interfaces.Univalue) ([]uint32, []uint32, []bool) {
+// 	length := len(transitions)
+// 	txs := make([]uint32, length)
+// 	paths := make([]string, length)
+// 	reads := make([]uint32, length)
+// 	writes := make([]uint32, length)
+// 	composite := make([]bool, length)
+// 	uniqueTxsDict := make(map[uint32]struct{})
+// 	for i, t := range transitions {
+// 		txs[i] = t.(*urltype.Univalue).GetTx()
+// 		paths[i] = *(t.(*urltype.Univalue).GetPath())
+// 		reads[i] = t.(*urltype.Univalue).Reads()
+// 		writes[i] = t.(*urltype.Univalue).Writes()
+// 		composite[i] = t.(*urltype.Univalue).Reads() == 0 && t.(*urltype.Univalue).Writes() == 0 && t.(*urltype.Univalue).DeltaWrites() >= 0
+// 		uniqueTxsDict[txs[i]] = struct{}{}
+// 	}
 
-	uniqueTxs := make([]uint32, 0, len(uniqueTxsDict))
-	for tx := range uniqueTxsDict {
-		uniqueTxs = append(uniqueTxs, tx)
-	}
-	engine := arbitrator.Start()
-	arbitrator.Insert(engine, txs, paths, reads, writes, composite)
-	txs, groups, flags := arbitrator.DetectLegacy(engine, uniqueTxs)
-	arbitrator.Clear(engine)
-	return txs, groups, flags
-}
+// 	uniqueTxs := make([]uint32, 0, len(uniqueTxsDict))
+// 	for tx := range uniqueTxsDict {
+// 		uniqueTxs = append(uniqueTxs, tx)
+// 	}
+// 	engine := arbitrator.Start()
+// 	arbitrator.Insert(engine, txs, paths, reads, writes, composite)
+// 	txs, groups, flags := arbitrator.DetectLegacy(engine, uniqueTxs)
+// 	arbitrator.Clear(engine)
+// 	return txs, groups, flags
+// }
 
 // func prepare(db interfaces.Datastore, height uint64, transitions []interfaces.Univalue, txs []uint32) (*vmadaptor.EU, *vmadaptor.Config) {
 // 	url := concurrenturl.NewConcurrentUrl(db)
