@@ -1,6 +1,13 @@
 package tests
 
+import "testing"
+
 // tests "github.com/arcology-network/vm-adaptor/tests"
+
+func TestTransfer(t *testing.T) {
+	// a := 0
+	// return a.(type)
+}
 
 // func TestTransfer(t *testing.T) {
 // 	coinbase := eucommon.Coinbase

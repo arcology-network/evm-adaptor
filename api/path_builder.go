@@ -36,7 +36,7 @@ func (this *CcurlConnector) New(txIndex uint32, deploymentAddr types.Address) bo
 
 func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32) bool {
 	accountRoot := commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(account), "/")
-	if value, _ := this.ccurl.Peek(accountRoot); value == nil {
+	if !this.ccurl.IfExists(accountRoot) {
 		return this.ccurl.NewAccount(txIndex, string(account)) != nil // Create a new account
 	}
 	return true // ALready exists
@@ -45,8 +45,8 @@ func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32
 func (this *CcurlConnector) newContainerRoot(account types.Address, txIndex uint32) bool {
 	containerRoot := this.key(account)
 
-	if value, _ := this.ccurl.Peek(containerRoot); value == nil {
-		_, err := this.ccurl.Write(txIndex, containerRoot, commutative.NewPath(), true) // Create a new container
+	if !this.ccurl.IfExists(containerRoot) {
+		_, err := this.ccurl.Write(txIndex, containerRoot, commutative.NewPath()) // Create a new container
 		return err == nil
 	}
 	return true // Already exists

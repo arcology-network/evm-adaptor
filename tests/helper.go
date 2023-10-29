@@ -29,6 +29,11 @@ import (
 	"github.com/arcology-network/vm-adaptor/execution"
 )
 
+var (
+	encoder = ccurlstorage.Rlp{}.Encode
+	decoder = ccurlstorage.Rlp{}.Decode
+)
+
 func MainTestConfig() *execution.Config {
 	vmConfig := vm.Config{}
 	cfg := &execution.Config{
@@ -46,7 +51,11 @@ func MainTestConfig() *execution.Config {
 }
 
 func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concurrenturl.ConcurrentUrl, []interfaces.Univalue) {
-	persistentDB := cachedstorage.NewDataStore()
+	// fileDB, _ := cachedstorage.NewFileDB(ROOT_PATH, 8, 2)
+
+	persistentDB := cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(10000000, 1), nil, encoder, decoder)
+
+	// persistentDB := cachedstorage.NewDataStore()
 	persistentDB.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, commutative.NewPath())
 	db := ccurlstorage.NewTransientDB(persistentDB)
 

@@ -1,6 +1,8 @@
 module github.com/arcology-network/vm-adaptor
 
-go 1.20
+go 1.21
+
+toolchain go1.21.1
 
 replace github.com/arcology-network/evm => ../evm/
 

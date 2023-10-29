@@ -7,6 +7,7 @@ import (
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/types"
 
+	"github.com/arcology-network/concurrenturl/commutative"
 	"github.com/arcology-network/concurrenturl/interfaces"
 	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
@@ -122,7 +123,7 @@ func (this *BaseHandlers) peekLength(caller evmcommon.Address, input []byte) ([]
 		return []byte{}, false, 0
 	}
 
-	typedv, fees := this.api.Ccurl().PeekCommitted(path)
+	typedv, fees := this.api.Ccurl().PeekCommitted(path, new(commutative.Path))
 	if typedv != nil {
 		type measurable interface{ Length() int }
 		numKeys := uint64(typedv.(interfaces.Type).Value().(measurable).Length())
@@ -267,7 +268,7 @@ func (this *BaseHandlers) clear(caller evmcommon.Address, input []byte) ([]byte,
 	}
 
 	for {
-		if _, _, err := this.api.Ccurl().PopBack(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, true); err != nil {
+		if _, _, err := this.api.Ccurl().PopBack(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, nil); err != nil {
 			break
 		}
 	}

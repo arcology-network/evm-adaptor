@@ -54,7 +54,7 @@ func (this *ImplStateDB) AddBalance(addr evmcommon.Address, amount *big.Int) {
 	}
 
 	if delta, ok := commutative.NewU256DeltaFromBigInt(amount); ok {
-		if _, err := this.api.Ccurl().Write(this.tid, getBalancePath(this.api.Ccurl(), addr), delta, true); err == nil {
+		if _, err := this.api.Ccurl().Write(this.tid, getBalancePath(this.api.Ccurl(), addr), delta); err == nil {
 			return
 		} else {
 			panic(err)
@@ -68,7 +68,7 @@ func (this *ImplStateDB) GetBalance(addr evmcommon.Address) *big.Int {
 		return new(big.Int)
 	}
 
-	if value, _ := this.api.Ccurl().Read(this.tid, getBalancePath(this.api.Ccurl(), addr)); value != nil {
+	if value, _ := this.api.Ccurl().Read(this.tid, getBalancePath(this.api.Ccurl(), addr), new(commutative.U256)); value != nil {
 		return (*(value.(*uint256.Int))).ToBig() // v.(*commutative.U256).Value().(*big.Int)
 	}
 	panic("Not found")
@@ -79,7 +79,7 @@ func (this *ImplStateDB) PeekBalance(addr evmcommon.Address) *big.Int {
 		return new(big.Int)
 	}
 
-	if value, _ := this.api.Ccurl().Peek(getBalancePath(this.api.Ccurl(), addr)); value != nil {
+	if value, _ := this.api.Ccurl().Peek(getBalancePath(this.api.Ccurl(), addr), new(commutative.U256)); value != nil {
 		v, _, _ := value.(*commutative.U256).Get()
 		return v.(*uint256.Int).ToBig()
 	}
@@ -96,7 +96,7 @@ func (this *ImplStateDB) GetNonce(addr evmcommon.Address) uint64 {
 		return 0
 	}
 
-	if value, _ := this.api.Ccurl().Peek(getNoncePath(this.api.Ccurl(), addr)); value != nil {
+	if value, _ := this.api.Ccurl().Peek(getNoncePath(this.api.Ccurl(), addr), new(commutative.Uint64)); value != nil {
 		v, _, _ := value.(*commutative.Uint64).Get()
 		return v.(uint64)
 	}
@@ -108,7 +108,7 @@ func (this *ImplStateDB) SetNonce(addr evmcommon.Address, nonce uint64) {
 		createAccount(this.api.Ccurl(), addr, this.tid)
 	}
 
-	if _, err := this.api.Ccurl().Write(this.tid, getNoncePath(this.api.Ccurl(), addr), commutative.NewUint64Delta(1), true); err != nil {
+	if _, err := this.api.Ccurl().Write(this.tid, getNoncePath(this.api.Ccurl(), addr), commutative.NewUint64Delta(1)); err != nil {
 		panic(err)
 	}
 }
@@ -126,7 +126,7 @@ func (this *ImplStateDB) GetCode(addr evmcommon.Address) []byte {
 	if !accountExist(this.api.Ccurl(), addr, this.tid) {
 		return nil
 	}
-	if value, _ := this.api.Ccurl().Read(this.tid, getCodePath(this.api.Ccurl(), addr)); value != nil {
+	if value, _ := this.api.Ccurl().Read(this.tid, getCodePath(this.api.Ccurl(), addr), new(noncommutative.Bytes)); value != nil {
 		return value.([]byte)
 	}
 	panic("Not found")
@@ -137,7 +137,7 @@ func (this *ImplStateDB) SetCode(addr evmcommon.Address, code []byte) {
 		createAccount(this.api.Ccurl(), addr, this.tid)
 	}
 
-	if _, err := this.api.Ccurl().Write(this.tid, getCodePath(this.api.Ccurl(), addr), noncommutative.NewBytes(code), true); err != nil {
+	if _, err := this.api.Ccurl().Write(this.tid, getCodePath(this.api.Ccurl(), addr), noncommutative.NewBytes(code)); err != nil {
 		panic(err)
 	}
 }
@@ -156,7 +156,7 @@ func (this *ImplStateDB) AddSlotToAccessList(addr evmcommon.Address, slot evmcom
 
 // Get from DB directly, bypassing ccurl since it make have some temporary states
 func (this *ImplStateDB) GetCommittedState(addr evmcommon.Address, key evmcommon.Hash) evmcommon.Hash {
-	if value, _ := this.api.Ccurl().ReadCommitted(this.tid, getStorageKeyPath(this.api, addr, key)); value != nil {
+	if value, _ := this.api.Ccurl().ReadCommitted(this.tid, getStorageKeyPath(this.api, addr, key), new(noncommutative.Bytes)); value != nil {
 		// v, _, _ := value.(interfaces.Type).Get()
 		return evmcommon.BytesToHash(value.([]byte))
 	}
@@ -164,7 +164,7 @@ func (this *ImplStateDB) GetCommittedState(addr evmcommon.Address, key evmcommon
 }
 
 func (this *ImplStateDB) GetState(addr evmcommon.Address, key evmcommon.Hash) evmcommon.Hash {
-	if value, _ := this.api.Ccurl().Read(this.tid, getStorageKeyPath(this.api, addr, key)); value != nil {
+	if value, _ := this.api.Ccurl().Read(this.tid, getStorageKeyPath(this.api, addr, key), new(noncommutative.Bytes)); value != nil {
 		return evmcommon.BytesToHash(value.([]byte))
 	}
 	return evmcommon.Hash{}
@@ -179,7 +179,7 @@ func (this *ImplStateDB) SetState(addr evmcommon.Address, key, value evmcommon.H
 	// this.api.Ccurl().IfExists(localPath)
 
 	path := getStorageKeyPath(this.api, addr, key)
-	if _, err := this.api.Ccurl().Write(this.tid, path, noncommutative.NewBytes(value.Bytes()), true); err != nil {
+	if _, err := this.api.Ccurl().Write(this.tid, path, noncommutative.NewBytes(value.Bytes())); err != nil {
 		panic(err)
 	}
 }
@@ -208,16 +208,16 @@ func (this *ImplStateDB) Empty(addr evmcommon.Address) bool {
 		return true
 	}
 
-	if value, _ := this.api.Ccurl().Peek(getBalancePath(this.api.Ccurl(), addr)); value != nil {
+	if value, _ := this.api.Ccurl().Peek(getBalancePath(this.api.Ccurl(), addr), new(commutative.U256)); value != nil {
 		v, _, _ := value.(*commutative.U256).Get()
-		if v.(*uint256.Int).Cmp(commutative.U256_ZERO) != 0 {
+		if v.(*uint256.Int).Cmp(&commutative.U256_ZERO) != 0 {
 			return false
 		}
 	} else {
 		panic("Balacne not found")
 	}
 
-	if value, _ := this.api.Ccurl().Peek(getNoncePath(this.api.Ccurl(), addr)); value != nil {
+	if value, _ := this.api.Ccurl().Peek(getNoncePath(this.api.Ccurl(), addr), new(commutative.Uint64)); value != nil {
 		v, _, _ := value.(*commutative.Uint64).Get()
 		if v.(uint64) != 0 {
 			return false
@@ -226,7 +226,7 @@ func (this *ImplStateDB) Empty(addr evmcommon.Address) bool {
 		panic("Nonce not found")
 	}
 
-	if value, _ := this.api.Ccurl().Peek(getCodePath(this.api.Ccurl(), addr)); value != nil {
+	if value, _ := this.api.Ccurl().Peek(getCodePath(this.api.Ccurl(), addr), new(noncommutative.Bytes)); value != nil {
 		return len(value.(*noncommutative.Bytes).Value().(codec.Bytes)) == 0
 	}
 	return true

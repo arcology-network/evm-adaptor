@@ -53,8 +53,13 @@ func CompileContracts(dockerRootpath, solfilename, version, contractname string,
 	ensureOutpath(dockerRootpath)
 	contrainerName := "solcContainer"
 
-	exec.Command("docker", "stop", contrainerName).Output()
-	exec.Command("docker", "rm", contrainerName).Output()
+	if output, err := exec.Command("docker", "stop", contrainerName).Output(); err != nil {
+		fmt.Println(output, err)
+	}
+
+	if output, err := exec.Command("docker", "rm", contrainerName).Output(); err != nil {
+		fmt.Println(output, err)
+	}
 
 	// cmd := "docker run -v " + dockerRootpath + ":/sources ethereum/solc:" + version + " -o /sources/" + outpath + " --abi --bin /sources/" + solfilename
 	// fmt.Printf("cmd:%v\n", cmd)
