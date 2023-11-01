@@ -51,32 +51,17 @@ func CompileContracts(dockerRootpath, solfilename, version, contractname string,
 	}
 
 	ensureOutpath(dockerRootpath)
-	contrainerName := "solcContainer"
 
-	if output, err := exec.Command("docker", "stop", contrainerName).Output(); err != nil {
-		fmt.Println(output, err)
-	}
-
-	if output, err := exec.Command("docker", "rm", contrainerName).Output(); err != nil {
-		fmt.Println(output, err)
-	}
-
-	// cmd := "docker run -v " + dockerRootpath + ":/sources ethereum/solc:" + version + " -o /sources/" + outpath + " --abi --bin /sources/" + solfilename
-	// fmt.Printf("cmd:%v\n", cmd)
-	_, err := exec.Command(
+	if _, err := exec.Command(
 		"docker", "run",
-		"--name", contrainerName,
 		"-v", dockerRootpath+":/sources",
 		"ethereum/solc:"+version,
 		"-o", "/sources/"+outpath,
-		"--abi", "--bin",
-		"/sources/"+solfilename).Output()
-	if err != nil {
-		fmt.Println()
-		fmt.Printf("compile contract err !!!:%v\n", err)
-		fmt.Println()
-		return "", err
+		"--abi", "--bin", "--overwrite",
+		"/sources/"+solfilename).Output(); err != nil {
+		fmt.Println(err)
 	}
+
 	bytes, err := ioutil.ReadFile(dockerRootpath + "/" + outpath + "/" + contractname + ".bin")
 	if err != nil {
 		fmt.Printf("reading contract err:%v\n", err)
@@ -85,7 +70,6 @@ func CompileContracts(dockerRootpath, solfilename, version, contractname string,
 	if !outpathhold {
 		removeOut(dockerRootpath)
 	}
-
 	return fmt.Sprintf("%s", bytes), nil
 }
 

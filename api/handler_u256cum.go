@@ -159,8 +159,8 @@ func (this *U256CumHandlers) min(caller evmcommon.Address, input []byte) ([]byte
 	}, new(commutative.U256))
 
 	if value != nil && err == nil {
-		minv := value.(*commutative.U256).Min().(*codec.Uint256)
-		if encoded, err := abi.Encode((*uint256.Int)(minv)); err == nil { // Encode the result
+		minv := value.(*commutative.U256).Min().(uint256.Int)
+		if encoded, err := abi.Encode((*uint256.Int)(&minv)); err == nil { // Encode the result
 			return encoded, true, 0
 		}
 	}
@@ -178,8 +178,8 @@ func (this *U256CumHandlers) max(caller evmcommon.Address, input []byte) ([]byte
 	}, new(commutative.U256))
 
 	if value != nil && err == nil {
-		minv := value.(*commutative.U256).Max().(*codec.Uint256)
-		if encoded, err := abi.Encode((*uint256.Int)(minv)); err == nil { // Encode the result
+		minv := value.(*commutative.U256).Max().(uint256.Int)
+		if encoded, err := abi.Encode((*uint256.Int)(&minv)); err == nil { // Encode the result
 			return encoded, true, 0
 		}
 	}

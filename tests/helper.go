@@ -29,6 +29,11 @@ import (
 	"github.com/arcology-network/vm-adaptor/execution"
 )
 
+const (
+	ROOT_PATH   = "./tmp/filedb/"
+	BACKUP_PATH = "./tmp/filedb-back/"
+)
+
 var (
 	encoder = ccurlstorage.Rlp{}.Encode
 	decoder = ccurlstorage.Rlp{}.Decode
@@ -51,15 +56,13 @@ func MainTestConfig() *execution.Config {
 }
 
 func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concurrenturl.ConcurrentUrl, []interfaces.Univalue) {
-	// fileDB, _ := cachedstorage.NewFileDB(ROOT_PATH, 8, 2)
-
-	persistentDB := cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(10000000, 1), nil, encoder, decoder)
+	datastore := cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), encoder, decoder)
 
 	// persistentDB := cachedstorage.NewDataStore()
-	persistentDB.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, commutative.NewPath())
-	db := ccurlstorage.NewTransientDB(persistentDB)
+	datastore.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, commutative.NewPath())
+	// db := ccurlstorage.NewTransientDB(datastore)
 
-	url := concurrenturl.NewConcurrentUrl(db)
+	url := concurrenturl.NewConcurrentUrl(datastore)
 	api := ccapi.NewAPI(url)
 
 	statedb := eth.NewImplStateDB(api)
@@ -81,7 +84,7 @@ func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concu
 	// fmt.Println("\n" + eucommon.FormatTransitions(transitions))
 
 	// Deploy.
-	url = concurrenturl.NewConcurrentUrl(db)
+	url = concurrenturl.NewConcurrentUrl(datastore)
 	url.Import(transitions)
 	url.Sort()
 	url.Commit([]uint32{0})
@@ -93,7 +96,7 @@ func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concu
 	config.BlockNumber = new(big.Int).SetUint64(10000000)
 	config.Time = new(big.Int).SetUint64(10000000)
 
-	return execution.NewEU(config.ChainConfig, *config.VMConfig, statedb, api), config, db, url, transitions
+	return execution.NewEU(config.ChainConfig, *config.VMConfig, statedb, api), config, datastore, url, transitions
 }
 
 func DepolyContract(eu *execution.EU, config *execution.Config, code string, funcName string, inputData []byte, nonce uint64, checkNonce bool) (error, *execution.Config, *execution.EU, *evmcoretypes.Receipt) {
