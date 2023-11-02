@@ -80,9 +80,6 @@ func (this *ImplStateDB) PeekBalance(addr evmcommon.Address) *big.Int {
 	}
 
 	if value, _ := this.api.Ccurl().Peek(getBalancePath(this.api.Ccurl(), addr), new(commutative.U256)); value != nil {
-		// v := this.GetBalance(addr)
-		// return v
-		// typedv, _, _ := value.(interfaces.Type).Get()
 		v := (value.(*uint256.Int))
 		return v.ToBig()
 	}
