@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
@@ -33,13 +32,13 @@ type Result struct {
 
 func (this *Result) GenGasTransition(rawTransition ccurlinterfaces.Univalue, gasDelta *uint256.Int, isCredit bool) ccurlinterfaces.Univalue {
 	balanceTransition := rawTransition.Clone().(ccurlinterfaces.Univalue)
-	if diff := (*uint256.Int)(balanceTransition.Value().(ccurlinterfaces.Type).Delta().(*codec.Uint256)); diff.Cmp(gasDelta) >= 0 {
+	if diff := balanceTransition.Value().(ccurlinterfaces.Type).Delta().(uint256.Int); diff.Cmp(gasDelta) >= 0 {
 		// transfer := diff.Sub(diff.Clone(), (*uint256.Int)(gasDelta))                            // balance - gas
 		// (balanceTransition).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(transfer)) // Set the transfer, Won't change the initial value.
 		// (balanceTransition).Value().(ccurlinterfaces.Type).SetDeltaSign(false)
 		//
 		newGasTransition := balanceTransition.Clone().(ccurlinterfaces.Univalue)
-		newGasTransition.Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(gasDelta))
+		newGasTransition.Value().(ccurlinterfaces.Type).SetDelta(*gasDelta)
 		newGasTransition.Value().(ccurlinterfaces.Type).SetDeltaSign(isCredit)
 		newGasTransition.GetUnimeta().(*univalue.Unimeta).SetPersistent(true)
 		return newGasTransition

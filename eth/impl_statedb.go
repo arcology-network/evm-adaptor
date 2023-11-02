@@ -80,8 +80,11 @@ func (this *ImplStateDB) PeekBalance(addr evmcommon.Address) *big.Int {
 	}
 
 	if value, _ := this.api.Ccurl().Peek(getBalancePath(this.api.Ccurl(), addr), new(commutative.U256)); value != nil {
-		v, _, _ := value.(*commutative.U256).Get()
-		return v.(*uint256.Int).ToBig()
+		// v := this.GetBalance(addr)
+		// return v
+		// typedv, _, _ := value.(interfaces.Type).Get()
+		v := (value.(*uint256.Int))
+		return v.ToBig()
 	}
 	panic("Not found")
 }
@@ -97,8 +100,8 @@ func (this *ImplStateDB) GetNonce(addr evmcommon.Address) uint64 {
 	}
 
 	if value, _ := this.api.Ccurl().Peek(getNoncePath(this.api.Ccurl(), addr), new(commutative.Uint64)); value != nil {
-		v, _, _ := value.(*commutative.Uint64).Get()
-		return v.(uint64)
+		// v, _, _ := value.(*commutative.Uint64).Get()
+		return value.(uint64)
 	}
 	panic("Not found")
 }
