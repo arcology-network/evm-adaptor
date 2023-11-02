@@ -46,7 +46,7 @@ func MainTestConfig() *execution.Config {
 }
 
 func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concurrenturl.ConcurrentUrl, []interfaces.Univalue) {
-	persistentDB := cachedstorage.NewDataStore()
+	persistentDB := cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), ccurlstorage.Rlp{}.Encode, ccurlstorage.Rlp{}.Decode)
 	persistentDB.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, commutative.NewPath())
 	db := ccurlstorage.NewTransientDB(persistentDB)
 
