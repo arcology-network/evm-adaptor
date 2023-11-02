@@ -119,9 +119,10 @@ func DepolyContract(eu *execution.EU, config *execution.Config, code string, fun
 	}
 
 	_, transitionsFiltered := eu.Api().StateFilter().ByType()
-	eu.Api().Ccurl().Import(transitionsFiltered)
-	eu.Api().Ccurl().Sort()
-	eu.Api().Ccurl().Commit([]uint32{1})
+	ccurl := eu.Api().Ccurl()
+	ccurl.Import(transitionsFiltered)
+	ccurl.Sort()
+	ccurl.Commit([]uint32{1})
 
 	return nil, config, eu, receipt
 }

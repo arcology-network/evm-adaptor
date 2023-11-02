@@ -59,7 +59,7 @@ func CompileContracts(dockerRootpath, solfilename, version, contractname string,
 		"-o", "/sources/"+outpath,
 		"--abi", "--bin", "--overwrite",
 		"/sources/"+solfilename).Output(); err != nil {
-		fmt.Println(err)
+		return "", err
 	}
 
 	bytes, err := ioutil.ReadFile(dockerRootpath + "/" + outpath + "/" + contractname + ".bin")

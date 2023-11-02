@@ -114,11 +114,12 @@ func (this *U256CumHandlers) peek(caller evmcommon.Address, input []byte) ([]byt
 	}, new(commutative.U256))
 
 	if value != nil && err == nil {
-		if initv := value.(*commutative.U256).Value().(*codec.Uint256); initv != nil {
-			if encoded, err := abi.Encode((*uint256.Int)(initv)); err == nil { // Encode the result
-				return encoded, true, 0
-			}
+		initv := value.(*commutative.U256).Value().(uint256.Int)
+		// if ; initv != nil {
+		if encoded, err := abi.Encode((*uint256.Int)(&initv)); err == nil { // Encode the result
+			return encoded, true, 0
 		}
+		// }
 	}
 	return []byte{}, false, 0
 }

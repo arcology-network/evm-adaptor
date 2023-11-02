@@ -96,7 +96,11 @@ func DepolyContract(eu *execution.EU, config *execution.Config, code string, fun
 		Source: commontypes.TX_SOURCE_LOCAL,
 	}
 
-	receipt, _, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
+	receipt, result, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
+
+	if result.Err != nil {
+		return result.Err, config, eu, nil
+	}
 
 	if err != nil || receipt.Status != 1 {
 		errmsg := ""
