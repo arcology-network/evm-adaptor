@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/arcology-network/common-lib/cachedstorage"
 	commontypes "github.com/arcology-network/common-lib/types"
 	concurrenturl "github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/commutative"
@@ -55,8 +54,16 @@ func MainTestConfig() *execution.Config {
 	return cfg
 }
 
+// Choose which data source to use
+func chooseDataStore() interfaces.Datastore {
+	return ccurlstorage.NewEthMemDataStore(false) // Eth trie datastore
+	// return cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), encoder, decoder)
+	// return  cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(1000000, 1), cachedstorage.NewMemDB(), encoder, decoder)
+	// return cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), encoder, decoder)
+}
+
 func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concurrenturl.ConcurrentUrl, []interfaces.Univalue) {
-	datastore := cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), encoder, decoder)
+	datastore := chooseDataStore()
 
 	// persistentDB := cachedstorage.NewDataStore()
 	datastore.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, commutative.NewPath())
