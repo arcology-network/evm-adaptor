@@ -42,7 +42,7 @@ func (this *ImplStateDB) CreateAccount(addr evmcommon.Address) {
 }
 
 func (this *ImplStateDB) SubBalance(addr evmcommon.Address, amount *big.Int) {
-	this.AddBalance(addr, new(big.Int).Neg(amount))
+	this.AddBalance(addr, new(big.Int).Neg(new(big.Int).Set(amount)))
 }
 
 func (this *ImplStateDB) AddBalance(addr evmcommon.Address, amount *big.Int) {
@@ -50,7 +50,7 @@ func (this *ImplStateDB) AddBalance(addr evmcommon.Address, amount *big.Int) {
 		createAccount(this.api.Ccurl(), addr, this.tid)
 	}
 
-	if delta, ok := commutative.NewU256DeltaFromBigInt(amount); ok {
+	if delta, ok := commutative.NewU256DeltaFromBigInt(new(big.Int).Set(amount)); ok {
 		if _, err := this.api.Ccurl().Write(this.tid, getBalancePath(this.api.Ccurl(), addr), delta); err == nil {
 			return
 		} else {
