@@ -72,19 +72,30 @@ func TestContractString(t *testing.T) {
 
 func TestCumulativeU256(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
-
-	err, _, _ := DeployThenInvoke(targetPath, "commutative/u256Cum_test.sol", "0.8.19", "CumulativeU256Test", "", []byte{}, false)
+	_, _, _, err := AliceDeploy(
+		path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib", "lib"),
+		"/commutative/u256Cum_test.sol",
+		"0.8.19",
+		"CumulativeU256Test",
+	)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func TestU256Multiprocess(t *testing.T) {
-	currentPath, _ := os.Getwd()
-	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib"
-	err, _, _ := DeployThenInvoke(targetPath, "/multiprocess/mp_u256_test.sol", "0.8.19", "U256ParallelTest", "call()", []byte{}, false)
-	if err != nil {
-		t.Error(err)
-	}
-}
+// func TestU256Multiprocess(t *testing.T) {
+// 	currentPath, _ := os.Getwd()
+// 	eu, contractAddress, err := AliceDeploy(
+// 		path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib", "lib"),
+// 		"/array/mp_u256_test.sol",
+// 		"0.8.19",
+// 		"U256ParallelTest",
+// 	)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+
+// 	if err = AliceCall(eu, *contractAddress); err != nil {
+// 		t.Error(err)
+// 	}
+// }

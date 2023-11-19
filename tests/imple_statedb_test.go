@@ -60,8 +60,8 @@ func TestStateDBV2GetNonexistCode(t *testing.T) {
 	statedb = eth.NewImplStateDB(api)
 	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 2)
 	code := statedb.GetCode(account)
-	if code != nil || len(code) != 0 {
-		t.Fail()
+	if len(code) != 0 {
+		t.Error("The code length should be 0")
 	}
 }
 

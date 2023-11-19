@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/arcology-network/common-lib/cachedstorage"
 	commontypes "github.com/arcology-network/common-lib/types"
 	concurrenturl "github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/commutative"
@@ -15,9 +16,9 @@ import (
 	"github.com/arcology-network/evm/core"
 	evmcore "github.com/arcology-network/evm/core"
 	evmcoretypes "github.com/arcology-network/evm/core/types"
+	"github.com/arcology-network/evm/crypto"
 
 	"github.com/arcology-network/evm/core/vm"
-	"github.com/arcology-network/evm/crypto"
 	"github.com/arcology-network/evm/params"
 
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
@@ -56,20 +57,20 @@ func MainTestConfig() *execution.Config {
 
 // Choose which data source to use
 func chooseDataStore() interfaces.Datastore {
-	return ccurlstorage.NewEthMemDataStore(false) // Eth trie datastore
+	// return ccurlstorage.NewParallelEthMemDataStore() // Eth trie datastore
 	// return cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), encoder, decoder)
-	// return  cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(1000000, 1), cachedstorage.NewMemDB(), encoder, decoder)
+	return cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(1000000, 1), cachedstorage.NewMemDB(), encoder, decoder)
 	// return cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), encoder, decoder)
 }
 
 func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concurrenturl.ConcurrentUrl, []interfaces.Univalue) {
 	datastore := chooseDataStore()
-
-	// persistentDB := cachedstorage.NewDataStore()
 	datastore.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, commutative.NewPath())
-	// db := ccurlstorage.NewTransientDB(datastore)
 
 	url := concurrenturl.NewConcurrentUrl(datastore)
+	// if len(args) > 0 {
+	// 	url = args[0].(*concurrenturl.ConcurrentUrl)
+	// }
 	api := ccapi.NewAPI(url)
 
 	statedb := eth.NewImplStateDB(api)
@@ -106,6 +107,84 @@ func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concu
 	return execution.NewEU(config.ChainConfig, *config.VMConfig, statedb, api), config, datastore, url, transitions
 }
 
+func DeployThenInvoke(targetPath, contractFile, version, contractName, funcName string, inputData []byte, checkNonce bool) (error, *execution.EU, *evmcoretypes.Receipt) {
+	eu, contractAddress, ccurl, err := AliceDeploy(targetPath, contractFile, version, contractName)
+	if err != nil {
+		return err, nil, nil
+	}
+
+	if len(funcName) == 0 {
+		return err, eu, nil
+	}
+	return AliceCall(eu, *contractAddress, ccurl), eu, nil
+}
+
+func AliceDeploy(targetPath, contractFile, compilerVersion, contract string) (*execution.EU, *evmcommon.Address, *concurrenturl.ConcurrentUrl, error) {
+	eu, config, db, url, _ := NewTestEU()
+
+	code, err := compiler.CompileContracts(targetPath, contractFile, compilerVersion, contract, true)
+	if err != nil || len(code) == 0 {
+		return nil, nil, nil, errors.New("Error: Failed to generate the byte code")
+	}
+
+	// ================================== Deploy the contract ==================================
+	msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)
+	stdMsg := &execution.StandardMessage{
+		ID:     1,
+		TxHash: [32]byte{1, 1, 1},
+		Native: &msg, // Build the message
+		Source: commontypes.TX_SOURCE_LOCAL,
+	}
+
+	receipt, execResult, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
+	_, transitions := eu.Api().StateFilter().ByType()
+
+	if receipt.Status != 1 || err != nil || execResult.Err != nil {
+		return nil, nil, nil, errors.New("Error: Deployment failed!!!")
+	}
+
+	contractAddress := receipt.ContractAddress
+	url = concurrenturl.NewConcurrentUrl(db)
+	url.Import(transitions)
+	url.Sort()
+	url.Commit([]uint32{1})
+	return eu, &contractAddress, url, nil
+}
+
+func AliceCall(eu *execution.EU, contractAddress evmcommon.Address, ccurl *concurrenturl.ConcurrentUrl) error {
+	api := ccapi.NewAPI(ccurl)
+	eu.SetApi(api)
+
+	data := crypto.Keccak256([]byte("call()"))[:4]
+	msg := core.NewMessage(eucommon.Alice, &contractAddress, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	stdMsg := &execution.StandardMessage{
+		ID:     1,
+		TxHash: [32]byte{1, 1, 1},
+		Native: &msg, // Build the message
+		Source: commontypes.TX_SOURCE_LOCAL,
+	}
+
+	config := MainTestConfig()
+	config.Coinbase = &eucommon.Coinbase
+	config.BlockNumber = new(big.Int).SetUint64(10000000)
+	config.Time = new(big.Int).SetUint64(10000000)
+	receipt, execResult, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
+	// _, transitions : eu.Api().StateFilter().ByType()
+
+	if err != nil {
+		return (err)
+	}
+
+	if execResult != nil && execResult.Err != nil {
+		return (execResult.Err)
+	}
+
+	if receipt.Status != 1 || err != nil {
+		return errors.New("Error: Failed to call!!!")
+	}
+	return nil
+}
+
 func DepolyContract(eu *execution.EU, config *execution.Config, code string, funcName string, inputData []byte, nonce uint64, checkNonce bool) (error, *execution.Config, *execution.EU, *evmcoretypes.Receipt) {
 	msg := core.NewMessage(eucommon.Alice, nil, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false)
 	stdMsg := &execution.StandardMessage{
@@ -132,33 +211,6 @@ func DepolyContract(eu *execution.EU, config *execution.Config, code string, fun
 	ccurl.Commit([]uint32{1})
 
 	return nil, config, eu, receipt
-}
-
-func DeployThenInvoke(targetPath, file, version, contractName, funcName string, inputData []byte, checkNonce bool) (error, *execution.EU, *evmcoretypes.Receipt) {
-	code, err := compiler.CompileContracts(targetPath, file, version, contractName, false)
-	eu, config, _, _, _ := NewTestEU()
-	if err != nil || len(code) == 0 {
-		return err, nil, nil
-	}
-
-	err, _, eu, receipt := DepolyContract(eu, config, code, funcName, inputData, 0, checkNonce)
-
-	if len(funcName) == 0 || err != nil {
-		return err, eu, receipt
-	}
-
-	data := crypto.Keccak256([]byte(funcName))[:4]
-	data = append(data, inputData...)
-	err, eu, execResult, receipt := CallContract(eu, receipt.ContractAddress, data, 0, checkNonce)
-
-	if err != nil || receipt.Status != 1 {
-		return execResult.Err, eu, receipt
-	}
-
-	if execResult != nil && execResult.Err != nil {
-		return execResult.Err, eu, receipt
-	}
-	return nil, eu, receipt
 }
 
 func CallContract(eu *execution.EU, contractAddress common.Address, inputData []byte, nonceIncrement uint64, checkNonce bool) (error, *execution.EU, *evmcore.ExecutionResult, *evmcoretypes.Receipt) {

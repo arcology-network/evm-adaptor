@@ -101,7 +101,8 @@ func (this *API) VM() *vm.EVM {
 func (this *API) GetEU() interface{}   { return this.eu }
 func (this *API) SetEU(eu interface{}) { this.eu = eu.(*execution.EU) }
 
-func (this *API) Ccurl() *concurrenturl.ConcurrentUrl { return this.ccurl }
+func (this *API) Ccurl() *concurrenturl.ConcurrentUrl            { return this.ccurl }
+func (this *API) SetCcurl(newCcurl *concurrenturl.ConcurrentUrl) { this.ccurl = newCcurl }
 
 func (this *API) GetSerialNum(idx int) uint64 {
 	v := this.serialNums[idx]

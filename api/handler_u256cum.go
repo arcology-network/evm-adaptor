@@ -33,6 +33,8 @@ func (this *U256CumHandlers) Address() [20]byte {
 	return common.CUMULATIVE_U256_HANDLER
 }
 
+// performed the changes on Delta only
+
 func (this *U256CumHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
 	signature := [4]byte{}
 	copy(signature[:], input)
@@ -94,7 +96,7 @@ func (this *U256CumHandlers) get(caller evmcommon.Address, input []byte) ([]byte
 	if value, _, err := this.api.Ccurl().ReadAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, new(noncommutative.Bytes)); value == nil || err != nil {
 		return []byte{}, false, 0
 	} else {
-		updated := value.(*uint256.Int)
+		updated := value.(uint256.Int)
 		if encoded, err := abi.Encode(updated); err == nil { // Encode the result
 			return encoded, true, 0
 		}

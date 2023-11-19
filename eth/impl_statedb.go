@@ -21,15 +21,12 @@ import (
 
 // Arcology implementation of Eth ImplStateDB interfaces.
 type ImplStateDB struct {
-	refund uint64
-	txHash evmcommon.Hash
-	tid    uint32 // tx id
-	logs   map[evmcommon.Hash][]*evmtypes.Log
-
-	// Transient storage
+	refund           uint64
+	txHash           evmcommon.Hash
+	tid              uint32 // tx id
+	logs             map[evmcommon.Hash][]*evmtypes.Log
 	transientStorage transientStorage
-
-	api vmCommon.EthApiRouter
+	api              vmCommon.EthApiRouter
 }
 
 func NewImplStateDB(api vmCommon.EthApiRouter) *ImplStateDB {
@@ -69,9 +66,10 @@ func (this *ImplStateDB) GetBalance(addr evmcommon.Address) *big.Int {
 	}
 
 	if value, _ := this.api.Ccurl().Read(this.tid, getBalancePath(this.api.Ccurl(), addr), new(commutative.U256)); value != nil {
-		return (*(value.(*uint256.Int))).ToBig() // v.(*commutative.U256).Value().(*big.Int)
+		v := value.(uint256.Int)
+		return (&v).ToBig() // v.(*commutative.U256).Value().(*big.Int)
 	}
-	panic("Not found")
+	panic("Balance Not found")
 }
 
 func (this *ImplStateDB) PeekBalance(addr evmcommon.Address) *big.Int {
@@ -80,10 +78,10 @@ func (this *ImplStateDB) PeekBalance(addr evmcommon.Address) *big.Int {
 	}
 
 	if value, _ := this.api.Ccurl().Peek(getBalancePath(this.api.Ccurl(), addr), new(commutative.U256)); value != nil {
-		v := (value.(*uint256.Int))
+		v := value.(uint256.Int)
 		return v.ToBig()
 	}
-	panic("Not found")
+	panic("Balance Not found")
 }
 
 func (this *ImplStateDB) SetBalance(addr evmcommon.Address, amount *big.Int) {
@@ -100,7 +98,7 @@ func (this *ImplStateDB) GetNonce(addr evmcommon.Address) uint64 {
 		// v, _, _ := value.(*commutative.Uint64).Get()
 		return value.(uint64)
 	}
-	panic("Not found")
+	panic("Nonce Not found")
 }
 
 func (this *ImplStateDB) SetNonce(addr evmcommon.Address, nonce uint64) {
@@ -129,7 +127,7 @@ func (this *ImplStateDB) GetCode(addr evmcommon.Address) []byte {
 	if value, _ := this.api.Ccurl().Read(this.tid, getCodePath(this.api.Ccurl(), addr), new(noncommutative.Bytes)); value != nil {
 		return value.([]byte)
 	}
-	panic("Not found")
+	panic("Code Not found")
 }
 
 func (this *ImplStateDB) SetCode(addr evmcommon.Address, code []byte) {
@@ -214,7 +212,7 @@ func (this *ImplStateDB) Empty(addr evmcommon.Address) bool {
 			return false
 		}
 	} else {
-		panic("Balacne not found")
+		panic("Balance not found")
 	}
 
 	if value, _ := this.api.Ccurl().Peek(getNoncePath(this.api.Ccurl(), addr), new(commutative.Uint64)); value != nil {

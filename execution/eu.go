@@ -19,17 +19,21 @@ import (
 )
 
 type EU struct {
-	stdMsg  *StandardMessage
-	evm     *vm.EVM               // Original ETH EVM
-	statedb vm.StateDB            // Arcology Implementation of Eth StateDB
-	api     eucommon.EthApiRouter // Arcology API calls
+	stdMsg      *StandardMessage
+	evm         *vm.EVM               // Original ETH EVM
+	statedb     vm.StateDB            // Arcology Implementation of Eth StateDB
+	api         eucommon.EthApiRouter // Arcology API calls
+	ChainConfig *params.ChainConfig
+	VmConfig    vm.Config
 }
 
 func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.StateDB, api eucommon.EthApiRouter) *EU {
 	eu := &EU{
-		evm:     vm.NewEVM(vm.BlockContext{BlockNumber: new(big.Int).SetUint64(100000000)}, vm.TxContext{}, statedb, chainConfig, vmConfig),
-		statedb: statedb,
-		api:     api,
+		ChainConfig: chainConfig,
+		VmConfig:    vmConfig,
+		evm:         vm.NewEVM(vm.BlockContext{BlockNumber: new(big.Int).SetUint64(100000000)}, vm.TxContext{}, statedb, chainConfig, vmConfig),
+		statedb:     statedb,
+		api:         api,
 	}
 
 	eu.api.SetEU(eu)
@@ -37,10 +41,11 @@ func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.State
 	return eu
 }
 
-func (this *EU) Message() *StandardMessage  { return this.stdMsg }
-func (this *EU) VM() *vm.EVM                { return this.evm }
-func (this *EU) Statedb() vm.StateDB        { return this.statedb }
-func (this *EU) Api() eucommon.EthApiRouter { return this.api }
+func (this *EU) Message() *StandardMessage           { return this.stdMsg }
+func (this *EU) VM() *vm.EVM                         { return this.evm }
+func (this *EU) Statedb() vm.StateDB                 { return this.statedb }
+func (this *EU) Api() eucommon.EthApiRouter          { return this.api }
+func (this *EU) SetApi(newApi eucommon.EthApiRouter) { this.api = newApi }
 
 func (this *EU) SetRuntimeContext(statedb vm.StateDB, api eucommon.EthApiRouter) {
 	this.api = api

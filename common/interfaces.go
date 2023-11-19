@@ -20,6 +20,7 @@ type ApiCallHandler interface {
 type EthApiRouter interface {
 	Origin() evmcommon.Address
 	Ccurl() *concurrenturl.ConcurrentUrl
+	SetCcurl(*concurrenturl.ConcurrentUrl)
 	New(*concurrenturl.ConcurrentUrl, interface{}) EthApiRouter
 	Coinbase() evmcommon.Address
 
