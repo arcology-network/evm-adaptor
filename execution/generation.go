@@ -48,6 +48,7 @@ func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []interfaces.
 	records := make([][]ccurlinterfaces.Univalue, len(this.jobs))
 	// t0 := time.Now()
 	worker := func(start, end, idx int, args ...interface{}) {
+		// for i := 0; i < len(this.jobs); i++ {
 		for i := start; i < end; i++ {
 			groupIDs[i], records[i] = this.jobs[i].Run(config, parentApiRouter)
 			//	indexer.Univalues(records[i]).Sort(groupIDs[i]) // Debugging only

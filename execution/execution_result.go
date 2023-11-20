@@ -70,7 +70,7 @@ func (this *Result) Postprocess() *Result {
 		}
 	}
 
-	common.Foreach(this.rawStateAccesses, func(v *ccurlinterfaces.Univalue) {
+	common.Foreach(this.rawStateAccesses, func(v *ccurlinterfaces.Univalue, _ int) {
 		if v != nil {
 			return
 		}

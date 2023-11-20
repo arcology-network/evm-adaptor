@@ -79,7 +79,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 
 	// Unify tx IDs c
 	mainTxID := uint32(this.Api().GetEU().(*execution.EU).Message().ID)
-	common.Foreach(transitions, func(v *interfaces.Univalue) { (*v).SetTx(mainTxID) })
+	common.Foreach(transitions, func(v *interfaces.Univalue, _ int) { (*v).SetTx(mainTxID) })
 
 	this.Api().Ccurl().WriteCache().AddTransitions(transitions) // Merge the write cache to the main cache
 	return []byte{}, true, common.Sum[int64](fees)

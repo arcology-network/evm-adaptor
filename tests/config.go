@@ -5,7 +5,6 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/arcology-network/common-lib/cachedstorage"
 	commontypes "github.com/arcology-network/common-lib/types"
 	concurrenturl "github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/commutative"
@@ -57,10 +56,9 @@ func MainTestConfig() *execution.Config {
 
 // Choose which data source to use
 func chooseDataStore() interfaces.Datastore {
-	// return ccurlstorage.NewParallelEthMemDataStore() // Eth trie datastore
+	return ccurlstorage.NewParallelEthMemDataStore() // Eth trie datastore
 	// return cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), encoder, decoder)
-	return cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(1000000, 1), cachedstorage.NewMemDB(), encoder, decoder)
-	// return cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), encoder, decoder)
+	// return cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(1000000, 1), cachedstorage.NewMemDB(), encoder, decoder)
 }
 
 func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concurrenturl.ConcurrentUrl, []interfaces.Univalue) {

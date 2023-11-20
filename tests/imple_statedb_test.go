@@ -5,18 +5,17 @@ import (
 	"math/big"
 	"testing"
 
-	cachedstorage "github.com/arcology-network/common-lib/cachedstorage"
 	concurrenturl "github.com/arcology-network/concurrenturl"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
-	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
 	evmcommon "github.com/arcology-network/evm/common"
 	ccapi "github.com/arcology-network/vm-adaptor/api"
 	eth "github.com/arcology-network/vm-adaptor/eth"
 )
 
 func TestStateDBV2GetNonexistBalance(t *testing.T) {
-	db := cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), ccurlstorage.Rlp{}.Encode, ccurlstorage.Rlp{}.Decode)
+	// db := cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), ccurlstorage.Rlp{}.Encode, ccurlstorage.Rlp{}.Decode)
+	db := chooseDataStore()
 	db.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, commutative.NewPath())
 	url := concurrenturl.NewConcurrentUrl(db)
 
@@ -41,7 +40,8 @@ func TestStateDBV2GetNonexistBalance(t *testing.T) {
 }
 
 func TestStateDBV2GetNonexistCode(t *testing.T) {
-	db := cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), ccurlstorage.Rlp{}.Encode, ccurlstorage.Rlp{}.Decode)
+	// db := cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), ccurlstorage.Rlp{}.Encode, ccurlstorage.Rlp{}.Decode)
+	db := chooseDataStore()
 	db.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, commutative.NewPath())
 	url := concurrenturl.NewConcurrentUrl(db)
 
@@ -66,7 +66,8 @@ func TestStateDBV2GetNonexistCode(t *testing.T) {
 }
 
 func TestStateDBV2GetNonexistStorageState(t *testing.T) {
-	db := cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), ccurlstorage.Rlp{}.Encode, ccurlstorage.Rlp{}.Decode)
+	// db := cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), ccurlstorage.Rlp{}.Encode, ccurlstorage.Rlp{}.Decode)
+	db := chooseDataStore()
 	meta := commutative.NewPath()
 	db.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, meta)
 	url := concurrenturl.NewConcurrentUrl(db)
