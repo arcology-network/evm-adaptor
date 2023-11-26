@@ -114,7 +114,7 @@ func DeployThenInvoke(targetPath, contractFile, version, contractName, funcName 
 	if len(funcName) == 0 {
 		return err, eu, nil
 	}
-	return AliceCall(eu, *contractAddress, ccurl), eu, nil
+	return AliceCall(eu, *contractAddress, funcName, ccurl), eu, nil
 }
 
 func AliceDeploy(targetPath, contractFile, compilerVersion, contract string) (*execution.EU, *evmcommon.Address, *concurrenturl.ConcurrentUrl, error) {
@@ -149,11 +149,17 @@ func AliceDeploy(targetPath, contractFile, compilerVersion, contract string) (*e
 	return eu, &contractAddress, url, nil
 }
 
-func AliceCall(eu *execution.EU, contractAddress evmcommon.Address, ccurl *concurrenturl.ConcurrentUrl) error {
-	api := ccapi.NewAPI(ccurl)
-	eu.SetApi(api)
+func AliceCall(eu *execution.EU, contractAddress evmcommon.Address, funcName string, ccurl *concurrenturl.ConcurrentUrl) error {
+	config := MainTestConfig()
+	config.Coinbase = &eucommon.Coinbase
+	config.BlockNumber = new(big.Int).SetUint64(10000000)
+	config.Time = new(big.Int).SetUint64(10000000)
 
-	data := crypto.Keccak256([]byte("call()"))[:4]
+	api := ccapi.NewAPI(ccurl)
+	statedb := eth.NewImplStateDB(api)
+	execution.NewEU(config.ChainConfig, *config.VMConfig, statedb, api)
+
+	data := crypto.Keccak256([]byte(funcName))[:4]
 	msg := core.NewMessage(eucommon.Alice, &contractAddress, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
 	stdMsg := &execution.StandardMessage{
 		ID:     1,
@@ -162,13 +168,7 @@ func AliceCall(eu *execution.EU, contractAddress evmcommon.Address, ccurl *concu
 		Source: commontypes.TX_SOURCE_LOCAL,
 	}
 
-	config := MainTestConfig()
-	config.Coinbase = &eucommon.Coinbase
-	config.BlockNumber = new(big.Int).SetUint64(10000000)
-	config.Time = new(big.Int).SetUint64(10000000)
 	receipt, execResult, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
-	// _, transitions : eu.Api().StateFilter().ByType()
-
 	if err != nil {
 		return (err)
 	}
@@ -182,6 +182,40 @@ func AliceCall(eu *execution.EU, contractAddress evmcommon.Address, ccurl *concu
 	}
 	return nil
 }
+
+// func AliceCall(eu *execution.EU, contractAddress evmcommon.Address, funcName string, ccurl *concurrenturl.ConcurrentUrl) error {
+// 	api := ccapi.NewAPI(ccurl)
+// 	eu.SetApi(api)
+
+// 	data := crypto.Keccak256([]byte(funcName))[:4]
+// 	msg := core.NewMessage(eucommon.Alice, &contractAddress, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+// 	stdMsg := &execution.StandardMessage{
+// 		ID:     1,
+// 		TxHash: [32]byte{1, 1, 1},
+// 		Native: &msg, // Build the message
+// 		Source: commontypes.TX_SOURCE_LOCAL,
+// 	}
+
+// 	config := MainTestConfig()
+// 	config.Coinbase = &eucommon.Coinbase
+// 	config.BlockNumber = new(big.Int).SetUint64(10000000)
+// 	config.Time = new(big.Int).SetUint64(10000000)
+// 	receipt, execResult, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
+// 	// _, transitions : eu.Api().StateFilter().ByType()
+
+// 	if err != nil {
+// 		return (err)
+// 	}
+
+// 	if execResult != nil && execResult.Err != nil {
+// 		return (execResult.Err)
+// 	}
+
+// 	if receipt.Status != 1 || err != nil {
+// 		return errors.New("Error: Failed to call!!!")
+// 	}
+// 	return nil
+// }
 
 func DepolyContract(eu *execution.EU, config *execution.Config, code string, funcName string, inputData []byte, nonce uint64, checkNonce bool) (error, *execution.Config, *execution.EU, *evmcoretypes.Receipt) {
 	msg := core.NewMessage(eucommon.Alice, nil, nonce, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, false)
