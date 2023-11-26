@@ -3,7 +3,6 @@ package eth
 import (
 	"math/big"
 
-	codec "github.com/arcology-network/common-lib/codec"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
 	noncommutative "github.com/arcology-network/concurrenturl/noncommutative"
 	"github.com/arcology-network/evm/common"
@@ -202,32 +201,34 @@ func (this *ImplStateDB) Exist(addr evmcommon.Address) bool {
 }
 
 func (this *ImplStateDB) Empty(addr evmcommon.Address) bool {
-	if !accountExist(this.api.Ccurl(), addr, this.tid) {
-		return true
-	}
+	// if !accountExist(this.api.Ccurl(), addr, this.tid) {
+	// 	return true
+	// }
 
-	if value, _ := this.api.Ccurl().Peek(getBalancePath(this.api.Ccurl(), addr), new(commutative.U256)); value != nil {
-		v, _, _ := value.(*commutative.U256).Get()
-		if v.(*uint256.Int).Cmp(&commutative.U256_ZERO) != 0 {
-			return false
-		}
-	} else {
-		panic("Balance not found")
-	}
+	// if value, _ := this.api.Ccurl().Peek(getBalancePath(this.api.Ccurl(), addr), new(commutative.U256)); value != nil {
+	// 	v, _, _ := value.(*commutative.U256).Get()
+	// 	if v.(*uint256.Int).Cmp(&commutative.U256_ZERO) != 0 {
+	// 		return false
+	// 	}
+	// } else {
+	// 	panic("Balance not found")
+	// }
 
-	if value, _ := this.api.Ccurl().Peek(getNoncePath(this.api.Ccurl(), addr), new(commutative.Uint64)); value != nil {
-		v, _, _ := value.(*commutative.Uint64).Get()
-		if v.(uint64) != 0 {
-			return false
-		}
-	} else {
-		panic("Nonce not found")
-	}
+	// if value, _ := this.api.Ccurl().Peek(getNoncePath(this.api.Ccurl(), addr), new(commutative.Uint64)); value != nil {
+	// 	v, _, _ := value.(*commutative.Uint64).Get()
+	// 	if v.(uint64) != 0 {
+	// 		return false
+	// 	}
+	// } else {
+	// 	panic("Nonce not found")
+	// }
 
-	if value, _ := this.api.Ccurl().Peek(getCodePath(this.api.Ccurl(), addr), new(noncommutative.Bytes)); value != nil {
-		return len(value.(*noncommutative.Bytes).Value().(codec.Bytes)) == 0
-	}
-	return true
+	// if value, _ := this.api.Ccurl().Peek(getCodePath(this.api.Ccurl(), addr), new(noncommutative.Bytes)); value != nil {
+	// 	return len(value.(*noncommutative.Bytes).Value().(codec.Bytes)) == 0
+	// }
+	// return true
+
+	return (!this.Exist(addr)) || (this.PeekBalance(addr).BitLen() == 0 && this.GetNonce(addr) == 0 && this.GetCodeSize(addr) == 0)
 }
 
 // SetTransientState sets transient storage for a given account. It

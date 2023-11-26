@@ -10,15 +10,11 @@ replace github.com/arcology-network/common-lib => ../common-lib/
 
 replace github.com/arcology-network/concurrenturl => ../concurrenturl/
 
-// replace github.com/arcology-network/urlarbitrator-engine => ../urlarbitrator-engine/
-
-require (
-	github.com/arcology-network/common-lib v1.8.0
-	github.com/arcology-network/concurrenturl v1.8.0
-	github.com/arcology-network/evm v1.8.0
-	github.com/arcology-network/urlarbitrator-engine v1.7.1
-	github.com/holiman/uint256 v1.2.3
-)
+// github.com/arcology-network/common-lib v1.8.0
+// github.com/arcology-network/concurrenturl v1.8.0
+// github.com/arcology-network/evm v1.8.0
+// github.com/arcology-network/urlarbitrator-engine v1.7.1
+require github.com/holiman/uint256 v1.2.3
 
 require (
 	github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96 // indirect
@@ -35,7 +31,6 @@ require (
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
@@ -54,6 +49,12 @@ require (
 )
 
 require (
+	github.com/arcology-network/common-lib v0.0.0-00010101000000-000000000000
+	github.com/arcology-network/concurrenturl v0.0.0-00010101000000-000000000000
+	github.com/arcology-network/evm v0.0.0-00010101000000-000000000000
+)
+
+require (
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
@@ -66,6 +67,7 @@ require (
 	github.com/getsentry/sentry-go v0.18.0 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
