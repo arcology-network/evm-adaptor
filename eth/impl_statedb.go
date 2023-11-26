@@ -45,42 +45,38 @@ func (this *ImplStateDB) SubBalance(addr evmcommon.Address, amount *big.Int) {
 }
 
 func (this *ImplStateDB) AddBalance(addr evmcommon.Address, amount *big.Int) {
-	if !accountExist(this.api.Ccurl(), addr, this.tid) {
+	if !this.Exist(addr) {
 		createAccount(this.api.Ccurl(), addr, this.tid)
 	}
 
 	if delta, ok := commutative.NewU256DeltaFromBigInt(new(big.Int).Set(amount)); ok {
 		if _, err := this.api.Ccurl().Write(this.tid, getBalancePath(this.api.Ccurl(), addr), delta); err == nil {
 			return
-		} else {
-			panic(err)
 		}
 	}
 	panic("Error: Failed to call AddBalance()")
 }
 
 func (this *ImplStateDB) GetBalance(addr evmcommon.Address) *big.Int {
-	if !accountExist(this.api.Ccurl(), addr, this.tid) {
+	if !this.Exist(addr) {
 		return new(big.Int)
 	}
 
-	if value, _ := this.api.Ccurl().Read(this.tid, getBalancePath(this.api.Ccurl(), addr), new(commutative.U256)); value != nil {
-		v := value.(uint256.Int)
-		return (&v).ToBig() // v.(*commutative.U256).Value().(*big.Int)
-	}
-	panic("Balance Not found")
+	value, _ := this.api.Ccurl().Read(this.tid, getBalancePath(this.api.Ccurl(), addr), new(commutative.U256))
+	v := value.(uint256.Int)
+	return (&v).ToBig() // v.(*commutative.U256).Value().(*big.Int)
+
 }
 
 func (this *ImplStateDB) PeekBalance(addr evmcommon.Address) *big.Int {
-	if !accountExist(this.api.Ccurl(), addr, this.tid) {
+	if !this.Exist(addr) {
 		return new(big.Int)
 	}
 
-	if value, _ := this.api.Ccurl().Peek(getBalancePath(this.api.Ccurl(), addr), new(commutative.U256)); value != nil {
-		v := value.(uint256.Int)
-		return v.ToBig()
-	}
-	panic("Balance Not found")
+	value, _ := this.api.Ccurl().Peek(getBalancePath(this.api.Ccurl(), addr), new(commutative.U256))
+	v := value.(uint256.Int)
+	return v.ToBig()
+
 }
 
 func (this *ImplStateDB) SetBalance(addr evmcommon.Address, amount *big.Int) {
@@ -89,19 +85,16 @@ func (this *ImplStateDB) SetBalance(addr evmcommon.Address, amount *big.Int) {
 }
 
 func (this *ImplStateDB) GetNonce(addr evmcommon.Address) uint64 {
-	if !accountExist(this.api.Ccurl(), addr, this.tid) {
+	if !this.Exist(addr) {
 		return 0
 	}
 
-	if value, _ := this.api.Ccurl().Peek(getNoncePath(this.api.Ccurl(), addr), new(commutative.Uint64)); value != nil {
-		// v, _, _ := value.(*commutative.Uint64).Get()
-		return value.(uint64)
-	}
-	panic("Nonce Not found")
+	value, _ := this.api.Ccurl().Peek(getNoncePath(this.api.Ccurl(), addr), new(commutative.Uint64))
+	return value.(uint64)
 }
 
 func (this *ImplStateDB) SetNonce(addr evmcommon.Address, nonce uint64) {
-	if !accountExist(this.api.Ccurl(), addr, this.tid) {
+	if !this.Exist(addr) {
 		createAccount(this.api.Ccurl(), addr, this.tid)
 	}
 
@@ -120,17 +113,17 @@ func (this *ImplStateDB) GetCodeHash(addr evmcommon.Address) evmcommon.Hash {
 }
 
 func (this *ImplStateDB) GetCode(addr evmcommon.Address) []byte {
-	if !accountExist(this.api.Ccurl(), addr, this.tid) {
+	if !this.Exist(addr) {
 		return nil
 	}
-	if value, _ := this.api.Ccurl().Read(this.tid, getCodePath(this.api.Ccurl(), addr), new(noncommutative.Bytes)); value != nil {
-		return value.([]byte)
-	}
-	panic("Code Not found")
+
+	value, _ := this.api.Ccurl().Read(this.tid, getCodePath(this.api.Ccurl(), addr), new(noncommutative.Bytes))
+	return value.([]byte)
+
 }
 
 func (this *ImplStateDB) SetCode(addr evmcommon.Address, code []byte) {
-	if !accountExist(this.api.Ccurl(), addr, this.tid) {
+	if !this.Exist(addr) {
 		createAccount(this.api.Ccurl(), addr, this.tid)
 	}
 
@@ -150,6 +143,7 @@ func (this *ImplStateDB) Snapshot() int                                         
 func (this *ImplStateDB) AddPreimage(hash evmcommon.Hash, preimage []byte)                {}
 func (this *ImplStateDB) AddAddressToAccessList(addr evmcommon.Address)                   {} // Do nothing.
 func (this *ImplStateDB) AddSlotToAccessList(addr evmcommon.Address, slot evmcommon.Hash) {}
+func (this *ImplStateDB) Set(eac EthAccountCache, esc EthStorageCache)                    {} // TODO
 
 // Get from DB directly, bypassing ccurl since it make have some temporary states
 func (this *ImplStateDB) GetCommittedState(addr evmcommon.Address, key evmcommon.Hash) evmcommon.Hash {
@@ -168,12 +162,9 @@ func (this *ImplStateDB) GetState(addr evmcommon.Address, key evmcommon.Hash) ev
 }
 
 func (this *ImplStateDB) SetState(addr evmcommon.Address, key, value evmcommon.Hash) {
-	if !accountExist(this.api.Ccurl(), addr, this.tid) {
+	if !this.Exist(addr) {
 		createAccount(this.api.Ccurl(), addr, this.tid)
 	}
-
-	// localPath := getLocalStorageKeyPath(this.api, addr, key)
-	// this.api.Ccurl().IfExists(localPath)
 
 	path := getStorageKeyPath(this.api, addr, key)
 	if _, err := this.api.Ccurl().Write(this.tid, path, noncommutative.NewBytes(value.Bytes())); err != nil {
@@ -181,53 +172,11 @@ func (this *ImplStateDB) SetState(addr evmcommon.Address, key, value evmcommon.H
 	}
 }
 
-// func (this *ImplStateDB) SetState(addr evmcommon.Address, key, value evmcommon.Hash) {
-// 	if !accountExist(this.api.Ccurl(), addr, this.tid) {
-// 		createAccount(this.api.Ccurl(), addr, this.tid)
-// 	}
-
-// 	// path := getLocalStorageKeyPath(this.api, addr, key)
-// 	// if this.api.Ccurl().IfExists(path) {
-// 	// 	this.api.Ccurl().Write(this.tid, path, noncommutative.NewBytes(value.Bytes()), true)
-// 	// }
-
-// 	if _, err := this.api.Ccurl().Write(this.tid, path, noncommutative.NewBytes(value.Bytes()), true); err != nil {
-// 		panic(err)
-// 	}
-// }
-
 func (this *ImplStateDB) Exist(addr evmcommon.Address) bool {
 	return accountExist(this.api.Ccurl(), addr, this.tid)
 }
 
 func (this *ImplStateDB) Empty(addr evmcommon.Address) bool {
-	// if !accountExist(this.api.Ccurl(), addr, this.tid) {
-	// 	return true
-	// }
-
-	// if value, _ := this.api.Ccurl().Peek(getBalancePath(this.api.Ccurl(), addr), new(commutative.U256)); value != nil {
-	// 	v, _, _ := value.(*commutative.U256).Get()
-	// 	if v.(*uint256.Int).Cmp(&commutative.U256_ZERO) != 0 {
-	// 		return false
-	// 	}
-	// } else {
-	// 	panic("Balance not found")
-	// }
-
-	// if value, _ := this.api.Ccurl().Peek(getNoncePath(this.api.Ccurl(), addr), new(commutative.Uint64)); value != nil {
-	// 	v, _, _ := value.(*commutative.Uint64).Get()
-	// 	if v.(uint64) != 0 {
-	// 		return false
-	// 	}
-	// } else {
-	// 	panic("Nonce not found")
-	// }
-
-	// if value, _ := this.api.Ccurl().Peek(getCodePath(this.api.Ccurl(), addr), new(noncommutative.Bytes)); value != nil {
-	// 	return len(value.(*noncommutative.Bytes).Value().(codec.Bytes)) == 0
-	// }
-	// return true
-
 	return (!this.Exist(addr)) || (this.PeekBalance(addr).BitLen() == 0 && this.GetNonce(addr) == 0 && this.GetCodeSize(addr) == 0)
 }
 
@@ -284,83 +233,3 @@ func (this *ImplStateDB) PrepareFormer(txHash, bhash evmcommon.Hash, ti uint32) 
 func (this *ImplStateDB) GetLogs(hash evmcommon.Hash) []*evmtypes.Log {
 	return this.logs[hash]
 }
-
-// func (this *ImplStateDB) Copy() *ImplStateDB {
-// 	return &ImplStateDB{
-// 		logs: make(map[evmcommon.Hash][]*evmtypes.Log),
-// 		// kapi: this.kapi,
-// 		// db:   this.db,
-// 		url: this.api.Ccurl(),
-// 	}
-// }
-
-func (this *ImplStateDB) Set(eac EthAccountCache, esc EthStorageCache) {
-	// TODO
-}
-
-// func GetAccountPathSize(url *concurrenturl.ConcurrentUrl) int {
-// 	return len(url.Platform.Eth10()) + 2*evmcommon.AddressLength
-// }
-
-// func ExportOnFailure(
-// 	db urlcommon.DatastoreInterface,
-// 	txIndex int,
-// 	from evmcommon.Address,
-// 	coinbase evmcommon.Address,
-// 	gasUsed uint64,
-// 	gasPrice *big.Int,
-// ) ([]interfaces.Univalue, []interfaces.Univalue) {
-// 	url := concurrenturl.NewConcurrentUrl(db)
-// 	this := eth.NewImplStateDB(nil, db, url)
-// 	this.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
-
-// 	// Chage the tranasction fees
-// 	this.AddBalance(coinbase, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
-// 	this.SubBalance(from, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
-// 	//	this.SetNonce(from, 0) don't increase if the transcation failes.
-// 	return url.Export(false)
-// }
-
-// func ExportOnFailureEx(
-// 	db urlcommon.DatastoreInterface,
-// 	txIndex int,
-// 	from, coinbase evmcommon.Address,
-// 	gasUsed uint64, gasPrice *big.Int,
-// ) ([][]byte, [][]byte) {
-// 	url := concurrenturl.NewConcurrentUrl(db)
-// 	this := eth.NewImplStateDB(nil, db, url)
-// 	this.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
-// 	this.AddBalance(coinbase, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
-// 	this.SubBalance(from, new(big.Int).Mul(new(big.Int).SetUint64(gasUsed), gasPrice))
-// 	// this.SetNonce(from, 0)
-// 	return url.ExportEncoded(nil)
-// }
-
-// func ExportOnConfliction(
-// 	db urlcommon.DatastoreInterface,
-// 	txIndex int,
-// 	from evmcommon.Address,
-// ) ([]interfaces.Univalue, []interfaces.Univalue) {
-// 	url := concurrenturl.NewConcurrentUrl(db)
-// 	this := eth.NewImplStateDB(nil, db, url)
-// 	this.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
-// 	this.SetNonce(from, 0)
-// 	return url.ExportAll()
-// }
-
-// func ExportOnConflictionEx(
-// 	db urlcommon.DatastoreInterface,
-// 	txIndex int,
-// 	from evmcommon.Address,
-// ) ([][]byte, [][]byte) {
-// 	url := concurrenturl.NewConcurrentUrl(db)
-// 	this := eth.NewImplStateDB(nil, db, url)
-// 	this.Prepare(evmcommon.Hash{}, evmcommon.Hash{}, txIndex)
-// 	this.SetNonce(from, 0)
-// 	return url.ExportEncoded(func(accesses, transitions []interfaces.Univalue) ([]interfaces.Univalue, []interfaces.Univalue) {
-// 		for _, t := range transitions {
-// 			t.SetTransitionType(urlcommon.INVARIATE_TRANSITIONS)
-// 		}
-// 		return accesses, transitions
-// 	})
-// }
