@@ -65,7 +65,6 @@ func (this *ImplStateDB) GetBalance(addr evmcommon.Address) *big.Int {
 	value, _ := this.api.Ccurl().Read(this.tid, getBalancePath(this.api.Ccurl(), addr), new(commutative.U256))
 	v := value.(uint256.Int)
 	return (&v).ToBig() // v.(*commutative.U256).Value().(*big.Int)
-
 }
 
 func (this *ImplStateDB) PeekBalance(addr evmcommon.Address) *big.Int {
