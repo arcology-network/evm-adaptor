@@ -3,6 +3,9 @@ package tests
 import (
 	"encoding/hex"
 	"fmt"
+	"os"
+	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/holiman/uint256"
@@ -18,6 +21,15 @@ func TestSlotHash(t *testing.T) {
 	v := hash.Sum(nil)
 	fmt.Println(v)
 	fmt.Println("0x" + hex.EncodeToString(v))
+}
+
+func TestNativeStorage(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/native/")
+	err, _, _ := DeployThenInvoke(targetPath, "NativeStorage.sol", "0.8.19", "NativeStorage", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 // func TestStorageSlot(t *testing.T) {
