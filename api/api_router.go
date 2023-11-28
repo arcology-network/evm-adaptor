@@ -94,6 +94,8 @@ func (this *API) Origin() evmcommon.Address   { return this.eu.VM().TxContext.Or
 func (this *API) SetSchedule(schedule interface{}) { this.schedule = schedule }
 func (this *API) Schedule() interface{}            { return this.schedule }
 
+func (this *API) HandlerDict() map[[20]byte]eucommon.ApiCallHandler { return this.handlerDict }
+
 func (this *API) VM() *vm.EVM {
 	return common.IfThenDo1st(this.eu != nil, func() *vm.EVM { return this.eu.VM() }, nil)
 }

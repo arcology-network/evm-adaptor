@@ -271,6 +271,28 @@ func TestParentChildBranchConflict(t *testing.T) {
 
 // func TestParaTransfer(t *testing.T) {
 // 	currentPath, _ := os.Getwd()
+// 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/apps/")
+
+// 	eu, contractAddress, ccurl, err := AliceDeploy(targetPath, contractFile, version, contractName)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+
+// 	if len(funcName) == 0 {
+// 		return
+// 	}
+
+// 	abi.Encode(contractAddress)
+// 	AliceCall(eu, *contractAddress, funcName, ccurl), eu, nil
+
+// 	// err, _, _ := DeployThenInvoke(targetPath, "transfer/transfer_test.sol", "0.8.19", "Transfer", "call()", []byte{}, false)
+// 	// if err != nil {
+// 	// 	t.Error(err)
+// 	// }
+// }
+
+// func TestParaTransfer(t *testing.T) {
+// 	currentPath, _ := os.Getwd()
 // 	targetPath := path.Join((path.Dir(filepath.Dir(currentPath))), "concurrentlib/")
 
 // 	// Deploy coin contract
