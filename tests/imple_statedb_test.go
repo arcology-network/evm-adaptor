@@ -9,8 +9,10 @@ import (
 	concurrenturl "github.com/arcology-network/concurrenturl"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
+	"github.com/arcology-network/concurrenturl/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	ccapi "github.com/arcology-network/vm-adaptor/api"
+
 	eth "github.com/arcology-network/vm-adaptor/eth"
 )
 
@@ -184,6 +186,27 @@ func TestEthStateDBInterfaces(t *testing.T) {
 		t.Error("Wrong code!")
 	}
 
-	// hanlders := api.HandlerDict()
+	// base.(*ccapi.BaseHandlers).Length("123")
 
+	if _, err := url.Write(1, "blcc://eth1.0/account/"+string(alice[:])+"/storage/container/ctrn-0/", noncommutative.NewString("path")); err == nil {
+		t.Error(err)
+	}
+
+	if _, err := url.Write(1, "blcc://eth1.0/account/"+string(alice[:])+"/storage/container/ctrn-0/elem-000", noncommutative.NewString("123")); err == nil {
+		t.Error(err)
+	}
+
+	if _, err := url.Write(1, "blcc://eth1.0/account/"+string(alice[:])+"/storage/container/ctrn-0/elem-001", noncommutative.NewString("456")); err == nil {
+		t.Error(err)
+	}
+
+	// Try to read an nonexistent entry from an nonexistent path, should fail !
+	if value, _ := url.Read(1, "blcc://eth1.0/account/"+string(alice[:])+"/storage/container/ctrn-0/elem-000", nil); value != nil {
+		t.Error("Error: Shouldn't be not found")
+	}
+
+	// try again
+	if value, _ := url.Read(1, "blcc://eth1.0/account/"+string(alice[:])+"/storage/container/ctrn-0/elem-000", nil); value != nil {
+		t.Error("Error: Shouldn't be not found")
+	}
 }
