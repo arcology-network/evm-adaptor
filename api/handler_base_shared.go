@@ -5,6 +5,7 @@ import (
 
 	"github.com/arcology-network/common-lib/common"
 	orderedset "github.com/arcology-network/common-lib/container/set"
+	"github.com/arcology-network/concurrenturl/commutative"
 	"github.com/arcology-network/concurrenturl/noncommutative"
 	"github.com/arcology-network/vm-adaptor/execution"
 )
@@ -15,7 +16,7 @@ func (this *BaseHandlers) Length(path string) (uint64, bool, int64) {
 		return 0, false, 0
 	}
 
-	if path, _ := this.api.Ccurl().Read(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, new(noncommutative.Bytes)); path != nil {
+	if path, _ := this.api.Ccurl().Read(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, new(commutative.Path)); path != nil {
 		keys := path.(*orderedset.OrderedSet).Keys()
 		return uint64(len(keys)), true, 0
 	}

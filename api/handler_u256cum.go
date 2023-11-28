@@ -7,7 +7,6 @@ import (
 
 	"github.com/arcology-network/concurrenturl/commutative"
 	ccinterfaces "github.com/arcology-network/concurrenturl/interfaces"
-	"github.com/arcology-network/concurrenturl/noncommutative"
 	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 
@@ -93,7 +92,7 @@ func (this *U256CumHandlers) get(caller evmcommon.Address, input []byte) ([]byte
 		return []byte{}, false, 0
 	}
 
-	if value, _, err := this.api.Ccurl().ReadAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, new(noncommutative.Bytes)); value == nil || err != nil {
+	if value, _, err := this.api.Ccurl().ReadAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, new(commutative.U256)); value == nil || err != nil {
 		return []byte{}, false, 0
 	} else {
 		updated := value.(uint256.Int)
