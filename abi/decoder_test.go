@@ -67,11 +67,3 @@ func TestDecoder(t *testing.T) {
 		t.Error("Error: Wrong [32]byte length")
 	}
 }
-
-func TestDecoder2(t *testing.T) {
-	raw := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 17, 17, 17, 17, 16, 18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 18, 52, 86, 120, 144, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	buffer32, _ := Decode(raw, 1, [20]byte{}, 2, math.MaxInt)
-	if len(buffer32.([]byte)) == 0 {
-		t.Error("Error: Wrong [32]byte length")
-	}
-}

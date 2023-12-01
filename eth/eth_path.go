@@ -95,15 +95,15 @@ func accountExist(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, t
 }
 
 func createAccount(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, tid uint32) {
-	if err := url.NewAccount(tid, codec.Bytes20(account).Hex()); err != nil {
+	if _, err := url.NewAccount(tid, codec.Bytes20(account).Hex()); err != nil {
 		panic(err)
 	}
 
-	if _, err := url.Write(tid, getBalancePath(url, account), commutative.NewU256(commutative.U256_MIN, commutative.U256_MAX), true); err != nil { // Initialize balance
+	if _, err := url.Write(tid, getBalancePath(url, account), commutative.NewUnboundedU256()); err != nil { // Initialize balance
 		panic(err)
 	}
 
-	if _, err := url.Write(tid, getNoncePath(url, account), commutative.NewUint64(), true); err != nil {
+	if _, err := url.Write(tid, getNoncePath(url, account), commutative.NewUnboundedUint64()); err != nil {
 		panic(err)
 	}
 	// if err := url.Write(tid, getCodePath(url, account), noncommutative.NewBytes(nil)); err != nil {

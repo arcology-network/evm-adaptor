@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
@@ -31,15 +30,16 @@ type Result struct {
 	Err              error
 }
 
+// The tx sender has to pay the tx fees regardless the execution status.
 func (this *Result) GenGasTransition(rawTransition ccurlinterfaces.Univalue, gasDelta *uint256.Int, isCredit bool) ccurlinterfaces.Univalue {
 	balanceTransition := rawTransition.Clone().(ccurlinterfaces.Univalue)
-	if diff := (*uint256.Int)(balanceTransition.Value().(ccurlinterfaces.Type).Delta().(*codec.Uint256)); diff.Cmp(gasDelta) >= 0 {
+	if diff := balanceTransition.Value().(ccurlinterfaces.Type).Delta().(uint256.Int); diff.Cmp(gasDelta) >= 0 {
 		// transfer := diff.Sub(diff.Clone(), (*uint256.Int)(gasDelta))                            // balance - gas
 		// (balanceTransition).Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(transfer)) // Set the transfer, Won't change the initial value.
 		// (balanceTransition).Value().(ccurlinterfaces.Type).SetDeltaSign(false)
 		//
 		newGasTransition := balanceTransition.Clone().(ccurlinterfaces.Univalue)
-		newGasTransition.Value().(ccurlinterfaces.Type).SetDelta((*codec.Uint256)(gasDelta))
+		newGasTransition.Value().(ccurlinterfaces.Type).SetDelta(*gasDelta)
 		newGasTransition.Value().(ccurlinterfaces.Type).SetDeltaSign(isCredit)
 		newGasTransition.GetUnimeta().(*univalue.Unimeta).SetPersistent(true)
 		return newGasTransition
@@ -56,8 +56,8 @@ func (this *Result) Postprocess() *Result {
 	})
 
 	gasUsedInWei := uint256.NewInt(1).Mul(uint256.NewInt(this.Receipt.GasUsed), uint256.NewInt(this.stdMsg.Native.GasPrice.Uint64()))
-	if senderGasTransition := this.GenGasTransition(*senderBalance, gasUsedInWei, false); senderGasTransition != nil {
-		this.immuned = append(this.immuned, senderGasTransition)
+	if senderGasDebit := this.GenGasTransition(*senderBalance, gasUsedInWei, false); senderGasDebit != nil {
+		this.immuned = append(this.immuned, senderGasDebit)
 	}
 
 	_, coinbaseBalance := common.FindFirstIf(this.rawStateAccesses, func(v ccurlinterfaces.Univalue) bool {
@@ -65,23 +65,23 @@ func (this *Result) Postprocess() *Result {
 	})
 
 	if *(*senderBalance).GetPath() != *(*coinbaseBalance).GetPath() {
-		if coinbaseGasTransition := this.GenGasTransition(*coinbaseBalance, gasUsedInWei, true); coinbaseGasTransition != nil {
-			this.immuned = append(this.immuned, coinbaseGasTransition)
+		if coinbaseGasCredit := this.GenGasTransition(*coinbaseBalance, gasUsedInWei, true); coinbaseGasCredit != nil {
+			this.immuned = append(this.immuned, coinbaseGasCredit)
 		}
 	}
 
-	common.Foreach(this.rawStateAccesses, func(v *ccurlinterfaces.Univalue) {
+	common.Foreach(this.rawStateAccesses, func(v *ccurlinterfaces.Univalue, _ int) {
 		if v != nil {
 			return
 		}
 
 		path := (*v).GetPath()
 		if strings.HasSuffix(*path, "/nonce") && strings.Contains(*path, hex.EncodeToString(this.From[:])) {
-			(*v).GetUnimeta().(*univalue.Unimeta).SetPersistent(true)
+			(*v).GetUnimeta().(*univalue.Unimeta).SetPersistent(true) // Won't be affect by conflicts
 		}
 	})
 
-	this.rawStateAccesses = this.Transitions() // Return all transitions is successful
+	this.rawStateAccesses = this.Transitions() // Return all the successful transitions
 	return this
 }
 

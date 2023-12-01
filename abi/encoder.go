@@ -37,6 +37,11 @@ func Encode(typed interface{}) ([]byte, error) {
 		bytes := typed.(*uint256.Int).Bytes32()
 		return bytes[:], nil
 
+	case uint256.Int:
+		v := typed.(uint256.Int)
+		bytes := (&v).Bytes32()
+		return bytes[:], nil
+
 	case string:
 		return []byte(typed.(string)), nil
 
@@ -58,7 +63,6 @@ func Encode(typed interface{}) ([]byte, error) {
 		copy(body, typed.([]byte))
 		return append(buffer[:], body...), nil
 	}
-
 	return []byte{}, errors.New("Error: Unsupported data type")
 }
 

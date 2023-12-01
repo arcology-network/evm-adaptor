@@ -32,6 +32,8 @@ func (this *U256CumHandlers) Address() [20]byte {
 	return common.CUMULATIVE_U256_HANDLER
 }
 
+// performed the changes on Delta only
+
 func (this *U256CumHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
 	signature := [4]byte{}
 	copy(signature[:], input)
@@ -77,8 +79,8 @@ func (this *U256CumHandlers) new(caller evmcommon.Address, input []byte) ([]byte
 		return []byte{}, false, 0
 	}
 
-	newU256 := commutative.NewU256(min.(*uint256.Int), max.(*uint256.Int))
-	if _, err := this.api.Ccurl().Write(txIndex, key, newU256, true); err != nil {
+	newU256 := commutative.NewBoundedU256(min.(*uint256.Int), max.(*uint256.Int))
+	if _, err := this.api.Ccurl().Write(txIndex, key, newU256); err != nil {
 		return []byte{}, false, 0
 	}
 	return []byte{}, true, 0
@@ -90,10 +92,10 @@ func (this *U256CumHandlers) get(caller evmcommon.Address, input []byte) ([]byte
 		return []byte{}, false, 0
 	}
 
-	if value, _, err := this.api.Ccurl().ReadAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0); value == nil || err != nil {
+	if value, _, err := this.api.Ccurl().ReadAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, new(commutative.U256)); value == nil || err != nil {
 		return []byte{}, false, 0
 	} else {
-		updated := value.(*uint256.Int)
+		updated := value.(uint256.Int)
 		if encoded, err := abi.Encode(updated); err == nil { // Encode the result
 			return encoded, true, 0
 		}
@@ -110,14 +112,15 @@ func (this *U256CumHandlers) peek(caller evmcommon.Address, input []byte) ([]byt
 	// Peek the initial value
 	value, _, err := this.api.Ccurl().DoAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
 		return uint32(0), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()
-	})
+	}, new(commutative.U256))
 
 	if value != nil && err == nil {
-		if initv := value.(*commutative.U256).Value().(*codec.Uint256); initv != nil {
-			if encoded, err := abi.Encode((*uint256.Int)(initv)); err == nil { // Encode the result
-				return encoded, true, 0
-			}
+		initv := value.(*commutative.U256).Value().(uint256.Int)
+		// if ; initv != nil {
+		if encoded, err := abi.Encode((*uint256.Int)(&initv)); err == nil { // Encode the result
+			return encoded, true, 0
 		}
+		// }
 	}
 	return []byte{}, false, 0
 }
@@ -143,7 +146,7 @@ func (this *U256CumHandlers) set(caller evmcommon.Address, input []byte, isPosit
 
 	value := commutative.NewU256Delta(delta.(*uint256.Int), isPositive)
 
-	_, err = this.api.Ccurl().WriteAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, value, true)
+	_, err = this.api.Ccurl().WriteAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, value)
 	return []byte{}, err == nil, 0
 }
 
@@ -155,11 +158,11 @@ func (this *U256CumHandlers) min(caller evmcommon.Address, input []byte) ([]byte
 
 	value, _, err := this.api.Ccurl().DoAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
 		return uint32(1), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()
-	})
+	}, new(commutative.U256))
 
 	if value != nil && err == nil {
-		minv := value.(*commutative.U256).Min().(*codec.Uint256)
-		if encoded, err := abi.Encode((*uint256.Int)(minv)); err == nil { // Encode the result
+		minv := value.(*commutative.U256).Min().(uint256.Int)
+		if encoded, err := abi.Encode((*uint256.Int)(&minv)); err == nil { // Encode the result
 			return encoded, true, 0
 		}
 	}
@@ -174,11 +177,11 @@ func (this *U256CumHandlers) max(caller evmcommon.Address, input []byte) ([]byte
 
 	value, _, err := this.api.Ccurl().DoAt(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
 		return uint32(1), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()
-	})
+	}, new(commutative.U256))
 
 	if value != nil && err == nil {
-		minv := value.(*commutative.U256).Max().(*codec.Uint256)
-		if encoded, err := abi.Encode((*uint256.Int)(minv)); err == nil { // Encode the result
+		minv := value.(*commutative.U256).Max().(uint256.Int)
+		if encoded, err := abi.Encode((*uint256.Int)(&minv)); err == nil { // Encode the result
 			return encoded, true, 0
 		}
 	}

@@ -32,7 +32,7 @@ type Contract struct {
 }
 
 func NewContract(accounts []evmcommon.Address, owner [20]byte, targetPath, file, version, contractName string) (*Contract, error) {
-	persistentDB := cachedstorage.NewDataStore()
+	persistentDB := cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), ccurlstorage.Rlp{}.Encode, ccurlstorage.Rlp{}.Decode)
 	persistentDB.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, commutative.NewPath())
 	db := ccurlstorage.NewTransientDB(persistentDB)
 

@@ -3,6 +3,9 @@ package tests
 import (
 	"encoding/hex"
 	"fmt"
+	"os"
+	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/holiman/uint256"
@@ -18,7 +21,24 @@ func TestSlotHash(t *testing.T) {
 	v := hash.Sum(nil)
 	fmt.Println(v)
 	fmt.Println("0x" + hex.EncodeToString(v))
+}
 
+func TestNativeStorage(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/native/")
+	err, _, _ := DeployThenInvoke(targetPath, "NativeStorage.sol", "0.8.19", "NativeStorage", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestGasDebitInFailedTx(t *testing.T) {
+	currentPath, _ := os.Getwd()
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/native/")
+	err, _, _ := DeployThenInvoke(targetPath, "NativeStorage.sol", "0.8.19", "TestFailed", "call()", []byte{}, false)
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 // func TestStorageSlot(t *testing.T) {
@@ -45,5 +65,158 @@ func TestSlotHash(t *testing.T) {
 // 	// contractAddress := receipt.ContractAddress
 // 	if receipt.Status != 1 || err != nil {
 // 		t.Error("Error: Deployment failed!!!", err)
+// 	}
+// }
+
+// func TestNativeContractSameBlock(t *testing.T) {
+// 	persistentDB := cachedstorage.NewDataStore()
+// 	meta := commutative.NewPath()
+// 	persistentDB.Inject((&concurrenturl.Platform{}).Eth10Account(), meta)
+// 	db := curstorage.NewTransientDB(persistentDB)
+
+// 	url := concurrenturl.NewConcurrentUrl(db)
+// 	api := ccapi.NewAPI(url)
+
+// 	statedb := cceueth.NewImplStateDB(api)
+// 	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 0)
+// 	statedb.CreateAccount(eucommon.Coinbase)
+// 	// User 1
+// 	statedb.CreateAccount(eucommon.Alice)
+// 	statedb.AddBalance(eucommon.Alice, new(big.Int).SetUint64(1e18))
+// 	// user2
+// 	statedb.CreateAccount(eucommon.Bob)
+// 	statedb.AddBalance(eucommon.Bob, new(big.Int).SetUint64(1e18))
+// 	// Contract owner
+// 	statedb.CreateAccount(eucommon.Owner)
+// 	statedb.AddBalance(eucommon.Owner, new(big.Int).SetUint64(1e18))
+
+// 	// ================================== Compile ==================================
+// 	currentPath, _ := os.Getwd()
+// 	project := filepath.Dir(filepath.Dir(currentPath))
+// 	targetPath := project + "/apps/native"
+
+// 	bytecode, err := compiler.CompileContracts(targetPath, "NativeStorage.sol", "0.8.19", "NativeStorage", false)
+// 	if err != nil || len(bytecode) == 0 {
+// 		t.Error("Error: Failed to generate the byte code")
+// 		return
+// 	}
+
+// 	// Compile
+// 	// ================================ Deploy the contract==================================
+// 	_, transitions := url.ExportAll()
+// 	eu, config := tests.Prepare(db, 10000000, transitions, []uint32{0})
+// 	transitions, receipt, err := tests.Deploy(eu, config, eucommon.Owner, 0, bytecode)
+// 	//t.Log("\n" + eucommon.FormatTransitions(transitions))
+// 	t.Log(receipt)
+// 	address := receipt.ContractAddress
+// 	t.Log(address)
+// 	if receipt.Status != 1 {
+// 		t.Error("Error: Failed to deploy!!!", err)
+// 	}
+
+// 	// Increment x by one
+// 	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
+// 		t.Error("Error: Failed to call incrementX() 1!!!", err)
+// 	}
+
+// 	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
+// 		t.Error("Error: Failed to call incrementX() 2!!!", err)
+// 	}
+
+// 	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "incrementX()"); receipt.Status != 1 || err != nil {
+// 		t.Error("Error: Failed to call incrementX() 3!!!", err)
+// 	}
+
+// 	encoded, _ := abi.Encode(uint64(102))
+// 	if _, _, receipt, err := tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "checkY(uint256)", encoded); receipt.Status != 1 || err != nil {
+// 		t.Error("Error: Failed to check checkY() 1!!!", err)
+// 	}
+
+// 	if _, _, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "incrementY()"); receipt.Status != 1 {
+// 		t.Error("Error: Failed to call incrementY() 1!!!", err)
+// 	}
+
+// 	encoded, _ = abi.Encode(uint64(104))
+// 	if _, _, receipt, err := tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "checkY(uint256)", encoded); receipt.Status != 1 || err != nil {
+// 		t.Error("Error: Failed to check checkY() 2!!!", err)
+// 	}
+// }
+
+// func TestNativeContractAcrossBlocks(t *testing.T) {
+// 	persistentDB := cachedstorage.NewDataStore()
+// 	meta := commutative.NewPath()
+// 	persistentDB.Inject((&concurrenturl.Platform{}).Eth10Account(), meta)
+// 	db := curstorage.NewTransientDB(persistentDB)
+
+// 	url := concurrenturl.NewConcurrentUrl(db)
+// 	api := ccapi.NewAPI(url)
+// 	statedb := cceueth.NewImplStateDB(api)
+// 	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 0)
+// 	statedb.CreateAccount(eucommon.Coinbase)
+// 	// User 1
+// 	statedb.CreateAccount(eucommon.Alice)
+// 	statedb.AddBalance(eucommon.Alice, new(big.Int).SetUint64(1e18))
+// 	// user2
+// 	statedb.CreateAccount(eucommon.Bob)
+// 	statedb.AddBalance(eucommon.Bob, new(big.Int).SetUint64(1e18))
+// 	// Contract owner
+// 	statedb.CreateAccount(eucommon.Owner)
+// 	statedb.AddBalance(eucommon.Owner, new(big.Int).SetUint64(1e18))
+
+// 	// // ================================== Compile ==================================
+// 	currentPath, _ := os.Getwd()
+// 	project := filepath.Dir(filepath.Dir(currentPath))
+// 	targetPath := project + "/apps/native"
+
+// 	bytecode, err := compiler.CompileContracts(targetPath, "NativeStorage.sol", "0.8.19", "NativeStorage", false)
+// 	if err != nil || len(bytecode) == 0 {
+// 		t.Error("Error: Failed to generate the byte code")
+// 	}
+// 	// ================================ Deploy the contract==================================
+// 	_, transitions := url.ExportAll()
+// 	eu, config := tests.Prepare(db, 10000000, transitions, []uint32{0})
+// 	transitions, receipt, err := tests.Deploy(eu, config, eucommon.Owner, 0, bytecode)
+// 	//t.Log("\n" + eucommon.FormatTransitions(transitions))
+// 	t.Log(receipt)
+// 	address := receipt.ContractAddress
+// 	t.Log(address)
+// 	if receipt.Status != 1 {
+// 		t.Error("Error: Failed to deploy!!!", err)
+// 	}
+
+// 	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{1})
+// 	// encoded, _ := abi.Encode(uint64(2))
+// 	_, transitions, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "incrementX()")
+// 	//t.Log("\n" + eucommon.FormatTransitions(transitions))
+// 	t.Log(receipt)
+// 	if receipt.Status != 1 || err != nil {
+// 		t.Error("Error: Failed to call incrementX()!!!", err)
+// 	}
+
+// 	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{0})
+// 	encodedInput, _ := abi.Encode(uint64(3))
+// 	acc, transitions, receipt, err := tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "checkX(uint256)", encodedInput)
+// 	t.Log("\n" + eucommon.FormatTransitions(acc))
+// 	t.Log(receipt)
+// 	if receipt.Status != 1 {
+// 		t.Error("Error: Failed to call checkX()!!!", err)
+// 	}
+
+// 	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{0})
+// 	encodedInput, _ = abi.Encode(uint64(102))
+// 	acc, transitions, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "checkY(uint256)", encodedInput)
+// 	t.Log("\n" + eucommon.FormatTransitions(acc))
+// 	t.Log(receipt)
+// 	if receipt.Status != 1 {
+// 		t.Error("Error: Failed to call checkY()!!!", err)
+// 	}
+
+// 	eu, config = tests.Prepare(db, 10000001, transitions, []uint32{0})
+// 	encodedInput, _ = abi.Encode(uint64(3))
+// 	acc, _, receipt, err = tests.CallFunc(eu, config, &eucommon.Alice, &address, 0, true, "checkX(uint256)", encodedInput)
+// 	t.Log("\n" + eucommon.FormatTransitions(acc))
+// 	t.Log(receipt)
+// 	if receipt.Status != 1 || err != nil {
+// 		t.Error("Error: Failed to call checkX()!!!", err)
 // 	}
 // }

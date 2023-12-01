@@ -46,7 +46,7 @@ func MainTestConfig() *execution.Config {
 }
 
 func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concurrenturl.ConcurrentUrl, []interfaces.Univalue) {
-	persistentDB := cachedstorage.NewDataStore()
+	persistentDB := cachedstorage.NewDataStore(nil, cachedstorage.NewCachePolicy(0, 1), cachedstorage.NewMemDB(), ccurlstorage.Rlp{}.Encode, ccurlstorage.Rlp{}.Decode)
 	persistentDB.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, commutative.NewPath())
 	db := ccurlstorage.NewTransientDB(persistentDB)
 
@@ -96,7 +96,11 @@ func DepolyContract(eu *execution.EU, config *execution.Config, code string, fun
 		Source: commontypes.TX_SOURCE_LOCAL,
 	}
 
-	receipt, _, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
+	receipt, result, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
+
+	if result.Err != nil {
+		return result.Err, config, eu, nil
+	}
 
 	if err != nil || receipt.Status != 1 {
 		errmsg := ""

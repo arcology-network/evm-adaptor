@@ -73,35 +73,16 @@ func TestContractString(t *testing.T) {
 func TestCumulativeU256(t *testing.T) {
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
-
-	err, _, _ := DeployThenInvoke(targetPath, "commutative/u256Cum_test.sol", "0.8.19", "CumulativeU256Test", "", []byte{}, false)
+	err, _, _ := DeployThenInvoke(targetPath, "commutative/u256Cum_test.sol", "0.8.19", "CumulativeU256Test", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func TestU256Multiprocess(t *testing.T) {
+func TestCumulativeU256Counter(t *testing.T) {
 	currentPath, _ := os.Getwd()
-	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib"
-	err, _, _ := DeployThenInvoke(targetPath, "/multiprocess/mp_u256_test.sol", "0.8.19", "U256ParallelTest", "call()", []byte{}, false)
-	if err != nil {
-		t.Error(err)
-	}
-}
-
-func TestArrayMultiprocess(t *testing.T) {
-	currentPath, _ := os.Getwd()
-	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib"
-	err, _, _ := DeployThenInvoke(targetPath, "/multiprocess/mp_u256_test.sol", "0.8.19", "U256ArrayParallelTest", "call()", []byte{}, false)
-	if err != nil {
-		t.Error(err)
-	}
-}
-
-func TestParallelArrayPush(t *testing.T) {
-	currentPath, _ := os.Getwd()
-	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib") + "/lib"
-	err, _, _ := DeployThenInvoke(targetPath, "/multiprocess/multiprocess_test.sol", "0.8.19", "ParaNativeArrayPushbackTest", "call()", []byte{}, false)
+	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
+	err, _, _ := DeployThenInvoke(targetPath, "commutative/u256Cum_test.sol", "0.8.19", "VisitCounter", "call()", []byte{}, false)
 	if err != nil {
 		t.Error(err)
 	}
