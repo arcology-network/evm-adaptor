@@ -30,6 +30,7 @@ type Result struct {
 	Err              error
 }
 
+// The tx sender has to pay the tx fees regardless the execution status.
 func (this *Result) GenGasTransition(rawTransition ccurlinterfaces.Univalue, gasDelta *uint256.Int, isCredit bool) ccurlinterfaces.Univalue {
 	balanceTransition := rawTransition.Clone().(ccurlinterfaces.Univalue)
 	if diff := balanceTransition.Value().(ccurlinterfaces.Type).Delta().(uint256.Int); diff.Cmp(gasDelta) >= 0 {
@@ -56,8 +57,8 @@ func (this *Result) Postprocess() *Result {
 	})
 
 	gasUsedInWei := uint256.NewInt(1).Mul(uint256.NewInt(this.Receipt.GasUsed), uint256.NewInt(this.stdMsg.Native.GasPrice.Uint64()))
-	if senderGasTransition := this.GenGasTransition(*senderBalance, gasUsedInWei, false); senderGasTransition != nil {
-		this.immuned = append(this.immuned, senderGasTransition)
+	if senderGasDebit := this.GenGasTransition(*senderBalance, gasUsedInWei, false); senderGasDebit != nil {
+		this.immuned = append(this.immuned, senderGasDebit)
 	}
 
 	_, coinbaseBalance := common.FindFirstIf(this.rawStateAccesses, func(v ccurlinterfaces.Univalue) bool {
@@ -65,8 +66,8 @@ func (this *Result) Postprocess() *Result {
 	})
 
 	if *(*senderBalance).GetPath() != *(*coinbaseBalance).GetPath() {
-		if coinbaseGasTransition := this.GenGasTransition(*coinbaseBalance, gasUsedInWei, true); coinbaseGasTransition != nil {
-			this.immuned = append(this.immuned, coinbaseGasTransition)
+		if coinbaseGasCredit := this.GenGasTransition(*coinbaseBalance, gasUsedInWei, true); coinbaseGasCredit != nil {
+			this.immuned = append(this.immuned, coinbaseGasCredit)
 		}
 	}
 
@@ -77,11 +78,11 @@ func (this *Result) Postprocess() *Result {
 
 		path := (*v).GetPath()
 		if strings.HasSuffix(*path, "/nonce") && strings.Contains(*path, hex.EncodeToString(this.From[:])) {
-			(*v).GetUnimeta().(*univalue.Unimeta).SetPersistent(true)
+			(*v).GetUnimeta().(*univalue.Unimeta).SetPersistent(true) // Won't be affect by conflicts
 		}
 	})
 
-	this.rawStateAccesses = this.Transitions() // Return all transitions is successful
+	this.rawStateAccesses = this.Transitions() // Return all the successful transitions
 	return this
 }
 

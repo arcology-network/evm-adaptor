@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/arcology-network/common-lib/codec"
+	common "github.com/arcology-network/common-lib/common"
 	commonlib "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/types"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
@@ -37,7 +38,7 @@ func (this *CcurlConnector) New(txIndex uint32, deploymentAddr types.Address) bo
 func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32) bool {
 	accountRoot := commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(account), "/")
 	if !this.ccurl.IfExists(accountRoot) {
-		return this.ccurl.NewAccount(txIndex, string(account)) != nil // Create a new account
+		return common.FilterFirst(this.ccurl.NewAccount(txIndex, string(account))) != nil // Create a new account
 	}
 	return true // ALready exists
 }
