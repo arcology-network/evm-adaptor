@@ -4,16 +4,12 @@ go 1.21
 
 toolchain go1.21.3
 
-replace github.com/arcology-network/evm => ../evm/
+// replace github.com/arcology-network/evm => ../evm/
 
-replace github.com/arcology-network/common-lib => ../common-lib/
+// replace github.com/arcology-network/common-lib => ../common-lib/
 
-replace github.com/arcology-network/concurrenturl => ../concurrenturl/
+// replace github.com/arcology-network/concurrenturl => ../concurrenturl/
 
-// github.com/arcology-network/common-lib v1.8.0
-// github.com/arcology-network/concurrenturl v1.8.0
-// github.com/arcology-network/evm v1.8.0
-// github.com/arcology-network/urlarbitrator-engine v1.7.1
 require github.com/holiman/uint256 v1.2.3
 
 require (
@@ -49,9 +45,9 @@ require (
 )
 
 require (
-	github.com/arcology-network/common-lib v0.0.0-00010101000000-000000000000
-	github.com/arcology-network/concurrenturl v0.0.0-00010101000000-000000000000
-	github.com/arcology-network/evm v0.0.0-00010101000000-000000000000
+	github.com/arcology-network/common-lib v1.9.0
+	github.com/arcology-network/concurrenturl v1.9.0
+	github.com/arcology-network/evm v1.9.0
 )
 
 require (
