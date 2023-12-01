@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -79,7 +78,6 @@ func TestParaMultiWithClear(t *testing.T) {
 }
 
 func TestMultiParaCumulativeU256(t *testing.T) {
-	fmt.Print("         ")
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
 
@@ -130,7 +128,6 @@ func TestRecursiveParallelizerOnNativeArray(t *testing.T) {
 }
 
 func TestRecursiveParallelizerOnContainer(t *testing.T) {
-	fmt.Print("    ")
 	currentPath, _ := os.Getwd()
 	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib/lib/")
 
