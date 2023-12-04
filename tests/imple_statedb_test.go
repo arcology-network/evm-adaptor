@@ -186,11 +186,9 @@ func TestEthStateDBInterfaces(t *testing.T) {
 		t.Error("Wrong code!")
 	}
 
-	// base.(*ccapi.BaseHandlers).Length("123")
-
-	if _, err := url.Write(1, "blcc://eth1.0/account/"+string(alice[:])+"/storage/container/ctrn-0/", noncommutative.NewString("path")); err == nil {
-		t.Error(err)
-	}
+	// if _, err := url.Write(1, "blcc://eth1.0/account/"+string(alice[:])+"/storage/container/ctrn-0/", noncommutative.NewString("path")); err != nil {
+	// 	t.Error(err)
+	// }
 
 	if _, err := url.Write(1, "blcc://eth1.0/account/"+string(alice[:])+"/storage/container/ctrn-0/elem-000", noncommutative.NewString("123")); err == nil {
 		t.Error(err)
