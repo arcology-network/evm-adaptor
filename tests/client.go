@@ -8,14 +8,14 @@ import (
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	"github.com/arcology-network/concurrenturl/commutative"
 	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
-	evmcommon "github.com/arcology-network/evm/common"
-	evmcore "github.com/arcology-network/evm/core"
-	evmcoretypes "github.com/arcology-network/evm/core/types"
 	ccapi "github.com/arcology-network/vm-adaptor/api"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/compiler"
 	"github.com/arcology-network/vm-adaptor/eth"
 	"github.com/arcology-network/vm-adaptor/execution"
+	evmcommon "github.com/ethereum/go-ethereum/common"
+	evmcore "github.com/ethereum/go-ethereum/core"
+	evmcoretypes "github.com/ethereum/go-ethereum/core/types"
 )
 
 type Contract struct {

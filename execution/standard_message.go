@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"sort"
 
-	evmcore "github.com/arcology-network/evm/core"
+	evmcore "github.com/ethereum/go-ethereum/core"
 )
 
 type StandardMessage struct {

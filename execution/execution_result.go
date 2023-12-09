@@ -11,8 +11,8 @@ import (
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	"github.com/arcology-network/concurrenturl/univalue"
-	evmcore "github.com/arcology-network/evm/core"
-	evmTypes "github.com/arcology-network/evm/core/types"
+	evmcore "github.com/ethereum/go-ethereum/core"
+	evmTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/holiman/uint256"
 )
 

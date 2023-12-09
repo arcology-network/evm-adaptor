@@ -3,9 +3,9 @@ package execution
 import (
 	"math/big"
 
-	"github.com/arcology-network/evm/common"
-	"github.com/arcology-network/evm/core/vm"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/vm"
 )
 
 func NewEVMBlockContext(cfg *Config) vm.BlockContext {

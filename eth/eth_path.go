@@ -9,8 +9,8 @@ import (
 	"github.com/arcology-network/concurrenturl"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
-	evmcommon "github.com/arcology-network/evm/common"
 	vmCommon "github.com/arcology-network/vm-adaptor/common"
+	evmcommon "github.com/ethereum/go-ethereum/common"
 )
 
 type EthCCurlConnector struct {

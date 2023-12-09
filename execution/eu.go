@@ -6,16 +6,16 @@ import (
 	"math"
 	"math/big"
 
-	ethCommon "github.com/arcology-network/evm/common"
-	"github.com/arcology-network/evm/core"
-	evmcore "github.com/arcology-network/evm/core"
-	"github.com/arcology-network/evm/core/types"
-	evmcoretypes "github.com/arcology-network/evm/core/types"
-	"github.com/arcology-network/evm/core/vm"
-	"github.com/arcology-network/evm/crypto"
-	"github.com/arcology-network/evm/params"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	eth "github.com/arcology-network/vm-adaptor/eth"
+	ethCommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core"
+	evmcore "github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/core/types"
+	evmcoretypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/params"
 )
 
 type EU struct {

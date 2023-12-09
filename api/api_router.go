@@ -8,9 +8,9 @@ import (
 	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl"
-	evmcommon "github.com/arcology-network/evm/common"
-	"github.com/arcology-network/evm/core/vm"
 	execution "github.com/arcology-network/vm-adaptor/execution"
+	evmcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/vm"
 
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 )

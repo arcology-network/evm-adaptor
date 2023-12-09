@@ -6,8 +6,8 @@ import (
 
 	"github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl/interfaces"
-	evmcommon "github.com/arcology-network/evm/common"
-	evmcore "github.com/arcology-network/evm/core"
+	evmcommon "github.com/ethereum/go-ethereum/common"
+	evmcore "github.com/ethereum/go-ethereum/core"
 	"github.com/holiman/uint256"
 
 	"github.com/arcology-network/vm-adaptor/abi"

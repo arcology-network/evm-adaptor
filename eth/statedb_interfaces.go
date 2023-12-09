@@ -3,10 +3,10 @@ package eth
 import (
 	"math/big"
 
-	"github.com/arcology-network/evm/common"
-	"github.com/arcology-network/evm/core/types"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 
-	"github.com/arcology-network/evm/params"
+	"github.com/ethereum/go-ethereum/params"
 
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
@@ -40,8 +40,10 @@ type StateDB interface {
 	GetTransientState(addr common.Address, key common.Hash) common.Hash
 	SetTransientState(addr common.Address, key, value common.Hash)
 
-	Suicide(common.Address) bool
-	HasSuicided(common.Address) bool
+	SelfDestruct(common.Address)
+	HasSelfDestructed(common.Address) bool
+
+	Selfdestruct6780(common.Address)
 
 	// Exist reports whether the given account exists in state.
 	// Notably this should also return true for suicided accounts.

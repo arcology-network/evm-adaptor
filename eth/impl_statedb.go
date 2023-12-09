@@ -5,13 +5,13 @@ import (
 
 	commutative "github.com/arcology-network/concurrenturl/commutative"
 	noncommutative "github.com/arcology-network/concurrenturl/noncommutative"
-	"github.com/arcology-network/evm/common"
-	evmcommon "github.com/arcology-network/evm/common"
-	"github.com/arcology-network/evm/core/types"
-	evmtypes "github.com/arcology-network/evm/core/types"
-	"github.com/arcology-network/evm/crypto"
+	"github.com/ethereum/go-ethereum/common"
+	evmcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	evmtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/arcology-network/evm/params"
+	"github.com/ethereum/go-ethereum/params"
 
 	vmCommon "github.com/arcology-network/vm-adaptor/common"
 
@@ -131,12 +131,14 @@ func (this *ImplStateDB) SetCode(addr evmcommon.Address, code []byte) {
 	}
 }
 
+func (this *ImplStateDB) SelfDestruct(addr evmcommon.Address)           { return }
+func (this *ImplStateDB) HasSelfDestructed(addr evmcommon.Address) bool { return false }
+func (this *ImplStateDB) Selfdestruct6780(common.Address)               {}
+
 func (this *ImplStateDB) GetCodeSize(addr evmcommon.Address) int                          { return len(this.GetCode(addr)) }
 func (this *ImplStateDB) AddRefund(amount uint64)                                         { this.refund += amount }
 func (this *ImplStateDB) SubRefund(amount uint64)                                         { this.refund -= amount }
 func (this *ImplStateDB) GetRefund() uint64                                               { return this.refund }
-func (this *ImplStateDB) Suicide(addr evmcommon.Address) bool                             { return true }
-func (this *ImplStateDB) HasSuicided(addr evmcommon.Address) bool                         { return false }
 func (this *ImplStateDB) RevertToSnapshot(id int)                                         {}
 func (this *ImplStateDB) Snapshot() int                                                   { return 0 }
 func (this *ImplStateDB) AddPreimage(hash evmcommon.Hash, preimage []byte)                {}

@@ -3,8 +3,8 @@ package execution
 import (
 	"math/big"
 
-	"github.com/arcology-network/evm/core"
-	"github.com/arcology-network/evm/core/vm"
+	"github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/core/vm"
 )
 
 func NewEVMTxContext(msg core.Message) vm.TxContext {
