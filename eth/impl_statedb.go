@@ -140,10 +140,6 @@ func (this *ImplStateDB) SetCode(addr evmcommon.Address, code []byte) {
 	}
 }
 
-func (this *ImplStateDB) SelfDestruct(addr evmcommon.Address)           { return }
-func (this *ImplStateDB) HasSelfDestructed(addr evmcommon.Address) bool { return false }
-func (this *ImplStateDB) Selfdestruct6780(common.Address)               {}
-
 func (this *ImplStateDB) GetCodeSize(addr evmcommon.Address) int                          { return len(this.GetCode(addr)) }
 func (this *ImplStateDB) AddRefund(amount uint64)                                         { this.refund += amount }
 func (this *ImplStateDB) SubRefund(amount uint64)                                         { this.refund -= amount }

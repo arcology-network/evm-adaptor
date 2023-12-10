@@ -25,6 +25,7 @@ require (
 	github.com/crate-crypto/go-kzg-4844 v0.7.0 // indirect
 	github.com/ethereum-optimism/superchain-registry/superchain v0.0.0-20231030223232-e16eae11e492 // indirect
 	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/supranational/blst v0.3.11 // indirect
 	golang.org/x/mod v0.14.0 // indirect
@@ -61,7 +62,6 @@ require (
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
-	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 )
 
 require (
