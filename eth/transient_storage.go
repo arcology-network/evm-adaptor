@@ -17,8 +17,8 @@
 package eth
 
 import (
-	"github.com/arcology-network/evm/common"
-	"github.com/arcology-network/evm/core/state"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/state"
 )
 
 // transientStorage is a representation of EIP-1153 "Transient Storage".

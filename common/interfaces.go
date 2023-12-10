@@ -4,12 +4,12 @@ package common
 import (
 	"github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/interfaces"
-	"github.com/arcology-network/evm/common"
+	"github.com/ethereum/go-ethereum/common"
 
-	evmcommon "github.com/arcology-network/evm/common"
-	"github.com/arcology-network/evm/consensus"
-	"github.com/arcology-network/evm/core/types"
-	"github.com/arcology-network/evm/core/vm"
+	evmcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/consensus"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/core/vm"
 )
 
 type ApiCallHandler interface {

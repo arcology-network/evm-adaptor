@@ -9,11 +9,11 @@ import (
 
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/common"
-	evmcore "github.com/arcology-network/evm/core"
-	"github.com/arcology-network/evm/crypto"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/compiler"
 	tests "github.com/arcology-network/vm-adaptor/tests"
+	evmcore "github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 func TestSubcurrencyMint(t *testing.T) {

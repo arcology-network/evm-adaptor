@@ -9,12 +9,12 @@ import (
 
 	commontypes "github.com/arcology-network/common-lib/types"
 	concurrenturl "github.com/arcology-network/concurrenturl"
-	evmcommon "github.com/arcology-network/evm/common"
-	"github.com/arcology-network/evm/core"
-	"github.com/arcology-network/evm/crypto"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/compiler"
 	"github.com/arcology-network/vm-adaptor/execution"
+	evmcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 func TestBaseContainer(t *testing.T) {

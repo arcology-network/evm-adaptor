@@ -10,8 +10,8 @@ import (
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
 	"github.com/arcology-network/concurrenturl/noncommutative"
-	evmcommon "github.com/arcology-network/evm/common"
 	ccapi "github.com/arcology-network/vm-adaptor/api"
+	evmcommon "github.com/ethereum/go-ethereum/common"
 
 	eth "github.com/arcology-network/vm-adaptor/eth"
 )

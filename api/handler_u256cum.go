@@ -7,8 +7,8 @@ import (
 
 	"github.com/arcology-network/concurrenturl/commutative"
 	ccinterfaces "github.com/arcology-network/concurrenturl/interfaces"
-	evmcommon "github.com/arcology-network/evm/common"
 	abi "github.com/arcology-network/vm-adaptor/abi"
+	evmcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/arcology-network/vm-adaptor/common"
 	eucommon "github.com/arcology-network/vm-adaptor/common"

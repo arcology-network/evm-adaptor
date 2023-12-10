@@ -3,8 +3,8 @@ package api
 import (
 	"encoding/hex"
 
-	evmcommon "github.com/arcology-network/evm/common"
 	"github.com/arcology-network/vm-adaptor/abi"
+	evmcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/arcology-network/vm-adaptor/common"
 	eucommon "github.com/arcology-network/vm-adaptor/common"

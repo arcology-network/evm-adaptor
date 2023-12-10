@@ -8,7 +8,7 @@ package api
 // 	"github.com/holiman/uint256"
 
 // 	"github.com/arcology-network/concurrenturl/commutative"
-// 	evmcommon "github.com/arcology-network/evm/common"
+// 	evmcommon "github.com/ethereum/go-ethereum/common"
 // 	abi "github.com/arcology-network/vm-adaptor/abi"
 // 	"github.com/arcology-network/vm-adaptor/common"
 // 	eucommon "github.com/arcology-network/vm-adaptor/common"

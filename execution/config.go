@@ -4,13 +4,13 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/arcology-network/evm/common"
-	evmcommon "github.com/arcology-network/evm/common"
-	"github.com/arcology-network/evm/consensus"
-	"github.com/arcology-network/evm/core/types"
-	"github.com/arcology-network/evm/core/vm"
-	"github.com/arcology-network/evm/params"
 	eucommon "github.com/arcology-network/vm-adaptor/common"
+	"github.com/ethereum/go-ethereum/common"
+	evmcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/consensus"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/params"
 )
 
 // DummyChain implements the ChainContext interface.

@@ -3,10 +3,10 @@ package eth
 import (
 	"math/big"
 
-	"github.com/arcology-network/evm/common"
-	"github.com/arcology-network/evm/core/types"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 
-	"github.com/arcology-network/evm/params"
+	"github.com/ethereum/go-ethereum/params"
 
 	eucommon "github.com/arcology-network/vm-adaptor/common"
 )
