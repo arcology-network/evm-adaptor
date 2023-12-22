@@ -11,7 +11,6 @@ import (
 	"github.com/holiman/uint256"
 
 	"github.com/arcology-network/vm-adaptor/abi"
-	execution "github.com/arcology-network/vm-adaptor/execution"
 
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 )
@@ -20,21 +19,21 @@ import (
 type MultiprocessHandlers struct {
 	*BaseHandlers
 	erros   []error
-	jobseqs []*execution.JobSequence
+	jobseqs []adaptorcommon.JobSequenceInterface
 }
 
-func NewMultiprocessHandlers(ethApiRouter adaptorcommon.EthApiRouter, jobseqs []*execution.JobSequence) *MultiprocessHandlers {
+func NewMultiprocessHandlers(ethApiRouter adaptorcommon.EthApiRouter, jobseqs []adaptorcommon.JobSequenceInterface, genInfo interface{}) *MultiprocessHandlers {
 	handler := &MultiprocessHandlers{
 		erros:   []error{},
 		jobseqs: jobseqs, //[]*execution.JobSequence{},
 	}
-	handler.BaseHandlers = NewBaseHandlers(ethApiRouter, handler)
+	handler.BaseHandlers = NewBaseHandlers(ethApiRouter, handler.Run, genInfo)
 	return handler
 }
 
 func (this *MultiprocessHandlers) Address() [20]byte { return adaptorcommon.MULTIPROCESS_HANDLER }
 
-func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bool, int64) {
+func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte, args ...interface{}) ([]byte, bool, int64) {
 	if atomic.AddUint64(&adaptorcommon.TotalSubProcesses, 1); !this.Api().CheckRuntimeConstrains() {
 		return []byte{}, false, 0
 	}
@@ -53,24 +52,23 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 	path := this.Connector().Key(caller)
 	length, successful, fee := this.Length(path)
 	length = common.Min(adaptorcommon.MAX_VM_INSTANCES, length)
-
 	if !successful {
 		return []byte{}, successful, fee
 	}
 
-	generation := execution.NewGeneration(0, threads, []*execution.JobSequence{})
+	generation := args[0].(adaptorcommon.GenerationInterface).New(0, threads, args[0].(adaptorcommon.GenerationInterface).JobSeqs()[:0])
 	fees := make([]int64, length)
 	this.erros = make([]error, length)
-	this.jobseqs = make([]*execution.JobSequence, length)
 
+	this.jobseqs = common.Resize(this.jobseqs, int(length))
 	for i := uint64(0); i < length; i++ {
 		funCall, successful, fee := this.GetByIndex(path, uint64(i))
 		if fees[i] = fee; successful {
-			this.jobseqs[i], this.erros[i] = this.toJobSeq(funCall)
+			this.jobseqs[i], this.erros[i] = this.toJobSeq(funCall, generation.JobT())
 		}
-		generation.Add(this.jobseqs[i])
+		generation.Add(this.jobseqs[i]) // Add the job sequence to the generation regardless of the error
 	}
-	transitions := generation.Run(this.Api())
+	transitions := generation.Run(this.Api()) // Run the generation
 
 	// Sub processes may have been spawned during the execution, recheck it.
 	if !this.Api().CheckRuntimeConstrains() {
@@ -85,10 +83,11 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 	return []byte{}, true, common.Sum[int64](fees)
 }
 
+// toJobSeq converts the input byte slice into a JobSequence object.
 // For multiprocessor, a job sequence only contains one message.
-// To keep the same structure with the transaction level processing, the message is wrapped// into a job sequence.
-
-func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence, error) {
+// To keep the same structure with the transaction level processing,
+// the message is wrapped
+func (this *MultiprocessHandlers) toJobSeq(input []byte, T adaptorcommon.JobSequenceInterface) (adaptorcommon.JobSequenceInterface, error) {
 	gasLimit, value, calleeAddr, funCall, err := abi.Parse4(input,
 		uint64(0), 1, 32,
 		uint256.NewInt(0), 1, 32,
@@ -113,17 +112,23 @@ func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence
 		false, // Don't checking nonce
 	)
 
-	newJobSeq := &execution.JobSequence{
-		ID:        uint32(this.BaseHandlers.Api().GetSerialNum(adaptorcommon.SUB_PROCESS)),
-		ApiRouter: this.BaseHandlers.Api(),
-	}
+	// newJobSeq := &execution.JobSequence{
+	// 	ID:        uint32(this.BaseHandlers.Api().GetSerialNum(adaptorcommon.SUB_PROCESS)),
+	// 	ApiRouter: this.BaseHandlers.Api(),
+	// }
+
+	// newJobSeq creates a new job sequence using the TYPE INFO of the jobseqs slice.
+	newJobSeq := T.New(
+		uint32(this.BaseHandlers.Api().GetSerialNum(adaptorcommon.SUB_PROCESS)),
+		this.BaseHandlers.Api(),
+	)
 
 	stdMsg := &adaptorcommon.StandardMessage{
-		ID:     uint64(newJobSeq.ID),
+		ID:     uint64(newJobSeq.GetID()),
 		Native: &evmMsg,
 		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(adaptorcommon.EUInterface).TxHash()),
 	}
-
-	newJobSeq.StdMsgs = []*adaptorcommon.StandardMessage{stdMsg}
+	newJobSeq.AppendMsg(stdMsg)
+	// newJobSeq.StdMsgs = []*adaptorcommon.StandardMessage{stdMsg}
 	return newJobSeq, nil
 }

@@ -17,48 +17,55 @@ import (
 type Generation struct {
 	ID         uint32
 	numThreads uint8
-	jobs       []*JobSequence // para jobs
+	jobSeqs    []*JobSequence // para jobSeqs
 }
 
-func NewGeneration(id uint32, numThreads uint8, jobs []*JobSequence) *Generation {
+func NewGeneration(id uint32, numThreads uint8, jobSeqs []*JobSequence) *Generation {
 	return &Generation{
 		ID:         id,
 		numThreads: numThreads,
-		jobs:       jobs,
+		jobSeqs:    jobSeqs,
 	}
 }
 
 // func (this *Generation) BranchID() uint32 { return this.branchID }
-func (this *Generation) Length() uint64       { return uint64(len(this.jobs)) }
-func (this *Generation) Jobs() []*JobSequence { return this.jobs }
-
-func (this *Generation) At(idx uint64) *JobSequence {
-	return common.IfThenDo1st(idx < uint64(len(this.jobs)), func() *JobSequence { return this.jobs[idx] }, nil)
+func (this *Generation) Length() uint64                           { return uint64(len(this.jobSeqs)) }
+func (this *Generation) JobT() adaptorcommon.JobSequenceInterface { return &JobSequence{} }
+func (this *Generation) JobSeqs() []adaptorcommon.JobSequenceInterface {
+	return common.To[*JobSequence, adaptorcommon.JobSequenceInterface](this.jobSeqs)
 }
 
-func (this *Generation) Add(job *JobSequence) bool {
-	this.jobs = append(this.jobs, job)
+func (this *Generation) At(idx uint64) *JobSequence {
+	return common.IfThenDo1st(idx < uint64(len(this.jobSeqs)), func() *JobSequence { return this.jobSeqs[idx] }, nil)
+}
+
+func (this *Generation) New(id uint32, numThreads uint8, jobSeqs []adaptorcommon.JobSequenceInterface) adaptorcommon.GenerationInterface {
+	return NewGeneration(id, numThreads, common.To[adaptorcommon.JobSequenceInterface, *JobSequence](jobSeqs))
+}
+
+func (this *Generation) Add(job adaptorcommon.JobSequenceInterface) bool {
+	this.jobSeqs = append(this.jobSeqs, job.(*JobSequence))
 	return true
 }
 
 func (this *Generation) Run(parentApiRouter adaptorcommon.EthApiRouter) []interfaces.Univalue {
 	config := NewConfig().SetCoinbase(parentApiRouter.Coinbase())
 
-	groupIDs := make([][]uint32, len(this.jobs))
-	records := make([][]ccurlinterfaces.Univalue, len(this.jobs))
+	groupIDs := make([][]uint32, len(this.jobSeqs))
+	records := make([][]ccurlinterfaces.Univalue, len(this.jobSeqs))
 	// t0 := time.Now()
 	worker := func(start, end, idx int, args ...interface{}) {
-		// for i := 0; i < len(this.jobs); i++ {
+		// for i := 0; i < len(this.jobSeqs); i++ {
 		for i := start; i < end; i++ {
-			groupIDs[i], records[i] = this.jobs[i].Run(config, parentApiRouter)
+			groupIDs[i], records[i] = this.jobSeqs[i].Run(config, parentApiRouter)
 			//	indexer.Univalues(records[i]).Sort(groupIDs[i]) // Debugging only
 		}
 	}
-	common.ParallelWorker(len(this.jobs), int(this.numThreads), worker)
+	common.ParallelWorker(len(this.jobSeqs), int(this.numThreads), worker)
 	// fmt.Println(time.Since(t0))
 
 	txDict, groupDict, _ := this.Detect(groupIDs, records).ToDict()
-	return common.Concate(this.jobs, func(seq *JobSequence) []interfaces.Univalue {
+	return common.Concate(this.jobSeqs, func(seq *JobSequence) []interfaces.Univalue {
 		if _, ok := (*groupDict)[(*seq).ID]; ok {
 			(*seq).FlagConflict(txDict, errors.New(ccurlcommon.WARN_ACCESS_CONFLICT))
 		}
@@ -74,7 +81,7 @@ func (*Generation) Detect(groupIDs [][]uint32, records [][]interfaces.Univalue) 
 }
 
 func (this *Generation) Clear() uint64 {
-	length := len(this.jobs)
-	this.jobs = this.jobs[:0]
+	length := len(this.jobSeqs)
+	this.jobSeqs = this.jobSeqs[:0]
 	return uint64(length)
 }

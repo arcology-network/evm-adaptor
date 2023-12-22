@@ -21,14 +21,14 @@ import (
 type BaseHandlers struct {
 	api       adaptorcommon.EthApiRouter
 	connector *adaptorcommon.CcurlConnector
-	handler   interface{}
+	args      []interface{}
 }
 
-func NewBaseHandlers(api adaptorcommon.EthApiRouter, handler interface{}) *BaseHandlers {
+func NewBaseHandlers(api adaptorcommon.EthApiRouter, args ...interface{}) *BaseHandlers {
 	return &BaseHandlers{
 		api:       api,
 		connector: adaptorcommon.NewCCurlConnector("/container", api, api.Ccurl()),
-		handler:   handler,
+		args:      args,
 	}
 }
 
@@ -80,10 +80,17 @@ func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20
 		return this.clear(caller, input[4:])
 	}
 
-	if this.handler != nil {
-		return this.handler.(interface {
-			Run([20]byte, []byte) ([]byte, bool, int64)
-		}).Run(caller, input[4:])
+	if len(this.args) > 0 {
+		// this.args[0].(interface {
+		// 	Run([20]byte, []byte, ...interface{}) ([]byte, bool, int64)
+		// }).Run(caller, input[4:], this.args[1:])
+
+		customFun := this.args[0].(func([20]byte, []byte, ...interface{}) ([]byte, bool, int64))
+		customFun(caller, input[4:], this.args[1:]...)
+
+		// return this.args.(interface {
+		// 	Run([20]byte, []byte) ([]byte, bool, int64)
+		// }).Run(caller, input[4:]) //more variables
 	}
 
 	return []byte{}, false, 0 // unknown

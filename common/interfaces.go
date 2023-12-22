@@ -79,3 +79,18 @@ type EUInterface interface {
 	Origin() [20]byte
 	Coinbase() [20]byte
 }
+
+type JobSequenceInterface interface {
+	GetID() uint32
+	New(uint32, EthApiRouter) JobSequenceInterface
+	DeriveNewHash([32]byte) [32]byte
+	AppendMsg(interface{})
+}
+
+type GenerationInterface interface {
+	New(uint32, uint8, []JobSequenceInterface) GenerationInterface
+	Add(JobSequenceInterface) bool
+	Run(EthApiRouter) []interfaces.Univalue
+	JobSeqs() []JobSequenceInterface
+	JobT() JobSequenceInterface
+}

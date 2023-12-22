@@ -49,7 +49,10 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 
 	handlers := []adaptorcommon.ApiCallHandler{
 		apihandler.NewIoHandlers(api),
-		apihandler.NewMultiprocessHandlers(api, []*execution.JobSequence{}),
+		apihandler.NewMultiprocessHandlers(
+			api,
+			common.To[*execution.JobSequence, adaptorcommon.JobSequenceInterface]([]*execution.JobSequence{}),
+			&execution.Generation{}),
 		apihandler.NewBaseHandlers(api, nil),
 		apihandler.NewU256CumulativeHandlers(api),
 		// cumulativei256.NewInt256CumulativeHandlers(api),

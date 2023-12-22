@@ -1,3 +1,4 @@
+// Package execution provides functionality for executing job sequences.
 package execution
 
 import (
@@ -18,6 +19,7 @@ import (
 	"github.com/holiman/uint256"
 )
 
+// JobSequence represents a sequence of jobs to be executed.
 type JobSequence struct {
 	ID           uint32 // group id
 	PreTxs       []uint32
@@ -29,25 +31,35 @@ type JobSequence struct {
 	// immunedBuffer    []ccurlinterfaces.Univalue
 }
 
-func (*JobSequence) New(id uint32, apiRouter adaptorcommon.EthApiRouter) *JobSequence {
+func (*JobSequence) T() adaptorcommon.JobSequenceInterface { return &JobSequence{} }
+
+// New creates a new JobSequence with the given ID and API router.
+func (*JobSequence) New(id uint32, apiRouter adaptorcommon.EthApiRouter) adaptorcommon.JobSequenceInterface {
 	return &JobSequence{
 		ID:        id,
 		ApiRouter: apiRouter,
 	}
 }
 
+// GetID returns the ID of the JobSequence.
 func (this *JobSequence) GetID() uint32 { return this.ID }
+func (this *JobSequence) AppendMsg(msg interface{}) {
+	this.StdMsgs = append(this.StdMsgs, msg.(*adaptorcommon.StandardMessage))
+}
 
-func (this *JobSequence) DeriveNewHash(seed [32]byte) [32]byte {
+// DeriveNewHash derives a new hash based on the original hash and the JobSequence ID.
+func (this *JobSequence) DeriveNewHash(original [32]byte) [32]byte {
 	return sha256.Sum256(common.Flatten([][]byte{
-		codec.Bytes32(seed).Encode(),
+		codec.Bytes32(original).Encode(),
 		codec.Uint32(this.ID).Encode(),
 	}))
 }
 
+// Length returns the number of standard messages in the JobSequence.
 func (this *JobSequence) Length() int { return len(this.StdMsgs) }
 
-func (this *JobSequence) Run(config *Config, mainApi adaptorcommon.EthApiRouter) ([]uint32, []ccurlinterfaces.Univalue) { //
+// Run executes the job sequence and returns the results.
+func (this *JobSequence) Run(config *Config, mainApi adaptorcommon.EthApiRouter) ([]uint32, []ccurlinterfaces.Univalue) {
 	this.Results = make([]*Result, len(this.StdMsgs))
 	this.ApiRouter = mainApi.New((&concurrenturl.ConcurrentUrl{}).New(indexer.NewWriteCache(mainApi.Ccurl().WriteCache())), this.ApiRouter.Schedule())
 
@@ -55,20 +67,20 @@ func (this *JobSequence) Run(config *Config, mainApi adaptorcommon.EthApiRouter)
 		pendingApi := this.ApiRouter.New((&concurrenturl.ConcurrentUrl{}).New(indexer.NewWriteCache(this.ApiRouter.Ccurl().WriteCache())), this.ApiRouter.Schedule())
 		pendingApi.DecrementDepth()
 
-		this.Results[i] = this.execute(msg, config, pendingApi)                              // What happens if it fails
-		this.ApiRouter.Ccurl().WriteCache().AddTransitions(this.Results[i].rawStateAccesses) // merge transitions to the main cache here !!!
+		this.Results[i] = this.execute(msg, config, pendingApi)
+		this.ApiRouter.Ccurl().WriteCache().AddTransitions(this.Results[i].rawStateAccesses)
 	}
 
-	accessRecords := indexer.Univalues(this.ApiRouter.Ccurl().Export()).To(indexer.IPCAccess{}) // Accumulated transitions from the map
+	accessRecords := indexer.Univalues(this.ApiRouter.Ccurl().Export()).To(indexer.IPCAccess{})
 	return common.Fill(make([]uint32, len(accessRecords)), this.ID), accessRecords
 }
 
+// GetClearedTransition returns the cleared transitions of the JobSequence.
 func (this *JobSequence) GetClearedTransition() []ccurlinterfaces.Univalue {
 	if idx, _ := common.FindFirstIf(this.Results, func(v *Result) bool { return v.Err != nil }); idx < 0 {
-		return this.ApiRouter.Ccurl().Export() // No conflict, export the write cache directly
+		return this.ApiRouter.Ccurl().Export()
 	}
 
-	// Reconcate the clear transitions
 	trans := common.Concate(this.Results,
 		func(v *Result) []ccurlinterfaces.Univalue {
 			return v.Transitions()
@@ -77,6 +89,7 @@ func (this *JobSequence) GetClearedTransition() []ccurlinterfaces.Univalue {
 	return trans
 }
 
+// FlagConflict flags the JobSequence as conflicting.
 func (this *JobSequence) FlagConflict(dict *map[uint32]uint64, err error) {
 	first, _ := common.FindFirstIf(this.Results, func(r *Result) bool {
 		_, ok := (*dict)[r.TxIndex]
@@ -84,22 +97,22 @@ func (this *JobSequence) FlagConflict(dict *map[uint32]uint64, err error) {
 	})
 
 	for i := first; i < len(this.Results); i++ {
-		this.Results[i].Err = err // Flag the transitions for the WriteTo().
+		this.Results[i].Err = err
 	}
 }
 
-func (this *JobSequence) execute(stdMsg *adaptorcommon.StandardMessage, config *Config, api adaptorcommon.EthApiRouter) *Result { //
-	statedb := eth.NewImplStateDB(api)                                  // Eth state DB
-	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, uint32(stdMsg.ID)) // tx hash , block hash and tx index
+// execute executes a standard message and returns the result.
+func (this *JobSequence) execute(stdMsg *adaptorcommon.StandardMessage, config *Config, api adaptorcommon.EthApiRouter) *Result {
+	statedb := eth.NewImplStateDB(api)
+	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, uint32(stdMsg.ID))
 
 	eu := NewEU(
 		config.ChainConfig,
 		vm.Config{},
 		statedb,
-		api, // Tx hash, tx id and url
+		api,
 	)
 
-	// var prechkErr error
 	receipt, evmResult, prechkErr :=
 		eu.Run(
 			stdMsg,
@@ -110,7 +123,7 @@ func (this *JobSequence) execute(stdMsg *adaptorcommon.StandardMessage, config *
 	return (&Result{
 		TxIndex:          uint32(stdMsg.ID),
 		TxHash:           common.IfThenDo1st(receipt != nil, func() evmcommon.Hash { return receipt.TxHash }, evmcommon.Hash{}),
-		rawStateAccesses: api.StateFilter().Raw(), // Transitions + Accesses
+		rawStateAccesses: api.StateFilter().Raw(),
 		Err:              common.IfThenDo1st(prechkErr == nil, func() error { return evmResult.Err }, prechkErr),
 		From:             stdMsg.Native.From,
 		Coinbase:         *config.Coinbase,
@@ -120,6 +133,7 @@ func (this *JobSequence) execute(stdMsg *adaptorcommon.StandardMessage, config *
 	}).Postprocess()
 }
 
+// CalcualteRefund calculates the refund amount for the JobSequence.
 func (this *JobSequence) CalcualteRefund() uint64 {
 	amount := uint64(0)
 	for _, v := range *this.ApiRouter.Ccurl().WriteCache().Cache() {
@@ -133,8 +147,8 @@ func (this *JobSequence) CalcualteRefund() uint64 {
 	return amount
 }
 
+// RefundTo refunds the specified amount from the payer to the recipient.
 func (this *JobSequence) RefundTo(payer, recipent ccurlinterfaces.Univalue, amount uint64) (uint64, error) {
-	// amount := uint64(this.receipt.GasUsed)
 	credit := commutative.NewU256Delta(uint256.NewInt(amount), true).(*commutative.U256)
 	if _, _, _, _, err := recipent.Value().(ccurlinterfaces.Type).Set(credit, nil); err != nil {
 		return 0, err
