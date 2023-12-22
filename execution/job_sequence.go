@@ -13,6 +13,7 @@ import (
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/eth"
+	intf "github.com/arcology-network/vm-adaptor/interface"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 	evmparams "github.com/ethereum/go-ethereum/params"
@@ -25,16 +26,16 @@ type JobSequence struct {
 	PreTxs       []uint32
 	StdMsgs      []*adaptorcommon.StandardMessage
 	Results      []*Result
-	ApiRouter    adaptorcommon.EthApiRouter
+	ApiRouter    intf.EthApiRouter
 	RecordBuffer []ccurlinterfaces.Univalue
 	// TransitionBuffer []ccurlinterfaces.Univalue
 	// immunedBuffer    []ccurlinterfaces.Univalue
 }
 
-func (*JobSequence) T() adaptorcommon.JobSequenceInterface { return &JobSequence{} }
+func (*JobSequence) T() intf.JobSequenceInterface { return &JobSequence{} }
 
 // New creates a new JobSequence with the given ID and API router.
-func (*JobSequence) New(id uint32, apiRouter adaptorcommon.EthApiRouter) adaptorcommon.JobSequenceInterface {
+func (*JobSequence) New(id uint32, apiRouter intf.EthApiRouter) intf.JobSequenceInterface {
 	return &JobSequence{
 		ID:        id,
 		ApiRouter: apiRouter,
@@ -59,7 +60,7 @@ func (this *JobSequence) DeriveNewHash(original [32]byte) [32]byte {
 func (this *JobSequence) Length() int { return len(this.StdMsgs) }
 
 // Run executes the job sequence and returns the results.
-func (this *JobSequence) Run(config *Config, mainApi adaptorcommon.EthApiRouter) ([]uint32, []ccurlinterfaces.Univalue) {
+func (this *JobSequence) Run(config *Config, mainApi intf.EthApiRouter) ([]uint32, []ccurlinterfaces.Univalue) {
 	this.Results = make([]*Result, len(this.StdMsgs))
 	this.ApiRouter = mainApi.New((&concurrenturl.ConcurrentUrl{}).New(indexer.NewWriteCache(mainApi.Ccurl().WriteCache())), this.ApiRouter.Schedule())
 
@@ -102,7 +103,7 @@ func (this *JobSequence) FlagConflict(dict *map[uint32]uint64, err error) {
 }
 
 // execute executes a standard message and returns the result.
-func (this *JobSequence) execute(stdMsg *adaptorcommon.StandardMessage, config *Config, api adaptorcommon.EthApiRouter) *Result {
+func (this *JobSequence) execute(stdMsg *adaptorcommon.StandardMessage, config *Config, api intf.EthApiRouter) *Result {
 	statedb := eth.NewImplStateDB(api)
 	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, uint32(stdMsg.ID))
 

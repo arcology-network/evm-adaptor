@@ -8,7 +8,7 @@ replace github.com/arcology-network/common-lib => ../common-lib/
 
 replace github.com/arcology-network/concurrenturl => ../concurrenturl/
 
-// replace github.com/arcology-network/urlarbitrator-engine => ../urlarbitrator-engine/
+replace github.com/arcology-network/eu => ../eu/
 
 require (
 	github.com/arcology-network/common-lib v1.9.0

@@ -3,7 +3,7 @@ package execution
 import (
 	"math/big"
 
-	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
+	intf "github.com/arcology-network/vm-adaptor/interface"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 )
@@ -23,7 +23,7 @@ func NewEVMBlockContext(cfg *Config) vm.BlockContext {
 }
 
 // GetHashFn returns a GetHashFunc which retrieves header hashes by number
-func GetHashFn(blockNumber *big.Int, parentHash common.Hash, chain adaptorcommon.ChainContext) func(n uint64) common.Hash {
+func GetHashFn(blockNumber *big.Int, parentHash common.Hash, chain intf.ChainContext) func(n uint64) common.Hash {
 	return func(n uint64) common.Hash { return common.Hash{} }
 }
 

@@ -10,48 +10,48 @@ import (
 	"github.com/arcology-network/concurrenturl"
 	eucommon "github.com/arcology-network/eu/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/vm"
 
 	// eucommon "github.com/arcology-network/eu/common"
 	apihandler "github.com/arcology-network/vm-adaptor/api"
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/execution"
+	intf "github.com/arcology-network/vm-adaptor/interface"
 )
 
 type API struct {
-	logs  []adaptorcommon.ILog
+	logs  []intf.ILog
 	depth uint8
 
 	serialNums [4]uint64 // sub-process/container/element/uuid generator,
 
 	schedule interface{}
-	eu       adaptorcommon.EUInterface
+	eu       intf.EUInterface
 	// reserved interface{}
 
-	handlerDict map[[20]byte]adaptorcommon.ApiCallHandler // APIs under the atomic namespace
+	handlerDict map[[20]byte]intf.ApiCallHandler // APIs under the atomic namespace
 	ccurl       *concurrenturl.ConcurrentUrl
 
 	execResult *eucommon.Result
 
-	filter adaptorcommon.StateFilter
+	filter intf.StateFilter
 }
 
 func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	api := &API{
 		eu:          nil,
 		ccurl:       ccurl,
-		handlerDict: make(map[[20]byte]adaptorcommon.ApiCallHandler),
+		handlerDict: make(map[[20]byte]intf.ApiCallHandler),
 		depth:       0,
 		execResult:  &eucommon.Result{},
 		serialNums:  [4]uint64{},
 	}
 	api.filter = NewExportFilter(api)
 
-	handlers := []adaptorcommon.ApiCallHandler{
+	handlers := []intf.ApiCallHandler{
 		apihandler.NewIoHandlers(api),
 		apihandler.NewMultiprocessHandlers(
 			api,
-			common.To[*execution.JobSequence, adaptorcommon.JobSequenceInterface]([]*execution.JobSequence{}),
+			common.To[*execution.JobSequence, intf.JobSequenceInterface]([]*execution.JobSequence{}),
 			&execution.Generation{}),
 		apihandler.NewBaseHandlers(api, nil),
 		apihandler.NewU256CumulativeHandlers(api),
@@ -73,7 +73,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 	return api
 }
 
-func (this *API) New(ccurl *concurrenturl.ConcurrentUrl, schedule interface{}) adaptorcommon.EthApiRouter {
+func (this *API) New(ccurl *concurrenturl.ConcurrentUrl, schedule interface{}) intf.EthApiRouter {
 	api := NewAPI(ccurl)
 	api.depth = this.depth + 1
 	return api
@@ -84,7 +84,7 @@ func (this *API) CheckRuntimeConstrains() bool { // Execeeds the max recursion d
 		atomic.AddUint64(&adaptorcommon.TotalSubProcesses, 1) <= adaptorcommon.MAX_VM_INSTANCES
 }
 
-func (this *API) StateFilter() adaptorcommon.StateFilter { return this.filter }
+func (this *API) StateFilter() intf.StateFilter { return this.filter }
 
 func (this *API) DecrementDepth() uint8 {
 	if this.depth > 0 {
@@ -100,14 +100,14 @@ func (this *API) Origin() ethcommon.Address   { return this.eu.Origin() }
 func (this *API) SetSchedule(schedule interface{}) { this.schedule = schedule }
 func (this *API) Schedule() interface{}            { return this.schedule }
 
-func (this *API) HandlerDict() map[[20]byte]adaptorcommon.ApiCallHandler { return this.handlerDict }
+func (this *API) HandlerDict() map[[20]byte]intf.ApiCallHandler { return this.handlerDict }
 
-func (this *API) VM() *vm.EVM {
-	return common.IfThenDo1st(this.eu != nil, func() *vm.EVM { return this.eu.VM() }, nil)
+func (this *API) VM() interface{} {
+	return common.IfThenDo1st(this.eu != nil, func() interface{} { return this.eu.VM() }, nil)
 }
 
 func (this *API) GetEU() interface{}   { return this.eu }
-func (this *API) SetEU(eu interface{}) { this.eu = eu.(adaptorcommon.EUInterface) }
+func (this *API) SetEU(eu interface{}) { this.eu = eu.(intf.EUInterface) }
 
 func (this *API) Ccurl() *concurrenturl.ConcurrentUrl            { return this.ccurl }
 func (this *API) SetCcurl(newCcurl *concurrenturl.ConcurrentUrl) { this.ccurl = newCcurl }
@@ -141,7 +141,7 @@ func (this *API) AddLog(key, value string) {
 	})
 }
 
-func (this *API) GetLogs() []adaptorcommon.ILog {
+func (this *API) GetLogs() []intf.ILog {
 	return this.logs
 }
 

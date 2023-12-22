@@ -8,7 +8,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/params"
 
-	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
+	intf "github.com/arcology-network/vm-adaptor/interface"
 )
 
 type StateDB interface {
@@ -96,7 +96,7 @@ type EthStorageCache interface {
 
 type KernelAPI interface {
 	AddLog(key, value string)
-	GetLogs() []adaptorcommon.ILog
+	GetLogs() []intf.ILog
 	ClearLogs()
 	Prepare(txHash common.Hash)
 	Call(caller, callee common.Address, input []byte, origin common.Address, nonce uint64, blockhash common.Hash) ([]byte, bool)

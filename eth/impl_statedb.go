@@ -13,7 +13,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/params"
 
-	vmCommon "github.com/arcology-network/vm-adaptor/common"
+	intf "github.com/arcology-network/vm-adaptor/interface"
 
 	uint256 "github.com/holiman/uint256"
 )
@@ -25,10 +25,10 @@ type ImplStateDB struct {
 	tid              uint32 // tx id
 	logs             map[evmcommon.Hash][]*evmtypes.Log
 	transientStorage transientStorage
-	api              vmCommon.EthApiRouter
+	api              intf.EthApiRouter
 }
 
-func NewImplStateDB(api vmCommon.EthApiRouter) *ImplStateDB {
+func NewImplStateDB(api intf.EthApiRouter) *ImplStateDB {
 	return &ImplStateDB{
 		logs:             make(map[evmcommon.Hash][]*evmtypes.Log),
 		api:              api,

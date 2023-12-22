@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 
 	"github.com/arcology-network/vm-adaptor/abi"
+	intf "github.com/arcology-network/vm-adaptor/interface"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/arcology-network/vm-adaptor/common"
@@ -12,11 +13,11 @@ import (
 
 // APIs under the concurrency namespace
 type RuntimeHandlers struct {
-	api       adaptorcommon.EthApiRouter
+	api       intf.EthApiRouter
 	connector *adaptorcommon.CcurlConnector
 }
 
-func NewRuntimeHandlers(ethApiRouter adaptorcommon.EthApiRouter) *RuntimeHandlers {
+func NewRuntimeHandlers(ethApiRouter intf.EthApiRouter) *RuntimeHandlers {
 	return &RuntimeHandlers{
 		api:       ethApiRouter,
 		connector: adaptorcommon.NewCCurlConnector("/native/local/", ethApiRouter, ethApiRouter.Ccurl()),

@@ -18,11 +18,11 @@ package api
 
 // // APIs under the concurrency namespace
 // type Int256CumulativeHandlers struct {
-// 	api       adaptorcommon.EthApiRouter
+// 	api       intf.EthApiRouter,
 // 	connector *CcurlConnector
 // }
 
-// func NewInt256CumulativeHandlers(api adaptorcommon.EthApiRouter) *Int256CumulativeHandlers {
+// func NewInt256CumulativeHandlers(api intf.EthApiRouter) *Int256CumulativeHandlers {
 // 	return &Int256CumulativeHandlers{
 // 		api:       api,
 // 		connector: NewCCurlConnector("/container", api, api.Ccurl()),

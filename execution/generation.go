@@ -5,12 +5,11 @@ import (
 
 	common "github.com/arcology-network/common-lib/common"
 
-	// evmeu "github.com/arcology-network/vm-adaptor"
 	arbitrator "github.com/arcology-network/concurrenturl/arbitrator"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	"github.com/arcology-network/concurrenturl/interfaces"
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
-	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
+	intf "github.com/arcology-network/vm-adaptor/interface"
 )
 
 // APIs under the concurrency namespace
@@ -29,26 +28,26 @@ func NewGeneration(id uint32, numThreads uint8, jobSeqs []*JobSequence) *Generat
 }
 
 // func (this *Generation) BranchID() uint32 { return this.branchID }
-func (this *Generation) Length() uint64                           { return uint64(len(this.jobSeqs)) }
-func (this *Generation) JobT() adaptorcommon.JobSequenceInterface { return &JobSequence{} }
-func (this *Generation) JobSeqs() []adaptorcommon.JobSequenceInterface {
-	return common.To[*JobSequence, adaptorcommon.JobSequenceInterface](this.jobSeqs)
+func (this *Generation) Length() uint64                  { return uint64(len(this.jobSeqs)) }
+func (this *Generation) JobT() intf.JobSequenceInterface { return &JobSequence{} }
+func (this *Generation) JobSeqs() []intf.JobSequenceInterface {
+	return common.To[*JobSequence, intf.JobSequenceInterface](this.jobSeqs)
 }
 
 func (this *Generation) At(idx uint64) *JobSequence {
 	return common.IfThenDo1st(idx < uint64(len(this.jobSeqs)), func() *JobSequence { return this.jobSeqs[idx] }, nil)
 }
 
-func (this *Generation) New(id uint32, numThreads uint8, jobSeqs []adaptorcommon.JobSequenceInterface) adaptorcommon.GenerationInterface {
-	return NewGeneration(id, numThreads, common.To[adaptorcommon.JobSequenceInterface, *JobSequence](jobSeqs))
+func (this *Generation) New(id uint32, numThreads uint8, jobSeqs []intf.JobSequenceInterface) intf.GenerationInterface {
+	return NewGeneration(id, numThreads, common.To[intf.JobSequenceInterface, *JobSequence](jobSeqs))
 }
 
-func (this *Generation) Add(job adaptorcommon.JobSequenceInterface) bool {
+func (this *Generation) Add(job intf.JobSequenceInterface) bool {
 	this.jobSeqs = append(this.jobSeqs, job.(*JobSequence))
 	return true
 }
 
-func (this *Generation) Run(parentApiRouter adaptorcommon.EthApiRouter) []interfaces.Univalue {
+func (this *Generation) Run(parentApiRouter intf.EthApiRouter) []interfaces.Univalue {
 	config := NewConfig().SetCoinbase(parentApiRouter.Coinbase())
 
 	groupIDs := make([][]uint32, len(this.jobSeqs))

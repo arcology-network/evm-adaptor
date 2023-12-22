@@ -4,7 +4,7 @@ import (
 	"math"
 	"math/big"
 
-	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
+	intf "github.com/arcology-network/vm-adaptor/interface"
 	"github.com/ethereum/go-ethereum/common"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus"
@@ -26,7 +26,7 @@ type Config struct {
 	BlockNumber *big.Int    // types.Header.Number
 	ParentHash  common.Hash // types.Header.ParentHash
 	Time        *big.Int    // types.Header.Time
-	Chain       adaptorcommon.ChainContext
+	Chain       intf.ChainContext
 	Coinbase    *evmcommon.Address
 	GasLimit    uint64   // types.Header.GasLimit
 	Difficulty  *big.Int // types.Header.Difficulty

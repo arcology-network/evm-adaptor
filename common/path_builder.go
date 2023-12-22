@@ -9,16 +9,18 @@ import (
 
 	"github.com/arcology-network/concurrenturl"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
+
+	intf "github.com/arcology-network/vm-adaptor/interface"
 )
 
 // Ccurl connectors for Arcology APIs
 type CcurlConnector struct {
-	apiRouter EthApiRouter
+	apiRouter intf.EthApiRouter
 	ccurl     *concurrenturl.ConcurrentUrl
 	subDir    string
 }
 
-func NewCCurlConnector(subDir string, api EthApiRouter, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
+func NewCCurlConnector(subDir string, api intf.EthApiRouter, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
 	return &CcurlConnector{
 		subDir:    subDir,
 		apiRouter: api,

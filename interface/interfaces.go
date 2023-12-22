@@ -1,5 +1,5 @@
 // KernelAPI provides system level function calls supported by arcology platform.
-package common
+package interfaces
 
 import (
 	"math/big"
@@ -11,7 +11,6 @@ import (
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/core/vm"
 )
 
 type ApiCallHandler interface {
@@ -30,7 +29,7 @@ type EthApiRouter interface {
 
 	SetEU(interface{})
 	GetEU() interface{}
-	VM() *vm.EVM
+	VM() interface{} //*vm.EVM
 	Schedule() interface{}
 
 	CheckRuntimeConstrains() bool
@@ -72,8 +71,8 @@ type MessageReader interface {
 
 type EUInterface interface {
 	GasPrice() *big.Int
-	Message() *StandardMessage
-	VM() *vm.EVM
+	Message() interface{}
+	VM() interface{} //*vm.EVM
 	ID() uint32
 	TxHash() [32]byte
 	Origin() [20]byte

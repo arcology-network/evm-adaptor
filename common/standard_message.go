@@ -40,7 +40,7 @@ func (this StandardMessages) Count(value *StandardMessage) int {
 	return counter
 }
 
-// func (this StandardMessages) FromSequence(baseApiRouter adaptorcommon.EthApiRouter) []*StandardMessage {
+// func (this StandardMessages) FromSequence(baseApiRouter intf.EthApiRouter) []*StandardMessage {
 // 	jobs := make([]*Job, len(this.Msgs))
 // 	for i, msg := range this.Msgs {
 // 		jobs[i].Predecessors = this.Predecessors

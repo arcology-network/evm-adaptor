@@ -8,6 +8,7 @@ import (
 
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 	eth "github.com/arcology-network/vm-adaptor/eth"
+	intf "github.com/arcology-network/vm-adaptor/interface"
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	evmcore "github.com/ethereum/go-ethereum/core"
@@ -20,14 +21,14 @@ import (
 
 type EU struct {
 	stdMsg      *adaptorcommon.StandardMessage
-	evm         *vm.EVM                    // Original ETH EVM
-	statedb     vm.StateDB                 // Arcology Implementation of Eth StateDB
-	api         adaptorcommon.EthApiRouter // Arcology API calls
+	evm         *vm.EVM           // Original ETH EVM
+	statedb     vm.StateDB        // Arcology Implementation of Eth StateDB
+	api         intf.EthApiRouter // Arcology API calls
 	ChainConfig *params.ChainConfig
 	VmConfig    vm.Config
 }
 
-func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.StateDB, api adaptorcommon.EthApiRouter) *EU {
+func NewEU(chainConfig *params.ChainConfig, vmConfig vm.Config, statedb vm.StateDB, api intf.EthApiRouter) *EU {
 	eu := &EU{
 		ChainConfig: chainConfig,
 		VmConfig:    vmConfig,
@@ -47,13 +48,13 @@ func (this *EU) GasPrice() *big.Int { return this.stdMsg.Native.GasPrice }
 func (this *EU) Coinbase() [20]byte { return this.evm.Context.Coinbase }
 func (this *EU) Origin() [20]byte   { return this.evm.TxContext.Origin }
 
-func (this *EU) Message() *adaptorcommon.StandardMessage  { return this.stdMsg }
-func (this *EU) VM() *vm.EVM                              { return this.evm }
-func (this *EU) Statedb() vm.StateDB                      { return this.statedb }
-func (this *EU) Api() adaptorcommon.EthApiRouter          { return this.api }
-func (this *EU) SetApi(newApi adaptorcommon.EthApiRouter) { this.api = newApi }
+func (this *EU) Message() interface{}            { return this.stdMsg }
+func (this *EU) VM() interface{}                 { return this.evm }
+func (this *EU) Statedb() vm.StateDB             { return this.statedb }
+func (this *EU) Api() intf.EthApiRouter          { return this.api }
+func (this *EU) SetApi(newApi intf.EthApiRouter) { this.api = newApi }
 
-func (this *EU) SetRuntimeContext(statedb vm.StateDB, api adaptorcommon.EthApiRouter) {
+func (this *EU) SetRuntimeContext(statedb vm.StateDB, api intf.EthApiRouter) {
 	this.api = api
 	this.statedb = statedb
 
