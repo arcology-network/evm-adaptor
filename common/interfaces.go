@@ -2,6 +2,8 @@
 package common
 
 import (
+	"math/big"
+
 	"github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/interfaces"
 	"github.com/ethereum/go-ethereum/common"
@@ -69,6 +71,7 @@ type MessageReader interface {
 }
 
 type EUInterface interface {
+	GasPrice() *big.Int
 	Message() *StandardMessage
 	VM() *vm.EVM
 	ID() uint32

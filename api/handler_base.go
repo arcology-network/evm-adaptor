@@ -12,7 +12,6 @@ import (
 	abi "github.com/arcology-network/vm-adaptor/abi"
 	"github.com/arcology-network/vm-adaptor/common"
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
-	"github.com/arcology-network/vm-adaptor/execution"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/holiman/uint256"
@@ -94,8 +93,8 @@ func (this *BaseHandlers) Api() adaptorcommon.EthApiRouter { return this.api }
 
 func (this *BaseHandlers) New(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	connected := this.connector.New(
-		uint32(this.api.GetEU().(*execution.EU).Message().ID), // Tx ID for conflict detection
-		types.Address(codec.Bytes20(caller).Hex()),            // Main contract address
+		this.api.GetEU().(adaptorcommon.EUInterface).ID(), // Tx ID for conflict detection
+		types.Address(codec.Bytes20(caller).Hex()),        // Main contract address
 	)
 	return caller[:], connected, 0 // Create a new container
 }
@@ -268,7 +267,7 @@ func (this *BaseHandlers) clear(caller evmcommon.Address, input []byte) ([]byte,
 	}
 
 	for {
-		if _, _, err := this.api.Ccurl().PopBack(uint32(this.api.GetEU().(*execution.EU).Message().ID), path, nil); err != nil {
+		if _, _, err := this.api.Ccurl().PopBack(this.api.GetEU().(adaptorcommon.EUInterface).ID(), path, nil); err != nil {
 			break
 		}
 	}

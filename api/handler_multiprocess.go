@@ -78,7 +78,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 	}
 
 	// Unify tx IDs c
-	mainTxID := uint32(this.Api().GetEU().(*execution.EU).Message().ID)
+	mainTxID := uint32(this.Api().GetEU().(adaptorcommon.EUInterface).ID())
 	common.Foreach(transitions, func(v *interfaces.Univalue, _ int) { (*v).SetTx(mainTxID) })
 
 	this.Api().Ccurl().WriteCache().AddTransitions(transitions) // Merge the write cache to the main cache
@@ -109,7 +109,7 @@ func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence
 		0,
 		transfer, // Amount to transfer
 		gasLimit,
-		this.BaseHandlers.Api().GetEU().(*execution.EU).Message().Native.GasPrice, // gas price
+		this.BaseHandlers.Api().GetEU().(adaptorcommon.EUInterface).GasPrice(), // gas price
 		funCall,
 		nil,
 		false, // Don't checking nonce
@@ -118,7 +118,7 @@ func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence
 	stdMsg := &adaptorcommon.StandardMessage{
 		ID:     uint64(newJobSeq.ID), // this is the problem !!!!
 		Native: &evmMsg,
-		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(*execution.EU).Message().TxHash),
+		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(adaptorcommon.EUInterface).TxHash()),
 	}
 
 	newJobSeq.StdMsgs = []*adaptorcommon.StandardMessage{stdMsg}
