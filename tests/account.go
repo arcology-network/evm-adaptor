@@ -1,5 +1,5 @@
 // KernelAPI provides system level function calls supported by arcology platform.
-package common
+package tests
 
 import (
 	evmcommon "github.com/ethereum/go-ethereum/common"

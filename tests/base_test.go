@@ -30,7 +30,7 @@ func TestBaseContainer(t *testing.T) {
 	}
 
 	// ================================== Deploy the contract ==================================
-	msg := core.NewMessage(adaptorcommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)
+	msg := core.NewMessage(Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)
 	stdMsg := &adaptorcommon.StandardMessage{
 		ID:     1,
 		TxHash: [32]byte{1, 1, 1},
@@ -41,7 +41,7 @@ func TestBaseContainer(t *testing.T) {
 	receipt, execResult, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
 	_, transitions := eu.Api().StateFilter().ByType()
 
-	// msg := core.NewMessage(adaptorcommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
+	// msg := core.NewMessage(Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
 	// receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg)) // Execute it
 	// _, transitions := eu.Api().StateFilter().ByType()
 
@@ -66,7 +66,7 @@ func TestBaseContainer(t *testing.T) {
 	// return
 
 	data := crypto.Keccak256([]byte("call()"))[:4]
-	msg = core.NewMessage(adaptorcommon.Alice, &contractAddress, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	msg = core.NewMessage(Alice, &contractAddress, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
 	stdMsg = &adaptorcommon.StandardMessage{
 		ID:     1,
 		TxHash: [32]byte{1, 1, 1},

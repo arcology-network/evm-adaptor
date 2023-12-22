@@ -22,7 +22,6 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
-	ccapi "github.com/arcology-network/vm-adaptor/api"
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/compiler"
 	"github.com/arcology-network/vm-adaptor/eth"
@@ -51,7 +50,7 @@ func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concu
 	db := ccurlstorage.NewTransientDB(persistentDB)
 
 	url := concurrenturl.NewConcurrentUrl(db)
-	api := ccapi.NewAPI(url)
+	api := eu.NewAPI(url)
 
 	statedb := eth.NewImplStateDB(api)
 	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 0)
@@ -76,7 +75,7 @@ func NewTestEU() (*execution.EU, *execution.Config, interfaces.Datastore, *concu
 	url.Import(transitions)
 	url.Sort()
 	url.Commit([]uint32{0})
-	api = ccapi.NewAPI(url)
+	api = eu.NewAPI(url)
 	statedb = eth.NewImplStateDB(api)
 
 	config := MainTestConfig()

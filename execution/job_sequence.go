@@ -29,6 +29,15 @@ type JobSequence struct {
 	// immunedBuffer    []ccurlinterfaces.Univalue
 }
 
+func (*JobSequence) New(id uint32, apiRouter adaptorcommon.EthApiRouter) *JobSequence {
+	return &JobSequence{
+		ID:        id,
+		ApiRouter: apiRouter,
+	}
+}
+
+func (this *JobSequence) GetID() uint32 { return this.ID }
+
 func (this *JobSequence) DeriveNewHash(seed [32]byte) [32]byte {
 	return sha256.Sum256(common.Flatten([][]byte{
 		codec.Bytes32(seed).Encode(),

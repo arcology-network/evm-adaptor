@@ -118,7 +118,7 @@ func FormatTransitions(transitions []interfaces.Univalue) string {
 // 	url.Import(transitions)
 // 	url.Sort()
 // 	url.Commit(txs)
-// 	api := ccapi.NewAPI(url)
+// 	api := eu.NewAPI(url)
 // 	statedb := eth.NewImplStateDB(api)
 
 // 	config := vmadaptor.NewConfig()

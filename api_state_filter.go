@@ -1,4 +1,4 @@
-package api
+package eu
 
 import (
 	commonlibcommon "github.com/arcology-network/common-lib/common"

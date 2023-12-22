@@ -1,8 +1,6 @@
 module github.com/arcology-network/vm-adaptor
 
-go 1.21
-
-toolchain go1.21.3
+go 1.21.3
 
 replace github.com/ethereum/go-ethereum => ../concurrent-evm
 
@@ -14,14 +12,15 @@ replace github.com/arcology-network/concurrenturl => ../concurrenturl/
 
 require (
 	github.com/arcology-network/common-lib v1.9.0
-	github.com/arcology-network/concurrenturl v1.8.0
-	github.com/ethereum/go-ethereum v1.13.5
+	github.com/arcology-network/concurrenturl v1.9.0
+	github.com/ethereum/go-ethereum v1.13.7
 	github.com/holiman/uint256 v1.2.4
 )
 
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
-	github.com/bits-and-blooms/bitset v1.7.0 // indirect
+	github.com/arcology-network/eu v0.0.0-20231221235534-9d2cbdb4c443 // indirect
+	github.com/bits-and-blooms/bitset v1.10.0 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
 	github.com/crate-crypto/go-kzg-4844 v0.7.0 // indirect
@@ -58,7 +57,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tklauser/go-sysconf v0.3.13 // indirect
 	github.com/tklauser/numcpus v0.7.0 // indirect
-	golang.org/x/crypto v0.16.0
+	golang.org/x/crypto v0.17.0
 	golang.org/x/exp v0.0.0-20231206192017-f3f8817b8deb // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect

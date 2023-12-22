@@ -1,4 +1,4 @@
-package api
+package eu
 
 import (
 	"fmt"
@@ -8,12 +8,14 @@ import (
 	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl"
-	execution "github.com/arcology-network/vm-adaptor/execution"
-	evmcommon "github.com/ethereum/go-ethereum/common"
+	eucommon "github.com/arcology-network/eu/common"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 
 	// eucommon "github.com/arcology-network/eu/common"
+	apihandler "github.com/arcology-network/vm-adaptor/api"
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
+	"github.com/arcology-network/vm-adaptor/execution"
 )
 
 type API struct {
@@ -29,7 +31,7 @@ type API struct {
 	handlerDict map[[20]byte]adaptorcommon.ApiCallHandler // APIs under the atomic namespace
 	ccurl       *concurrenturl.ConcurrentUrl
 
-	execResult *execution.Result
+	execResult *eucommon.Result
 
 	filter adaptorcommon.StateFilter
 }
@@ -40,18 +42,18 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 		ccurl:       ccurl,
 		handlerDict: make(map[[20]byte]adaptorcommon.ApiCallHandler),
 		depth:       0,
-		execResult:  &execution.Result{},
+		execResult:  &eucommon.Result{},
 		serialNums:  [4]uint64{},
 	}
 	api.filter = NewExportFilter(api)
 
 	handlers := []adaptorcommon.ApiCallHandler{
-		NewIoHandlers(api),
-		NewMultiprocessHandlers(api),
-		NewBaseHandlers(api, nil),
-		NewU256CumulativeHandlers(api),
+		apihandler.NewIoHandlers(api),
+		apihandler.NewMultiprocessHandlers(api, []*execution.JobSequence{}),
+		apihandler.NewBaseHandlers(api, nil),
+		apihandler.NewU256CumulativeHandlers(api),
 		// cumulativei256.NewInt256CumulativeHandlers(api),
-		NewRuntimeHandlers(api),
+		apihandler.NewRuntimeHandlers(api),
 	}
 
 	for i, v := range handlers {
@@ -89,8 +91,8 @@ func (this *API) DecrementDepth() uint8 {
 }
 
 func (this *API) Depth() uint8                { return this.depth }
-func (this *API) Coinbase() evmcommon.Address { return this.eu.Coinbase() }
-func (this *API) Origin() evmcommon.Address   { return this.eu.Origin() }
+func (this *API) Coinbase() ethcommon.Address { return this.eu.Coinbase() }
+func (this *API) Origin() ethcommon.Address   { return this.eu.Origin() }
 
 func (this *API) SetSchedule(schedule interface{}) { this.schedule = schedule }
 func (this *API) Schedule() interface{}            { return this.schedule }
@@ -130,7 +132,7 @@ func (this *API) UUID() []byte {
 }
 
 func (this *API) AddLog(key, value string) {
-	this.logs = append(this.logs, &execution.ExecutionLog{
+	this.logs = append(this.logs, &eucommon.ExecutionLog{
 		Key:   key,
 		Value: value,
 	})
@@ -144,11 +146,11 @@ func (this *API) ClearLogs() {
 	this.logs = this.logs[:0]
 }
 
-func (this *API) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64, blockhash evmcommon.Hash) (bool, []byte, bool, int64) {
+func (this *API) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64, blockhash ethcommon.Hash) (bool, []byte, bool, int64) {
 	if handler, ok := this.handlerDict[callee]; ok {
 		result, successful, fees := handler.Call(
-			evmcommon.Address(codec.Bytes20(caller).Clone().(codec.Bytes20)),
-			evmcommon.Address(codec.Bytes20(callee).Clone().(codec.Bytes20)),
+			ethcommon.Address(codec.Bytes20(caller).Clone().(codec.Bytes20)),
+			ethcommon.Address(codec.Bytes20(callee).Clone().(codec.Bytes20)),
 			common.Clone(input),
 			origin,
 			nonce,

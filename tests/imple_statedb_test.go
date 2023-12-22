@@ -10,7 +10,7 @@ import (
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
 	"github.com/arcology-network/concurrenturl/noncommutative"
-	ccapi "github.com/arcology-network/vm-adaptor/api"
+	eu "github.com/arcology-network/vm-adaptor"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 
 	eth "github.com/arcology-network/vm-adaptor/eth"
@@ -22,7 +22,7 @@ func TestStateDBV2GetNonexistBalance(t *testing.T) {
 	db.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, commutative.NewPath())
 	url := concurrenturl.NewConcurrentUrl(db)
 
-	api := ccapi.NewAPI(url)
+	api := eu.NewAPI(url)
 	account := evmcommon.BytesToAddress([]byte{201, 202, 203, 204, 205})
 	ethStatedb := eth.NewImplStateDB(api)
 	ethStatedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 1)
@@ -48,7 +48,7 @@ func TestStateDBV2GetNonexistCode(t *testing.T) {
 	db.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, commutative.NewPath())
 	url := concurrenturl.NewConcurrentUrl(db)
 
-	api := ccapi.NewAPI(url)
+	api := eu.NewAPI(url)
 	account := evmcommon.BytesToAddress([]byte{201, 202, 203, 204, 205}) // a random address, there should be no code.
 	ethStatedb := eth.NewImplStateDB(api)
 	ethStatedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 1)
@@ -75,7 +75,7 @@ func TestStateDBV2GetNonexistStorageState(t *testing.T) {
 	db.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, meta)
 	url := concurrenturl.NewConcurrentUrl(db)
 
-	api := ccapi.NewAPI(url)
+	api := eu.NewAPI(url)
 	account := evmcommon.BytesToAddress([]byte{201, 202, 203, 204, 205})
 	ethStatedb := eth.NewImplStateDB(api)
 	ethStatedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 1)
@@ -102,7 +102,7 @@ func TestEthStateDBInterfaces(t *testing.T) {
 	db.Inject(ccurlcommon.ETH10_ACCOUNT_PREFIX, meta)
 	url := concurrenturl.NewConcurrentUrl(db)
 
-	api := ccapi.NewAPI(url)
+	api := eu.NewAPI(url)
 	account := evmcommon.BytesToAddress([]byte{201, 202, 203, 204, 205})
 	ethStatedb := eth.NewImplStateDB(api)
 	ethStatedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 1)

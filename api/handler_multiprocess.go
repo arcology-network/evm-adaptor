@@ -23,10 +23,10 @@ type MultiprocessHandlers struct {
 	jobseqs []*execution.JobSequence
 }
 
-func NewMultiprocessHandlers(ethApiRouter adaptorcommon.EthApiRouter) *MultiprocessHandlers {
+func NewMultiprocessHandlers(ethApiRouter adaptorcommon.EthApiRouter, jobseqs []*execution.JobSequence) *MultiprocessHandlers {
 	handler := &MultiprocessHandlers{
 		erros:   []error{},
-		jobseqs: []*execution.JobSequence{},
+		jobseqs: jobseqs, //[]*execution.JobSequence{},
 	}
 	handler.BaseHandlers = NewBaseHandlers(ethApiRouter, handler)
 	return handler
@@ -85,6 +85,9 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 	return []byte{}, true, common.Sum[int64](fees)
 }
 
+// For multiprocessor, a job sequence only contains one message.
+// To keep the same structure with the transaction level processing, the message is wrapped// into a job sequence.
+
 func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence, error) {
 	gasLimit, value, calleeAddr, funCall, err := abi.Parse4(input,
 		uint64(0), 1, 32,
@@ -94,11 +97,6 @@ func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence
 
 	if err != nil {
 		return nil, err
-	}
-
-	newJobSeq := &execution.JobSequence{
-		ID:        uint32(this.BaseHandlers.Api().GetSerialNum(adaptorcommon.SUB_PROCESS)),
-		ApiRouter: this.BaseHandlers.Api(),
 	}
 
 	transfer := value.ToBig()
@@ -115,8 +113,13 @@ func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence
 		false, // Don't checking nonce
 	)
 
+	newJobSeq := &execution.JobSequence{
+		ID:        uint32(this.BaseHandlers.Api().GetSerialNum(adaptorcommon.SUB_PROCESS)),
+		ApiRouter: this.BaseHandlers.Api(),
+	}
+
 	stdMsg := &adaptorcommon.StandardMessage{
-		ID:     uint64(newJobSeq.ID), // this is the problem !!!!
+		ID:     uint64(newJobSeq.ID),
 		Native: &evmMsg,
 		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(adaptorcommon.EUInterface).TxHash()),
 	}
