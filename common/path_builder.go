@@ -1,4 +1,4 @@
-package api
+package common
 
 import (
 	"github.com/arcology-network/common-lib/codec"
@@ -6,7 +6,6 @@ import (
 	commonlib "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/types"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
 
 	"github.com/arcology-network/concurrenturl"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
@@ -14,12 +13,12 @@ import (
 
 // Ccurl connectors for Arcology APIs
 type CcurlConnector struct {
-	apiRouter eucommon.EthApiRouter
+	apiRouter EthApiRouter
 	ccurl     *concurrenturl.ConcurrentUrl
 	subDir    string
 }
 
-func NewCCurlConnector(subDir string, api eucommon.EthApiRouter, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
+func NewCCurlConnector(subDir string, api EthApiRouter, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
 	return &CcurlConnector{
 		subDir:    subDir,
 		apiRouter: api,

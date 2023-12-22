@@ -11,7 +11,7 @@ import (
 	"github.com/arcology-network/concurrenturl/interfaces"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 	"github.com/arcology-network/vm-adaptor/common"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/execution"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 
@@ -20,21 +20,21 @@ import (
 
 // APIs under the concurrency namespace
 type BaseHandlers struct {
-	api       eucommon.EthApiRouter
-	connector *CcurlConnector
+	api       adaptorcommon.EthApiRouter
+	connector *adaptorcommon.CcurlConnector
 	handler   interface{}
 }
 
-func NewBaseHandlers(api eucommon.EthApiRouter, handler interface{}) *BaseHandlers {
+func NewBaseHandlers(api adaptorcommon.EthApiRouter, handler interface{}) *BaseHandlers {
 	return &BaseHandlers{
 		api:       api,
-		connector: NewCCurlConnector("/container", api, api.Ccurl()),
+		connector: adaptorcommon.NewCCurlConnector("/container", api, api.Ccurl()),
 		handler:   handler,
 	}
 }
 
-func (this *BaseHandlers) Address() [20]byte          { return common.BYTES_HANDLER }
-func (this *BaseHandlers) Connector() *CcurlConnector { return this.connector }
+func (this *BaseHandlers) Address() [20]byte                        { return common.BYTES_HANDLER }
+func (this *BaseHandlers) Connector() *adaptorcommon.CcurlConnector { return this.connector }
 
 func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
 	signature := [4]byte{}
@@ -90,7 +90,7 @@ func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20
 	return []byte{}, false, 0 // unknown
 }
 
-func (this *BaseHandlers) Api() eucommon.EthApiRouter { return this.api }
+func (this *BaseHandlers) Api() adaptorcommon.EthApiRouter { return this.api }
 
 func (this *BaseHandlers) New(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	connected := this.connector.New(

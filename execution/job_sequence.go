@@ -10,7 +10,7 @@ import (
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/eth"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
@@ -21,9 +21,9 @@ import (
 type JobSequence struct {
 	ID           uint32 // group id
 	PreTxs       []uint32
-	StdMsgs      []*StandardMessage
+	StdMsgs      []*adaptorcommon.StandardMessage
 	Results      []*Result
-	ApiRouter    eucommon.EthApiRouter
+	ApiRouter    adaptorcommon.EthApiRouter
 	RecordBuffer []ccurlinterfaces.Univalue
 	// TransitionBuffer []ccurlinterfaces.Univalue
 	// immunedBuffer    []ccurlinterfaces.Univalue
@@ -38,7 +38,7 @@ func (this *JobSequence) DeriveNewHash(seed [32]byte) [32]byte {
 
 func (this *JobSequence) Length() int { return len(this.StdMsgs) }
 
-func (this *JobSequence) Run(config *Config, mainApi eucommon.EthApiRouter) ([]uint32, []ccurlinterfaces.Univalue) { //
+func (this *JobSequence) Run(config *Config, mainApi adaptorcommon.EthApiRouter) ([]uint32, []ccurlinterfaces.Univalue) { //
 	this.Results = make([]*Result, len(this.StdMsgs))
 	this.ApiRouter = mainApi.New((&concurrenturl.ConcurrentUrl{}).New(indexer.NewWriteCache(mainApi.Ccurl().WriteCache())), this.ApiRouter.Schedule())
 
@@ -79,7 +79,7 @@ func (this *JobSequence) FlagConflict(dict *map[uint32]uint64, err error) {
 	}
 }
 
-func (this *JobSequence) execute(stdMsg *StandardMessage, config *Config, api eucommon.EthApiRouter) *Result { //
+func (this *JobSequence) execute(stdMsg *adaptorcommon.StandardMessage, config *Config, api adaptorcommon.EthApiRouter) *Result { //
 	statedb := eth.NewImplStateDB(api)                                  // Eth state DB
 	statedb.PrepareFormer(stdMsg.TxHash, [32]byte{}, uint32(stdMsg.ID)) // tx hash , block hash and tx index
 

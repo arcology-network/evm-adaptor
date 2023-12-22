@@ -7,19 +7,19 @@ import (
 	evmcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/arcology-network/vm-adaptor/common"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 )
 
 // APIs under the concurrency namespace
 type RuntimeHandlers struct {
-	api       eucommon.EthApiRouter
-	connector *CcurlConnector
+	api       adaptorcommon.EthApiRouter
+	connector *adaptorcommon.CcurlConnector
 }
 
-func NewRuntimeHandlers(ethApiRouter eucommon.EthApiRouter) *RuntimeHandlers {
+func NewRuntimeHandlers(ethApiRouter adaptorcommon.EthApiRouter) *RuntimeHandlers {
 	return &RuntimeHandlers{
 		api:       ethApiRouter,
-		connector: NewCCurlConnector("/native/local/", ethApiRouter, ethApiRouter.Ccurl()),
+		connector: adaptorcommon.NewCCurlConnector("/native/local/", ethApiRouter, ethApiRouter.Ccurl()),
 	}
 }
 

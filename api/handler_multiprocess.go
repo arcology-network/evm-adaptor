@@ -13,7 +13,7 @@ import (
 	"github.com/arcology-network/vm-adaptor/abi"
 	execution "github.com/arcology-network/vm-adaptor/execution"
 
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 )
 
 // APIs under the concurrency namespace
@@ -23,7 +23,7 @@ type MultiprocessHandlers struct {
 	jobseqs []*execution.JobSequence
 }
 
-func NewMultiprocessHandlers(ethApiRouter eucommon.EthApiRouter) *MultiprocessHandlers {
+func NewMultiprocessHandlers(ethApiRouter adaptorcommon.EthApiRouter) *MultiprocessHandlers {
 	handler := &MultiprocessHandlers{
 		erros:   []error{},
 		jobseqs: []*execution.JobSequence{},
@@ -32,10 +32,10 @@ func NewMultiprocessHandlers(ethApiRouter eucommon.EthApiRouter) *MultiprocessHa
 	return handler
 }
 
-func (this *MultiprocessHandlers) Address() [20]byte { return eucommon.MULTIPROCESS_HANDLER }
+func (this *MultiprocessHandlers) Address() [20]byte { return adaptorcommon.MULTIPROCESS_HANDLER }
 
 func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bool, int64) {
-	if atomic.AddUint64(&eucommon.TotalSubProcesses, 1); !this.Api().CheckRuntimeConstrains() {
+	if atomic.AddUint64(&adaptorcommon.TotalSubProcesses, 1); !this.Api().CheckRuntimeConstrains() {
 		return []byte{}, false, 0
 	}
 
@@ -52,7 +52,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte) ([]byte, bo
 
 	path := this.Connector().Key(caller)
 	length, successful, fee := this.Length(path)
-	length = common.Min(eucommon.MAX_VM_INSTANCES, length)
+	length = common.Min(adaptorcommon.MAX_VM_INSTANCES, length)
 
 	if !successful {
 		return []byte{}, successful, fee
@@ -97,7 +97,7 @@ func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence
 	}
 
 	newJobSeq := &execution.JobSequence{
-		ID:        uint32(this.BaseHandlers.Api().GetSerialNum(eucommon.SUB_PROCESS)),
+		ID:        uint32(this.BaseHandlers.Api().GetSerialNum(adaptorcommon.SUB_PROCESS)),
 		ApiRouter: this.BaseHandlers.Api(),
 	}
 
@@ -115,12 +115,12 @@ func (this *MultiprocessHandlers) toJobSeq(input []byte) (*execution.JobSequence
 		false, // Don't checking nonce
 	)
 
-	stdMsg := &execution.StandardMessage{
+	stdMsg := &adaptorcommon.StandardMessage{
 		ID:     uint64(newJobSeq.ID), // this is the problem !!!!
 		Native: &evmMsg,
 		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(*execution.EU).Message().TxHash),
 	}
 
-	newJobSeq.StdMsgs = []*execution.StandardMessage{stdMsg}
+	newJobSeq.StdMsgs = []*adaptorcommon.StandardMessage{stdMsg}
 	return newJobSeq, nil
 }

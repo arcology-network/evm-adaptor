@@ -60,3 +60,19 @@ type ChainContext interface {
 	Engine() consensus.Engine                    // Engine retrieves the chain's consensus engine.
 	GetHeader(common.Hash, uint64) *types.Header // GetHeader returns the hash corresponding to their hash.
 }
+
+type MessageReader interface {
+	Message() interface {
+		ID() uint32
+		TxHash() [32]byte
+	}
+}
+
+type EUInterface interface {
+	Message() *StandardMessage
+	VM() *vm.EVM
+	ID() uint32
+	TxHash() [32]byte
+	Origin() [20]byte
+	Coinbase() [20]byte
+}

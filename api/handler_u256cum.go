@@ -11,20 +11,20 @@ import (
 	evmcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/arcology-network/vm-adaptor/common"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/execution"
 )
 
 // APIs under the concurrency namespace
 type U256CumHandlers struct {
-	api       eucommon.EthApiRouter
-	connector *CcurlConnector
+	api       adaptorcommon.EthApiRouter
+	connector *adaptorcommon.CcurlConnector
 }
 
-func NewU256CumulativeHandlers(api eucommon.EthApiRouter) *U256CumHandlers {
+func NewU256CumulativeHandlers(api adaptorcommon.EthApiRouter) *U256CumHandlers {
 	return &U256CumHandlers{
 		api:       api,
-		connector: NewCCurlConnector("/container", api, api.Ccurl()),
+		connector: adaptorcommon.NewCCurlConnector("/container", api, api.Ccurl()),
 	}
 }
 

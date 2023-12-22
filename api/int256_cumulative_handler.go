@@ -11,18 +11,18 @@ package api
 // 	evmcommon "github.com/ethereum/go-ethereum/common"
 // 	abi "github.com/arcology-network/vm-adaptor/abi"
 // 	"github.com/arcology-network/vm-adaptor/common"
-// 	eucommon "github.com/arcology-network/vm-adaptor/common"
+// 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 
 //
 // )
 
 // // APIs under the concurrency namespace
 // type Int256CumulativeHandlers struct {
-// 	api       eucommon.EthApiRouter
+// 	api       adaptorcommon.EthApiRouter
 // 	connector *CcurlConnector
 // }
 
-// func NewInt256CumulativeHandlers(api eucommon.EthApiRouter) *Int256CumulativeHandlers {
+// func NewInt256CumulativeHandlers(api adaptorcommon.EthApiRouter) *Int256CumulativeHandlers {
 // 	return &Int256CumulativeHandlers{
 // 		api:       api,
 // 		connector: NewCCurlConnector("/container", api, api.Ccurl()),

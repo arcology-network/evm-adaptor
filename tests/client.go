@@ -9,7 +9,7 @@ import (
 	"github.com/arcology-network/concurrenturl/commutative"
 	ccurlstorage "github.com/arcology-network/concurrenturl/storage"
 	ccapi "github.com/arcology-network/vm-adaptor/api"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/compiler"
 	"github.com/arcology-network/vm-adaptor/eth"
 	"github.com/arcology-network/vm-adaptor/execution"
@@ -42,7 +42,7 @@ func NewContract(accounts []evmcommon.Address, owner [20]byte, targetPath, file,
 	statedb := eth.NewImplStateDB(api)
 	statedb.PrepareFormer(evmcommon.Hash{}, evmcommon.Hash{}, 0)
 
-	statedb.CreateAccount(eucommon.Coinbase)
+	statedb.CreateAccount(adaptorcommon.Coinbase)
 	for i := 0; i < len(accounts); i++ {
 		statedb.CreateAccount(accounts[i])
 		statedb.AddBalance(accounts[i], new(big.Int).SetUint64(1e18))
@@ -57,7 +57,7 @@ func NewContract(accounts []evmcommon.Address, owner [20]byte, targetPath, file,
 	statedb = eth.NewImplStateDB(api)
 
 	config := MainTestConfig()
-	config.Coinbase = &eucommon.Coinbase
+	config.Coinbase = &adaptorcommon.Coinbase
 	config.BlockNumber = new(big.Int).SetUint64(10000000)
 	config.Time = new(big.Int).SetUint64(10000000)
 
@@ -91,7 +91,7 @@ func NewContract(accounts []evmcommon.Address, owner [20]byte, targetPath, file,
 // 	}
 
 // 	config := MainTestConfig()
-// 	config.Coinbase = &eucommon.Coinbase
+// 	config.Coinbase = &adaptorcommon.Coinbase
 // 	config.BlockNumber = new(big.Int).SetUint64(10000000)
 // 	config.Time = new(big.Int).SetUint64(10000000)
 

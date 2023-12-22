@@ -5,15 +5,15 @@ import (
 
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	"github.com/arcology-network/concurrenturl/interfaces"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 )
 
 type StateFilter struct {
-	api             eucommon.EthApiRouter
+	api             adaptorcommon.EthApiRouter
 	ignoreAddresses map[string]bool
 }
 
-func NewExportFilter(api eucommon.EthApiRouter) *StateFilter {
+func NewExportFilter(api adaptorcommon.EthApiRouter) *StateFilter {
 	return &StateFilter{
 		api,
 		map[string]bool{},

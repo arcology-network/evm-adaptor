@@ -10,7 +10,7 @@ import (
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	"github.com/arcology-network/concurrenturl/interfaces"
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 )
 
 // APIs under the concurrency namespace
@@ -41,7 +41,7 @@ func (this *Generation) Add(job *JobSequence) bool {
 	return true
 }
 
-func (this *Generation) Run(parentApiRouter eucommon.EthApiRouter) []interfaces.Univalue {
+func (this *Generation) Run(parentApiRouter adaptorcommon.EthApiRouter) []interfaces.Univalue {
 	config := NewConfig().SetCoinbase(parentApiRouter.Coinbase())
 
 	groupIDs := make([][]uint32, len(this.jobs))

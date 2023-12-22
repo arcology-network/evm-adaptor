@@ -8,7 +8,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/params"
 
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 )
 
 type StateDB interface {
@@ -96,7 +96,7 @@ type EthStorageCache interface {
 
 type KernelAPI interface {
 	AddLog(key, value string)
-	GetLogs() []eucommon.ILog
+	GetLogs() []adaptorcommon.ILog
 	ClearLogs()
 	Prepare(txHash common.Hash)
 	Call(caller, callee common.Address, input []byte, origin common.Address, nonce uint64, blockhash common.Hash) ([]byte, bool)

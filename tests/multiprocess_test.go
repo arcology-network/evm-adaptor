@@ -307,7 +307,7 @@ func TestParentChildBranchConflict(t *testing.T) {
 // 	}
 
 // 	config := tests.MainTestConfig()
-// 	config.Coinbase = &eucommon.Coinbase
+// 	config.Coinbase = &adaptorcommon.Coinbase
 // 	config.BlockNumber = new(big.Int).SetUint64(10000000)
 // 	config.Time = new(big.Int).SetUint64(10000000)
 // 	err, config, eu, receipt = tests.DepolyContract(eu, config, callerCode, "", []byte{}, 2, false)

@@ -9,7 +9,7 @@ import (
 
 	commontypes "github.com/arcology-network/common-lib/types"
 	concurrenturl "github.com/arcology-network/concurrenturl"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 	"github.com/arcology-network/vm-adaptor/compiler"
 	"github.com/arcology-network/vm-adaptor/execution"
 	evmcommon "github.com/ethereum/go-ethereum/common"
@@ -30,8 +30,8 @@ func TestBaseContainer(t *testing.T) {
 	}
 
 	// ================================== Deploy the contract ==================================
-	msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)
-	stdMsg := &execution.StandardMessage{
+	msg := core.NewMessage(adaptorcommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)
+	stdMsg := &adaptorcommon.StandardMessage{
 		ID:     1,
 		TxHash: [32]byte{1, 1, 1},
 		Native: &msg, // Build the message
@@ -41,11 +41,11 @@ func TestBaseContainer(t *testing.T) {
 	receipt, execResult, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
 	_, transitions := eu.Api().StateFilter().ByType()
 
-	// msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
+	// msg := core.NewMessage(adaptorcommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
 	// receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg)) // Execute it
 	// _, transitions := eu.Api().StateFilter().ByType()
 
-	//t.Log("\n" + eucommon.FormatTransitions(transitions))
+	//t.Log("\n" + adaptorcommon.FormatTransitions(transitions))
 	// t.Log(receipt)
 
 	if receipt.Status != 1 || err != nil {
@@ -66,8 +66,8 @@ func TestBaseContainer(t *testing.T) {
 	// return
 
 	data := crypto.Keccak256([]byte("call()"))[:4]
-	msg = core.NewMessage(eucommon.Alice, &contractAddress, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-	stdMsg = &execution.StandardMessage{
+	msg = core.NewMessage(adaptorcommon.Alice, &contractAddress, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
+	stdMsg = &adaptorcommon.StandardMessage{
 		ID:     1,
 		TxHash: [32]byte{1, 1, 1},
 		Native: &msg, // Build the message

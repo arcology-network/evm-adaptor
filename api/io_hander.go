@@ -4,15 +4,15 @@ import (
 	"fmt"
 
 	"github.com/arcology-network/vm-adaptor/common"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
+	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 )
 
 // APIs under the concurrency namespace
 type IoHandlers struct {
-	api eucommon.EthApiRouter
+	api adaptorcommon.EthApiRouter
 }
 
-func NewIoHandlers(api eucommon.EthApiRouter) *IoHandlers {
+func NewIoHandlers(api adaptorcommon.EthApiRouter) *IoHandlers {
 	return &IoHandlers{
 		api: api,
 	}

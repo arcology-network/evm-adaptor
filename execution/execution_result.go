@@ -11,6 +11,7 @@ import (
 	indexer "github.com/arcology-network/concurrenturl/indexer"
 	ccurlinterfaces "github.com/arcology-network/concurrenturl/interfaces"
 	"github.com/arcology-network/concurrenturl/univalue"
+	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 	evmcore "github.com/ethereum/go-ethereum/core"
 	evmTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/holiman/uint256"
@@ -26,7 +27,7 @@ type Result struct {
 	immuned          []ccurlinterfaces.Univalue
 	Receipt          *evmTypes.Receipt
 	EvmResult        *evmcore.ExecutionResult
-	stdMsg           *StandardMessage
+	stdMsg           *adaptorcommon.StandardMessage
 	Err              error
 }
 
