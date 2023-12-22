@@ -69,7 +69,7 @@ type MessageReader interface {
 	}
 }
 
-type EUInterface interface {
+type EU interface {
 	GasPrice() *big.Int
 	Message() interface{}
 	VM() interface{} //*vm.EVM
@@ -79,17 +79,17 @@ type EUInterface interface {
 	Coinbase() [20]byte
 }
 
-type JobSequenceInterface interface {
+type JobSequence interface {
 	GetID() uint32
-	New(uint32, EthApiRouter) JobSequenceInterface
+	New(uint32, EthApiRouter) JobSequence
 	DeriveNewHash([32]byte) [32]byte
 	AppendMsg(interface{})
 }
 
-type GenerationInterface interface {
-	New(uint32, uint8, []JobSequenceInterface) GenerationInterface
-	Add(JobSequenceInterface) bool
+type Generation interface {
+	New(uint32, uint8, []JobSequence) Generation
+	Add(JobSequence) bool
 	Run(EthApiRouter) []interfaces.Univalue
-	JobSeqs() []JobSequenceInterface
-	JobT() JobSequenceInterface
+	JobSeqs() []JobSequence
+	JobT() JobSequence
 }

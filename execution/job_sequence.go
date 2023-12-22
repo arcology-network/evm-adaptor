@@ -32,10 +32,10 @@ type JobSequence struct {
 	// immunedBuffer    []ccurlinterfaces.Univalue
 }
 
-func (*JobSequence) T() intf.JobSequenceInterface { return &JobSequence{} }
+func (*JobSequence) T() intf.JobSequence { return &JobSequence{} }
 
 // New creates a new JobSequence with the given ID and API router.
-func (*JobSequence) New(id uint32, apiRouter intf.EthApiRouter) intf.JobSequenceInterface {
+func (*JobSequence) New(id uint32, apiRouter intf.EthApiRouter) intf.JobSequence {
 	return &JobSequence{
 		ID:        id,
 		ApiRouter: apiRouter,

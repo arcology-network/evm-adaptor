@@ -25,7 +25,7 @@ type API struct {
 	serialNums [4]uint64 // sub-process/container/element/uuid generator,
 
 	schedule interface{}
-	eu       intf.EUInterface
+	eu       intf.EU
 	// reserved interface{}
 
 	handlerDict map[[20]byte]intf.ApiCallHandler // APIs under the atomic namespace
@@ -51,7 +51,7 @@ func NewAPI(ccurl *concurrenturl.ConcurrentUrl) *API {
 		apihandler.NewIoHandlers(api),
 		apihandler.NewMultiprocessHandlers(
 			api,
-			common.To[*execution.JobSequence, intf.JobSequenceInterface]([]*execution.JobSequence{}),
+			common.To[*execution.JobSequence, intf.JobSequence]([]*execution.JobSequence{}),
 			&execution.Generation{}),
 		apihandler.NewBaseHandlers(api, nil),
 		apihandler.NewU256CumulativeHandlers(api),
@@ -107,7 +107,7 @@ func (this *API) VM() interface{} {
 }
 
 func (this *API) GetEU() interface{}   { return this.eu }
-func (this *API) SetEU(eu interface{}) { this.eu = eu.(intf.EUInterface) }
+func (this *API) SetEU(eu interface{}) { this.eu = eu.(intf.EU) }
 
 func (this *API) Ccurl() *concurrenturl.ConcurrentUrl            { return this.ccurl }
 func (this *API) SetCcurl(newCcurl *concurrenturl.ConcurrentUrl) { this.ccurl = newCcurl }

@@ -101,7 +101,7 @@ func (this *BaseHandlers) Api() intf.EthApiRouter { return this.api }
 
 func (this *BaseHandlers) New(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	connected := this.connector.New(
-		this.api.GetEU().(intf.EUInterface).ID(),   // Tx ID for conflict detection
+		this.api.GetEU().(intf.EU).ID(),            // Tx ID for conflict detection
 		types.Address(codec.Bytes20(caller).Hex()), // Main contract address
 	)
 	return caller[:], connected, 0 // Create a new container
@@ -275,7 +275,7 @@ func (this *BaseHandlers) clear(caller evmcommon.Address, input []byte) ([]byte,
 	}
 
 	for {
-		if _, _, err := this.api.Ccurl().PopBack(this.api.GetEU().(intf.EUInterface).ID(), path, nil); err != nil {
+		if _, _, err := this.api.Ccurl().PopBack(this.api.GetEU().(intf.EU).ID(), path, nil); err != nil {
 			break
 		}
 	}

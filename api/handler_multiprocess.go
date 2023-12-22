@@ -20,10 +20,10 @@ import (
 type MultiprocessHandlers struct {
 	*BaseHandlers
 	erros   []error
-	jobseqs []intf.JobSequenceInterface
+	jobseqs []intf.JobSequence
 }
 
-func NewMultiprocessHandlers(ethApiRouter intf.EthApiRouter, jobseqs []intf.JobSequenceInterface, genInfo interface{}) *MultiprocessHandlers {
+func NewMultiprocessHandlers(ethApiRouter intf.EthApiRouter, jobseqs []intf.JobSequence, genInfo interface{}) *MultiprocessHandlers {
 	handler := &MultiprocessHandlers{
 		erros:   []error{},
 		jobseqs: jobseqs, //[]*execution.JobSequence{},
@@ -57,7 +57,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte, args ...int
 		return []byte{}, successful, fee
 	}
 
-	generation := args[0].(intf.GenerationInterface).New(0, threads, args[0].(intf.GenerationInterface).JobSeqs()[:0])
+	generation := args[0].(intf.Generation).New(0, threads, args[0].(intf.Generation).JobSeqs()[:0])
 	fees := make([]int64, length)
 	this.erros = make([]error, length)
 
@@ -77,7 +77,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte, args ...int
 	}
 
 	// Unify tx IDs c
-	mainTxID := uint32(this.Api().GetEU().(intf.EUInterface).ID())
+	mainTxID := uint32(this.Api().GetEU().(intf.EU).ID())
 	common.Foreach(transitions, func(v *interfaces.Univalue, _ int) { (*v).SetTx(mainTxID) })
 
 	this.Api().Ccurl().WriteCache().AddTransitions(transitions) // Merge the write cache to the main cache
@@ -88,7 +88,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte, args ...int
 // For multiprocessor, a job sequence only contains one message.
 // To keep the same structure with the transaction level processing,
 // the message is wrapped
-func (this *MultiprocessHandlers) toJobSeq(input []byte, T intf.JobSequenceInterface) (intf.JobSequenceInterface, error) {
+func (this *MultiprocessHandlers) toJobSeq(input []byte, T intf.JobSequence) (intf.JobSequence, error) {
 	gasLimit, value, calleeAddr, funCall, err := abi.Parse4(input,
 		uint64(0), 1, 32,
 		uint256.NewInt(0), 1, 32,
@@ -107,7 +107,7 @@ func (this *MultiprocessHandlers) toJobSeq(input []byte, T intf.JobSequenceInter
 		0,
 		transfer, // Amount to transfer
 		gasLimit,
-		this.BaseHandlers.Api().GetEU().(intf.EUInterface).GasPrice(), // gas price
+		this.BaseHandlers.Api().GetEU().(intf.EU).GasPrice(), // gas price
 		funCall,
 		nil,
 		false, // Don't checking nonce
@@ -127,7 +127,7 @@ func (this *MultiprocessHandlers) toJobSeq(input []byte, T intf.JobSequenceInter
 	stdMsg := &adaptorcommon.StandardMessage{
 		ID:     uint64(newJobSeq.GetID()),
 		Native: &evmMsg,
-		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(intf.EUInterface).TxHash()),
+		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(intf.EU).TxHash()),
 	}
 	newJobSeq.AppendMsg(stdMsg)
 	// newJobSeq.StdMsgs = []*adaptorcommon.StandardMessage{stdMsg}

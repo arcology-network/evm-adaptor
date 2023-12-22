@@ -28,21 +28,21 @@ func NewGeneration(id uint32, numThreads uint8, jobSeqs []*JobSequence) *Generat
 }
 
 // func (this *Generation) BranchID() uint32 { return this.branchID }
-func (this *Generation) Length() uint64                  { return uint64(len(this.jobSeqs)) }
-func (this *Generation) JobT() intf.JobSequenceInterface { return &JobSequence{} }
-func (this *Generation) JobSeqs() []intf.JobSequenceInterface {
-	return common.To[*JobSequence, intf.JobSequenceInterface](this.jobSeqs)
+func (this *Generation) Length() uint64         { return uint64(len(this.jobSeqs)) }
+func (this *Generation) JobT() intf.JobSequence { return &JobSequence{} }
+func (this *Generation) JobSeqs() []intf.JobSequence {
+	return common.To[*JobSequence, intf.JobSequence](this.jobSeqs)
 }
 
 func (this *Generation) At(idx uint64) *JobSequence {
 	return common.IfThenDo1st(idx < uint64(len(this.jobSeqs)), func() *JobSequence { return this.jobSeqs[idx] }, nil)
 }
 
-func (this *Generation) New(id uint32, numThreads uint8, jobSeqs []intf.JobSequenceInterface) intf.GenerationInterface {
-	return NewGeneration(id, numThreads, common.To[intf.JobSequenceInterface, *JobSequence](jobSeqs))
+func (this *Generation) New(id uint32, numThreads uint8, jobSeqs []intf.JobSequence) intf.Generation {
+	return NewGeneration(id, numThreads, common.To[intf.JobSequence, *JobSequence](jobSeqs))
 }
 
-func (this *Generation) Add(job intf.JobSequenceInterface) bool {
+func (this *Generation) Add(job intf.JobSequence) bool {
 	this.jobSeqs = append(this.jobSeqs, job.(*JobSequence))
 	return true
 }
