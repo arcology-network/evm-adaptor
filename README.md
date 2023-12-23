@@ -1,4 +1,4 @@
-# EVM-adaptor
+# evm-adaptor
 
 EVM-adaptor is a thin adaptor designed to connecting [parallelized EVM](https://github.com/arcology-network/concurrent-evm) to the rest of the Arcology execution related modules.
 
