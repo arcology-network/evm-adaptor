@@ -1,103 +1,92 @@
 package eth
 
-import (
-	"math/big"
+// type StateDB interface {
+// 	CreateAccount(common.Address)
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+// 	SubBalance(common.Address, *big.Int)
+// 	AddBalance(common.Address, *big.Int)
+// 	GetBalance(common.Address) *big.Int
+// 	SetBalance(common.Address, *big.Int)
 
-	"github.com/ethereum/go-ethereum/params"
+// 	PeekBalance(common.Address) *big.Int // For Arcology
 
-	intf "github.com/arcology-network/vm-adaptor/interface"
-)
+// 	GetNonce(common.Address) uint64
+// 	SetNonce(common.Address, uint64)
 
-type StateDB interface {
-	CreateAccount(common.Address)
+// 	GetCodeHash(common.Address) common.Hash
+// 	GetCode(common.Address) []byte
+// 	SetCode(common.Address, []byte)
+// 	GetCodeSize(common.Address) int
 
-	SubBalance(common.Address, *big.Int)
-	AddBalance(common.Address, *big.Int)
-	GetBalance(common.Address) *big.Int
-	SetBalance(common.Address, *big.Int)
+// 	AddRefund(uint64)
+// 	SubRefund(uint64)
+// 	GetRefund() uint64
 
-	PeekBalance(common.Address) *big.Int // For Arcology
+// 	GetCommittedState(common.Address, common.Hash) common.Hash
+// 	GetState(common.Address, common.Hash) common.Hash
+// 	SetState(common.Address, common.Hash, common.Hash)
 
-	GetNonce(common.Address) uint64
-	SetNonce(common.Address, uint64)
+// 	GetTransientState(addr common.Address, key common.Hash) common.Hash
+// 	SetTransientState(addr common.Address, key, value common.Hash)
 
-	GetCodeHash(common.Address) common.Hash
-	GetCode(common.Address) []byte
-	SetCode(common.Address, []byte)
-	GetCodeSize(common.Address) int
+// 	SelfDestruct(common.Address)
+// 	HasSelfDestructed(common.Address) bool
 
-	AddRefund(uint64)
-	SubRefund(uint64)
-	GetRefund() uint64
+// 	Selfdestruct6780(common.Address)
 
-	GetCommittedState(common.Address, common.Hash) common.Hash
-	GetState(common.Address, common.Hash) common.Hash
-	SetState(common.Address, common.Hash, common.Hash)
+// 	// Exist reports whether the given account exists in state.
+// 	// Notably this should also return true for suicided accounts.
+// 	Exist(common.Address) bool
+// 	// Empty returns whether the given account is empty. Empty
+// 	// is defined according to EIP161 (balance = nonce = code = 0).
+// 	Empty(common.Address) bool
 
-	GetTransientState(addr common.Address, key common.Hash) common.Hash
-	SetTransientState(addr common.Address, key, value common.Hash)
+// 	RevertToSnapshot(int)
+// 	Snapshot() int
 
-	SelfDestruct(common.Address)
-	HasSelfDestructed(common.Address) bool
+// 	AddLog(*types.Log)
+// 	AddPreimage(common.Hash, []byte)
 
-	Selfdestruct6780(common.Address)
+// 	ForEachStorage(common.Address, func(common.Hash, common.Hash) bool) error
 
-	// Exist reports whether the given account exists in state.
-	// Notably this should also return true for suicided accounts.
-	Exist(common.Address) bool
-	// Empty returns whether the given account is empty. Empty
-	// is defined according to EIP161 (balance = nonce = code = 0).
-	Empty(common.Address) bool
+// 	PrepareAccessList(sender common.Address, dest *common.Address, precompiles []common.Address, txAccesses types.AccessList)
+// 	AddressInAccessList(addr common.Address) bool
+// 	SlotInAccessList(addr common.Address, slot common.Hash) (addressOk bool, slotOk bool)
+// 	// AddAddressToAccessList adds the given address to the access list. This operation is safe to perform
+// 	// even if the feature/fork is not active yet
+// 	AddAddressToAccessList(addr common.Address)
+// 	// AddSlotToAccessList adds the given (address,slot) to the access list. This operation is safe to perform
+// 	// even if the feature/fork is not active yet
+// 	AddSlotToAccessList(addr common.Address, slot common.Hash)
 
-	RevertToSnapshot(int)
-	Snapshot() int
+// 	PrepareFormer(txHash, bhash common.Hash, ti int)
+// 	GetLogs(hash common.Hash) []*types.Log
+// 	Copy() StateDB
 
-	AddLog(*types.Log)
-	AddPreimage(common.Hash, []byte)
+// 	Set(eac EthAccountCache, esc EthStorageCache)
 
-	ForEachStorage(common.Address, func(common.Hash, common.Hash) bool) error
+// 	Prepare(rules params.Rules, sender, coinbase common.Address, dest *common.Address, precompiles []common.Address, txAccesses types.AccessList)
+// }
 
-	PrepareAccessList(sender common.Address, dest *common.Address, precompiles []common.Address, txAccesses types.AccessList)
-	AddressInAccessList(addr common.Address) bool
-	SlotInAccessList(addr common.Address, slot common.Hash) (addressOk bool, slotOk bool)
-	// AddAddressToAccessList adds the given address to the access list. This operation is safe to perform
-	// even if the feature/fork is not active yet
-	AddAddressToAccessList(addr common.Address)
-	// AddSlotToAccessList adds the given (address,slot) to the access list. This operation is safe to perform
-	// even if the feature/fork is not active yet
-	AddSlotToAccessList(addr common.Address, slot common.Hash)
+// type Account interface {
+// 	GetBalance() *big.Int
+// 	GetNonce() uint64
+// 	GetCodeHash() []byte
+// }
 
-	PrepareFormer(txHash, bhash common.Hash, ti int)
-	GetLogs(hash common.Hash) []*types.Log
-	Copy() StateDB
+// type EthAccountCache interface {
+// 	GetAccount(string) (Account, error)
+// 	GetCode(string) ([]byte, error)
+// }
 
-	Set(eac EthAccountCache, esc EthStorageCache)
+// type EthStorageCache interface {
+// 	GetState(string, []byte) []byte
+// }
 
-	Prepare(rules params.Rules, sender, coinbase common.Address, dest *common.Address, precompiles []common.Address, txAccesses types.AccessList)
-}
-
-type Account interface {
-	GetBalance() *big.Int
-	GetNonce() uint64
-	GetCodeHash() []byte
-}
-
-type EthAccountCache interface {
-	GetAccount(string) (Account, error)
-	GetCode(string) ([]byte, error)
-}
-
-type EthStorageCache interface {
-	GetState(string, []byte) []byte
-}
-
-type KernelAPI interface {
-	AddLog(key, value string)
-	GetLogs() []intf.ILog
-	ClearLogs()
-	Prepare(txHash common.Hash)
-	Call(caller, callee common.Address, input []byte, origin common.Address, nonce uint64, blockhash common.Hash) ([]byte, bool)
-}
+// type KernelAPI interface {
+// 	AddLog(key, value string)
+// 	GetLogs() []intf.ILog
+// 	ClearLogs()
+// 	Prepare(txHash common.Hash)
+// 	Call(caller, callee common.Address, input []byte, origin common.Address, nonce uint64, blockhash common.Hash) ([]byte, bool)
+// }

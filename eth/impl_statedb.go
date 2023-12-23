@@ -144,7 +144,8 @@ func (this *ImplStateDB) Snapshot() int                                         
 func (this *ImplStateDB) AddPreimage(hash evmcommon.Hash, preimage []byte)                {}
 func (this *ImplStateDB) AddAddressToAccessList(addr evmcommon.Address)                   {} // Do nothing.
 func (this *ImplStateDB) AddSlotToAccessList(addr evmcommon.Address, slot evmcommon.Hash) {}
-func (this *ImplStateDB) Set(eac EthAccountCache, esc EthStorageCache)                    {} // TODO
+
+// func (this *ImplStateDB) Set(eac EthAccountCache, esc EthStorageCache)                    {} // TODO
 
 // Get from DB directly, bypassing ccurl since it make have some temporary states
 func (this *ImplStateDB) GetCommittedState(addr evmcommon.Address, key evmcommon.Hash) evmcommon.Hash {
