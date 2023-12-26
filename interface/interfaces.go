@@ -4,7 +4,6 @@ package interfaces
 import (
 	"math/big"
 
-	"github.com/arcology-network/concurrenturl"
 	"github.com/arcology-network/concurrenturl/interfaces"
 	"github.com/ethereum/go-ethereum/common"
 
@@ -20,9 +19,11 @@ type ApiCallHandler interface {
 
 type EthApiRouter interface {
 	Origin() evmcommon.Address
-	Ccurl() *concurrenturl.ConcurrentUrl
-	SetCcurl(*concurrenturl.ConcurrentUrl)
-	New(*concurrenturl.ConcurrentUrl, interface{}) EthApiRouter
+	// WriteCache() *concurrenturl.ConcurrentUrl
+	WriteCache() interface{}
+	// DataReader() interface{}
+	SetReadOnlyDataSource(interface{})
+	New(interface{}, interface{}) EthApiRouter
 	Coinbase() evmcommon.Address
 
 	StateFilter() StateFilter

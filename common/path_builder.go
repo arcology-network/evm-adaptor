@@ -7,57 +7,58 @@ import (
 	"github.com/arcology-network/common-lib/types"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 
-	"github.com/arcology-network/concurrenturl"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
+	cache "github.com/arcology-network/eu/cache"
 
 	intf "github.com/arcology-network/vm-adaptor/interface"
 )
 
 // Ccurl connectors for Arcology APIs
-type CcurlConnector struct {
+type BuiltinPathMaker struct {
 	apiRouter intf.EthApiRouter
-	ccurl     *concurrenturl.ConcurrentUrl
-	subDir    string
+	// apiRouter.WriteCache()     *concurrenturl.ConcurrentUrl
+	subDir string
 }
 
-func NewCCurlConnector(subDir string, api intf.EthApiRouter, ccurl *concurrenturl.ConcurrentUrl) *CcurlConnector {
-	return &CcurlConnector{
+func NewBuiltinPathMaker(subDir string, api intf.EthApiRouter) *BuiltinPathMaker {
+	return &BuiltinPathMaker{
 		subDir:    subDir,
 		apiRouter: api,
-		ccurl:     ccurl,
+		// apiRouter.WriteCache():     apiRouter.WriteCache(),
 	}
 }
 
 // Make Arcology paths under the current account
-func (this *CcurlConnector) New(txIndex uint32, deploymentAddr types.Address) bool {
+func (this *BuiltinPathMaker) New(txIndex uint32, deploymentAddr types.Address) bool {
 	if !this.newStorageRoot(deploymentAddr, txIndex) { // Create the root path if has been created yet.
 		return false
 	}
 	return this.newContainerRoot(deploymentAddr, txIndex) //
 }
 
-func (this *CcurlConnector) newStorageRoot(account types.Address, txIndex uint32) bool {
+func (this *BuiltinPathMaker) newStorageRoot(account types.Address, txIndex uint32) bool {
 	accountRoot := commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(account), "/")
-	if !this.ccurl.IfExists(accountRoot) {
-		return common.FilterFirst(this.ccurl.NewAccount(txIndex, string(account))) != nil // Create a new account
+	if !this.apiRouter.WriteCache().(*cache.WriteCache).IfExists(accountRoot) {
+		// ccurlcommon.CreateAccount(this.apiRouter.WriteCache(), account, txIndex)                           // Create a new account
+		return common.FilterFirst(this.apiRouter.WriteCache().(*cache.WriteCache).CreateNewAccount(txIndex, string(account))) != nil // Create a new account
 	}
 	return true // ALready exists
 }
 
-func (this *CcurlConnector) newContainerRoot(account types.Address, txIndex uint32) bool {
+func (this *BuiltinPathMaker) newContainerRoot(account types.Address, txIndex uint32) bool {
 	containerRoot := this.key(account)
 
-	if !this.ccurl.IfExists(containerRoot) {
-		_, err := this.ccurl.Write(txIndex, containerRoot, commutative.NewPath()) // Create a new container
+	if !this.apiRouter.WriteCache().(*cache.WriteCache).IfExists(containerRoot) {
+		_, err := this.apiRouter.WriteCache().(*cache.WriteCache).Write(txIndex, containerRoot, commutative.NewPath()) // Create a new container
 		return err == nil
 	}
 	return true // Already exists
 }
 
-func (this *CcurlConnector) Key(caller [20]byte) string { // container ID
+func (this *BuiltinPathMaker) Key(caller [20]byte) string { // container ID
 	return this.key(types.Address(codec.Bytes20(caller).Hex()))
 }
 
-func (this *CcurlConnector) key(account types.Address) string { // container ID
+func (this *BuiltinPathMaker) key(account types.Address) string { // container ID
 	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(account), "/storage", this.subDir, "/")
 }

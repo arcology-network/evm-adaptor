@@ -14,13 +14,13 @@ import (
 // APIs under the concurrency namespace
 type RuntimeHandlers struct {
 	api       intf.EthApiRouter
-	connector *adaptorcommon.CcurlConnector
+	connector *adaptorcommon.BuiltinPathMaker
 }
 
 func NewRuntimeHandlers(ethApiRouter intf.EthApiRouter) *RuntimeHandlers {
 	return &RuntimeHandlers{
 		api:       ethApiRouter,
-		connector: adaptorcommon.NewCCurlConnector("/native/local/", ethApiRouter, ethApiRouter.Ccurl()),
+		connector: adaptorcommon.NewBuiltinPathMaker("/native/local/", ethApiRouter),
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/arcology-network/concurrenturl/commutative"
 	"github.com/arcology-network/concurrenturl/interfaces"
+	"github.com/arcology-network/eu/cache"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 	"github.com/arcology-network/vm-adaptor/common"
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
@@ -21,20 +22,20 @@ import (
 // APIs under the concurrency namespace
 type BaseHandlers struct {
 	api       intf.EthApiRouter
-	connector *adaptorcommon.CcurlConnector
+	connector *adaptorcommon.BuiltinPathMaker
 	args      []interface{}
 }
 
 func NewBaseHandlers(api intf.EthApiRouter, args ...interface{}) *BaseHandlers {
 	return &BaseHandlers{
 		api:       api,
-		connector: adaptorcommon.NewCCurlConnector("/container", api, api.Ccurl()),
+		connector: adaptorcommon.NewBuiltinPathMaker("/container", api),
 		args:      args,
 	}
 }
 
-func (this *BaseHandlers) Address() [20]byte                        { return common.BYTES_HANDLER }
-func (this *BaseHandlers) Connector() *adaptorcommon.CcurlConnector { return this.connector }
+func (this *BaseHandlers) Address() [20]byte                          { return common.BYTES_HANDLER }
+func (this *BaseHandlers) Connector() *adaptorcommon.BuiltinPathMaker { return this.connector }
 
 func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
 	signature := [4]byte{}
@@ -130,7 +131,7 @@ func (this *BaseHandlers) peekLength(caller evmcommon.Address, input []byte) ([]
 		return []byte{}, false, 0
 	}
 
-	typedv, fees := this.api.Ccurl().PeekCommitted(path, new(commutative.Path))
+	typedv, fees := this.api.WriteCache().(*cache.WriteCache).PeekCommitted(path, new(commutative.Path))
 	if typedv != nil {
 		type measurable interface{ Length() int }
 		numKeys := uint64(typedv.(interfaces.Type).Value().(measurable).Length())
@@ -275,7 +276,7 @@ func (this *BaseHandlers) clear(caller evmcommon.Address, input []byte) ([]byte,
 	}
 
 	for {
-		if _, _, err := this.api.Ccurl().PopBack(this.api.GetEU().(intf.EU).ID(), path, nil); err != nil {
+		if _, _, err := this.api.WriteCache().(*cache.WriteCache).PopBack(this.api.GetEU().(intf.EU).ID(), path, nil); err != nil {
 			break
 		}
 	}

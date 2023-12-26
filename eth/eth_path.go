@@ -6,51 +6,52 @@ import (
 
 	codec "github.com/arcology-network/common-lib/codec"
 	commonlib "github.com/arcology-network/common-lib/common"
-	"github.com/arcology-network/concurrenturl"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
 	commutative "github.com/arcology-network/concurrenturl/commutative"
+	cache "github.com/arcology-network/eu/cache"
 	intf "github.com/arcology-network/vm-adaptor/interface"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 )
 
-type EthCCurlConnector struct {
-	ccurl *concurrenturl.ConcurrentUrl
+type EthPathBuilder struct {
+	// ccurl cache.WriteCache
 }
 
-func (this *EthCCurlConnector) AccountExist(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, tid uint32) bool {
+func (this *EthPathBuilder) AccountExist(writeCache *cache.WriteCache, account evmcommon.Address, tid uint32) bool {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], account[:])
-	return url.IfExists(this.AccountRootPath(account))
+	return writeCache.IfExists(this.AccountRootPath(account))
+	// return writeCache.IfExists(this.AccountRootPath(account))
 }
 
-func (this *EthCCurlConnector) AccountRootPath(account evmcommon.Address) string {
+func (this *EthPathBuilder) AccountRootPath(account evmcommon.Address) string {
 	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, codec.Bytes20(account).Hex(), "/")
 }
 
-func (this *EthCCurlConnector) StorageRootPath(account evmcommon.Address) string {
+func (this *EthPathBuilder) StorageRootPath(account evmcommon.Address) string {
 	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, codec.Bytes20(account).Hex(), "/storage/native/")
 }
 
-func (this *EthCCurlConnector) BalancePath(account evmcommon.Address) string {
+func (this *EthPathBuilder) BalancePath(account evmcommon.Address) string {
 	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, codec.Bytes20(account).Hex(), "/balance")
 }
 
-func (this *EthCCurlConnector) NoncePath(account evmcommon.Address) string {
+func (this *EthPathBuilder) NoncePath(account evmcommon.Address) string {
 	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, codec.Bytes20(account).Hex(), "/nonce")
 }
 
-func (this *EthCCurlConnector) CodePath(account evmcommon.Address) string {
+func (this *EthPathBuilder) CodePath(account evmcommon.Address) string {
 	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, codec.Bytes20(account).Hex(), "/code")
 }
 
-func getAccountRootPath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
+func getAccountRootPath(writeCache *cache.WriteCache, account evmcommon.Address) string {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], account[:])
 	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, codec.Bytes20(account).Hex(), "/")
 }
 
-func getStorageRootPath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
+func getStorageRootPath(writeCache *cache.WriteCache, account evmcommon.Address) string {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], account[:])
 	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(accHex[:]), "/storage/native/")
@@ -71,43 +72,43 @@ func getStorageKeyPath(api intf.EthApiRouter, account evmcommon.Address, key evm
 	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(accHex[:]), "/storage/native/", key.Hex())
 }
 
-func getBalancePath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
+func getBalancePath(writeCache *cache.WriteCache, account evmcommon.Address) string {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], account[:])
 	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(accHex[:]), "/balance")
 }
 
-func getNoncePath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
+func getNoncePath(writeCache *cache.WriteCache, account evmcommon.Address) string {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], account[:])
 	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(accHex[:]), "/nonce")
 }
 
-func getCodePath(url *concurrenturl.ConcurrentUrl, account evmcommon.Address) string {
+func getCodePath(writeCache *cache.WriteCache, account evmcommon.Address) string {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], account[:])
 	return commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(accHex[:]), "/code")
 }
 
-func accountExist(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, tid uint32) bool {
+func accountExist(writeCache *cache.WriteCache, account evmcommon.Address, tid uint32) bool {
 	var accHex [2 * evmcommon.AddressLength]byte
 	hex.Encode(accHex[:], account[:])
-	return url.IfExists(getAccountRootPath(url, account))
+	return writeCache.IfExists(getAccountRootPath(writeCache, account))
 }
 
-func createAccount(url *concurrenturl.ConcurrentUrl, account evmcommon.Address, tid uint32) {
-	if _, err := url.NewAccount(tid, codec.Bytes20(account).Hex()); err != nil {
+func createAccount(writeCache *cache.WriteCache, account evmcommon.Address, tid uint32) {
+	if _, err := writeCache.CreateNewAccount(tid, codec.Bytes20(account).Hex()); err != nil {
 		panic(err)
 	}
 
-	if _, err := url.Write(tid, getBalancePath(url, account), commutative.NewUnboundedU256()); err != nil { // Initialize balance
+	if _, err := writeCache.Write(tid, getBalancePath(writeCache, account), commutative.NewUnboundedU256()); err != nil { // Initialize balance
 		panic(err)
 	}
 
-	if _, err := url.Write(tid, getNoncePath(url, account), commutative.NewUnboundedUint64()); err != nil {
+	if _, err := writeCache.Write(tid, getNoncePath(writeCache, account), commutative.NewUnboundedUint64()); err != nil {
 		panic(err)
 	}
-	// if err := url.Write(tid, getCodePath(url, account), noncommutative.NewBytes(nil)); err != nil {
+	// if err := writeCache.Write(tid, getCodePath(writeCache, account), noncommutative.NewBytes(nil)); err != nil {
 	// 	panic(err)
 	// }
 }

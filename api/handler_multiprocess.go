@@ -6,6 +6,7 @@ import (
 
 	"github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl/interfaces"
+	"github.com/arcology-network/eu/cache"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	evmcore "github.com/ethereum/go-ethereum/core"
 	"github.com/holiman/uint256"
@@ -80,7 +81,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte, args ...int
 	mainTxID := uint32(this.Api().GetEU().(intf.EU).ID())
 	common.Foreach(transitions, func(v *interfaces.Univalue, _ int) { (*v).SetTx(mainTxID) })
 
-	this.Api().Ccurl().WriteCache().AddTransitions(transitions) // Merge the write cache to the main cache
+	this.Api().WriteCache().(*cache.WriteCache).AddTransitions(transitions) // Merge the write cache to the main cache
 	return []byte{}, true, common.Sum[int64](fees)
 }
 

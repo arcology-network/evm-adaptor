@@ -7,6 +7,7 @@ import (
 
 	"github.com/arcology-network/concurrenturl/commutative"
 	ccinterfaces "github.com/arcology-network/concurrenturl/interfaces"
+	"github.com/arcology-network/eu/cache"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 	intf "github.com/arcology-network/vm-adaptor/interface"
 	evmcommon "github.com/ethereum/go-ethereum/common"
@@ -18,13 +19,13 @@ import (
 // APIs under the concurrency namespace
 type U256CumHandlers struct {
 	api       intf.EthApiRouter
-	connector *adaptorcommon.CcurlConnector
+	connector *adaptorcommon.BuiltinPathMaker
 }
 
 func NewU256CumulativeHandlers(api intf.EthApiRouter) *U256CumHandlers {
 	return &U256CumHandlers{
 		api:       api,
-		connector: adaptorcommon.NewCCurlConnector("/container", api, api.Ccurl()),
+		connector: adaptorcommon.NewBuiltinPathMaker("/container", api),
 	}
 }
 
@@ -80,7 +81,7 @@ func (this *U256CumHandlers) new(caller evmcommon.Address, input []byte) ([]byte
 	}
 
 	newU256 := commutative.NewBoundedU256(min.(*uint256.Int), max.(*uint256.Int))
-	if _, err := this.api.Ccurl().Write(txIndex, key, newU256); err != nil {
+	if _, err := this.api.WriteCache().(*cache.WriteCache).Write(txIndex, key, newU256); err != nil {
 		return []byte{}, false, 0
 	}
 	return []byte{}, true, 0
@@ -92,7 +93,7 @@ func (this *U256CumHandlers) get(caller evmcommon.Address, input []byte) ([]byte
 		return []byte{}, false, 0
 	}
 
-	if value, _, err := this.api.Ccurl().ReadAt(this.api.GetEU().(intf.EU).ID(), path, 0, new(commutative.U256)); value == nil || err != nil {
+	if value, _, err := this.api.WriteCache().(*cache.WriteCache).ReadAt(this.api.GetEU().(intf.EU).ID(), path, 0, new(commutative.U256)); value == nil || err != nil {
 		return []byte{}, false, 0
 	} else {
 		updated := value.(uint256.Int)
@@ -110,7 +111,7 @@ func (this *U256CumHandlers) peek(caller evmcommon.Address, input []byte) ([]byt
 	}
 
 	// Peek the initial value
-	value, _, err := this.api.Ccurl().DoAt(this.api.GetEU().(intf.EU).ID(), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
+	value, _, err := this.api.WriteCache().(*cache.WriteCache).DoAt(this.api.GetEU().(intf.EU).ID(), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
 		return uint32(0), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()
 	}, new(commutative.U256))
 
@@ -146,7 +147,7 @@ func (this *U256CumHandlers) set(caller evmcommon.Address, input []byte, isPosit
 
 	value := commutative.NewU256Delta(delta.(*uint256.Int), isPositive)
 
-	_, err = this.api.Ccurl().WriteAt(this.api.GetEU().(intf.EU).ID(), path, 0, value)
+	_, err = this.api.WriteCache().(*cache.WriteCache).WriteAt(this.api.GetEU().(intf.EU).ID(), path, 0, value)
 	return []byte{}, err == nil, 0
 }
 
@@ -156,7 +157,7 @@ func (this *U256CumHandlers) min(caller evmcommon.Address, input []byte) ([]byte
 		return []byte{}, false, 0
 	}
 
-	value, _, err := this.api.Ccurl().DoAt(this.api.GetEU().(intf.EU).ID(), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
+	value, _, err := this.api.WriteCache().(*cache.WriteCache).DoAt(this.api.GetEU().(intf.EU).ID(), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
 		return uint32(1), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()
 	}, new(commutative.U256))
 
@@ -175,7 +176,7 @@ func (this *U256CumHandlers) max(caller evmcommon.Address, input []byte) ([]byte
 		return []byte{}, false, 0
 	}
 
-	value, _, err := this.api.Ccurl().DoAt(this.api.GetEU().(intf.EU).ID(), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
+	value, _, err := this.api.WriteCache().(*cache.WriteCache).DoAt(this.api.GetEU().(intf.EU).ID(), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
 		return uint32(1), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()
 	}, new(commutative.U256))
 
