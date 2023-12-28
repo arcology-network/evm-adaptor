@@ -25,6 +25,6 @@ The [Concurrent lib](https://github.com/arcology-network/concurrentlib) provides
 For detailed information on how to use and integrate the EVM-adaptor into your project, refer to the [documentation.](https://doc.arcology.network)
 
 
-<h2> License  <img align="center" height="32" src="./img/cc.svg">  </h2>
+<h2> License  <img align="center" height="32" src="./img/copyright.svg">  </h2>
 ## License
 This project is licensed under the MIT License.
