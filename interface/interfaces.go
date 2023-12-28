@@ -19,14 +19,10 @@ type ApiCallHandler interface {
 
 type EthApiRouter interface {
 	Origin() evmcommon.Address
-	// WriteCache() *StorageCommitter.ConcurrentUrl
 	WriteCache() interface{}
-	// DataReader() interface{}
 	SetReadOnlyDataSource(interface{})
 	New(interface{}, interface{}) EthApiRouter
 	Coinbase() evmcommon.Address
-
-	StateFilter() StateFilter
 
 	SetEU(interface{})
 	GetEU() interface{}
@@ -46,8 +42,7 @@ type EthApiRouter interface {
 	ElementUID() []byte
 }
 
-type StateFilter interface {
-	Raw() []*univalue.Univalue
+type WriteCacheFilter interface {
 	ByType() ([]*univalue.Univalue, []*univalue.Univalue)
 	AddToAutoReversion(addr string)
 	RemoveByAddress(string)

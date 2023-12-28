@@ -7,6 +7,7 @@ import (
 	intf "github.com/arcology-network/vm-adaptor/interface"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 
+	cache "github.com/arcology-network/eu/cache"
 	"github.com/arcology-network/vm-adaptor/common"
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 )
@@ -54,7 +55,7 @@ func (this *RuntimeHandlers) pid(caller evmcommon.Address, input []byte) ([]byte
 }
 
 func (this *RuntimeHandlers) rollback(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	this.api.StateFilter().RemoveByAddress(hex.EncodeToString(caller[:]))
+	cache.NewWriteCacheFilter(this.api.WriteCache()).RemoveByAddress(hex.EncodeToString(caller[:]))
 	return []byte{}, true, 0
 }
 

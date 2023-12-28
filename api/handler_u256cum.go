@@ -16,7 +16,7 @@ import (
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 )
 
-// APIs under the concurrency namespace
+// U256CumulativeHandlers handles the U256Cumulative APIs that can be called by concurrent API called.
 type U256CumHandlers struct {
 	api       intf.EthApiRouter
 	connector *adaptorcommon.BuiltinPathMaker
@@ -32,8 +32,6 @@ func NewU256CumulativeHandlers(api intf.EthApiRouter) *U256CumHandlers {
 func (this *U256CumHandlers) Address() [20]byte {
 	return common.CUMULATIVE_U256_HANDLER
 }
-
-// performed the changes on Delta only
 
 func (this *U256CumHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
 	signature := [4]byte{}
@@ -104,7 +102,9 @@ func (this *U256CumHandlers) get(caller evmcommon.Address, input []byte) ([]byte
 	return []byte{}, false, 0
 }
 
-func (this *U256CumHandlers) peek(caller evmcommon.Address, input []byte) ([]byte, bool, int64) { // Get the initial value
+// Peek reads the initial value from the WriteCache. It assumes that the initial value
+// is always in the cache by the time it is called.
+func (this *U256CumHandlers) peek(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
@@ -126,10 +126,12 @@ func (this *U256CumHandlers) peek(caller evmcommon.Address, input []byte) ([]byt
 	return []byte{}, false, 0
 }
 
+// Add adds a positive delta to the variable's delta.
 func (this *U256CumHandlers) add(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	return this.set(caller, input, true)
 }
 
+// Add adds a negative delta to the variable's delta.
 func (this *U256CumHandlers) sub(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	return this.set(caller, input, false)
 }
