@@ -83,16 +83,8 @@ func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20
 	}
 
 	if len(this.args) > 0 {
-		// this.args[0].(interface {
-		// 	Run([20]byte, []byte, ...interface{}) ([]byte, bool, int64)
-		// }).Run(caller, input[4:], this.args[1:])
-
 		customFun := this.args[0].(func([20]byte, []byte, ...interface{}) ([]byte, bool, int64))
 		customFun(caller, input[4:], this.args[1:]...)
-
-		// return this.args.(interface {
-		// 	Run([20]byte, []byte) ([]byte, bool, int64)
-		// }).Run(caller, input[4:]) //more variables
 	}
 
 	return []byte{}, false, 0 // unknown

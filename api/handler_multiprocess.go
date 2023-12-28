@@ -114,23 +114,16 @@ func (this *MultiprocessHandlers) toJobSeq(input []byte, T intf.JobSequence) (in
 		false, // Don't checking nonce
 	)
 
-	// newJobSeq := &execution.JobSequence{
-	// 	ID:        uint32(this.BaseHandlers.Api().GetSerialNum(adaptorcommon.SUB_PROCESS)),
-	// 	ApiRouter: this.BaseHandlers.Api(),
-	// }
-
-	// newJobSeq creates a new job sequence using the TYPE INFO of the jobseqs slice.
+	// newJobSeq creates a new job sequence using the TYPE INFO.
 	newJobSeq := T.New(
 		uint32(this.BaseHandlers.Api().GetSerialNum(adaptorcommon.SUB_PROCESS)),
 		this.BaseHandlers.Api(),
 	)
 
-	stdMsg := &adaptorcommon.StandardMessage{
+	newJobSeq.AppendMsg(&adaptorcommon.StandardMessage{
 		ID:     uint64(newJobSeq.GetID()),
 		Native: &evmMsg,
 		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(intf.EU).TxHash()),
-	}
-	newJobSeq.AppendMsg(stdMsg)
-	// newJobSeq.StdMsgs = []*adaptorcommon.StandardMessage{stdMsg}
+	})
 	return newJobSeq, nil
 }
