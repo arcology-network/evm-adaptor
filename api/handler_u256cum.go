@@ -6,7 +6,7 @@ import (
 	"github.com/holiman/uint256"
 
 	"github.com/arcology-network/concurrenturl/commutative"
-	ccinterfaces "github.com/arcology-network/concurrenturl/interfaces"
+	"github.com/arcology-network/concurrenturl/univalue"
 	"github.com/arcology-network/eu/cache"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 	intf "github.com/arcology-network/vm-adaptor/interface"
@@ -112,7 +112,7 @@ func (this *U256CumHandlers) peek(caller evmcommon.Address, input []byte) ([]byt
 
 	// Peek the initial value
 	value, _, err := this.api.WriteCache().(*cache.WriteCache).DoAt(this.api.GetEU().(intf.EU).ID(), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
-		return uint32(0), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()
+		return uint32(0), uint32(0), uint32(0), v.(*univalue.Univalue).Value()
 	}, new(commutative.U256))
 
 	if value != nil && err == nil {
@@ -158,7 +158,7 @@ func (this *U256CumHandlers) min(caller evmcommon.Address, input []byte) ([]byte
 	}
 
 	value, _, err := this.api.WriteCache().(*cache.WriteCache).DoAt(this.api.GetEU().(intf.EU).ID(), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
-		return uint32(1), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()
+		return uint32(1), uint32(0), uint32(0), v.(*univalue.Univalue).Value()
 	}, new(commutative.U256))
 
 	if value != nil && err == nil {
@@ -177,7 +177,7 @@ func (this *U256CumHandlers) max(caller evmcommon.Address, input []byte) ([]byte
 	}
 
 	value, _, err := this.api.WriteCache().(*cache.WriteCache).DoAt(this.api.GetEU().(intf.EU).ID(), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
-		return uint32(1), uint32(0), uint32(0), v.(ccinterfaces.Univalue).Value()
+		return uint32(1), uint32(0), uint32(0), v.(*univalue.Univalue).Value()
 	}, new(commutative.U256))
 
 	if value != nil && err == nil {

@@ -5,8 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/arcology-network/concurrenturl/commutative"
-	"github.com/arcology-network/concurrenturl/interfaces"
-	urltype "github.com/arcology-network/concurrenturl/univalue"
+	"github.com/arcology-network/concurrenturl/univalue"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -70,22 +69,22 @@ func FormatValue(value interface{}) string {
 	return ""
 }
 
-func FormatTransitions(transitions []interfaces.Univalue) string {
+func FormatTransitions(transitions []*univalue.Univalue) string {
 	var str string
 	for _, t := range transitions {
 		str += fmt.Sprintf("%v%v%v%v%v%v%v%v%v%v%v%v%v%v",
-			"Tx=", t.(*urltype.Univalue).GetTx(),
-			" Reads=", t.(*urltype.Univalue).Reads(),
-			" Writes=", t.(*urltype.Univalue).Writes(),
-			" Delta Writes=", t.(*urltype.Univalue).DeltaWrites(),
-			" Preexists=", t.(*urltype.Univalue).Preexist(),
-			" Path=", *(t.(*urltype.Univalue).GetPath()),
-			" Value", FormatValue(t.(*urltype.Univalue).Value())+"\n")
+			"Tx=", t.GetTx(),
+			" Reads=", t.Reads(),
+			" Writes=", t.Writes(),
+			" Delta Writes=", t.DeltaWrites(),
+			" Preexists=", t.Preexist(),
+			" Path=", *(t.GetPath()),
+			" Value", FormatValue(t.Value())+"\n")
 	}
 	return str
 }
 
-// func DetectConflict(transitions []interfaces.Univalue) ([]uint32, []uint32, []bool) {
+// func DetectConflict(transitions [] *univalue.Univalue) ([]uint32, []uint32, []bool) {
 // 	length := len(transitions)
 // 	txs := make([]uint32, length)
 // 	paths := make([]string, length)
@@ -94,11 +93,11 @@ func FormatTransitions(transitions []interfaces.Univalue) string {
 // 	composite := make([]bool, length)
 // 	uniqueTxsDict := make(map[uint32]struct{})
 // 	for i, t := range transitions {
-// 		txs[i] = t.(*urltype.Univalue).GetTx()
-// 		paths[i] = *(t.(*urltype.Univalue).GetPath())
-// 		reads[i] = t.(*urltype.Univalue).Reads()
-// 		writes[i] = t.(*urltype.Univalue).Writes()
-// 		composite[i] = t.(*urltype.Univalue).Reads() == 0 && t.(*urltype.Univalue).Writes() == 0 && t.(*urltype.Univalue).DeltaWrites() >= 0
+// 		txs[i] = t.GetTx()
+// 		paths[i] = *(t.GetPath())
+// 		reads[i] = t.Reads()
+// 		writes[i] = t.Writes()
+// 		composite[i] = t.Reads() == 0 && t.Writes() == 0 && t.DeltaWrites() >= 0
 // 		uniqueTxsDict[txs[i]] = struct{}{}
 // 	}
 
@@ -113,7 +112,7 @@ func FormatTransitions(transitions []interfaces.Univalue) string {
 // 	return txs, groups, flags
 // }
 
-// func prepare(db interfaces.Datastore, height uint64, transitions []interfaces.Univalue, txs []uint32) (*vmadaptor.EU, *vmadaptor.Config) {
+// func prepare(db interfaces.Datastore, height uint64, transitions [] *univalue.Univalue, txs []uint32) (*vmadaptor.EU, *vmadaptor.Config) {
 // 	url := concurrenturl.NewConcurrentUrl(db)
 // 	url.Import(transitions)
 // 	url.Sort()

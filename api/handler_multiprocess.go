@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 
 	"github.com/arcology-network/common-lib/common"
-	"github.com/arcology-network/concurrenturl/interfaces"
+	"github.com/arcology-network/concurrenturl/univalue"
 	"github.com/arcology-network/eu/cache"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	evmcore "github.com/ethereum/go-ethereum/core"
@@ -79,7 +79,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte, args ...int
 
 	// Unify tx IDs c
 	mainTxID := uint32(this.Api().GetEU().(intf.EU).ID())
-	common.Foreach(transitions, func(v *interfaces.Univalue, _ int) { (*v).SetTx(mainTxID) })
+	common.Foreach(transitions, func(v **univalue.Univalue, _ int) { (*v).SetTx(mainTxID) })
 
 	this.Api().WriteCache().(*cache.WriteCache).AddTransitions(transitions) // Merge the write cache to the main cache
 	return []byte{}, true, common.Sum[int64](fees)

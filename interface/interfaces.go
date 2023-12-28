@@ -4,7 +4,7 @@ package interfaces
 import (
 	"math/big"
 
-	"github.com/arcology-network/concurrenturl/interfaces"
+	"github.com/arcology-network/concurrenturl/univalue"
 	"github.com/ethereum/go-ethereum/common"
 
 	evmcommon "github.com/ethereum/go-ethereum/common"
@@ -19,7 +19,7 @@ type ApiCallHandler interface {
 
 type EthApiRouter interface {
 	Origin() evmcommon.Address
-	// WriteCache() *concurrenturl.ConcurrentUrl
+	// WriteCache() *StorageCommitter.ConcurrentUrl
 	WriteCache() interface{}
 	// DataReader() interface{}
 	SetReadOnlyDataSource(interface{})
@@ -47,8 +47,8 @@ type EthApiRouter interface {
 }
 
 type StateFilter interface {
-	Raw() []interfaces.Univalue
-	ByType() ([]interfaces.Univalue, []interfaces.Univalue)
+	Raw() []*univalue.Univalue
+	ByType() ([]*univalue.Univalue, []*univalue.Univalue)
 	AddToAutoReversion(addr string)
 	RemoveByAddress(string)
 }
@@ -90,7 +90,7 @@ type JobSequence interface {
 type Generation interface {
 	New(uint32, uint8, []JobSequence) Generation
 	Add(JobSequence) bool
-	Run(EthApiRouter) []interfaces.Univalue
+	Run(EthApiRouter) []*univalue.Univalue
 	JobSeqs() []JobSequence
 	JobT() JobSequence
 }
