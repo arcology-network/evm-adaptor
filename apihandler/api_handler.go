@@ -13,8 +13,6 @@ import (
 	eucommon "github.com/arcology-network/eu/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
-	// eucommon "github.com/arcology-network/eu/common"
-	execution "github.com/arcology-network/eu/execution"
 	apicontainer "github.com/arcology-network/vm-adaptor/apihandler/container"
 	apicumulative "github.com/arcology-network/vm-adaptor/apihandler/cumulative"
 	apimultiprocess "github.com/arcology-network/vm-adaptor/apihandler/multiprocess"
@@ -51,10 +49,7 @@ func NewAPIHandler(cache *cache.WriteCache) *APIHandler {
 
 	handlers := []adaptorintf.ApiCallHandler{
 		apiio.NewIoHandlers(api),
-		apimultiprocess.NewMultiprocessHandler(
-			api,
-			common.To[*execution.JobSequence, adaptorintf.JobSequence]([]*execution.JobSequence{}),
-			&execution.Generation{}),
+		apimultiprocess.NewMultiprocessHandler(api),
 		apicontainer.NewBaseHandlers(api, nil),
 		apicumulative.NewU256CumulativeHandler(api),
 		// cumulativei256.NewInt256CumulativeHandlers(api),

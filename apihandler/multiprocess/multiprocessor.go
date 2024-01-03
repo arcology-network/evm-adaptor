@@ -7,6 +7,7 @@ import (
 	"github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/concurrenturl/univalue"
 	"github.com/arcology-network/eu/cache"
+	"github.com/arcology-network/eu/execution"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	evmcore "github.com/ethereum/go-ethereum/core"
 	"github.com/holiman/uint256"
@@ -15,7 +16,7 @@ import (
 
 	eucommon "github.com/arcology-network/eu/common"
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
-	intf "github.com/arcology-network/vm-adaptor/interface"
+	adaptorintf "github.com/arcology-network/vm-adaptor/interface"
 
 	basecontainer "github.com/arcology-network/vm-adaptor/apihandler/container"
 )
@@ -24,15 +25,15 @@ import (
 type MultiprocessHandler struct {
 	*basecontainer.BaseHandlers
 	erros   []error
-	jobseqs []intf.JobSequence
+	jobseqs []adaptorintf.JobSequence
 }
 
-func NewMultiprocessHandler(ethApiRouter intf.EthApiRouter, jobseqs []intf.JobSequence, genInfo interface{}) *MultiprocessHandler {
+func NewMultiprocessHandler(ethApiRouter adaptorintf.EthApiRouter) *MultiprocessHandler {
 	handler := &MultiprocessHandler{
 		erros:   []error{},
-		jobseqs: jobseqs, //[]*execution.JobSequence{},
+		jobseqs: common.To[*execution.JobSequence, adaptorintf.JobSequence]([]*execution.JobSequence{}),
 	}
-	handler.BaseHandlers = basecontainer.NewBaseHandlers(ethApiRouter, handler.Run, genInfo)
+	handler.BaseHandlers = basecontainer.NewBaseHandlers(ethApiRouter, handler.Run, &execution.Generation{})
 	return handler
 }
 
@@ -61,7 +62,7 @@ func (this *MultiprocessHandler) Run(caller [20]byte, input []byte, args ...inte
 		return []byte{}, successful, fee
 	}
 
-	generation := args[0].(intf.Generation).New(0, threads, args[0].(intf.Generation).JobSeqs()[:0])
+	generation := args[0].(adaptorintf.Generation).New(0, threads, args[0].(adaptorintf.Generation).JobSeqs()[:0])
 	fees := make([]int64, length)
 	this.erros = make([]error, length)
 
@@ -81,7 +82,7 @@ func (this *MultiprocessHandler) Run(caller [20]byte, input []byte, args ...inte
 	}
 
 	// Unify tx IDs c
-	mainTxID := uint32(this.Api().GetEU().(intf.EU).ID())
+	mainTxID := uint32(this.Api().GetEU().(adaptorintf.EU).ID())
 	common.Foreach(transitions, func(v **univalue.Univalue, _ int) { (*v).SetTx(mainTxID) })
 
 	this.Api().WriteCache().(*cache.WriteCache).AddTransitions(transitions) // Merge the write cache to the main cache
@@ -92,7 +93,7 @@ func (this *MultiprocessHandler) Run(caller [20]byte, input []byte, args ...inte
 // For multiprocessor, a job sequence only contains one message.
 // To keep the same structure with the transaction level processing,
 // the message is wrapped
-func (this *MultiprocessHandler) toJobSeq(input []byte, T intf.JobSequence) (intf.JobSequence, error) {
+func (this *MultiprocessHandler) toJobSeq(input []byte, T adaptorintf.JobSequence) (adaptorintf.JobSequence, error) {
 	gasLimit, value, calleeAddr, funCall, err := abi.Parse4(input,
 		uint64(0), 1, 32,
 		uint256.NewInt(0), 1, 32,
@@ -111,7 +112,7 @@ func (this *MultiprocessHandler) toJobSeq(input []byte, T intf.JobSequence) (int
 		0,
 		transfer, // Amount to transfer
 		gasLimit,
-		this.BaseHandlers.Api().GetEU().(intf.EU).GasPrice(), // gas price
+		this.BaseHandlers.Api().GetEU().(adaptorintf.EU).GasPrice(), // gas price
 		funCall,
 		nil,
 		false, // Don't checking nonce
@@ -126,7 +127,7 @@ func (this *MultiprocessHandler) toJobSeq(input []byte, T intf.JobSequence) (int
 	newJobSeq.AppendMsg(&eucommon.StandardMessage{
 		ID:     uint64(newJobSeq.GetID()),
 		Native: &evmMsg,
-		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(intf.EU).TxHash()),
+		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(adaptorintf.EU).TxHash()),
 	})
 	return newJobSeq, nil
 }
