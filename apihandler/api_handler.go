@@ -1,4 +1,4 @@
-package api
+package apihandler
 
 import (
 	"fmt"
@@ -13,12 +13,16 @@ import (
 	eucommon "github.com/arcology-network/eu/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
-	adaptorcommon "github.com/arcology-network/eu/common"
+	// eucommon "github.com/arcology-network/eu/common"
 	execution "github.com/arcology-network/eu/execution"
+	apicontainer "github.com/arcology-network/vm-adaptor/apihandler/container"
+	apicumulative "github.com/arcology-network/vm-adaptor/apihandler/cumulative"
+	apimultiprocess "github.com/arcology-network/vm-adaptor/apihandler/multiprocess"
+	apiio "github.com/arcology-network/vm-adaptor/apihandler/runtime"
 	adaptorintf "github.com/arcology-network/vm-adaptor/interface"
 )
 
-type API struct {
+type APIHandler struct {
 	logs       []adaptorintf.ILog
 	depth      uint8
 	serialNums [4]uint64 // sub-process/container/element/uuid generator,
@@ -34,8 +38,8 @@ type API struct {
 	execResult *eucommon.Result
 }
 
-func NewAPIRouter(cache *cache.WriteCache) *API {
-	api := &API{
+func NewAPIHandler(cache *cache.WriteCache) *APIHandler {
+	api := &APIHandler{
 		eu:         nil,
 		localCache: cache,
 		// filter:      *cache.NewWriteCacheFilter(cache),
@@ -46,15 +50,15 @@ func NewAPIRouter(cache *cache.WriteCache) *API {
 	}
 
 	handlers := []adaptorintf.ApiCallHandler{
-		NewIoHandlers(api),
-		NewMultiprocessHandler(
+		apiio.NewIoHandlers(api),
+		apimultiprocess.NewMultiprocessHandler(
 			api,
 			common.To[*execution.JobSequence, adaptorintf.JobSequence]([]*execution.JobSequence{}),
 			&execution.Generation{}),
-		NewBaseHandlers(api, nil),
-		NewU256CumulativeHandler(api),
-		// cumulativei256.NewInt256CumulativeHandler(api),
-		NewRuntimeHandlers(api),
+		apicontainer.NewBaseHandlers(api, nil),
+		apicumulative.NewU256CumulativeHandler(api),
+		// cumulativei256.NewInt256CumulativeHandlers(api),
+		apiio.NewRuntimeHandlers(api),
 	}
 
 	for i, v := range handlers {
@@ -66,86 +70,88 @@ func NewAPIRouter(cache *cache.WriteCache) *API {
 	return api
 }
 
-func (this *API) New(localCache interface{}, schedule interface{}) adaptorintf.EthApiRouter {
-	api := NewAPIRouter(localCache.(*cache.WriteCache))
+func (this *APIHandler) New(localCache interface{}, schedule interface{}) adaptorintf.EthApiRouter {
+	api := NewAPIHandler(localCache.(*cache.WriteCache))
 	api.depth = this.depth + 1
 	return api
 }
 
-func (this *API) WriteCache() interface{} { return this.localCache }
+func (this *APIHandler) WriteCache() interface{} { return this.localCache }
 
-// func (this *API) DataReader() interface{} { return this.dataReader }
+// func (this *APIHandler) DataReader() interface{} { return this.dataReader }
 
-func (this *API) CheckRuntimeConstrains() bool { // Execeeds the max recursion depth or the max sub processes
+func (this *APIHandler) CheckRuntimeConstrains() bool { // Execeeds the max recursion depth or the max sub processes
 	return this.Depth() < eucommon.MAX_RECURSIION_DEPTH &&
-		atomic.AddUint64(&eucommon.TotalSubProcesses, 1) <= adaptorcommon.MAX_VM_INSTANCES
+		atomic.AddUint64(&eucommon.TotalSubProcesses, 1) <= eucommon.MAX_VM_INSTANCES
 }
 
-func (this *API) DecrementDepth() uint8 {
+func (this *APIHandler) DecrementDepth() uint8 {
 	if this.depth > 0 {
 		this.depth--
 	}
 	return this.depth
 }
 
-func (this *API) Depth() uint8                { return this.depth }
-func (this *API) Coinbase() ethcommon.Address { return this.eu.Coinbase() }
-func (this *API) Origin() ethcommon.Address   { return this.eu.Origin() }
+func (this *APIHandler) Depth() uint8                { return this.depth }
+func (this *APIHandler) Coinbase() ethcommon.Address { return this.eu.Coinbase() }
+func (this *APIHandler) Origin() ethcommon.Address   { return this.eu.Origin() }
 
-func (this *API) SetSchedule(schedule interface{}) { this.schedule = schedule }
-func (this *API) Schedule() interface{}            { return this.schedule }
+func (this *APIHandler) SetSchedule(schedule interface{}) { this.schedule = schedule }
+func (this *APIHandler) Schedule() interface{}            { return this.schedule }
 
-func (this *API) HandlerDict() map[[20]byte]adaptorintf.ApiCallHandler { return this.handlerDict }
+func (this *APIHandler) HandlerDict() map[[20]byte]adaptorintf.ApiCallHandler {
+	return this.handlerDict
+}
 
-func (this *API) VM() interface{} {
+func (this *APIHandler) VM() interface{} {
 	return common.IfThenDo1st(this.eu != nil, func() interface{} { return this.eu.VM() }, nil)
 }
 
-func (this *API) GetEU() interface{}   { return this.eu }
-func (this *API) SetEU(eu interface{}) { this.eu = eu.(adaptorintf.EU) }
+func (this *APIHandler) GetEU() interface{}   { return this.eu }
+func (this *APIHandler) SetEU(eu interface{}) { this.eu = eu.(adaptorintf.EU) }
 
-func (this *API) SetReadOnlyDataSource(readOnlyDataSource interface{}) {
+func (this *APIHandler) SetReadOnlyDataSource(readOnlyDataSource interface{}) {
 	this.dataReader = readOnlyDataSource.(ccurlintf.ReadOnlyDataStore)
 }
 
-func (this *API) GetSerialNum(idx int) uint64 {
+func (this *APIHandler) GetSerialNum(idx int) uint64 {
 	v := this.serialNums[idx]
 	this.serialNums[idx]++
 	return v
 }
 
-func (this *API) Pid() [32]byte {
+func (this *APIHandler) Pid() [32]byte {
 	return this.eu.TxHash()
 }
 
-func (this *API) ElementUID() []byte {
+func (this *APIHandler) ElementUID() []byte {
 	instanceID := this.Pid()
 	serial := strconv.Itoa(int(this.GetSerialNum(eucommon.ELEMENT_ID)))
 	return []byte(append(instanceID[:8], []byte(serial)...))
 }
 
 // Generate an UUID based on transaction hash and the counter
-func (this *API) UUID() []byte {
+func (this *APIHandler) UUID() []byte {
 	id := codec.Bytes32(this.Pid()).UUID(this.GetSerialNum(eucommon.UUID))
 	return id[:8]
 }
 
-func (this *API) AddLog(key, value string) {
+func (this *APIHandler) AddLog(key, value string) {
 	this.logs = append(this.logs, &eucommon.ExecutionLog{
 		Key:   key,
 		Value: value,
 	})
 }
 
-func (this *API) GetLogs() []adaptorintf.ILog {
+func (this *APIHandler) GetLogs() []adaptorintf.ILog {
 	return this.logs
 }
 
-func (this *API) ClearLogs() {
+func (this *APIHandler) ClearLogs() {
 	this.logs = this.logs[:0]
 }
 
-func (this *API) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64, blockhash ethcommon.Hash) (bool, []byte, bool, int64) {
+func (this *APIHandler) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64, blockhash ethcommon.Hash) (bool, []byte, bool, int64) {
 	if handler, ok := this.handlerDict[callee]; ok {
 		result, successful, fees := handler.Call(
 			ethcommon.Address(codec.Bytes20(caller).Clone().(codec.Bytes20)),

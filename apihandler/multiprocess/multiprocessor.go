@@ -17,7 +17,7 @@ import (
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 	intf "github.com/arcology-network/vm-adaptor/interface"
 
-	basecontainer "github.com/arcology-network/vm-adaptor/api/container"
+	basecontainer "github.com/arcology-network/vm-adaptor/apihandler/container"
 )
 
 // APIs under the concurrency namespace
