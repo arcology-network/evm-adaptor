@@ -25,8 +25,6 @@ func (this *IoHandlers) Call(caller, callee [20]byte, input []byte, origin [20]b
 	signature := [4]byte{}
 	copy(signature[:], input)
 
-	// switch signature {
-	// case [4]byte{0x13, 0xbd, 0xfa, 0xcd}: // 13 bd fa cd
 	return this.print(caller, callee, input, origin, nonce)
 	// }
 	// return []byte{}, false, 0

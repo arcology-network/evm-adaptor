@@ -12,7 +12,6 @@ import (
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 )
 
-// APIs under the concurrency namespace
 type RuntimeHandlers struct {
 	api       intf.EthApiRouter
 	connector *adaptorcommon.BuiltinPathMaker

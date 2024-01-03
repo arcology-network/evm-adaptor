@@ -16,7 +16,7 @@ import (
 	apicontainer "github.com/arcology-network/vm-adaptor/apihandler/container"
 	apicumulative "github.com/arcology-network/vm-adaptor/apihandler/cumulative"
 	apimultiprocess "github.com/arcology-network/vm-adaptor/apihandler/multiprocess"
-	apiio "github.com/arcology-network/vm-adaptor/apihandler/runtime"
+	apiruntime "github.com/arcology-network/vm-adaptor/apihandler/runtime"
 	adaptorintf "github.com/arcology-network/vm-adaptor/interface"
 )
 
@@ -48,12 +48,12 @@ func NewAPIHandler(cache *cache.WriteCache) *APIHandler {
 	}
 
 	handlers := []adaptorintf.ApiCallHandler{
-		apiio.NewIoHandlers(api),
+		apiruntime.NewIoHandlers(api),
 		apimultiprocess.NewMultiprocessHandler(api),
 		apicontainer.NewBaseHandlers(api, nil),
 		apicumulative.NewU256CumulativeHandler(api),
 		// cumulativei256.NewInt256CumulativeHandlers(api),
-		apiio.NewRuntimeHandlers(api),
+		apiruntime.NewRuntimeHandlers(api),
 	}
 
 	for i, v := range handlers {
