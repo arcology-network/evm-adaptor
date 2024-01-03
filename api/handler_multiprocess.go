@@ -13,6 +13,7 @@ import (
 
 	"github.com/arcology-network/vm-adaptor/abi"
 
+	eucommon "github.com/arcology-network/eu/common"
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 	intf "github.com/arcology-network/vm-adaptor/interface"
 )
@@ -36,7 +37,7 @@ func NewMultiprocessHandlers(ethApiRouter intf.EthApiRouter, jobseqs []intf.JobS
 func (this *MultiprocessHandlers) Address() [20]byte { return adaptorcommon.MULTIPROCESS_HANDLER }
 
 func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte, args ...interface{}) ([]byte, bool, int64) {
-	if atomic.AddUint64(&adaptorcommon.TotalSubProcesses, 1); !this.Api().CheckRuntimeConstrains() {
+	if atomic.AddUint64(&eucommon.TotalSubProcesses, 1); !this.Api().CheckRuntimeConstrains() {
 		return []byte{}, false, 0
 	}
 
@@ -53,7 +54,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte, args ...int
 
 	path := this.Connector().Key(caller)
 	length, successful, fee := this.Length(path)
-	length = common.Min(adaptorcommon.MAX_VM_INSTANCES, length)
+	length = common.Min(eucommon.MAX_VM_INSTANCES, length)
 	if !successful {
 		return []byte{}, successful, fee
 	}
@@ -116,11 +117,11 @@ func (this *MultiprocessHandlers) toJobSeq(input []byte, T intf.JobSequence) (in
 
 	// newJobSeq creates a new job sequence using the TYPE INFO.
 	newJobSeq := T.New(
-		uint32(this.BaseHandlers.Api().GetSerialNum(adaptorcommon.SUB_PROCESS)),
+		uint32(this.BaseHandlers.Api().GetSerialNum(eucommon.SUB_PROCESS)),
 		this.BaseHandlers.Api(),
 	)
 
-	newJobSeq.AppendMsg(&adaptorcommon.StandardMessage{
+	newJobSeq.AppendMsg(&eucommon.StandardMessage{
 		ID:     uint64(newJobSeq.GetID()),
 		Native: &evmMsg,
 		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(intf.EU).TxHash()),

@@ -6,7 +6,7 @@ EVM-adaptor is a thin adaptor designed to connecting [a parallelized EVM](https:
 
 The EVM-adaptor comprises several key components to interface with Arcology's concurrency state management system.
 
-### StateDB Implementation:
+### StateDB Implementation
 
 A new [StateDB](https://github.com/ethereum/go-ethereum/blob/master/core/vm/interface.go) implementation is provided, redirecting all state accesses to Arcology's concurrency state management system.
 
