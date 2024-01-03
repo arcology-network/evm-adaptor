@@ -16,27 +16,29 @@ import (
 	eucommon "github.com/arcology-network/eu/common"
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 	intf "github.com/arcology-network/vm-adaptor/interface"
+
+	basecontainer "github.com/arcology-network/vm-adaptor/api/container"
 )
 
 // APIs under the concurrency namespace
-type MultiprocessHandlers struct {
-	*BaseHandlers
+type MultiprocessHandler struct {
+	*basecontainer.BaseHandlers
 	erros   []error
 	jobseqs []intf.JobSequence
 }
 
-func NewMultiprocessHandlers(ethApiRouter intf.EthApiRouter, jobseqs []intf.JobSequence, genInfo interface{}) *MultiprocessHandlers {
-	handler := &MultiprocessHandlers{
+func NewMultiprocessHandler(ethApiRouter intf.EthApiRouter, jobseqs []intf.JobSequence, genInfo interface{}) *MultiprocessHandler {
+	handler := &MultiprocessHandler{
 		erros:   []error{},
 		jobseqs: jobseqs, //[]*execution.JobSequence{},
 	}
-	handler.BaseHandlers = NewBaseHandlers(ethApiRouter, handler.Run, genInfo)
+	handler.BaseHandlers = basecontainer.NewBaseHandlers(ethApiRouter, handler.Run, genInfo)
 	return handler
 }
 
-func (this *MultiprocessHandlers) Address() [20]byte { return adaptorcommon.MULTIPROCESS_HANDLER }
+func (this *MultiprocessHandler) Address() [20]byte { return adaptorcommon.MULTIPROCESS_HANDLER }
 
-func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte, args ...interface{}) ([]byte, bool, int64) {
+func (this *MultiprocessHandler) Run(caller [20]byte, input []byte, args ...interface{}) ([]byte, bool, int64) {
 	if atomic.AddUint64(&eucommon.TotalSubProcesses, 1); !this.Api().CheckRuntimeConstrains() {
 		return []byte{}, false, 0
 	}
@@ -90,7 +92,7 @@ func (this *MultiprocessHandlers) Run(caller [20]byte, input []byte, args ...int
 // For multiprocessor, a job sequence only contains one message.
 // To keep the same structure with the transaction level processing,
 // the message is wrapped
-func (this *MultiprocessHandlers) toJobSeq(input []byte, T intf.JobSequence) (intf.JobSequence, error) {
+func (this *MultiprocessHandler) toJobSeq(input []byte, T intf.JobSequence) (intf.JobSequence, error) {
 	gasLimit, value, calleeAddr, funCall, err := abi.Parse4(input,
 		uint64(0), 1, 32,
 		uint256.NewInt(0), 1, 32,

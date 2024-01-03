@@ -17,23 +17,23 @@ import (
 )
 
 // U256CumulativeHandlers handles the U256Cumulative APIs that can be called by concurrent API called.
-type U256CumHandlers struct {
+type U256CumHandler struct {
 	api       intf.EthApiRouter
 	connector *adaptorcommon.BuiltinPathMaker
 }
 
-func NewU256CumulativeHandlers(api intf.EthApiRouter) *U256CumHandlers {
-	return &U256CumHandlers{
+func NewU256CumulativeHandler(api intf.EthApiRouter) *U256CumHandler {
+	return &U256CumHandler{
 		api:       api,
 		connector: adaptorcommon.NewBuiltinPathMaker("/container", api),
 	}
 }
 
-func (this *U256CumHandlers) Address() [20]byte {
+func (this *U256CumHandler) Address() [20]byte {
 	return common.CUMULATIVE_U256_HANDLER
 }
 
-func (this *U256CumHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
+func (this *U256CumHandler) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
 	signature := [4]byte{}
 	copy(signature[:], input)
 
@@ -62,7 +62,7 @@ func (this *U256CumHandlers) Call(caller, callee [20]byte, input []byte, origin 
 	return []byte{}, false, 0
 }
 
-func (this *U256CumHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *U256CumHandler) new(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	txIndex := this.api.GetEU().(intf.EU).ID()
 	if !this.connector.New(txIndex, types.Address(codec.Bytes20(caller).Hex())) { // A new container
 		return []byte{}, false, 0
@@ -85,7 +85,7 @@ func (this *U256CumHandlers) new(caller evmcommon.Address, input []byte) ([]byte
 	return []byte{}, true, 0
 }
 
-func (this *U256CumHandlers) get(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *U256CumHandler) get(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
@@ -104,7 +104,7 @@ func (this *U256CumHandlers) get(caller evmcommon.Address, input []byte) ([]byte
 
 // Peek reads the initial value from the WriteCache. It assumes that the initial value
 // is always in the cache by the time it is called.
-func (this *U256CumHandlers) peek(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *U256CumHandler) peek(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
@@ -127,16 +127,16 @@ func (this *U256CumHandlers) peek(caller evmcommon.Address, input []byte) ([]byt
 }
 
 // Add adds a positive delta to the variable's delta.
-func (this *U256CumHandlers) add(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *U256CumHandler) add(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	return this.set(caller, input, true)
 }
 
 // Add adds a negative delta to the variable's delta.
-func (this *U256CumHandlers) sub(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *U256CumHandler) sub(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	return this.set(caller, input, false)
 }
 
-func (this *U256CumHandlers) set(caller evmcommon.Address, input []byte, isPositive bool) ([]byte, bool, int64) {
+func (this *U256CumHandler) set(caller evmcommon.Address, input []byte, isPositive bool) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
@@ -153,7 +153,7 @@ func (this *U256CumHandlers) set(caller evmcommon.Address, input []byte, isPosit
 	return []byte{}, err == nil, 0
 }
 
-func (this *U256CumHandlers) min(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *U256CumHandler) min(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
@@ -172,7 +172,7 @@ func (this *U256CumHandlers) min(caller evmcommon.Address, input []byte) ([]byte
 	return []byte{}, false, 0
 }
 
-func (this *U256CumHandlers) max(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *U256CumHandler) max(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
