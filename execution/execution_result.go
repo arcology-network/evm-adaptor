@@ -54,10 +54,11 @@ func (this *Result) Postprocess() *Result {
 	_, senderBalance := common.FindFirstIf(this.rawStateAccesses, func(v ccurlinterfaces.Univalue) bool {
 		return v != nil && strings.HasSuffix(*v.GetPath(), "/balance") && strings.Contains(*v.GetPath(), hex.EncodeToString(this.From[:]))
 	})
-
 	gasUsedInWei := uint256.NewInt(1).Mul(uint256.NewInt(this.Receipt.GasUsed), uint256.NewInt(this.stdMsg.Native.GasPrice.Uint64()))
-	if senderGasDebit := this.GenGasTransition(*senderBalance, gasUsedInWei, false); senderGasDebit != nil {
-		this.immuned = append(this.immuned, senderGasDebit)
+	if senderBalance != nil {
+		if senderGasDebit := this.GenGasTransition(*senderBalance, gasUsedInWei, false); senderGasDebit != nil {
+			this.immuned = append(this.immuned, senderGasDebit)
+		}
 	}
 
 	_, coinbaseBalance := common.FindFirstIf(this.rawStateAccesses, func(v ccurlinterfaces.Univalue) bool {

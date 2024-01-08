@@ -11,9 +11,9 @@ replace github.com/arcology-network/common-lib => ../common-lib/
 replace github.com/arcology-network/concurrenturl => ../concurrenturl/
 
 require (
-	github.com/arcology-network/common-lib v1.9.0
-	github.com/arcology-network/concurrenturl v1.8.0
-	github.com/ethereum/go-ethereum v1.13.5
+	github.com/arcology-network/common-lib v0.0.0-00010101000000-000000000000
+	github.com/arcology-network/concurrenturl v0.0.0-00010101000000-000000000000
+	github.com/ethereum/go-ethereum v1.13.1
 	github.com/holiman/uint256 v1.2.4
 )
 
