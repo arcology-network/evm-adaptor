@@ -1,8 +1,7 @@
 package api
 
 import (
-	"encoding/hex"
-
+	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/vm-adaptor/abi"
 	intf "github.com/arcology-network/vm-adaptor/interface"
 	evmcommon "github.com/ethereum/go-ethereum/common"
@@ -54,7 +53,7 @@ func (this *RuntimeHandlers) pid(caller evmcommon.Address, input []byte) ([]byte
 }
 
 func (this *RuntimeHandlers) rollback(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	cache.NewWriteCacheFilter(this.api.WriteCache()).RemoveByAddress(hex.EncodeToString(caller[:]))
+	cache.NewWriteCacheFilter(this.api.WriteCache()).RemoveByAddress(codec.Bytes20(caller).Hex())
 	return []byte{}, true, 0
 }
 
