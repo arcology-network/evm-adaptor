@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 
 	"github.com/arcology-network/common-lib/common"
+	"github.com/arcology-network/common-lib/exp/array"
 	"github.com/arcology-network/concurrenturl/univalue"
 	"github.com/arcology-network/eu/cache"
 	evmcommon "github.com/ethereum/go-ethereum/common"
@@ -31,7 +32,7 @@ type MultiprocessHandler struct {
 func NewMultiprocessHandler(ethApiRouter adaptorintf.EthApiRouter) *MultiprocessHandler {
 	handler := &MultiprocessHandler{
 		erros:   []error{},
-		jobseqs: common.To[*eu.JobSequence, *eu.JobSequence]([]*eu.JobSequence{}),
+		jobseqs: array.To[*eu.JobSequence, *eu.JobSequence]([]*eu.JobSequence{}),
 	}
 	handler.BaseHandlers = basecontainer.NewBaseHandlers(ethApiRouter, handler.Run, &eu.Generation{})
 	return handler
@@ -66,7 +67,7 @@ func (this *MultiprocessHandler) Run(caller [20]byte, input []byte, args ...inte
 	fees := make([]int64, length)
 	this.erros = make([]error, length)
 
-	this.jobseqs = common.Resize(this.jobseqs, int(length))
+	this.jobseqs = array.Resize(this.jobseqs, int(length))
 	for i := uint64(0); i < length; i++ {
 		funCall, successful, fee := this.GetByIndex(path, uint64(i))
 		if fees[i] = fee; successful {
@@ -83,7 +84,7 @@ func (this *MultiprocessHandler) Run(caller [20]byte, input []byte, args ...inte
 
 	// Unify tx IDs c
 	mainTxID := uint32(this.Api().GetEU().(adaptorintf.EU).ID())
-	common.Foreach(transitions, func(_ int, v **univalue.Univalue) { (*v).SetTx(mainTxID) })
+	array.Foreach(transitions, func(_ int, v **univalue.Univalue) { (*v).SetTx(mainTxID) })
 
 	this.Api().WriteCache().(*cache.WriteCache).AddTransitions(transitions) // Merge the write cache to the main cache
 	return []byte{}, true, common.Sum[int64, int64](fees)

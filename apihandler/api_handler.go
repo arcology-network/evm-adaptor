@@ -7,6 +7,7 @@ import (
 
 	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
+	"github.com/arcology-network/common-lib/exp/array"
 	ccurlintf "github.com/arcology-network/concurrenturl/interfaces"
 	"github.com/arcology-network/eu/cache"
 
@@ -151,7 +152,7 @@ func (this *APIHandler) Call(caller, callee [20]byte, input []byte, origin [20]b
 		result, successful, fees := handler.Call(
 			ethcommon.Address(codec.Bytes20(caller).Clone().(codec.Bytes20)),
 			ethcommon.Address(codec.Bytes20(callee).Clone().(codec.Bytes20)),
-			common.Clone(input),
+			array.Clone(input),
 			origin,
 			nonce,
 		)
