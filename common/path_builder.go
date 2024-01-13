@@ -1,11 +1,11 @@
 package common
 
 import (
-	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
 	commonlib "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/types"
 	ccurlcommon "github.com/arcology-network/concurrenturl/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	commutative "github.com/arcology-network/concurrenturl/commutative"
 	cache "github.com/arcology-network/eu/cache"
@@ -39,7 +39,6 @@ func (this *BuiltinPathMaker) New(txIndex uint32, deploymentAddr types.Address) 
 func (this *BuiltinPathMaker) newStorageRoot(account types.Address, txIndex uint32) bool {
 	accountRoot := commonlib.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(account), "/")
 	if !this.apiRouter.WriteCache().(*cache.WriteCache).IfExists(accountRoot) {
-		// ccurlcommon.CreateAccount(this.apiRouter.WriteCache(), account, txIndex)                           // Create a new account
 		return common.FilterFirst(this.apiRouter.WriteCache().(*cache.WriteCache).CreateNewAccount(txIndex, string(account))) != nil // Create a new account
 	}
 	return true // ALready exists
@@ -56,7 +55,7 @@ func (this *BuiltinPathMaker) newContainerRoot(account types.Address, txIndex ui
 }
 
 func (this *BuiltinPathMaker) Key(caller [20]byte) string { // container ID
-	return this.key(types.Address(codec.Bytes20(caller).Hex()))
+	return this.key(types.Address(hexutil.Encode(caller[:])))
 }
 
 func (this *BuiltinPathMaker) key(account types.Address) string { // container ID

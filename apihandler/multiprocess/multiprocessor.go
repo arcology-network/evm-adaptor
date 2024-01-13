@@ -83,10 +83,10 @@ func (this *MultiprocessHandler) Run(caller [20]byte, input []byte, args ...inte
 
 	// Unify tx IDs c
 	mainTxID := uint32(this.Api().GetEU().(adaptorintf.EU).ID())
-	common.Foreach(transitions, func(v **univalue.Univalue, _ int) { (*v).SetTx(mainTxID) })
+	common.Foreach(transitions, func(_ int, v **univalue.Univalue) { (*v).SetTx(mainTxID) })
 
 	this.Api().WriteCache().(*cache.WriteCache).AddTransitions(transitions) // Merge the write cache to the main cache
-	return []byte{}, true, common.Sum[int64](fees)
+	return []byte{}, true, common.Sum[int64, int64](fees)
 }
 
 // toJobSeq converts the input byte slice into a JobSequence object.
