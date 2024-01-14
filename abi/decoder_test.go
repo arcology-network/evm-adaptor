@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/arcology-network/common-lib/codec"
-	"github.com/arcology-network/common-lib/common"
+	"github.com/arcology-network/common-lib/exp/array"
 	"github.com/holiman/uint256"
 )
 
@@ -24,7 +24,7 @@ func TestDecoder(t *testing.T) {
 	fmt.Println(buffer)
 
 	subbytes := buffer.([]byte)
-	idx, _ := common.FindFirstIf(subbytes, func(v byte) bool { return v != 65 })
+	idx, _ := array.FindFirstIf(subbytes, func(v byte) bool { return v != 65 })
 	if len(buffer.([]byte)) != 75 || idx != -1 {
 		t.Error("Error; The array should be 75 byte long!")
 	}
