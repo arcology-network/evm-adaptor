@@ -87,7 +87,7 @@ func (this *MultiprocessHandler) Run(caller [20]byte, input []byte, args ...inte
 	array.Foreach(transitions, func(_ int, v **univalue.Univalue) { (*v).SetTx(mainTxID) })
 
 	this.Api().WriteCache().(*cache.WriteCache).AddTransitions(transitions) // Merge the write cache to the main cache
-	return []byte{}, true, common.Sum[int64, int64](fees)
+	return []byte{}, true, array.Sum[int64, int64](fees)
 }
 
 // toJobSeq converts the input byte slice into a JobSequence object.

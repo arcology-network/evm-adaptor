@@ -11,10 +11,10 @@ replace github.com/arcology-network/concurrenturl => ../concurrenturl/
 replace github.com/arcology-network/eu => ../eu/
 
 require (
-	github.com/arcology-network/common-lib v1.9.0
-	github.com/arcology-network/concurrenturl v1.9.0
-	github.com/arcology-network/eu v0.0.0-20231224215632-ab78ac9f31af
-	github.com/ethereum/go-ethereum v1.13.7
+	github.com/arcology-network/common-lib v0.0.0-00010101000000-000000000000
+	github.com/arcology-network/concurrenturl v0.0.0-00010101000000-000000000000
+	github.com/arcology-network/eu v0.0.0-00010101000000-000000000000
+	github.com/ethereum/go-ethereum v1.13.1
 	github.com/holiman/uint256 v1.2.4
 )
 
@@ -43,6 +43,7 @@ require (
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
