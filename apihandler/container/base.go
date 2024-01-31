@@ -43,45 +43,46 @@ func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20
 
 	switch signature {
 	case [4]byte{0xcd, 0xbf, 0x60, 0x8d}:
-		return this.New(caller, input[4:])
+		return this.new(caller, input[4:]) // Create a new container
 
 	case [4]byte{0x59, 0xe0, 0x2d, 0xd7}:
-		return this.peekLength(caller, input[4:])
+		return this.peekLength(caller, input[4:]) // Get the initial length of the container, it remains the same in the same block.
 
-	case [4]byte{0xf1, 0x06, 0x84, 0x54}: // f1 06 84 54
-		return this.pid(caller, input[4:])
+	case [4]byte{0xf1, 0x06, 0x84, 0x54}:
+		return this.pid(caller, input[4:]) // Get the pesudo process ID.
 
-	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}: // 1f 7b 6d 32
-		return this.length(caller, input[4:])
+	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}:
+		return this.length(caller, input[4:]) // Get the current number of elements in the container.
 
-	case [4]byte{0x6a, 0x3a, 0x16, 0xbd}: // =========  6a 3a 16 bd
-		return this.indexByKey(caller, input[4:])
+	case [4]byte{0x6a, 0x3a, 0x16, 0xbd}:
+		return this.indexByKey(caller, input[4:]) // Get the index of the element by its key.
 
-	case [4]byte{0xb7, 0xc5, 0x64, 0x6c}: // b7c5646c
-		return this.keyByIndex(caller, input[4:])
+	case [4]byte{0xb7, 0xc5, 0x64, 0x6c}:
+		return this.keyByIndex(caller, input[4:]) // Get the key of the element by its index.
 
-	case [4]byte{0x8e, 0x7c, 0xb6, 0xe1}: // 8e 7c b6 e1
-		return this.getByIndex(caller, input[4:])
+	case [4]byte{0x8e, 0x7c, 0xb6, 0xe1}:
+		return this.getByIndex(caller, input[4:]) // Get the element by its index.
 
-	case [4]byte{0xaf, 0x4b, 0xaa, 0x7d}: // af 4b aa 7d
-		return this.setByIndex(caller, input[4:])
+	case [4]byte{0xaf, 0x4b, 0xaa, 0x7d}:
+		return this.setByIndex(caller, input[4:]) // Set the element by its index.
 
-	case [4]byte{0x7f, 0xed, 0x84, 0xf2}: //7f ed 84 f2
-		return this.getByKey(caller, input[4:])
+	case [4]byte{0x7f, 0xed, 0x84, 0xf2}:
+		return this.getByKey(caller, input[4:]) // Get the element by its key.
 
-	case [4]byte{0xc2, 0x78, 0xb7, 0x99}: // c2 78 b7 99
-		return this.setByKey(caller, input[4:])
+	case [4]byte{0xc2, 0x78, 0xb7, 0x99}:
+		return this.setByKey(caller, input[4:]) // Set the element by its key.
 
-	case [4]byte{0x90, 0xd2, 0x44, 0xd8}: //  90 d2 44 d8
-		return this.delByIndex(caller, input[4:])
+	case [4]byte{0x90, 0xd2, 0x44, 0xd8}:
+		return this.delByIndex(caller, input[4:]) // Delete the element by its index.
 
 	case [4]byte{0x37, 0x79, 0xc0, 0x34}:
-		return this.delByKey(caller, input[4:])
+		return this.delByKey(caller, input[4:]) // Delete the element by its key.
 
 	case [4]byte{0x52, 0xef, 0xea, 0x6e}:
-		return this.clear(caller, input[4:])
+		return this.clear(caller, input[4:]) // Clear the container.
 	}
 
+	// Custom function call. The base handler may have a custom function to call..
 	if len(this.args) > 0 {
 		customFun := this.args[0].(func([20]byte, []byte, ...interface{}) ([]byte, bool, int64))
 		customFun(caller, input[4:], this.args[1:]...)
@@ -92,7 +93,8 @@ func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20
 
 func (this *BaseHandlers) Api() intf.EthApiRouter { return this.api }
 
-func (this *BaseHandlers) New(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+// Create a new container. This function is called when the constructor of the base contract is called in the concurrentlib.
+func (this *BaseHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	connected := this.connector.New(
 		this.api.GetEU().(intf.EU).ID(),            // Tx ID for conflict detection
 		types.Address(codec.Bytes20(caller).Hex()), // Main contract address
@@ -116,7 +118,7 @@ func (this *BaseHandlers) length(caller evmcommon.Address, input []byte) ([]byte
 	return []byte{}, false, 0
 }
 
-// getByIndex the intial length of the container
+// peekLength the initial length of the container, which would remain the same in the same block.
 func (this *BaseHandlers) peekLength(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // BaseHandlers path
 	if len(path) == 0 {
@@ -134,6 +136,7 @@ func (this *BaseHandlers) peekLength(caller evmcommon.Address, input []byte) ([]
 	return []byte{}, false, int64(fees)
 }
 
+// getByIndex the element by its index
 func (this *BaseHandlers) getByIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.connector.Key(caller) // Build container path
 	if len(path) == 0 {

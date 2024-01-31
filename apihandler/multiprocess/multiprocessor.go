@@ -75,7 +75,9 @@ func (this *MultiprocessHandler) Run(caller [20]byte, input []byte, args ...inte
 		}
 		generation.Add(this.jobseqs[i]) // Add the job sequence to the generation regardless of the error
 	}
-	transitions := generation.Run(this.Api()) // Run the generation
+
+	// Run the job sequences in parallel.
+	transitions := generation.Run(this.Api())
 
 	// Sub processes may have been spawned during the execution, recheck it.
 	if !this.Api().CheckRuntimeConstrains() {
@@ -87,7 +89,7 @@ func (this *MultiprocessHandler) Run(caller [20]byte, input []byte, args ...inte
 	array.Foreach(transitions, func(_ int, v **univalue.Univalue) { (*v).SetTx(mainTxID) })
 
 	this.Api().WriteCache().(*cache.WriteCache).AddTransitions(transitions) // Merge the write cache to the main cache
-	return []byte{}, true, common.Sum[int64, int64](fees)
+	return []byte{}, true, array.Sum[int64, int64](fees)
 }
 
 // toJobSeq converts the input byte slice into a JobSequence object.
