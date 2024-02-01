@@ -27,7 +27,7 @@ type APIHandler struct {
 	serialNums [4]uint64 // sub-process/container/element/uuid generator,
 
 	schedule interface{}
-	eu       adaptorintf.EU
+	eu       interface{}
 
 	handlerDict map[[20]byte]adaptorintf.ApiCallHandler // APIs under the atomic namespace
 
@@ -88,9 +88,15 @@ func (this *APIHandler) DecrementDepth() uint8 {
 	return this.depth
 }
 
-func (this *APIHandler) Depth() uint8                { return this.depth }
-func (this *APIHandler) Coinbase() ethcommon.Address { return this.eu.Coinbase() }
-func (this *APIHandler) Origin() ethcommon.Address   { return this.eu.Origin() }
+func (this *APIHandler) Depth() uint8 { return this.depth }
+
+func (this *APIHandler) Coinbase() ethcommon.Address {
+	return this.eu.(interface{ Coinbase() ethcommon.Address }).Coinbase()
+}
+
+func (this *APIHandler) Origin() ethcommon.Address {
+	return this.eu.(interface{ Origin() ethcommon.Address }).Origin()
+}
 
 func (this *APIHandler) SetSchedule(schedule interface{}) { this.schedule = schedule }
 func (this *APIHandler) Schedule() interface{}            { return this.schedule }
@@ -100,11 +106,11 @@ func (this *APIHandler) HandlerDict() map[[20]byte]adaptorintf.ApiCallHandler {
 }
 
 func (this *APIHandler) VM() interface{} {
-	return common.IfThenDo1st(this.eu != nil, func() interface{} { return this.eu.VM() }, nil)
+	return common.IfThenDo1st(this.eu != nil, func() interface{} { return this.eu.(interface{ VM() interface{} }).VM() }, nil)
 }
 
 func (this *APIHandler) GetEU() interface{}   { return this.eu }
-func (this *APIHandler) SetEU(eu interface{}) { this.eu = eu.(adaptorintf.EU) }
+func (this *APIHandler) SetEU(eu interface{}) { this.eu = eu }
 
 func (this *APIHandler) SetReadOnlyDataSource(readOnlyDataSource interface{}) {
 	this.dataReader = readOnlyDataSource.(ccurlintf.ReadOnlyDataStore)
@@ -117,7 +123,7 @@ func (this *APIHandler) GetSerialNum(idx int) uint64 {
 }
 
 func (this *APIHandler) Pid() [32]byte {
-	return this.eu.TxHash()
+	return this.eu.(interface{ TxHash() [32]byte }).TxHash()
 }
 
 func (this *APIHandler) ElementUID() []byte {

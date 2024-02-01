@@ -2,6 +2,7 @@ package api
 
 import (
 	"math"
+	"math/big"
 	"sync/atomic"
 
 	"github.com/arcology-network/common-lib/common"
@@ -69,23 +70,22 @@ func (this *MultiprocessHandler) Run(caller [20]byte, input []byte, args ...inte
 
 	this.jobseqs = array.Resize(this.jobseqs, int(length))
 	for i := uint64(0); i < length; i++ {
-		funCall, successful, fee := this.GetByIndex(path, uint64(i))
+		funCall, successful, fee := this.GetByIndex(path, uint64(i)) // The message sender should be resonpsible for the fees.
 		if fees[i] = fee; successful {
 			this.jobseqs[i], this.erros[i] = this.toJobSeq(funCall, generation.JobT())
 		}
-		generation.Add(this.jobseqs[i]) // Add the job sequence to the generation regardless of the error
+		generation.Add(this.jobseqs[i]) // Add the job sequence to the 	generation regardless of the error
 	}
 
 	// Run the job sequences in parallel.
-	transitions := generation.Run(this.Api())
-
+	transitions := generation.Execute(this.Api())
 	// Sub processes may have been spawned during the execution, recheck it.
 	if !this.Api().CheckRuntimeConstrains() {
 		return []byte{}, false, fee
 	}
 
 	// Unify tx IDs c
-	mainTxID := uint32(this.Api().GetEU().(adaptorintf.EU).ID())
+	mainTxID := uint32(this.Api().GetEU().(interface{ ID() uint32 }).ID())
 	array.Foreach(transitions, func(_ int, v **univalue.Univalue) { (*v).SetTx(mainTxID) })
 
 	this.Api().WriteCache().(*cache.WriteCache).AddTransitions(transitions) // Merge the write cache to the main cache
@@ -115,7 +115,7 @@ func (this *MultiprocessHandler) toJobSeq(input []byte, T *eu.JobSequence) (*eu.
 		0,
 		transfer, // Amount to transfer
 		gasLimit,
-		this.BaseHandlers.Api().GetEU().(adaptorintf.EU).GasPrice(), // gas price
+		this.BaseHandlers.Api().GetEU().(interface{ GasPrice() *big.Int }).GasPrice(), // gas price
 		funCall,
 		nil,
 		false, // Don't checking nonce
@@ -130,7 +130,7 @@ func (this *MultiprocessHandler) toJobSeq(input []byte, T *eu.JobSequence) (*eu.
 	newJobSeq.AppendMsg(&eucommon.StandardMessage{
 		ID:     uint64(newJobSeq.GetID()),
 		Native: &evmMsg,
-		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(adaptorintf.EU).TxHash()),
+		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(interface{ TxHash() [32]byte }).TxHash()),
 	})
 	return newJobSeq, nil
 }

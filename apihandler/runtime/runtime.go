@@ -13,13 +13,13 @@ import (
 
 type RuntimeHandlers struct {
 	api       intf.EthApiRouter
-	connector *adaptorcommon.BuiltinPathMaker
+	connector *adaptorcommon.PathBuilder
 }
 
 func NewRuntimeHandlers(ethApiRouter intf.EthApiRouter) *RuntimeHandlers {
 	return &RuntimeHandlers{
 		api:       ethApiRouter,
-		connector: adaptorcommon.NewBuiltinPathMaker("/native/local/", ethApiRouter),
+		connector: adaptorcommon.NewPathBuilder("/native/local/", ethApiRouter),
 	}
 }
 

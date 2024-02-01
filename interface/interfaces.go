@@ -2,9 +2,6 @@
 package interfaces
 
 import (
-	"math/big"
-
-	"github.com/arcology-network/concurrenturl/univalue"
 	"github.com/ethereum/go-ethereum/common"
 
 	evmcommon "github.com/ethereum/go-ethereum/common"
@@ -42,12 +39,6 @@ type EthApiRouter interface {
 	ElementUID() []byte
 }
 
-type WriteCacheFilter interface {
-	ByType() ([]*univalue.Univalue, []*univalue.Univalue)
-	AddToAutoReversion(addr string)
-	RemoveByAddress(string)
-}
-
 type ILog interface {
 	GetByKey() string
 	GetValue() string
@@ -56,21 +47,4 @@ type ILog interface {
 type ChainContext interface {
 	Engine() consensus.Engine                    // Engine retrieves the chain's consensus engine.
 	GetHeader(common.Hash, uint64) *types.Header // GetHeader returns the hash corresponding to their hash.
-}
-
-type MessageReader interface {
-	Message() interface {
-		ID() uint32
-		TxHash() [32]byte
-	}
-}
-
-type EU interface {
-	GasPrice() *big.Int
-	Message() interface{}
-	VM() interface{} //*vm.EVM
-	ID() uint32
-	TxHash() [32]byte
-	Origin() [20]byte
-	Coinbase() [20]byte
 }

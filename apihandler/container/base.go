@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/hex"
 	"math"
+	"sort"
 
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/types"
@@ -21,21 +22,22 @@ import (
 
 // APIs under the concurrency namespace
 type BaseHandlers struct {
-	api       intf.EthApiRouter
-	connector *adaptorcommon.BuiltinPathMaker
-	args      []interface{}
+	api         intf.EthApiRouter
+	pathBuilder *adaptorcommon.PathBuilder
+	caller      [20]byte
+	args        []interface{}
 }
 
 func NewBaseHandlers(api intf.EthApiRouter, args ...interface{}) *BaseHandlers {
 	return &BaseHandlers{
-		api:       api,
-		connector: adaptorcommon.NewBuiltinPathMaker("/container", api),
-		args:      args,
+		api:         api,
+		pathBuilder: adaptorcommon.NewPathBuilder("/container", api),
+		args:        args,
 	}
 }
 
-func (this *BaseHandlers) Address() [20]byte                          { return common.BYTES_HANDLER }
-func (this *BaseHandlers) Connector() *adaptorcommon.BuiltinPathMaker { return this.connector }
+func (this *BaseHandlers) Address() [20]byte                     { return common.BYTES_HANDLER }
+func (this *BaseHandlers) Connector() *adaptorcommon.PathBuilder { return this.pathBuilder }
 
 func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20]byte, nonce uint64) ([]byte, bool, int64) {
 	signature := [4]byte{}
@@ -95,10 +97,11 @@ func (this *BaseHandlers) Api() intf.EthApiRouter { return this.api }
 
 // Create a new container. This function is called when the constructor of the base contract is called in the concurrentlib.
 func (this *BaseHandlers) new(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	connected := this.connector.New(
-		this.api.GetEU().(intf.EU).ID(),            // Tx ID for conflict detection
-		types.Address(codec.Bytes20(caller).Hex()), // Main contract address
+	connected := this.pathBuilder.New(
+		this.api.GetEU().(interface{ ID() uint32 }).ID(), // Tx ID for conflict detection
+		types.Address(codec.Bytes20(caller).Hex()),       // Main contract address
 	)
+	this.caller = caller
 	return caller[:], connected, 0 // Create a new container
 }
 
@@ -109,7 +112,7 @@ func (this *BaseHandlers) pid(caller evmcommon.Address, input []byte) ([]byte, b
 
 // getByIndex the number of elements in the container
 func (this *BaseHandlers) length(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller)
+	path := this.pathBuilder.Key(caller)
 	if length, successful, _ := this.Length(path); successful {
 		if encoded, err := abi.Encode(uint256.NewInt(length)); err == nil {
 			return encoded, true, 0
@@ -120,7 +123,7 @@ func (this *BaseHandlers) length(caller evmcommon.Address, input []byte) ([]byte
 
 // peekLength the initial length of the container, which would remain the same in the same block.
 func (this *BaseHandlers) peekLength(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // BaseHandlers path
+	path := this.pathBuilder.Key(caller) // BaseHandlers path
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
@@ -138,7 +141,7 @@ func (this *BaseHandlers) peekLength(caller evmcommon.Address, input []byte) ([]
 
 // getByIndex the element by its index
 func (this *BaseHandlers) getByIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // Build container path
+	path := this.pathBuilder.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
@@ -156,7 +159,7 @@ func (this *BaseHandlers) getByIndex(caller evmcommon.Address, input []byte) ([]
 }
 
 func (this *BaseHandlers) getByKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // Build container path
+	path := this.pathBuilder.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
@@ -171,8 +174,10 @@ func (this *BaseHandlers) getByKey(caller evmcommon.Address, input []byte) ([]by
 	return []byte{}, false, 0
 }
 
+// Set the element by its index. This function is different from the SetByKey function in that if
+// the index is out of range, the function will return false.
 func (this *BaseHandlers) setByIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // Build container path
+	path := this.pathBuilder.Key(caller) // Build container path
 
 	idx, bytes, err := abi.Parse2(input,
 		uint64(0), 1, 32,
@@ -189,9 +194,9 @@ func (this *BaseHandlers) setByIndex(caller evmcommon.Address, input []byte) ([]
 	return []byte{}, false, 0
 }
 
-// push a new element into the container
+// Push a new element into the container. If the key does not exist, it will be created and the value will be set.
 func (this *BaseHandlers) setByKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // BaseHandlers path
+	path := this.pathBuilder.Key(caller) // BaseHandlers path
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
@@ -211,7 +216,7 @@ func (this *BaseHandlers) setByKey(caller evmcommon.Address, input []byte) ([]by
 }
 
 func (this *BaseHandlers) indexByKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // BaseHandlers path
+	path := this.pathBuilder.Key(caller) // BaseHandlers path
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
@@ -227,7 +232,7 @@ func (this *BaseHandlers) indexByKey(caller evmcommon.Address, input []byte) ([]
 
 // 4223b5c2
 func (this *BaseHandlers) keyByIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // BaseHandlers path
+	path := this.pathBuilder.Key(caller) // BaseHandlers path
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
@@ -241,7 +246,7 @@ func (this *BaseHandlers) keyByIndex(caller evmcommon.Address, input []byte) ([]
 }
 
 func (this *BaseHandlers) delByIndex(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // Build container path
+	path := this.pathBuilder.Key(caller) // Build container path
 	idx, err := abi.DecodeTo(input, 0, uint64(0), 1, 32)
 	if err == nil {
 		if successful, fee := this.SetByIndex(path, idx, nil); successful {
@@ -252,7 +257,7 @@ func (this *BaseHandlers) delByIndex(caller evmcommon.Address, input []byte) ([]
 }
 
 func (this *BaseHandlers) delByKey(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // Build container path
+	path := this.pathBuilder.Key(caller) // Build container path
 
 	key, err := abi.DecodeTo(input, 0, []byte{}, 2, math.MaxInt)
 	if err == nil {
@@ -264,14 +269,30 @@ func (this *BaseHandlers) delByKey(caller evmcommon.Address, input []byte) ([]by
 	return []byte{}, false, 0
 }
 
+func (this *BaseHandlers) max(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	entries, _, _ := this.Export(this.pathBuilder.Key(caller))
+	sort.Slice(entries, func(i, j int) bool {
+		return string(entries[i]) < string(entries[j])
+	})
+	return []byte{}, false, 0
+}
+
+func (this *BaseHandlers) min(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	entries, _, _ := this.Export(this.pathBuilder.Key(caller))
+	sort.Slice(entries, func(i, j int) bool {
+		return string(entries[i]) > string(entries[j])
+	})
+	return []byte{}, false, 0
+}
+
 func (this *BaseHandlers) clear(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.connector.Key(caller) // Build container path
+	path := this.pathBuilder.Key(caller) // Build container path
 	if len(path) == 0 {
 		return []byte{}, false, 0
 	}
 
 	for {
-		if _, _, err := this.api.WriteCache().(*cache.WriteCache).PopBack(this.api.GetEU().(intf.EU).ID(), path, nil); err != nil {
+		if _, _, err := this.api.WriteCache().(*cache.WriteCache).PopBack(this.api.GetEU().(interface{ ID() uint32 }).ID(), path, nil); err != nil {
 			break
 		}
 	}

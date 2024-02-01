@@ -13,14 +13,14 @@ import (
 )
 
 // Ccurl connectors for Arcology APIs
-type BuiltinPathMaker struct {
+type PathBuilder struct {
 	apiRouter intf.EthApiRouter
 	// apiRouter.WriteCache()     *concurrenturl.ConcurrentUrl
 	subDir string
 }
 
-func NewBuiltinPathMaker(subDir string, api intf.EthApiRouter) *BuiltinPathMaker {
-	return &BuiltinPathMaker{
+func NewPathBuilder(subDir string, api intf.EthApiRouter) *PathBuilder {
+	return &PathBuilder{
 		subDir:    subDir,
 		apiRouter: api,
 		// apiRouter.WriteCache():     apiRouter.WriteCache(),
@@ -28,14 +28,14 @@ func NewBuiltinPathMaker(subDir string, api intf.EthApiRouter) *BuiltinPathMaker
 }
 
 // Make Arcology paths under the current account
-func (this *BuiltinPathMaker) New(txIndex uint32, deploymentAddr types.Address) bool {
+func (this *PathBuilder) New(txIndex uint32, deploymentAddr types.Address) bool {
 	if !this.newStorageRoot(deploymentAddr, txIndex) { // Create the root path if has been created yet.
 		return false
 	}
 	return this.newContainerRoot(deploymentAddr, txIndex) //
 }
 
-func (this *BuiltinPathMaker) newStorageRoot(account types.Address, txIndex uint32) bool {
+func (this *PathBuilder) newStorageRoot(account types.Address, txIndex uint32) bool {
 	accountRoot := common.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(account), "/")
 	if !this.apiRouter.WriteCache().(*cache.WriteCache).IfExists(accountRoot) {
 		return common.FilterFirst(this.apiRouter.WriteCache().(*cache.WriteCache).CreateNewAccount(txIndex, string(account))) != nil // Create a new account
@@ -43,7 +43,7 @@ func (this *BuiltinPathMaker) newStorageRoot(account types.Address, txIndex uint
 	return true // ALready exists
 }
 
-func (this *BuiltinPathMaker) newContainerRoot(account types.Address, txIndex uint32) bool {
+func (this *PathBuilder) newContainerRoot(account types.Address, txIndex uint32) bool {
 	containerRoot := this.key(account)
 
 	if !this.apiRouter.WriteCache().(*cache.WriteCache).IfExists(containerRoot) {
@@ -53,10 +53,10 @@ func (this *BuiltinPathMaker) newContainerRoot(account types.Address, txIndex ui
 	return true // Already exists
 }
 
-func (this *BuiltinPathMaker) Key(caller [20]byte) string { // container ID
+func (this *PathBuilder) Key(caller [20]byte) string { // container ID
 	return this.key(types.Address(hexutil.Encode(caller[:])))
 }
 
-func (this *BuiltinPathMaker) key(account types.Address) string { // container ID
+func (this *PathBuilder) key(account types.Address) string { // container ID
 	return common.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(account), "/storage", this.subDir, "/")
 }

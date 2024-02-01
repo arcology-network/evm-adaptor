@@ -95,7 +95,8 @@ func (this *ImplStateDB) SetNonce(addr evmcommon.Address, nonce uint64) {
 		createAccount(this.api.WriteCache().(*cache.WriteCache), addr, this.tid)
 	}
 
-	if _, err := this.api.WriteCache().(*cache.WriteCache).Write(this.tid, getNoncePath(this.api.WriteCache().(*cache.WriteCache), addr), commutative.NewUint64Delta(1)); err != nil {
+	if _, err := this.api.WriteCache().(*cache.WriteCache).Write(this.tid, getNoncePath(this.api.WriteCache().(*cache.WriteCache), addr), commutative.NewUint64Delta(nonce)); err != nil {
+		this.api.WriteCache().(*cache.WriteCache).Write(this.tid, getNoncePath(this.api.WriteCache().(*cache.WriteCache), addr), commutative.NewUint64Delta(nonce))
 		panic(err)
 	}
 }
