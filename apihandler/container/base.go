@@ -3,9 +3,10 @@ package api
 import (
 	"encoding/hex"
 	"math"
-	"sort"
+	"math/big"
 
 	"github.com/arcology-network/common-lib/codec"
+	"github.com/arcology-network/common-lib/exp/array"
 	"github.com/arcology-network/common-lib/types"
 
 	"github.com/arcology-network/concurrenturl/commutative"
@@ -79,6 +80,18 @@ func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20
 
 	case [4]byte{0x37, 0x79, 0xc0, 0x34}:
 		return this.delByKey(caller, input[4:]) // Delete the element by its key.
+
+	case [4]byte{0xd3, 0x32, 0x51, 0x6f}:
+		return this.minNumerical(caller, input[4:]) // Delete the element by its key.
+
+	case [4]byte{0xd6, 0x99, 0x5f, 0x76}:
+		return this.maxNumerical(caller, input[4:]) // Delete the element by its key.
+
+	case [4]byte{0x9b, 0x78, 0xae, 0xcf}:
+		return this.minString(caller, input[4:]) // Delete the element by its key.
+
+	case [4]byte{0x05, 0x88, 0x52, 0x4c}:
+		return this.maxString(caller, input[4:]) // Delete the element by its key.
 
 	case [4]byte{0x52, 0xef, 0xea, 0x6e}:
 		return this.clear(caller, input[4:]) // Clear the container.
@@ -269,20 +282,56 @@ func (this *BaseHandlers) delByKey(caller evmcommon.Address, input []byte) ([]by
 	return []byte{}, false, 0
 }
 
-func (this *BaseHandlers) max(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	entries, _, _ := this.Export(this.pathBuilder.Key(caller))
-	sort.Slice(entries, func(i, j int) bool {
-		return string(entries[i]) < string(entries[j])
+// The function returns the minimum value in the container sorted by numerical order by
+// converting the byte array to a big integer and comparing the two values.
+func (this *BaseHandlers) minNumerical(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	entries, _, _ := this.ReadAll(this.pathBuilder.Key(caller))
+
+	lhv, rhv := new(big.Int), new(big.Int)
+	idx, v := array.Min(entries, func(lhvBytes, rhvBytes []byte) bool {
+		lhv.SetBytes(lhvBytes) // Convert the byte array to a big integer
+		rhv.SetBytes(rhvBytes)
+		return lhv.Cmp(rhv) < 0
 	})
-	return []byte{}, false, 0
+
+	idxBytes, _ := abi.Encode(uint256.NewInt(uint64(idx)))
+	return append(idxBytes, v...), true, 0
 }
 
-func (this *BaseHandlers) min(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	entries, _, _ := this.Export(this.pathBuilder.Key(caller))
-	sort.Slice(entries, func(i, j int) bool {
-		return string(entries[i]) > string(entries[j])
+// The function maxNumerical returns the maximum value in the container sorted by numerical order by
+// converting the byte array to a big integer and comparing the two values.
+func (this *BaseHandlers) maxNumerical(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	entries, _, _ := this.ReadAll(this.pathBuilder.Key(caller))
+
+	lhv, rhv := new(big.Int), new(big.Int)
+	idx, v := array.Min(entries, func(lhvBytes, rhvBytes []byte) bool {
+		lhv.SetBytes(lhvBytes) // Convert the byte array to a big integer
+		rhv.SetBytes(rhvBytes)
+		return lhv.Cmp(rhv) > 0
 	})
-	return []byte{}, false, 0
+
+	idxBytes, _ := abi.Encode(uint256.NewInt(uint64(idx)))
+	return append(idxBytes, v...), true, 0
+}
+
+func (this *BaseHandlers) minString(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	entries, _, _ := this.ReadAll(this.pathBuilder.Key(caller))
+	idx, v := array.Min(entries, func(lhv, rhv []byte) bool {
+		return string(lhv) < string(rhv)
+	})
+
+	idxBytes, _ := abi.Encode(uint256.NewInt(uint64(idx)))
+	return append(idxBytes, v...), true, 0
+}
+
+func (this *BaseHandlers) maxString(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	entries, _, _ := this.ReadAll(this.pathBuilder.Key(caller))
+	idx, v := array.Min(entries, func(lhv, rhv []byte) bool {
+		return string(lhv) > string(rhv)
+	})
+
+	idxBytes, _ := abi.Encode(uint256.NewInt(uint64(idx)))
+	return append(idxBytes, v...), true, 0
 }
 
 func (this *BaseHandlers) clear(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {

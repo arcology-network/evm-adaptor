@@ -91,11 +91,11 @@ func (this *APIHandler) DecrementDepth() uint8 {
 func (this *APIHandler) Depth() uint8 { return this.depth }
 
 func (this *APIHandler) Coinbase() ethcommon.Address {
-	return this.eu.(interface{ Coinbase() ethcommon.Address }).Coinbase()
+	return this.eu.(interface{ Coinbase() [20]byte }).Coinbase()
 }
 
 func (this *APIHandler) Origin() ethcommon.Address {
-	return this.eu.(interface{ Origin() ethcommon.Address }).Origin()
+	return this.eu.(interface{ Origin() [20]byte }).Origin()
 }
 
 func (this *APIHandler) SetSchedule(schedule interface{}) { this.schedule = schedule }

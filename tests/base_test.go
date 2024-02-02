@@ -19,11 +19,15 @@ package api
 
 import (
 	"bytes"
+	"fmt"
+	"math"
 	"testing"
 
 	"github.com/arcology-network/eu/cache"
+	"github.com/arcology-network/vm-adaptor/abi"
 	apihandler "github.com/arcology-network/vm-adaptor/apihandler"
 	base "github.com/arcology-network/vm-adaptor/apihandler/container"
+	"github.com/holiman/uint256"
 )
 
 type MockID struct{}
@@ -37,24 +41,32 @@ func TestBaseHandlers(t *testing.T) {
 
 	// Create a new container
 	baseContainer.Call(
-		[20]byte{0xcd, 0xbf, 0x60, 0x8d},
-		[20]byte{},
+		[20]byte{0xc2},
+		[20]byte{0xc2},
 		[]byte{0xcd, 0xbf, 0x60, 0x8d},
 		[20]byte{},
 		0) // Nonce
 
 	// Push a new element by calling setByKey()
+	data, _ := abi.Encode(uint256.NewInt(11))
+	d, _ := abi.Decode(data, 0, new(uint256.Int), 1, math.MaxInt)
+	// if d, _ := abi.Decode(data, 0, new(uint256.Int), 1, math.MaxInt); !u256.Eq(d.(*uint256.Int)) {
+	// 	t.Error("Error: Should be equal!")
+	// }
+
+	fmt.Println(d)
+
 	baseContainer.Call(
-		[20]byte{0xc2, 0x78, 0xb7, 0x99},
-		[20]byte{},
-		[]byte{0xc2, 0x78, 0xb7, 0x99},
+		[20]byte{0xc2},
+		[20]byte{0xc2},
+		append([]byte{0xc2, 0x78, 0xb7, 0x99}, data...),
 		[20]byte{},
 		0)
 
 	// Get length
-	data, _, _ := baseContainer.Call(
-		[20]byte{0x1f, 0x7b, 0x6d, 0x32},
-		[20]byte{},
+	data, _, _ = baseContainer.Call(
+		[20]byte{0xc2},
+		[20]byte{0xc2},
 		[]byte{0x1f, 0x7b, 0x6d, 0x32},
 		[20]byte{},
 		0) // Nonce

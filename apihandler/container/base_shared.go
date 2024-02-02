@@ -24,10 +24,9 @@ func (this *BaseHandlers) Length(path string) (uint64, bool, int64) {
 	return 0, false, 0
 }
 
-// Export all the elements in the container to a two-dimensional array
-func (this *BaseHandlers) Export(path string) ([][]byte, []bool, []int64) {
-	// path := this.pathBuilder.Key(caller) // Build container path
-
+// Export all the elements in the container to a two-dimensional array.
+// This function will read all the elements in the container.
+func (this *BaseHandlers) ReadAll(path string) ([][]byte, []bool, []int64) {
 	length, _, _ := this.Length(path)
 	entries := make([][]byte, length)
 	flags := make([]bool, length)
