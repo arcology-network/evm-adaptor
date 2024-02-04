@@ -51,7 +51,7 @@ func NewAPIHandler(cache *cache.WriteCache) *APIHandler {
 	handlers := []adaptorintf.ApiCallHandler{
 		apiruntime.NewIoHandlers(api),
 		apimultiprocess.NewMultiprocessHandler(api),
-		apicontainer.NewBaseHandlers(api, nil),
+		apicontainer.NewBaseHandlers(api),
 		apicumulative.NewU256CumulativeHandler(api),
 		// cumulativei256.NewInt256CumulativeHandlers(api),
 		apiruntime.NewRuntimeHandlers(api),
