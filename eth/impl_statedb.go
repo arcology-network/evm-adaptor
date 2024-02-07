@@ -87,7 +87,7 @@ func (this *ImplStateDB) GetNonce(addr evmcommon.Address) uint64 {
 	}
 
 	value, _ := this.api.WriteCache().(*cache.WriteCache).Peek(getNoncePath(this.api.WriteCache().(*cache.WriteCache), addr), new(commutative.Uint64))
-	return value.(uint64)
+	return value.(uint64) + this.CalculateNonceOffset(addr)
 }
 
 func (this *ImplStateDB) SetNonce(addr evmcommon.Address, nonce uint64) {
@@ -95,8 +95,9 @@ func (this *ImplStateDB) SetNonce(addr evmcommon.Address, nonce uint64) {
 		createAccount(this.api.WriteCache().(*cache.WriteCache), addr, this.tid)
 	}
 
-	if _, err := this.api.WriteCache().(*cache.WriteCache).Write(this.tid, getNoncePath(this.api.WriteCache().(*cache.WriteCache), addr), commutative.NewUint64Delta(nonce)); err != nil {
-		this.api.WriteCache().(*cache.WriteCache).Write(this.tid, getNoncePath(this.api.WriteCache().(*cache.WriteCache), addr), commutative.NewUint64Delta(nonce))
+	// This original implementation will set the nonce to the given value, but here we just write the nonce delta, which is 1 to the cache, becuase the nonce increment is always 1
+	// This is Arcology's way to handle the nonce, and the actual nonce will be calculated when it is read or at commit time.
+	if _, err := this.api.WriteCache().(*cache.WriteCache).Write(this.tid, getNoncePath(this.api.WriteCache().(*cache.WriteCache), addr), commutative.NewUint64Delta(1)); err != nil {
 		panic(err)
 	}
 }

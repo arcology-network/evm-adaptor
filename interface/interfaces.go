@@ -15,16 +15,22 @@ type ApiCallHandler interface {
 }
 
 type EthApiRouter interface {
+	GetInitiator() evmcommon.Address
+	SetInitiator(evmcommon.Address)
+
+	GetEU() interface{}
+	SetEU(interface{})
+
+	GetSchedule() interface{}
+	SetSchedule(interface{})
+
 	Origin() evmcommon.Address
 	WriteCache() interface{}
 	SetReadOnlyDataSource(interface{})
-	New(interface{}, interface{}) EthApiRouter
+	New(interface{}, evmcommon.Address, interface{}) EthApiRouter
 	Coinbase() evmcommon.Address
 
-	SetEU(interface{})
-	GetEU() interface{}
 	VM() interface{} //*vm.EVM
-	Schedule() interface{}
 
 	CheckRuntimeConstrains() bool
 

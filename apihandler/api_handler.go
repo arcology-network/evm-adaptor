@@ -22,6 +22,7 @@ import (
 )
 
 type APIHandler struct {
+	initiator  [20]byte // For transactions, the msg.sender, for sub-processes, the Multiprocessor's address
 	logs       []adaptorintf.ILog
 	depth      uint8
 	serialNums [4]uint64 // sub-process/container/element/uuid generator,
@@ -37,8 +38,9 @@ type APIHandler struct {
 	execResult *eucommon.Result
 }
 
-func NewAPIHandler(cache *cache.WriteCache) *APIHandler {
+func NewAPIHandler(cache *cache.WriteCache, initiator ethcommon.Address) *APIHandler {
 	api := &APIHandler{
+		initiator:  initiator,
 		eu:         nil,
 		localCache: cache,
 		// filter:      *cache.NewWriteCacheFilter(cache),
@@ -66,11 +68,21 @@ func NewAPIHandler(cache *cache.WriteCache) *APIHandler {
 	return api
 }
 
-func (this *APIHandler) New(localCache interface{}, schedule interface{}) adaptorintf.EthApiRouter {
-	api := NewAPIHandler(localCache.(*cache.WriteCache))
+func (this *APIHandler) New(localCache interface{}, initiator ethcommon.Address, schedule interface{}) adaptorintf.EthApiRouter {
+	api := NewAPIHandler(localCache.(*cache.WriteCache), initiator)
 	api.depth = this.depth + 1
+	api.initiator = initiator
 	return api
 }
+
+func (this *APIHandler) GetInitiator() ethcommon.Address          { return this.initiator }
+func (this *APIHandler) SetInitiator(initiator ethcommon.Address) { this.initiator = initiator }
+
+func (this *APIHandler) GetEU() interface{}   { return this.eu }
+func (this *APIHandler) SetEU(eu interface{}) { this.eu = eu }
+
+func (this *APIHandler) GetSchedule() interface{}         { return this.schedule }
+func (this *APIHandler) SetSchedule(schedule interface{}) { this.schedule = schedule }
 
 func (this *APIHandler) WriteCache() interface{} { return this.localCache }
 
@@ -95,11 +107,11 @@ func (this *APIHandler) Coinbase() ethcommon.Address {
 }
 
 func (this *APIHandler) Origin() ethcommon.Address {
+	if this.eu == nil {
+		return [20]byte{}
+	}
 	return this.eu.(interface{ Origin() [20]byte }).Origin()
 }
-
-func (this *APIHandler) SetSchedule(schedule interface{}) { this.schedule = schedule }
-func (this *APIHandler) Schedule() interface{}            { return this.schedule }
 
 func (this *APIHandler) HandlerDict() map[[20]byte]adaptorintf.ApiCallHandler {
 	return this.handlerDict
@@ -108,9 +120,6 @@ func (this *APIHandler) HandlerDict() map[[20]byte]adaptorintf.ApiCallHandler {
 func (this *APIHandler) VM() interface{} {
 	return common.IfThenDo1st(this.eu != nil, func() interface{} { return this.eu.(interface{ VM() interface{} }).VM() }, nil)
 }
-
-func (this *APIHandler) GetEU() interface{}   { return this.eu }
-func (this *APIHandler) SetEU(eu interface{}) { this.eu = eu }
 
 func (this *APIHandler) SetReadOnlyDataSource(readOnlyDataSource interface{}) {
 	this.dataReader = readOnlyDataSource.(ccurlintf.ReadOnlyDataStore)

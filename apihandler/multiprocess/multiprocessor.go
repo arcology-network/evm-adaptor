@@ -41,7 +41,7 @@ func NewMultiprocessHandler(ethApiRouter adaptorintf.EthApiRouter) *Multiprocess
 
 func (this *MultiprocessHandler) Address() [20]byte { return adaptorcommon.MULTIPROCESS_HANDLER }
 
-func (this *MultiprocessHandler) Run(caller [20]byte, input []byte, args ...interface{}) ([]byte, bool, int64) {
+func (this *MultiprocessHandler) Run(caller, callee [20]byte, input []byte, args ...interface{}) ([]byte, bool, int64) {
 	if atomic.AddUint64(&eucommon.TotalSubProcesses, 1); !this.Api().CheckRuntimeConstrains() {
 		return []byte{}, false, 0
 	}
@@ -71,14 +71,16 @@ func (this *MultiprocessHandler) Run(caller [20]byte, input []byte, args ...inte
 	this.jobseqs = array.Resize(this.jobseqs, int(length))
 	for i := uint64(0); i < length; i++ {
 		funCall, successful, fee := this.GetByIndex(path, uint64(i)) // The message sender should be resonpsible for the fees.
+
 		if fees[i] = fee; successful {
-			this.jobseqs[i], this.erros[i] = this.toJobSeq(funCall, generation.JobT())
+			this.jobseqs[i], this.erros[i] = this.toJobSeq(caller, funCall, generation.JobT())
 		}
 		generation.Add(this.jobseqs[i]) // Add the job sequence to the 	generation regardless of the error
 	}
 
 	// Run the job sequences in parallel.
 	transitions := generation.Execute(this.Api())
+	univalue.Univalues(transitions).Print()
 	// Sub processes may have been spawned during the execution, recheck it.
 	if !this.Api().CheckRuntimeConstrains() {
 		return []byte{}, false, fee
@@ -96,7 +98,7 @@ func (this *MultiprocessHandler) Run(caller [20]byte, input []byte, args ...inte
 // For multiprocessor, a job sequence only contains one message.
 // To keep the same structure with the transaction level processing,
 // the message is wrapped
-func (this *MultiprocessHandler) toJobSeq(input []byte, T *eu.JobSequence) (*eu.JobSequence, error) {
+func (this *MultiprocessHandler) toJobSeq(caller [20]byte, input []byte, T *eu.JobSequence) (*eu.JobSequence, error) {
 	gasLimit, value, calleeAddr, funCall, err := abi.Parse4(input,
 		uint64(0), 1, 32,
 		uint256.NewInt(0), 1, 32,
@@ -110,7 +112,7 @@ func (this *MultiprocessHandler) toJobSeq(input []byte, T *eu.JobSequence) (*eu.
 	transfer := value.ToBig()
 	addr := evmcommon.Address(calleeAddr)
 	evmMsg := evmcore.NewMessage( // Build the message
-		this.BaseHandlers.Api().Origin(),
+		this.BaseHandlers.Api().Origin(), // Where the gas comes from, cannot use the caller here.
 		&addr,
 		0,
 		transfer, // Amount to transfer
@@ -132,5 +134,6 @@ func (this *MultiprocessHandler) toJobSeq(input []byte, T *eu.JobSequence) (*eu.
 		Native: &evmMsg,
 		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(interface{ TxHash() [32]byte }).TxHash()),
 	})
+
 	return newJobSeq, nil
 }

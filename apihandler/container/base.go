@@ -25,7 +25,6 @@ import (
 type BaseHandlers struct {
 	api         intf.EthApiRouter
 	pathBuilder *adaptorcommon.PathBuilder
-	caller      [20]byte
 	args        []interface{}
 }
 
@@ -99,8 +98,8 @@ func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20
 
 	// Custom function call. The base handler may have a custom function to call..
 	if len(this.args) > 0 {
-		customFun := this.args[0].(func([20]byte, []byte, ...interface{}) ([]byte, bool, int64))
-		customFun(caller, input[4:], this.args[1:]...)
+		customFun := this.args[0].(func([20]byte, [20]byte, []byte, ...interface{}) ([]byte, bool, int64))
+		customFun(caller, callee, input[4:], this.args[1:]...)
 	}
 
 	return []byte{}, false, 0 // unknown
@@ -114,7 +113,8 @@ func (this *BaseHandlers) new(caller evmcommon.Address, input []byte) ([]byte, b
 		this.api.GetEU().(interface{ ID() uint32 }).ID(), // Tx ID for conflict detection
 		types.Address(codec.Bytes20(caller).Hex()),       // Main contract address
 	)
-	this.caller = caller
+
+	this.api.SetInitiator(caller)  // Store the MP address to the API
 	return caller[:], connected, 0 // Create a new container
 }
 
