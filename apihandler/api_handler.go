@@ -38,9 +38,9 @@ type APIHandler struct {
 	execResult *eucommon.Result
 }
 
-func NewAPIHandler(cache *cache.WriteCache, initiator ethcommon.Address) *APIHandler {
+func NewAPIHandler(cache *cache.WriteCache) *APIHandler {
 	api := &APIHandler{
-		initiator:  initiator,
+		// initiator:  initiator,
 		eu:         nil,
 		localCache: cache,
 		// filter:      *cache.NewWriteCacheFilter(cache),
@@ -69,7 +69,8 @@ func NewAPIHandler(cache *cache.WriteCache, initiator ethcommon.Address) *APIHan
 }
 
 func (this *APIHandler) New(localCache interface{}, initiator ethcommon.Address, schedule interface{}) adaptorintf.EthApiRouter {
-	api := NewAPIHandler(localCache.(*cache.WriteCache), initiator)
+	api := NewAPIHandler(localCache.(*cache.WriteCache))
+	api.SetInitiator(initiator)
 	api.depth = this.depth + 1
 	api.initiator = initiator
 	return api

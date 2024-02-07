@@ -80,7 +80,7 @@ func (this *MultiprocessHandler) Run(caller, callee [20]byte, input []byte, args
 
 	// Run the job sequences in parallel.
 	transitions := generation.Execute(this.Api())
-	univalue.Univalues(transitions).Print()
+
 	// Sub processes may have been spawned during the execution, recheck it.
 	if !this.Api().CheckRuntimeConstrains() {
 		return []byte{}, false, fee
