@@ -15,8 +15,8 @@ type ApiCallHandler interface {
 }
 
 type EthApiRouter interface {
-	GetInitiator() evmcommon.Address
-	SetInitiator(evmcommon.Address)
+	GetDeployer() evmcommon.Address
+	SetDeployer(evmcommon.Address)
 
 	GetEU() interface{}
 	SetEU(interface{})

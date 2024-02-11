@@ -86,8 +86,8 @@ func (this *ImplStateDB) GetNonce(addr evmcommon.Address) uint64 {
 		return 0
 	}
 
-	value, _ := this.api.WriteCache().(*cache.WriteCache).Peek(getNoncePath(this.api.WriteCache().(*cache.WriteCache), addr), new(commutative.Uint64))
-	return value.(uint64) + this.CalculateNonceOffset(addr)
+	nonce, _ := this.api.WriteCache().(*cache.WriteCache).Peek(getNoncePath(this.api.WriteCache().(*cache.WriteCache), addr), new(commutative.Uint64))
+	return nonce.(uint64) + this.CalculateNonceOffset(addr, nonce.(uint64)) // Add the nonce offset
 }
 
 func (this *ImplStateDB) SetNonce(addr evmcommon.Address, nonce uint64) {

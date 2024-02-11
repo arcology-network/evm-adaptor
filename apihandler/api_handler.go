@@ -22,7 +22,7 @@ import (
 )
 
 type APIHandler struct {
-	initiator  [20]byte // For transactions, the msg.sender, for sub-processes, the Multiprocessor's address
+	deployer   [20]byte // For transactions, the msg.sender, for sub-processes, the Multiprocessor's address
 	logs       []adaptorintf.ILog
 	depth      uint8
 	serialNums [4]uint64 // sub-process/container/element/uuid generator,
@@ -40,7 +40,7 @@ type APIHandler struct {
 
 func NewAPIHandler(cache *cache.WriteCache) *APIHandler {
 	api := &APIHandler{
-		// initiator:  initiator,
+		// deployer:  deployer,
 		eu:         nil,
 		localCache: cache,
 		// filter:      *cache.NewWriteCacheFilter(cache),
@@ -68,16 +68,16 @@ func NewAPIHandler(cache *cache.WriteCache) *APIHandler {
 	return api
 }
 
-func (this *APIHandler) New(localCache interface{}, initiator ethcommon.Address, schedule interface{}) adaptorintf.EthApiRouter {
+func (this *APIHandler) New(localCache interface{}, deployer ethcommon.Address, schedule interface{}) adaptorintf.EthApiRouter {
 	api := NewAPIHandler(localCache.(*cache.WriteCache))
-	api.SetInitiator(initiator)
+	api.SetDeployer(deployer)
 	api.depth = this.depth + 1
-	api.initiator = initiator
+	api.deployer = deployer
 	return api
 }
 
-func (this *APIHandler) GetInitiator() ethcommon.Address          { return this.initiator }
-func (this *APIHandler) SetInitiator(initiator ethcommon.Address) { this.initiator = initiator }
+func (this *APIHandler) GetDeployer() ethcommon.Address         { return this.deployer }
+func (this *APIHandler) SetDeployer(deployer ethcommon.Address) { this.deployer = deployer }
 
 func (this *APIHandler) GetEU() interface{}   { return this.eu }
 func (this *APIHandler) SetEU(eu interface{}) { this.eu = eu }

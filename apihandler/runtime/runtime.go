@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/vm-adaptor/abi"
 	intf "github.com/arcology-network/vm-adaptor/interface"
@@ -42,6 +44,8 @@ func (this *RuntimeHandlers) Call(caller, callee [20]byte, input []byte, origin 
 	case [4]byte{0xbb, 0x07, 0xe8, 0x5d}: // bb 07 e8 5d
 		return this.uuid(caller, callee, input[4:])
 	}
+
+	fmt.Println(input)
 	return []byte{}, false, 0
 }
 
