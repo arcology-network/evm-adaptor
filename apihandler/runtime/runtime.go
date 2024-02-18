@@ -34,7 +34,6 @@ func (this *RuntimeHandlers) Call(caller, callee [20]byte, input []byte, origin 
 	copy(signature[:], input)
 
 	switch signature {
-
 	case [4]byte{0xf1, 0x06, 0x84, 0x54}: // 79 fc 09 a2
 		return this.pid(caller, input[4:])
 
@@ -43,6 +42,9 @@ func (this *RuntimeHandlers) Call(caller, callee [20]byte, input []byte, origin 
 
 	case [4]byte{0xbb, 0x07, 0xe8, 0x5d}: // bb 07 e8 5d
 		return this.uuid(caller, callee, input[4:])
+
+	case [4]byte{0x69, 0xc8, 0xb3, 0x9f}: // bb 07 e8 5d
+		return this.instances(caller, callee, input[4:])
 	}
 
 	fmt.Println(input)
@@ -63,4 +65,11 @@ func (this *RuntimeHandlers) rollback(caller evmcommon.Address, input []byte) ([
 
 func (this *RuntimeHandlers) uuid(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	return this.api.ElementUID(), true, 0
+}
+
+func (this *RuntimeHandlers) instances(caller evmcommon.Address, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	if encoded, err := abi.Encode(this.api.Pid()); err == nil {
+		return encoded, true, 0
+	}
+	return []byte{}, false, 0
 }
