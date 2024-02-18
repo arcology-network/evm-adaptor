@@ -19,8 +19,6 @@ import (
 	apimultiprocess "github.com/arcology-network/vm-adaptor/apihandler/multiprocess"
 	apiruntime "github.com/arcology-network/vm-adaptor/apihandler/runtime"
 	adaptorintf "github.com/arcology-network/vm-adaptor/interface"
-
-	scheduler "github.com/arcology-network/eu/new-scheduler"
 )
 
 type APIHandler struct {
@@ -29,7 +27,7 @@ type APIHandler struct {
 	depth      uint8
 	serialNums [4]uint64 // sub-process/container/element/uuid generator,
 
-	schedule *scheduler.Schedule
+	schedule interface{}
 	eu       interface{}
 
 	handlerDict map[[20]byte]adaptorintf.ApiCallHandler // APIs under the atomic namespace

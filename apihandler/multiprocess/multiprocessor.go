@@ -64,16 +64,16 @@ func (this *MultiprocessHandler) Run(caller, callee [20]byte, input []byte, args
 		return []byte{}, successful, fee
 	}
 
-	generation := args[0].(*eu.Generation).New(0, threads, args[0].(*eu.Generation).JobSeqs()[:0])
+	// Initialize a new generation
+	generation := args[0].(*eu.Generation).New(0, threads, args[0].(*eu.Generation).JobSeqs()[:0], nil)
 	fees := make([]int64, length)
 	this.erros = make([]error, length)
 
 	this.jobseqs = array.Resize(this.jobseqs, int(length))
 	for i := uint64(0); i < length; i++ {
 		funCall, successful, fee := this.GetByIndex(path, uint64(i)) // The message sender should be resonpsible for the fees.
-
-		if fees[i] = fee; successful {
-			this.jobseqs[i], this.erros[i] = this.toJobSeq(caller, funCall, generation.JobT())
+		if fees[i] = fee; successful {                               // Assign the fee to the fees array
+			this.jobseqs[i], this.erros[i] = this.toJobSeq(caller, funCall, generation.JobT()) // Convert the input to a job sequence
 		}
 		generation.Add(this.jobseqs[i]) // Add the job sequence to the 	generation regardless of the error
 	}
@@ -86,7 +86,7 @@ func (this *MultiprocessHandler) Run(caller, callee [20]byte, input []byte, args
 		return []byte{}, false, fee
 	}
 
-	// Unify tx IDs c
+	// Unify tx IDs
 	mainTxID := uint32(this.Api().GetEU().(interface{ ID() uint32 }).ID())
 	array.Foreach(transitions, func(_ int, v **univalue.Univalue) { (*v).SetTx(mainTxID) })
 
