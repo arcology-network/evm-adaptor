@@ -7,6 +7,7 @@ import (
 	"github.com/arcology-network/vm-adaptor/abi"
 	intf "github.com/arcology-network/vm-adaptor/interface"
 	evmcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/holiman/uint256"
 
 	cache "github.com/arcology-network/eu/cache"
 	scheduler "github.com/arcology-network/eu/new-scheduler"
@@ -69,6 +70,10 @@ func (this *RuntimeHandlers) uuid(caller, callee evmcommon.Address, input []byte
 }
 
 func (this *RuntimeHandlers) instances(caller evmcommon.Address, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	if this.api.GetSchedule() == nil {
+		return []byte{}, false, 0
+	}
+
 	address, err := abi.DecodeTo(input, 0, [20]byte{}, 1, 4)
 	if err != nil {
 		return []byte{}, false, 0
@@ -82,6 +87,9 @@ func (this *RuntimeHandlers) instances(caller evmcommon.Address, callee evmcommo
 	dict := this.api.GetSchedule().(*map[string]int)
 	key := scheduler.CallToKey(address[:], funSign)
 
-	fmt.Println((*dict)[key])
+	// Encode the total number of instances and return
+	if encoded, err := abi.Encode(uint256.NewInt(uint64((*dict)[key]))); err == nil {
+		return encoded, true, 0
+	}
 	return []byte{}, false, 0
 }
