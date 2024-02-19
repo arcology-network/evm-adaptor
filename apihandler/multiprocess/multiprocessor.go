@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"math"
 	"math/big"
 	"sync/atomic"
@@ -9,6 +10,7 @@ import (
 	"github.com/arcology-network/common-lib/exp/array"
 	"github.com/arcology-network/concurrenturl/univalue"
 	"github.com/arcology-network/eu/cache"
+	scheduler "github.com/arcology-network/eu/new-scheduler"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	evmcore "github.com/ethereum/go-ethereum/core"
 	"github.com/holiman/uint256"
@@ -26,15 +28,10 @@ import (
 // APIs under the concurrency namespace
 type MultiprocessHandler struct {
 	*basecontainer.BaseHandlers
-	erros   []error
-	jobseqs []*eu.JobSequence
 }
 
 func NewMultiprocessHandler(ethApiRouter adaptorintf.EthApiRouter) *MultiprocessHandler {
-	handler := &MultiprocessHandler{
-		erros:   []error{},
-		jobseqs: array.To[*eu.JobSequence, *eu.JobSequence]([]*eu.JobSequence{}),
-	}
+	handler := &MultiprocessHandler{}
 	handler.BaseHandlers = basecontainer.NewBaseHandlers(ethApiRouter, handler.Run, &eu.Generation{})
 	return handler
 }
@@ -65,21 +62,26 @@ func (this *MultiprocessHandler) Run(caller, callee [20]byte, input []byte, args
 	}
 
 	// Initialize a new generation
-	generation := args[0].(*eu.Generation).New(0, threads, args[0].(*eu.Generation).JobSeqs()[:0], nil)
 	fees := make([]int64, length)
-	this.erros = make([]error, length)
+	erros := make([]error, length)
+	ethMsgs := make([]*evmcore.Message, length)
 
-	this.jobseqs = array.Resize(this.jobseqs, int(length))
-	for i := uint64(0); i < length; i++ {
-		funCall, successful, fee := this.GetByIndex(path, uint64(i)) // The message sender should be resonpsible for the fees.
-		if fees[i] = fee; successful {                               // Assign the fee to the fees array
-			this.jobseqs[i], this.erros[i] = this.toJobSeq(caller, funCall, generation.JobT()) // Convert the input to a job sequence
+	array.Foreach(ethMsgs, func(i int, _ **evmcore.Message) {
+		funCall, successful, fee := this.GetByIndex(path, uint64(i)) // Get the function call data and the fee.
+		fees[i] = fee
+
+		if !successful { // Assign the fee to the fees array
+			ethMsgs[i], erros[i] = nil, errors.New("Error: Failed to get the function call data")
 		}
-		generation.Add(this.jobseqs[i]) // Add the job sequence to the 	generation regardless of the error
-	}
+		ethMsgs[i], erros[i] = this.CalltoEthMsg(caller, funCall) // Convert the function call data to an ethereum message.
+	})
 
-	// Run the job sequences in parallel.
-	transitions := generation.Execute(this.Api())
+	stdMsgs := array.Append(ethMsgs, func(i int, ethMsg *evmcore.Message) *eucommon.StandardMessage {
+		return &eucommon.StandardMessage{Native: ethMsg}
+	})
+
+	sch := &scheduler.Schedule{Generations: [][]*eucommon.StandardMessage{stdMsgs}}
+	transitions := eu.NewGenerationFromMsgs(0, threads, ethMsgs, this.Api(), sch).Execute(this.Api()) // Run the job sequences in parallel.
 
 	// Sub processes may have been spawned during the execution, recheck it.
 	if !this.Api().CheckRuntimeConstrains() {
@@ -94,11 +96,8 @@ func (this *MultiprocessHandler) Run(caller, callee [20]byte, input []byte, args
 	return []byte{}, true, array.Sum[int64, int64](fees)
 }
 
-// toJobSeq converts the input byte slice into a JobSequence object.
-// For multiprocessor, a job sequence only contains one message.
-// To keep the same structure with the transaction level processing,
-// the message is wrapped
-func (this *MultiprocessHandler) toJobSeq(caller [20]byte, input []byte, T *eu.JobSequence) (*eu.JobSequence, error) {
+// toEthMsgs converts the input byte slice into a list of ethereum messages.
+func (this *MultiprocessHandler) CalltoEthMsg(caller [20]byte, input []byte) (*evmcore.Message, error) {
 	gasLimit, value, calleeAddr, funCall, err := abi.Parse4(input,
 		uint64(0), 1, 32,
 		uint256.NewInt(0), 1, 32,
@@ -111,29 +110,16 @@ func (this *MultiprocessHandler) toJobSeq(caller [20]byte, input []byte, T *eu.J
 
 	transfer := value.ToBig()
 	addr := evmcommon.Address(calleeAddr)
-	evmMsg := evmcore.NewMessage( // Build the message
-		this.BaseHandlers.Api().Origin(), // Where the gas comes from, cannot use the caller here.
+	msg := evmcore.NewMessage( // Build the message
+		this.Api().Origin(), // Where the gas comes from, cannot use the caller here.
 		&addr,
 		0,
 		transfer, // Amount to transfer
 		gasLimit,
-		this.BaseHandlers.Api().GetEU().(interface{ GasPrice() *big.Int }).GasPrice(), // gas price
+		this.Api().GetEU().(interface{ GasPrice() *big.Int }).GasPrice(), // gas price
 		funCall,
 		nil,
 		false, // Don't checking nonce
 	)
-
-	// newJobSeq creates a new job sequence using the TYPE INFO.
-	newJobSeq := T.New(
-		uint32(this.BaseHandlers.Api().GetSerialNum(eucommon.SUB_PROCESS)),
-		this.BaseHandlers.Api(),
-	)
-
-	newJobSeq.AppendMsg(&eucommon.StandardMessage{
-		ID:     uint64(newJobSeq.GetID()),
-		Native: &evmMsg,
-		TxHash: newJobSeq.DeriveNewHash(this.BaseHandlers.Api().GetEU().(interface{ TxHash() [32]byte }).TxHash()),
-	})
-
-	return newJobSeq, nil
+	return &msg, nil
 }

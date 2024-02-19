@@ -84,8 +84,10 @@ func (this *APIHandler) SetDeployer(deployer ethcommon.Address) { this.deployer 
 func (this *APIHandler) GetEU() interface{}   { return this.eu }
 func (this *APIHandler) SetEU(eu interface{}) { this.eu = eu }
 
-func (this *APIHandler) GetSchedule() interface{}         { return this.schedule }
-func (this *APIHandler) SetSchedule(schedule interface{}) { this.schedule = schedule }
+func (this *APIHandler) GetSchedule() interface{} { return this.schedule }
+func (this *APIHandler) SetSchedule(schedule interface{}) {
+	this.schedule = schedule.(*scheduler.Schedule)
+}
 
 func (this *APIHandler) WriteCache() interface{} { return this.localCache }
 
