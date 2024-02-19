@@ -19,8 +19,6 @@ import (
 	apimultiprocess "github.com/arcology-network/vm-adaptor/apihandler/multiprocess"
 	apiruntime "github.com/arcology-network/vm-adaptor/apihandler/runtime"
 	adaptorintf "github.com/arcology-network/vm-adaptor/interface"
-
-	scheduler "github.com/arcology-network/eu/new-scheduler"
 )
 
 type APIHandler struct {
@@ -29,7 +27,7 @@ type APIHandler struct {
 	depth      uint8
 	serialNums [4]uint64 // sub-process/container/element/uuid generator,
 
-	schedule *scheduler.Schedule
+	schedule interface{}
 	eu       interface{}
 
 	handlerDict map[[20]byte]adaptorintf.ApiCallHandler // APIs under the atomic namespace
@@ -75,6 +73,7 @@ func (this *APIHandler) New(localCache interface{}, deployer ethcommon.Address, 
 	api.SetDeployer(deployer)
 	api.depth = this.depth + 1
 	api.deployer = deployer
+	api.schedule = schedule
 	return api
 }
 
@@ -84,10 +83,8 @@ func (this *APIHandler) SetDeployer(deployer ethcommon.Address) { this.deployer 
 func (this *APIHandler) GetEU() interface{}   { return this.eu }
 func (this *APIHandler) SetEU(eu interface{}) { this.eu = eu }
 
-func (this *APIHandler) GetSchedule() interface{} { return this.schedule }
-func (this *APIHandler) SetSchedule(schedule interface{}) {
-	this.schedule = schedule.(*scheduler.Schedule)
-}
+func (this *APIHandler) GetSchedule() interface{}         { return this.schedule }
+func (this *APIHandler) SetSchedule(schedule interface{}) { this.schedule = schedule }
 
 func (this *APIHandler) WriteCache() interface{} { return this.localCache }
 

@@ -9,6 +9,7 @@ import (
 	evmcommon "github.com/ethereum/go-ethereum/common"
 
 	cache "github.com/arcology-network/eu/cache"
+	scheduler "github.com/arcology-network/eu/new-scheduler"
 	"github.com/arcology-network/vm-adaptor/common"
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
 )
@@ -43,7 +44,7 @@ func (this *RuntimeHandlers) Call(caller, callee [20]byte, input []byte, origin 
 	case [4]byte{0xbb, 0x07, 0xe8, 0x5d}: // bb 07 e8 5d
 		return this.uuid(caller, callee, input[4:])
 
-	case [4]byte{0x69, 0xc8, 0xb3, 0x9f}: // bb 07 e8 5d
+	case [4]byte{0xa8, 0x7a, 0xe4, 0x81}: // bb 07 e8 5d
 		return this.instances(caller, callee, input[4:])
 	}
 
@@ -68,8 +69,19 @@ func (this *RuntimeHandlers) uuid(caller, callee evmcommon.Address, input []byte
 }
 
 func (this *RuntimeHandlers) instances(caller evmcommon.Address, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	if encoded, err := abi.Encode(this.api.Pid()); err == nil {
-		return encoded, true, 0
+	address, err := abi.DecodeTo(input, 0, [20]byte{}, 1, 4)
+	if err != nil {
+		return []byte{}, false, 0
 	}
+
+	funSign, err := abi.DecodeTo(input, 1, []byte{}, 1, 4)
+	if err != nil {
+		return []byte{}, false, 0
+	}
+
+	dict := this.api.GetSchedule().(*map[string]int)
+	key := scheduler.CallToKey(address[:], funSign)
+
+	fmt.Println((*dict)[key])
 	return []byte{}, false, 0
 }

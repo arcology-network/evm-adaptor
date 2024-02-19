@@ -10,7 +10,6 @@ import (
 	"github.com/arcology-network/common-lib/exp/array"
 	"github.com/arcology-network/concurrenturl/univalue"
 	"github.com/arcology-network/eu/cache"
-	scheduler "github.com/arcology-network/eu/new-scheduler"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	evmcore "github.com/ethereum/go-ethereum/core"
 	"github.com/holiman/uint256"
@@ -76,12 +75,7 @@ func (this *MultiprocessHandler) Run(caller, callee [20]byte, input []byte, args
 		ethMsgs[i], erros[i] = this.CalltoEthMsg(caller, funCall) // Convert the function call data to an ethereum message.
 	})
 
-	stdMsgs := array.Append(ethMsgs, func(i int, ethMsg *evmcore.Message) *eucommon.StandardMessage {
-		return &eucommon.StandardMessage{Native: ethMsg}
-	})
-
-	sch := &scheduler.Schedule{Generations: [][]*eucommon.StandardMessage{stdMsgs}}
-	transitions := eu.NewGenerationFromMsgs(0, threads, ethMsgs, this.Api(), sch).Execute(this.Api()) // Run the job sequences in parallel.
+	transitions := eu.NewGenerationFromMsgs(0, threads, ethMsgs, this.Api()).Execute(this.Api()) // Run the job sequences in parallel.
 
 	// Sub processes may have been spawned during the execution, recheck it.
 	if !this.Api().CheckRuntimeConstrains() {
