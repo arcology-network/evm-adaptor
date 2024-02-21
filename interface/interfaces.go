@@ -25,9 +25,11 @@ type EthApiRouter interface {
 	SetSchedule(interface{})
 
 	Origin() evmcommon.Address
+
+	WriteCachePool() interface{}
 	WriteCache() interface{}
 	SetReadOnlyDataSource(interface{})
-	New(interface{}, evmcommon.Address, interface{}) EthApiRouter
+	New(interface{}, interface{}, evmcommon.Address, interface{}) EthApiRouter
 	Coinbase() evmcommon.Address
 
 	VM() interface{} //*vm.EVM

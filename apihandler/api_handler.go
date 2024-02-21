@@ -8,6 +8,7 @@ import (
 	"github.com/arcology-network/common-lib/codec"
 	common "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/exp/array"
+	"github.com/arcology-network/common-lib/exp/mempool"
 	ccurlintf "github.com/arcology-network/concurrenturl/interfaces"
 	"github.com/arcology-network/eu/cache"
 
@@ -32,17 +33,19 @@ type APIHandler struct {
 
 	handlerDict map[[20]byte]adaptorintf.ApiCallHandler // APIs under the atomic namespace
 
-	localCache *cache.WriteCache
-	dataReader ccurlintf.ReadOnlyDataStore
+	writeCachePool *mempool.Mempool[*cache.WriteCache]
+	localCache     *cache.WriteCache
+	dataReader     ccurlintf.ReadOnlyDataStore
 
 	execResult *eucommon.Result
 }
 
-func NewAPIHandler(cache *cache.WriteCache) *APIHandler {
+func NewAPIHandler(writeCachePool *mempool.Mempool[*cache.WriteCache]) *APIHandler {
 	api := &APIHandler{
 		// deployer:  deployer,
-		eu:         nil,
-		localCache: cache,
+		writeCachePool: writeCachePool,
+		eu:             nil,
+		localCache:     writeCachePool.New(),
 		// filter:      *cache.NewWriteCacheFilter(cache),
 		handlerDict: make(map[[20]byte]adaptorintf.ApiCallHandler),
 		depth:       0,
@@ -68,14 +71,20 @@ func NewAPIHandler(cache *cache.WriteCache) *APIHandler {
 	return api
 }
 
-func (this *APIHandler) New(localCache interface{}, deployer ethcommon.Address, schedule interface{}) adaptorintf.EthApiRouter {
-	api := NewAPIHandler(localCache.(*cache.WriteCache))
+// Initliaze a new APIHandler from an existing writeCache. This is different from the NewAPIHandler() function in that it does not create a new writeCache.
+func (this *APIHandler) New(writeCachePool interface{}, localCache interface{}, deployer ethcommon.Address, schedule interface{}) adaptorintf.EthApiRouter {
+	// localCache := writeCachePool.(*mempool.Mempool[*cache.WriteCache]).New()
+	api := NewAPIHandler(writeCachePool.(*mempool.Mempool[*cache.WriteCache]))
 	api.SetDeployer(deployer)
+	api.writeCachePool = writeCachePool.(*mempool.Mempool[*cache.WriteCache])
+	api.localCache = localCache.(*cache.WriteCache)
 	api.depth = this.depth + 1
 	api.deployer = deployer
 	api.schedule = schedule
 	return api
 }
+
+func (this *APIHandler) WriteCachePool() interface{} { return this.writeCachePool }
 
 func (this *APIHandler) GetDeployer() ethcommon.Address         { return this.deployer }
 func (this *APIHandler) SetDeployer(deployer ethcommon.Address) { this.deployer = deployer }
