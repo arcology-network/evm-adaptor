@@ -5,9 +5,9 @@ import (
 	"github.com/arcology-network/common-lib/types"
 	"github.com/holiman/uint256"
 
-	"github.com/arcology-network/concurrenturl/commutative"
-	"github.com/arcology-network/concurrenturl/univalue"
 	"github.com/arcology-network/eu/cache"
+	"github.com/arcology-network/storage-committer/commutative"
+	"github.com/arcology-network/storage-committer/univalue"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 	intf "github.com/arcology-network/vm-adaptor/interface"
 	evmcommon "github.com/ethereum/go-ethereum/common"

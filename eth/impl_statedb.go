@@ -3,9 +3,9 @@ package eth
 import (
 	"math/big"
 
-	commutative "github.com/arcology-network/concurrenturl/commutative"
-	noncommutative "github.com/arcology-network/concurrenturl/noncommutative"
 	cache "github.com/arcology-network/eu/cache"
+	commutative "github.com/arcology-network/storage-committer/commutative"
+	noncommutative "github.com/arcology-network/storage-committer/noncommutative"
 	intf "github.com/arcology-network/vm-adaptor/interface"
 	"github.com/ethereum/go-ethereum/common"
 	evmcommon "github.com/ethereum/go-ethereum/common"

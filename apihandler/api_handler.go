@@ -9,8 +9,8 @@ import (
 	common "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/exp/array"
 	"github.com/arcology-network/common-lib/exp/mempool"
-	ccurlintf "github.com/arcology-network/concurrenturl/interfaces"
 	"github.com/arcology-network/eu/cache"
+	ccurlintf "github.com/arcology-network/storage-committer/interfaces"
 
 	eucommon "github.com/arcology-network/eu/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"

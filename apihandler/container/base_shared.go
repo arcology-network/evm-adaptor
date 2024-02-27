@@ -6,9 +6,9 @@ import (
 	"github.com/arcology-network/common-lib/common"
 	orderedset "github.com/arcology-network/common-lib/container/set"
 	array "github.com/arcology-network/common-lib/exp/array"
-	"github.com/arcology-network/concurrenturl/commutative"
-	"github.com/arcology-network/concurrenturl/noncommutative"
 	"github.com/arcology-network/eu/cache"
+	"github.com/arcology-network/storage-committer/commutative"
+	"github.com/arcology-network/storage-committer/noncommutative"
 )
 
 // Get the number of elements in the container

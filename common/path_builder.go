@@ -3,11 +3,11 @@ package common
 import (
 	common "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/types"
-	ccurlcommon "github.com/arcology-network/concurrenturl/common"
+	ccurlcommon "github.com/arcology-network/storage-committer/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
-	commutative "github.com/arcology-network/concurrenturl/commutative"
 	cache "github.com/arcology-network/eu/cache"
+	commutative "github.com/arcology-network/storage-committer/commutative"
 
 	intf "github.com/arcology-network/vm-adaptor/interface"
 )

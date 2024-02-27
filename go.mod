@@ -1,12 +1,12 @@
 module github.com/arcology-network/vm-adaptor
 
-go 1.21.3
+go 1.22
 
 replace github.com/ethereum/go-ethereum => ../concurrent-evm
 
 replace github.com/arcology-network/common-lib => ../common-lib/
 
-replace github.com/arcology-network/concurrenturl => ../concurrenturl/
+replace github.com/arcology-network/concurrenturl => ../storage-committer/
 
 replace github.com/arcology-network/eu => ../eu/
 

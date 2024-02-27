@@ -9,9 +9,9 @@ import (
 	"github.com/arcology-network/common-lib/exp/array"
 	"github.com/arcology-network/common-lib/types"
 
-	"github.com/arcology-network/concurrenturl/commutative"
-	"github.com/arcology-network/concurrenturl/interfaces"
 	"github.com/arcology-network/eu/cache"
+	"github.com/arcology-network/storage-committer/commutative"
+	"github.com/arcology-network/storage-committer/interfaces"
 	abi "github.com/arcology-network/vm-adaptor/abi"
 	"github.com/arcology-network/vm-adaptor/common"
 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
