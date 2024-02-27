@@ -19,7 +19,7 @@ package eth
 
 import (
 	"github.com/arcology-network/common-lib/codec"
-	"github.com/arcology-network/common-lib/exp/array"
+	"github.com/arcology-network/common-lib/exp/slice"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -30,7 +30,7 @@ func (this *ImplStateDB) CalculateNonceOffset(addr evmcommon.Address, nonce uint
 	}
 
 	id := uint64(this.api.GetEU().(interface{ ID() uint32 }).ID())
-	encoded := array.Flatten([][]byte{
+	encoded := slice.Flatten([][]byte{
 		this.api.GetDeployer().Bytes(),
 		codec.Uint64(id).Encode(),
 		codec.Uint64(nonce).Encode(),

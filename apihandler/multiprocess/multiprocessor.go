@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 
 	"github.com/arcology-network/common-lib/common"
-	"github.com/arcology-network/common-lib/exp/array"
+	"github.com/arcology-network/common-lib/exp/slice"
 	"github.com/arcology-network/eu/cache"
 	"github.com/arcology-network/storage-committer/univalue"
 	evmcommon "github.com/ethereum/go-ethereum/common"
@@ -65,7 +65,7 @@ func (this *MultiprocessHandler) Run(caller, callee [20]byte, input []byte, args
 	erros := make([]error, length)
 	ethMsgs := make([]*evmcore.Message, length)
 
-	array.Foreach(ethMsgs, func(i int, _ **evmcore.Message) {
+	slice.Foreach(ethMsgs, func(i int, _ **evmcore.Message) {
 		funCall, successful, fee := this.GetByIndex(path, uint64(i)) // Get the function call data and the fee.
 		fees[i] = fee
 
@@ -84,10 +84,10 @@ func (this *MultiprocessHandler) Run(caller, callee [20]byte, input []byte, args
 
 	// Unify tx IDs
 	mainTxID := uint32(this.Api().GetEU().(interface{ ID() uint32 }).ID())
-	array.Foreach(transitions, func(_ int, v **univalue.Univalue) { (*v).SetTx(mainTxID) })
+	slice.Foreach(transitions, func(_ int, v **univalue.Univalue) { (*v).SetTx(mainTxID) })
 
 	this.Api().WriteCache().(*cache.WriteCache).AddTransitions(transitions) // Merge the write cache to the main cache
-	return []byte{}, true, array.Sum[int64, int64](fees)
+	return []byte{}, true, slice.Sum[int64, int64](fees)
 }
 
 // toEthMsgs converts the input byte slice into a list of ethereum messages.

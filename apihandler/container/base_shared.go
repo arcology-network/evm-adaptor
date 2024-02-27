@@ -5,7 +5,7 @@ import (
 
 	"github.com/arcology-network/common-lib/common"
 	orderedset "github.com/arcology-network/common-lib/container/set"
-	array "github.com/arcology-network/common-lib/exp/array"
+	"github.com/arcology-network/common-lib/exp/slice"
 	"github.com/arcology-network/eu/cache"
 	"github.com/arcology-network/storage-committer/commutative"
 	"github.com/arcology-network/storage-committer/noncommutative"
@@ -24,7 +24,7 @@ func (this *BaseHandlers) Length(path string) (uint64, bool, int64) {
 	return 0, false, 0
 }
 
-// Export all the elements in the container to a two-dimensional array.
+// Export all the elements in the container to a two-dimensional slice.
 // This function will read all the elements in the container.
 func (this *BaseHandlers) ReadAll(path string) ([][]byte, []bool, []int64) {
 	length, _, _ := this.Length(path)
@@ -32,7 +32,7 @@ func (this *BaseHandlers) ReadAll(path string) ([][]byte, []bool, []int64) {
 	flags := make([]bool, length)
 	fees := make([]int64, length)
 
-	array.NewWith(int(length), func(i int) []byte {
+	slice.NewWith(int(length), func(i int) []byte {
 		entries[i], flags[i], fees[i] = this.GetByIndex(path, uint64(i))
 		return []byte{}
 	})
