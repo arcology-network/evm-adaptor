@@ -14,14 +14,14 @@ import (
 	evmcore "github.com/ethereum/go-ethereum/core"
 	"github.com/holiman/uint256"
 
-	"github.com/arcology-network/vm-adaptor/abi"
+	"github.com/arcology-network/evm-adaptor/abi"
 
 	eu "github.com/arcology-network/eu"
 	eucommon "github.com/arcology-network/eu/common"
-	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
-	adaptorintf "github.com/arcology-network/vm-adaptor/interface"
+	adaptorcommon "github.com/arcology-network/evm-adaptor/common"
+	adaptorintf "github.com/arcology-network/evm-adaptor/interface"
 
-	basecontainer "github.com/arcology-network/vm-adaptor/apihandler/container"
+	basecontainer "github.com/arcology-network/evm-adaptor/apihandler/container"
 )
 
 // APIs under the concurrency namespace

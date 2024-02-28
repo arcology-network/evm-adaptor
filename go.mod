@@ -1,4 +1,4 @@
-module github.com/arcology-network/vm-adaptor
+module github.com/arcology-network/evm-adaptor
 
 go 1.22
 

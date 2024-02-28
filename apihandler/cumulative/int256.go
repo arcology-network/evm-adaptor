@@ -9,9 +9,9 @@ package api
 
 // 	"github.com/arcology-network/storage-committer/commutative"
 // 	evmcommon "github.com/ethereum/go-ethereum/common"
-// 	abi "github.com/arcology-network/vm-adaptor/abi"
-// 	"github.com/arcology-network/vm-adaptor/common"
-// 	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
+// 	abi "github.com/arcology-network/evm-adaptor/abi"
+// 	"github.com/arcology-network/evm-adaptor/common"
+// 	adaptorcommon "github.com/arcology-network/evm-adaptor/common"
 
 //
 // )

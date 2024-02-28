@@ -3,8 +3,8 @@ package api
 import (
 	"fmt"
 
-	"github.com/arcology-network/vm-adaptor/common"
-	intf "github.com/arcology-network/vm-adaptor/interface"
+	"github.com/arcology-network/evm-adaptor/common"
+	intf "github.com/arcology-network/evm-adaptor/interface"
 )
 
 // APIs under the concurrency namespace

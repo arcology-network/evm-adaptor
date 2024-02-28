@@ -24,9 +24,9 @@ import (
 	"testing"
 
 	"github.com/arcology-network/eu/cache"
-	"github.com/arcology-network/vm-adaptor/abi"
-	apihandler "github.com/arcology-network/vm-adaptor/apihandler"
-	base "github.com/arcology-network/vm-adaptor/apihandler/container"
+	"github.com/arcology-network/evm-adaptor/abi"
+	apihandler "github.com/arcology-network/evm-adaptor/apihandler"
+	base "github.com/arcology-network/evm-adaptor/apihandler/container"
 	"github.com/holiman/uint256"
 )
 

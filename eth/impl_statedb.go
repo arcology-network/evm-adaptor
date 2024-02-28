@@ -4,9 +4,9 @@ import (
 	"math/big"
 
 	cache "github.com/arcology-network/eu/cache"
+	intf "github.com/arcology-network/evm-adaptor/interface"
 	commutative "github.com/arcology-network/storage-committer/commutative"
 	noncommutative "github.com/arcology-network/storage-committer/noncommutative"
-	intf "github.com/arcology-network/vm-adaptor/interface"
 	"github.com/ethereum/go-ethereum/common"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"

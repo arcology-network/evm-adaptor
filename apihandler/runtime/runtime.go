@@ -4,15 +4,15 @@ import (
 	"fmt"
 
 	"github.com/arcology-network/common-lib/codec"
-	"github.com/arcology-network/vm-adaptor/abi"
-	intf "github.com/arcology-network/vm-adaptor/interface"
+	"github.com/arcology-network/evm-adaptor/abi"
+	intf "github.com/arcology-network/evm-adaptor/interface"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/holiman/uint256"
 
 	cache "github.com/arcology-network/eu/cache"
 	scheduler "github.com/arcology-network/eu/new-scheduler"
-	"github.com/arcology-network/vm-adaptor/common"
-	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
+	"github.com/arcology-network/evm-adaptor/common"
+	adaptorcommon "github.com/arcology-network/evm-adaptor/common"
 )
 
 type RuntimeHandlers struct {

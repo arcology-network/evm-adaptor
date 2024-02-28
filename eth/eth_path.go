@@ -3,9 +3,9 @@ package eth
 import (
 	commonlib "github.com/arcology-network/common-lib/common"
 	cache "github.com/arcology-network/eu/cache"
+	intf "github.com/arcology-network/evm-adaptor/interface"
 	ccurlcommon "github.com/arcology-network/storage-committer/common"
 	commutative "github.com/arcology-network/storage-committer/commutative"
-	intf "github.com/arcology-network/vm-adaptor/interface"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )

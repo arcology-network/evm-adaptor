@@ -6,14 +6,14 @@ import (
 	"github.com/holiman/uint256"
 
 	"github.com/arcology-network/eu/cache"
+	abi "github.com/arcology-network/evm-adaptor/abi"
+	intf "github.com/arcology-network/evm-adaptor/interface"
 	"github.com/arcology-network/storage-committer/commutative"
 	"github.com/arcology-network/storage-committer/univalue"
-	abi "github.com/arcology-network/vm-adaptor/abi"
-	intf "github.com/arcology-network/vm-adaptor/interface"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 
-	"github.com/arcology-network/vm-adaptor/common"
-	adaptorcommon "github.com/arcology-network/vm-adaptor/common"
+	"github.com/arcology-network/evm-adaptor/common"
+	adaptorcommon "github.com/arcology-network/evm-adaptor/common"
 )
 
 // U256CumulativeHandlers handles the U256Cumulative APIs that can be called by concurrent API called.

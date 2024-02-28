@@ -9,7 +9,7 @@ import (
 	cache "github.com/arcology-network/eu/cache"
 	commutative "github.com/arcology-network/storage-committer/commutative"
 
-	intf "github.com/arcology-network/vm-adaptor/interface"
+	intf "github.com/arcology-network/evm-adaptor/interface"
 )
 
 // Ccurl connectors for Arcology APIs
