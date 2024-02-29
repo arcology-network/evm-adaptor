@@ -7,6 +7,7 @@ import (
 	"github.com/arcology-network/evm-adaptor/abi"
 	intf "github.com/arcology-network/evm-adaptor/interface"
 	evmcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/holiman/uint256"
 
 	cache "github.com/arcology-network/eu/cache"
@@ -47,6 +48,9 @@ func (this *RuntimeHandlers) Call(caller, callee [20]byte, input []byte, origin 
 
 	case [4]byte{0xa8, 0x7a, 0xe4, 0x81}: // bb 07 e8 5d
 		return this.instances(caller, callee, input[4:])
+
+	case [4]byte{0xf5, 0xf0, 0x15, 0xf3}: //
+		return this.deferred(caller, callee, input[4:])
 	}
 
 	fmt.Println(input)
@@ -89,7 +93,24 @@ func (this *RuntimeHandlers) instances(caller evmcommon.Address, callee evmcommo
 
 	// Encode the total number of instances and return
 	if encoded, err := abi.Encode(uint256.NewInt(uint64((*dict)[key]))); err == nil {
+		// encoded, _ := abi.Encode(uint256.NewInt(2))
+		// if !bytes.Equal(encoded, encoded2) {
+		// 	panic("")
+		// }
+
 		return encoded, true, 0
 	}
 	return []byte{}, false, 0
+}
+
+// This function needs to schedule a defer call to the next generation.
+func (this *RuntimeHandlers) deferred(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
+
+	vm := this.api.VM().(*vm.EVM).ArcologyNetworkAPIs.IsInConstructor()
+	fmt.Println(vm)
+	encoded, err := abi.Encode(true)
+	if err == nil {
+		return encoded, true, 0
+	}
+	return encoded, false, 0
 }
