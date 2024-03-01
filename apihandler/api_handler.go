@@ -34,8 +34,10 @@ type APIHandler struct {
 	handlerDict map[[20]byte]adaptorintf.ApiCallHandler // APIs under the atomic namespace
 
 	writeCachePool *mempool.Mempool[*cache.WriteCache]
-	localCache     *cache.WriteCache
-	dataReader     ccurlintf.ReadOnlyDataStore
+	localCache     *cache.WriteCache           // The private cache for the current APIHandler
+	dataReader     ccurlintf.ReadOnlyDataStore // The read-only storage layer  for retieving data from if not found in the cache.
+
+	auxDict map[string]interface{} // Auxiliary data generated during the execution of the APIHandler
 
 	execResult *eucommon.Result
 }
@@ -46,6 +48,7 @@ func NewAPIHandler(writeCachePool *mempool.Mempool[*cache.WriteCache]) *APIHandl
 		writeCachePool: writeCachePool,
 		eu:             nil,
 		localCache:     writeCachePool.New(),
+		auxDict:        make(map[string]interface{}),
 		// filter:      *cache.NewWriteCacheFilter(cache),
 		handlerDict: make(map[[20]byte]adaptorintf.ApiCallHandler),
 		depth:       0,
@@ -81,10 +84,12 @@ func (this *APIHandler) New(writeCachePool interface{}, localCache interface{}, 
 	api.depth = this.depth + 1
 	api.deployer = deployer
 	api.schedule = schedule
+	api.auxDict = make(map[string]interface{})
 	return api
 }
 
-func (this *APIHandler) WriteCachePool() interface{} { return this.writeCachePool }
+func (this *APIHandler) AuxDict() map[string]interface{} { return this.auxDict }
+func (this *APIHandler) WriteCachePool() interface{}     { return this.writeCachePool }
 
 func (this *APIHandler) GetDeployer() ethcommon.Address         { return this.deployer }
 func (this *APIHandler) SetDeployer(deployer ethcommon.Address) { this.deployer = deployer }

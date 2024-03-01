@@ -58,5 +58,9 @@ func (this *PathBuilder) Key(caller [20]byte) string { // container ID
 }
 
 func (this *PathBuilder) key(account types.Address) string { // container ID
-	return common.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(account), "/storage", this.subDir, "/")
+	return common.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(account), this.subDir, "/")
+}
+
+func (this *PathBuilder) Root() string { // container ID
+	return common.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, this.subDir, "/")
 }

@@ -1,4 +1,4 @@
-package api
+package runtime
 
 import (
 	"fmt"
@@ -17,14 +17,14 @@ import (
 )
 
 type RuntimeHandlers struct {
-	api       intf.EthApiRouter
-	connector *adaptorcommon.PathBuilder
+	api         intf.EthApiRouter
+	pathBuilder *adaptorcommon.PathBuilder
 }
 
 func NewRuntimeHandlers(ethApiRouter intf.EthApiRouter) *RuntimeHandlers {
 	return &RuntimeHandlers{
-		api:       ethApiRouter,
-		connector: adaptorcommon.NewPathBuilder("/native/local/", ethApiRouter),
+		api:         ethApiRouter,
+		pathBuilder: adaptorcommon.NewPathBuilder("/storage", ethApiRouter),
 	}
 }
 
@@ -105,12 +105,12 @@ func (this *RuntimeHandlers) instances(caller evmcommon.Address, callee evmcommo
 
 // This function needs to schedule a defer call to the next generation.
 func (this *RuntimeHandlers) deferred(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
-
-	vm := this.api.VM().(*vm.EVM).ArcologyNetworkAPIs.IsInConstructor()
-	fmt.Println(vm)
-	encoded, err := abi.Encode(true)
-	if err == nil {
-		return encoded, true, 0
+	if !this.api.VM().(*vm.EVM).ArcologyNetworkAPIs.IsInConstructor() {
+		return []byte{}, false, 0 // Can only be called from a constructor.
 	}
-	return encoded, false, 0
+
+	if len(input) >= 4 {
+		this.api.AuxDict()["deferrable"] = input[:4]
+	}
+	return []byte{}, false, 0 // Can only initialize once.
 }

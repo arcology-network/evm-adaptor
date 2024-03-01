@@ -31,7 +31,7 @@ type BaseHandlers struct {
 func NewBaseHandlers(api intf.EthApiRouter, args ...interface{}) *BaseHandlers {
 	return &BaseHandlers{
 		api:         api,
-		pathBuilder: adaptorcommon.NewPathBuilder("/container", api),
+		pathBuilder: adaptorcommon.NewPathBuilder("/storage/container", api),
 		args:        args,
 	}
 }

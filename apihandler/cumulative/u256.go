@@ -25,7 +25,7 @@ type U256CumHandler struct {
 func NewU256CumulativeHandler(api intf.EthApiRouter) *U256CumHandler {
 	return &U256CumHandler{
 		api:       api,
-		connector: adaptorcommon.NewPathBuilder("/container", api),
+		connector: adaptorcommon.NewPathBuilder("/storage/container", api),
 	}
 }
 
