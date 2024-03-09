@@ -24,14 +24,14 @@ func FormatValue(value interface{}) string {
 		meta := value.(*commutative.Path)
 		var str string
 		str += "{"
-		for i, k := range meta.Keys() {
+		for i, k := range meta.Committed().Elements() {
 			str += k
-			if i != len(meta.Keys())-1 {
+			if i != meta.Committed().Length()-1 {
 				str += ", "
 			}
 		}
 		str += "}"
-		if len(meta.Added()) != 0 {
+		if len(meta.Committed().Elements()) != 0 {
 			str += " + {"
 			for i, k := range meta.Added() {
 				str += k

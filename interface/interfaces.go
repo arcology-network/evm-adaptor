@@ -26,6 +26,7 @@ type EthApiRouter interface {
 
 	Origin() evmcommon.Address
 
+	AuxDict() map[string]interface{}
 	WriteCachePool() interface{}
 	WriteCache() interface{}
 	SetReadOnlyDataSource(interface{})

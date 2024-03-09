@@ -72,7 +72,7 @@ func (this *MultiprocessHandler) Run(caller, callee [20]byte, input []byte, args
 		if !successful { // Assign the fee to the fees array
 			ethMsgs[i], erros[i] = nil, errors.New("Error: Failed to get the function call data")
 		}
-		ethMsgs[i], erros[i] = this.CalltoEthMsg(caller, funCall) // Convert the function call data to an ethereum message.
+		ethMsgs[i], erros[i] = this.WrapEthMsg(caller, funCall) // Convert the function call data to an ethereum message.
 	})
 
 	transitions := eu.NewGenerationFromMsgs(0, threads, ethMsgs, this.Api()).Execute(this.Api()) // Run the job sequences in parallel.
@@ -91,7 +91,7 @@ func (this *MultiprocessHandler) Run(caller, callee [20]byte, input []byte, args
 }
 
 // toEthMsgs converts the input byte slice into a list of ethereum messages.
-func (this *MultiprocessHandler) CalltoEthMsg(caller [20]byte, input []byte) (*evmcore.Message, error) {
+func (this *MultiprocessHandler) WrapEthMsg(caller [20]byte, input []byte) (*evmcore.Message, error) {
 	gasLimit, value, calleeAddr, funCall, err := abi.Parse4(input,
 		uint64(0), 1, 32,
 		uint256.NewInt(0), 1, 32,
