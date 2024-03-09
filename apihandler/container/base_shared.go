@@ -4,22 +4,21 @@ import (
 	"math"
 
 	"github.com/arcology-network/common-lib/common"
-	orderedset "github.com/arcology-network/common-lib/container/set"
+	"github.com/arcology-network/common-lib/exp/deltaset"
 	"github.com/arcology-network/common-lib/exp/slice"
 	"github.com/arcology-network/eu/cache"
 	"github.com/arcology-network/storage-committer/commutative"
 	"github.com/arcology-network/storage-committer/noncommutative"
 )
 
-// Get the number of elements in the container
+// Get the number of elements in the container, including the nil elements.
 func (this *BaseHandlers) Length(path string) (uint64, bool, int64) {
 	if len(path) == 0 {
 		return 0, false, 0
 	}
 
 	if path, _, _ := this.api.WriteCache().(*cache.WriteCache).Read(this.api.GetEU().(interface{ ID() uint32 }).ID(), path, new(commutative.Path)); path != nil {
-		keys := path.(*orderedset.OrderedSet).Keys()
-		return uint64(len(keys)), true, 0
+		return path.(*deltaset.DeltaSet[string]).NonNilCount(), true, 0
 	}
 	return 0, false, 0
 }
@@ -32,7 +31,7 @@ func (this *BaseHandlers) ReadAll(path string) ([][]byte, []bool, []int64) {
 	flags := make([]bool, length)
 	fees := make([]int64, length)
 
-	slice.NewWith(int(length), func(i int) []byte {
+	slice.NewDo(int(length), func(i int) []byte {
 		entries[i], flags[i], fees[i] = this.GetByIndex(path, uint64(i))
 		return []byte{}
 	})
@@ -49,11 +48,13 @@ func (this *BaseHandlers) GetByIndex(path string, idx uint64) ([]byte, bool, int
 
 // Set the element by its index
 func (this *BaseHandlers) SetByIndex(path string, idx uint64, bytes []byte) (bool, int64) {
-	if len(path) > 0 {
-		value := common.IfThen(bytes == nil, nil, noncommutative.NewBytes(bytes))
-		if _, err := this.api.WriteCache().(*cache.WriteCache).WriteAt(this.api.GetEU().(interface{ ID() uint32 }).ID(), path, idx, value); err == nil {
-			return true, 0
-		}
+	if len(path) == 0 {
+		return false, 0
+	}
+
+	value := common.IfThen(bytes == nil, nil, noncommutative.NewBytes(bytes))
+	if _, err := this.api.WriteCache().(*cache.WriteCache).WriteAt(this.api.GetEU().(interface{ ID() uint32 }).ID(), path, idx, value); err == nil {
+		return true, 0
 	}
 	return false, 0
 }

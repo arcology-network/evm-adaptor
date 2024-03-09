@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	"github.com/arcology-network/common-lib/codec"
+	"github.com/arcology-network/common-lib/exp/deltaset"
 	"github.com/arcology-network/common-lib/exp/slice"
 	"github.com/arcology-network/common-lib/types"
 
@@ -16,6 +17,7 @@ import (
 	intf "github.com/arcology-network/evm-adaptor/interface"
 	"github.com/arcology-network/storage-committer/commutative"
 	"github.com/arcology-network/storage-committer/interfaces"
+	"github.com/arcology-network/storage-committer/univalue"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/holiman/uint256"
@@ -341,10 +343,16 @@ func (this *BaseHandlers) clear(caller evmcommon.Address, input []byte) ([]byte,
 		return []byte{}, false, 0
 	}
 
+	tx := this.api.GetEU().(interface{ ID() uint32 }).ID()
 	for {
-		if _, _, err := this.api.WriteCache().(*cache.WriteCache).PopBack(this.api.GetEU().(interface{ ID() uint32 }).ID(), path, nil); err != nil {
+		if _, _, err := this.api.WriteCache().(*cache.WriteCache).PopBack(tx, path, nil); err != nil {
 			break
 		}
 	}
+
+	typedv, univ, _ := this.api.WriteCache().(*cache.WriteCache).Read(tx, path, new(commutative.Path))
+	typedv.(*deltaset.DeltaSet[string]).Commit()
+	univ.(*univalue.Univalue).IncrementWrites(1)
+
 	return []byte{}, true, 0
 }
