@@ -1,6 +1,8 @@
 package api
 
 import (
+	"encoding/hex"
+
 	"github.com/arcology-network/common-lib/codec"
 	"github.com/arcology-network/common-lib/types"
 	"github.com/holiman/uint256"
@@ -9,7 +11,6 @@ import (
 	abi "github.com/arcology-network/evm-adaptor/abi"
 	intf "github.com/arcology-network/evm-adaptor/interface"
 	"github.com/arcology-network/storage-committer/commutative"
-	"github.com/arcology-network/storage-committer/univalue"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/arcology-network/evm-adaptor/common"
@@ -20,12 +21,15 @@ import (
 type U256CumHandler struct {
 	api       intf.EthApiRouter
 	connector *adaptorcommon.PathBuilder
+	key       string
 }
 
 func NewU256CumulativeHandler(api intf.EthApiRouter) *U256CumHandler {
+	k := [20]byte{}
 	return &U256CumHandler{
 		api:       api,
 		connector: adaptorcommon.NewPathBuilder("/storage/container", api),
+		key:       hex.EncodeToString(k[:]),
 	}
 }
 
@@ -68,18 +72,15 @@ func (this *U256CumHandler) new(caller evmcommon.Address, input []byte) ([]byte,
 		return []byte{}, false, 0
 	}
 
-	path := this.connector.Key(caller)
-	key := path + string(this.api.ElementUID()) // Element ID
-
-	// val, valErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
 	min, minErr := abi.Decode(input, 0, &uint256.Int{}, 1, 32)
 	max, maxErr := abi.Decode(input, 1, &uint256.Int{}, 1, 32)
 	if minErr != nil || maxErr != nil {
 		return []byte{}, false, 0
 	}
 
+	keyPath := this.connector.Key(caller) + string(this.key) // Element ID
 	newU256 := commutative.NewBoundedU256(min.(*uint256.Int), max.(*uint256.Int))
-	if _, err := this.api.WriteCache().(*cache.WriteCache).Write(txIndex, key, newU256); err != nil {
+	if _, err := this.api.WriteCache().(*cache.WriteCache).Write(txIndex, keyPath, newU256); err != nil {
 		return []byte{}, false, 0
 	}
 	return []byte{}, true, 0
@@ -91,7 +92,8 @@ func (this *U256CumHandler) get(caller evmcommon.Address, input []byte) ([]byte,
 		return []byte{}, false, 0
 	}
 
-	if value, _, err := this.api.WriteCache().(*cache.WriteCache).ReadAt(this.api.GetEU().(interface{ ID() uint32 }).ID(), path, 0, new(commutative.U256)); value == nil || err != nil {
+	keyPath := path + string(this.key) // Element ID
+	if value, _, _ := this.api.WriteCache().(*cache.WriteCache).Read(this.api.GetEU().(interface{ ID() uint32 }).ID(), keyPath, new(commutative.U256)); value == nil {
 		return []byte{}, false, 0
 	} else {
 		updated := value.(uint256.Int)
@@ -110,18 +112,12 @@ func (this *U256CumHandler) peek(caller evmcommon.Address, input []byte) ([]byte
 		return []byte{}, false, 0
 	}
 
-	// Peek the initial value
-	value, _, err := this.api.WriteCache().(*cache.WriteCache).DoAt(this.api.GetEU().(interface{ ID() uint32 }).ID(), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
-		return uint32(0), uint32(0), uint32(0), v.(*univalue.Univalue).Value()
-	}, new(commutative.U256))
-
-	if value != nil && err == nil {
+	keyPath := path + string(this.key) // Element ID
+	if value, _ := this.api.WriteCache().(*cache.WriteCache).PeekCommitted(keyPath, new(commutative.U256)); value != nil {
 		initv := value.(*commutative.U256).Value().(uint256.Int)
-		// if ; initv != nil {
 		if encoded, err := abi.Encode((*uint256.Int)(&initv)); err == nil { // Encode the result
 			return encoded, true, 0
 		}
-		// }
 	}
 	return []byte{}, false, 0
 }
@@ -149,7 +145,9 @@ func (this *U256CumHandler) set(caller evmcommon.Address, input []byte, isPositi
 
 	value := commutative.NewU256Delta(delta.(*uint256.Int), isPositive)
 
-	_, err = this.api.WriteCache().(*cache.WriteCache).WriteAt(this.api.GetEU().(interface{ ID() uint32 }).ID(), path, 0, value)
+	txIndex := this.api.GetEU().(interface{ ID() uint32 }).ID()
+	keyPath := path + string(this.key) // Element ID
+	_, err = this.api.WriteCache().(*cache.WriteCache).Write(txIndex, keyPath, value)
 	return []byte{}, err == nil, 0
 }
 
@@ -159,11 +157,10 @@ func (this *U256CumHandler) min(caller evmcommon.Address, input []byte) ([]byte,
 		return []byte{}, false, 0
 	}
 
-	value, _, err := this.api.WriteCache().(*cache.WriteCache).DoAt(this.api.GetEU().(interface{ ID() uint32 }).ID(), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
-		return uint32(1), uint32(0), uint32(0), v.(*univalue.Univalue).Value()
-	}, new(commutative.U256))
-
-	if value != nil && err == nil {
+	// Min and Max are read only variable
+	txIndex := this.api.GetEU().(interface{ ID() uint32 }).ID()
+	keyPath := path + string(this.key) // Element ID
+	if value, _ := this.api.WriteCache().(*cache.WriteCache).Find(txIndex, keyPath, new(commutative.U256)); value != nil {
 		minv := value.(*commutative.U256).Min().(uint256.Int)
 		if encoded, err := abi.Encode((*uint256.Int)(&minv)); err == nil { // Encode the result
 			return encoded, true, 0
@@ -178,13 +175,11 @@ func (this *U256CumHandler) max(caller evmcommon.Address, input []byte) ([]byte,
 		return []byte{}, false, 0
 	}
 
-	value, _, err := this.api.WriteCache().(*cache.WriteCache).DoAt(this.api.GetEU().(interface{ ID() uint32 }).ID(), path, 0, func(v interface{}) (uint32, uint32, uint32, interface{}) {
-		return uint32(1), uint32(0), uint32(0), v.(*univalue.Univalue).Value()
-	}, new(commutative.U256))
-
-	if value != nil && err == nil {
-		minv := value.(*commutative.U256).Max().(uint256.Int)
-		if encoded, err := abi.Encode((*uint256.Int)(&minv)); err == nil { // Encode the result
+	txIndex := this.api.GetEU().(interface{ ID() uint32 }).ID()
+	keyPath := path + string(this.key) // Element ID
+	if value, _ := this.api.WriteCache().(*cache.WriteCache).Find(txIndex, keyPath, new(commutative.U256)); value != nil {
+		maxv := value.(*commutative.U256).Max().(uint256.Int)
+		if encoded, err := abi.Encode((*uint256.Int)(&maxv)); err == nil { // Encode the result
 			return encoded, true, 0
 		}
 	}
