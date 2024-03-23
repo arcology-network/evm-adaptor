@@ -10,7 +10,6 @@ import (
 	"github.com/arcology-network/common-lib/exp/mempool"
 	"github.com/arcology-network/common-lib/exp/slice"
 	"github.com/arcology-network/eu/cache"
-	ccurlintf "github.com/arcology-network/storage-committer/interfaces"
 
 	eucommon "github.com/arcology-network/eu/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -34,8 +33,7 @@ type APIHandler struct {
 	handlerDict map[[20]byte]adaptorintf.ApiCallHandler // APIs under the atomic namespace
 
 	writeCachePool *mempool.Mempool[*cache.WriteCache]
-	localCache     *cache.WriteCache           // The private cache for the current APIHandler
-	dataReader     ccurlintf.ReadOnlyDataStore // The read-only storage layer  for retieving data from if not found in the cache.
+	localCache     *cache.WriteCache // The private cache for the current APIHandler
 
 	auxDict map[string]interface{} // Auxiliary data generated during the execution of the APIHandler
 
@@ -44,16 +42,14 @@ type APIHandler struct {
 
 func NewAPIHandler(writeCachePool *mempool.Mempool[*cache.WriteCache]) *APIHandler {
 	api := &APIHandler{
-		// deployer:  deployer,
 		writeCachePool: writeCachePool,
 		eu:             nil,
 		localCache:     writeCachePool.New(),
 		auxDict:        make(map[string]interface{}),
-		// filter:      *cache.NewWriteCacheFilter(cache),
-		handlerDict: make(map[[20]byte]adaptorintf.ApiCallHandler),
-		depth:       0,
-		execResult:  &eucommon.Result{},
-		serialNums:  [4]uint64{},
+		handlerDict:    make(map[[20]byte]adaptorintf.ApiCallHandler),
+		depth:          0,
+		execResult:     &eucommon.Result{},
+		serialNums:     [4]uint64{},
 	}
 
 	handlers := []adaptorintf.ApiCallHandler{
@@ -77,15 +73,31 @@ func NewAPIHandler(writeCachePool *mempool.Mempool[*cache.WriteCache]) *APIHandl
 // Initliaze a new APIHandler from an existing writeCache. This is different from the NewAPIHandler() function in that it does not create a new writeCache.
 func (this *APIHandler) New(writeCachePool interface{}, localCache interface{}, deployer ethcommon.Address, schedule interface{}) adaptorintf.EthApiRouter {
 	// localCache := writeCachePool.(*mempool.Mempool[*cache.WriteCache]).New()
-	api := NewAPIHandler(writeCachePool.(*mempool.Mempool[*cache.WriteCache]))
+	api := NewAPIHandler(this.writeCachePool)
 	api.SetDeployer(deployer)
-	api.writeCachePool = writeCachePool.(*mempool.Mempool[*cache.WriteCache])
+	// api.writeCachePool = writeCachePool.(*mempool.Mempool[*cache.WriteCache])
+	api.writeCachePool = this.writeCachePool
 	api.localCache = localCache.(*cache.WriteCache)
 	api.depth = this.depth + 1
 	api.deployer = deployer
 	api.schedule = schedule
 	api.auxDict = make(map[string]interface{})
 	return api
+}
+
+// The Cascade() function creates a new APIHandler whose writeCache uses the parent APIHandler's writeCache as the
+// read-only data store.  writecache -> parent's writecache -> backend datastore
+func (this *APIHandler) Cascade() adaptorintf.EthApiRouter {
+	api := NewAPIHandler(this.writeCachePool)
+	api.SetDeployer(this.deployer)
+	api.depth = this.depth + 1
+	api.schedule = this.schedule
+	api.auxDict = make(map[string]interface{})
+
+	writeCache := this.writeCachePool.New() // Get a new write cache from the shared write cache pool.
+
+	// Use the current write cache as the read-only data store for the replicated APIHandler
+	return api.SetWriteCache(writeCache.SetReadOnlyDataStore(this.localCache))
 }
 
 func (this *APIHandler) AuxDict() map[string]interface{} { return this.auxDict }
@@ -101,8 +113,10 @@ func (this *APIHandler) GetSchedule() interface{}         { return this.schedule
 func (this *APIHandler) SetSchedule(schedule interface{}) { this.schedule = schedule }
 
 func (this *APIHandler) WriteCache() interface{} { return this.localCache }
-
-// func (this *APIHandler) DataReader() interface{} { return this.dataReader }
+func (this *APIHandler) SetWriteCache(writeCache interface{}) adaptorintf.EthApiRouter {
+	this.localCache = writeCache.(*cache.WriteCache)
+	return this
+}
 
 func (this *APIHandler) CheckRuntimeConstrains() bool { // Execeeds the max recursion depth or the max sub processes
 	return this.Depth() < eucommon.MAX_RECURSIION_DEPTH &&
@@ -135,10 +149,6 @@ func (this *APIHandler) HandlerDict() map[[20]byte]adaptorintf.ApiCallHandler {
 
 func (this *APIHandler) VM() interface{} {
 	return common.IfThenDo1st(this.eu != nil, func() interface{} { return this.eu.(interface{ VM() interface{} }).VM() }, nil)
-}
-
-func (this *APIHandler) SetReadOnlyDataSource(readOnlyDataSource interface{}) {
-	this.dataReader = readOnlyDataSource.(ccurlintf.ReadOnlyDataStore)
 }
 
 func (this *APIHandler) GetSerialNum(idx int) uint64 {

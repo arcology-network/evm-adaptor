@@ -29,8 +29,9 @@ type EthApiRouter interface {
 	AuxDict() map[string]interface{}
 	WriteCachePool() interface{}
 	WriteCache() interface{}
-	SetReadOnlyDataSource(interface{})
+	SetWriteCache(interface{}) EthApiRouter
 	New(interface{}, interface{}, evmcommon.Address, interface{}) EthApiRouter
+	Cascade() EthApiRouter
 	Coinbase() evmcommon.Address
 
 	VM() interface{} //*vm.EVM
