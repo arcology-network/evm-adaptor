@@ -40,7 +40,7 @@ func TestBaseHandlers(t *testing.T) {
 
 	api := apihandler.NewAPIHandler(mempool.NewMempool[*cache.WriteCache](16, 1, func() *cache.WriteCache {
 		return cache.NewWriteCache(nil, 32, 1)
-	}, (&cache.WriteCache{}).Reset))
+	}, func(cache *cache.WriteCache) { cache.Clear() }))
 
 	api.SetEU(MockID{})
 	baseContainer := base.NewBaseHandlers(api)
