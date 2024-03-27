@@ -12,6 +12,7 @@ import (
 	"github.com/arcology-network/storage-committer/univalue"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	evmcore "github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/holiman/uint256"
 
 	"github.com/arcology-network/evm-adaptor/abi"
@@ -75,7 +76,9 @@ func (this *MultiprocessHandler) Run(caller, callee [20]byte, input []byte, args
 		ethMsgs[i], erros[i] = this.WrapEthMsg(caller, funCall) // Convert the function call data to an ethereum message.
 	})
 
-	transitions := eu.NewGenerationFromMsgs(0, threads, ethMsgs, this.Api()).Execute(this.Api()) // Run the job sequences in parallel.
+	// Generate the configuration for the sub processes based on the current block context.
+	subConfig := adaptorcommon.NewConfigFromBlockContext(this.Api().GetEU().(interface{ VM() interface{} }).VM().(*vm.EVM).Context)
+	transitions := eu.NewGenerationFromMsgs(0, threads, ethMsgs, this.Api()).Execute(subConfig, this.Api()) // Run the job sequences in parallel.
 
 	// Sub processes may have been spawned during the execution, recheck it.
 	if !this.Api().CheckRuntimeConstrains() {
@@ -86,7 +89,7 @@ func (this *MultiprocessHandler) Run(caller, callee [20]byte, input []byte, args
 	mainTxID := uint32(this.Api().GetEU().(interface{ ID() uint32 }).ID())
 	slice.Foreach(transitions, func(_ int, v **univalue.Univalue) { (*v).SetTx(mainTxID) })
 
-	this.Api().WriteCache().(*cache.WriteCache).AddTransitions(transitions) // Merge the write cache to the main cache
+	this.Api().WriteCache().(*cache.WriteCache).Insert(transitions) // Merge the write cache to the main cache
 	return []byte{}, true, slice.Sum[int64, int64](fees)
 }
 

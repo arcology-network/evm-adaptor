@@ -25,6 +25,7 @@ type EthApiRouter interface {
 	SetSchedule(interface{})
 
 	Origin() evmcommon.Address
+	// Config() interface{}
 
 	AuxDict() map[string]interface{}
 	WriteCachePool() interface{}
