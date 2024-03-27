@@ -291,7 +291,7 @@ func (this *BaseHandlers) minNumerical(caller evmcommon.Address, input []byte) (
 	entries, _, _ := this.ReadAll(this.pathBuilder.Key(caller))
 
 	lhv, rhv := new(big.Int), new(big.Int)
-	idx, v := slice.Min(entries, func(lhvBytes, rhvBytes []byte) bool {
+	idx, v := slice.Extreme(entries, func(lhvBytes, rhvBytes []byte) bool {
 		lhv.SetBytes(lhvBytes) // Convert the byte array to a big integer
 		rhv.SetBytes(rhvBytes)
 		return lhv.Cmp(rhv) < 0
@@ -307,7 +307,7 @@ func (this *BaseHandlers) maxNumerical(caller evmcommon.Address, input []byte) (
 	entries, _, _ := this.ReadAll(this.pathBuilder.Key(caller))
 
 	lhv, rhv := new(big.Int), new(big.Int)
-	idx, v := slice.Min(entries, func(lhvBytes, rhvBytes []byte) bool {
+	idx, v := slice.Extreme(entries, func(lhvBytes, rhvBytes []byte) bool {
 		lhv.SetBytes(lhvBytes) // Convert the byte array to a big integer
 		rhv.SetBytes(rhvBytes)
 		return lhv.Cmp(rhv) > 0
@@ -319,7 +319,7 @@ func (this *BaseHandlers) maxNumerical(caller evmcommon.Address, input []byte) (
 
 func (this *BaseHandlers) minString(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	entries, _, _ := this.ReadAll(this.pathBuilder.Key(caller))
-	idx, v := slice.Min(entries, func(lhv, rhv []byte) bool {
+	idx, v := slice.Extreme(entries, func(lhv, rhv []byte) bool {
 		return string(lhv) < string(rhv)
 	})
 
@@ -329,7 +329,7 @@ func (this *BaseHandlers) minString(caller evmcommon.Address, input []byte) ([]b
 
 func (this *BaseHandlers) maxString(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	entries, _, _ := this.ReadAll(this.pathBuilder.Key(caller))
-	idx, v := slice.Min(entries, func(lhv, rhv []byte) bool {
+	idx, v := slice.Extreme(entries, func(lhv, rhv []byte) bool {
 		return string(lhv) > string(rhv)
 	})
 
