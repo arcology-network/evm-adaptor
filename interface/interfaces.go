@@ -24,15 +24,14 @@ type EthApiRouter interface {
 	GetSchedule() interface{}
 	SetSchedule(interface{})
 
-	Origin() evmcommon.Address
-	// Config() interface{}
-
 	AuxDict() map[string]interface{}
 	WriteCachePool() interface{}
 	WriteCache() interface{}
 	SetWriteCache(interface{}) EthApiRouter
 	New(interface{}, interface{}, evmcommon.Address, interface{}) EthApiRouter
 	Cascade() EthApiRouter
+
+	Origin() evmcommon.Address
 	Coinbase() evmcommon.Address
 
 	VM() interface{} //*vm.EVM
