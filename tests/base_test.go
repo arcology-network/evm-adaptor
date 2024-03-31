@@ -23,10 +23,10 @@ import (
 	"math"
 	"testing"
 
-	"github.com/arcology-network/eu/cache"
 	"github.com/arcology-network/evm-adaptor/abi"
 	apihandler "github.com/arcology-network/evm-adaptor/apihandler"
 	base "github.com/arcology-network/evm-adaptor/apihandler/container"
+	cache "github.com/arcology-network/storage-committer/storage/writecache"
 	"github.com/holiman/uint256"
 )
 

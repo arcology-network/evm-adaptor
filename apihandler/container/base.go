@@ -10,13 +10,13 @@ import (
 	"github.com/arcology-network/common-lib/exp/slice"
 	"github.com/arcology-network/common-lib/types"
 
-	"github.com/arcology-network/eu/cache"
 	abi "github.com/arcology-network/evm-adaptor/abi"
 	"github.com/arcology-network/evm-adaptor/common"
 	adaptorcommon "github.com/arcology-network/evm-adaptor/common"
 	intf "github.com/arcology-network/evm-adaptor/interface"
 	"github.com/arcology-network/storage-committer/commutative"
 	"github.com/arcology-network/storage-committer/interfaces"
+	cache "github.com/arcology-network/storage-committer/storage/writecache"
 	"github.com/arcology-network/storage-committer/univalue"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 

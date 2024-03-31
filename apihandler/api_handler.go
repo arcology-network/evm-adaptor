@@ -9,9 +9,8 @@ import (
 	common "github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/exp/mempool"
 	"github.com/arcology-network/common-lib/exp/slice"
-	"github.com/arcology-network/eu/cache"
-
 	eucommon "github.com/arcology-network/eu/common"
+	cache "github.com/arcology-network/storage-committer/storage/writecache"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	apicontainer "github.com/arcology-network/evm-adaptor/apihandler/container"

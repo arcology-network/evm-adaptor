@@ -6,9 +6,9 @@ import (
 	"github.com/arcology-network/common-lib/common"
 	"github.com/arcology-network/common-lib/exp/deltaset"
 	"github.com/arcology-network/common-lib/exp/slice"
-	"github.com/arcology-network/eu/cache"
 	"github.com/arcology-network/storage-committer/commutative"
 	"github.com/arcology-network/storage-committer/noncommutative"
+	cache "github.com/arcology-network/storage-committer/storage/writecache"
 )
 
 // Get the number of elements in the container, including the nil elements.

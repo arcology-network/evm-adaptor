@@ -1,4 +1,4 @@
-package eth
+package adaptorcommon
 
 // type StateDB interface {
 // 	CreateAccount(common.Address)

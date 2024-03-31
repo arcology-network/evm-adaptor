@@ -7,10 +7,10 @@ import (
 	"github.com/arcology-network/common-lib/types"
 	"github.com/holiman/uint256"
 
-	"github.com/arcology-network/eu/cache"
 	abi "github.com/arcology-network/evm-adaptor/abi"
 	intf "github.com/arcology-network/evm-adaptor/interface"
 	"github.com/arcology-network/storage-committer/commutative"
+	cache "github.com/arcology-network/storage-committer/storage/writecache"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/arcology-network/evm-adaptor/common"

@@ -6,9 +6,10 @@ import (
 	ccurlcommon "github.com/arcology-network/storage-committer/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
-	cache "github.com/arcology-network/eu/cache"
 	commutative "github.com/arcology-network/storage-committer/commutative"
+	cache "github.com/arcology-network/storage-committer/storage/writecache"
 
+	// adaptorcommon "github.com/arcology-network/storage-committer/storage/writecache"
 	intf "github.com/arcology-network/evm-adaptor/interface"
 )
 
@@ -38,7 +39,9 @@ func (this *PathBuilder) New(txIndex uint32, deploymentAddr types.Address) bool 
 func (this *PathBuilder) newStorageRoot(account types.Address, txIndex uint32) bool {
 	accountRoot := common.StrCat(ccurlcommon.ETH10_ACCOUNT_PREFIX, string(account), "/")
 	if !this.apiRouter.WriteCache().(*cache.WriteCache).IfExists(accountRoot) {
-		return common.FilterFirst(this.apiRouter.WriteCache().(*cache.WriteCache).CreateNewAccount(txIndex, string(account))) != nil // Create a new account
+		_, err := CreateNewAccount(txIndex, string(account), this.apiRouter.WriteCache().(*cache.WriteCache))
+		return err == nil
+		// return common.FilterFirst(this.apiRouter.WriteCache().(*cache.WriteCache).CreateNewAccount() != nil // Create a new account
 	}
 	return true // ALready exists
 }
