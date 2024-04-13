@@ -23,8 +23,9 @@ import (
 	"math"
 	"testing"
 
+	"github.com/arcology-network/common-lib/exp/mempool"
 	"github.com/arcology-network/evm-adaptor/abi"
-	apihandler "github.com/arcology-network/evm-adaptor/apihandler"
+	"github.com/arcology-network/evm-adaptor/apihandler"
 	base "github.com/arcology-network/evm-adaptor/apihandler/container"
 	cache "github.com/arcology-network/storage-committer/storage/writecache"
 	"github.com/holiman/uint256"
@@ -35,7 +36,9 @@ type MockID struct{}
 func (MockID) ID() uint32 { return 0 }
 
 func TestBaseHandlers(t *testing.T) {
-	api := apihandler.NewAPIHandler(cache.NewWriteCache(nil))
+	api := apihandler.NewAPIHandler(mempool.NewMempool[*cache.WriteCache](16, 1, func() *cache.WriteCache {
+		return cache.NewWriteCache(nil, 32, 1)
+	}, func(cache *cache.WriteCache) { cache.Clear() }))
 	api.SetEU(MockID{})
 	baseContainer := base.NewBaseHandlers(api)
 
