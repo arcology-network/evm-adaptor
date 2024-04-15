@@ -96,7 +96,7 @@ func (this *APIHandler) Cascade() adaptorintf.EthApiRouter {
 	writeCache := this.writeCachePool.New() // Get a new write cache from the shared write cache pool.
 
 	// Use the current write cache as the read-only data store for the replicated APIHandler
-	return api.SetWriteCache(writeCache.SetReadOnlyDataStore(this.localCache))
+	return api.SetWriteCache(writeCache.SetReadOnlyStore(this.localCache))
 }
 
 func (this *APIHandler) AuxDict() map[string]interface{} { return this.auxDict }

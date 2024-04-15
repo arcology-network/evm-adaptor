@@ -89,7 +89,7 @@ func (this *MultiprocessHandler) Run(caller, callee [20]byte, input []byte, args
 	mainTxID := uint32(this.Api().GetEU().(interface{ ID() uint32 }).ID())
 	slice.Foreach(transitions, func(_ int, v **univalue.Univalue) { (*v).SetTx(mainTxID) })
 
-	this.Api().WriteCache().(*cache.WriteCache).Insert(transitions) // Merge the write cache to the main cache
+	this.Api().WriteCache().(*cache.WriteCache).Import(transitions) // Merge the write cache to the main cache
 	return []byte{}, true, slice.Sum[int64, int64](fees)
 }
 
