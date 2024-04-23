@@ -176,7 +176,9 @@ func (this *ImplStateDB) SetState(addr evmcommon.Address, key, value evmcommon.H
 }
 
 func (this *ImplStateDB) Exist(addr evmcommon.Address) bool {
-	return accountExist(this.api.WriteCache().(*cache.WriteCache), addr, this.tid)
+	flag := accountExist(this.api.WriteCache().(*cache.WriteCache), addr, this.tid)
+	// fmt.Println(addr, flag)
+	return flag
 }
 
 func (this *ImplStateDB) Empty(addr evmcommon.Address) bool {

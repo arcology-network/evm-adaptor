@@ -40,7 +40,12 @@ func (this *BaseHandlers) ReadAll(path string) ([][]byte, []bool, []int64) {
 
 // Get the index of the element by its key
 func (this *BaseHandlers) GetByIndex(path string, idx uint64) ([]byte, bool, int64) {
-	if value, _, err := this.api.WriteCache().(*cache.WriteCache).ReadAt(this.api.GetEU().(interface{ ID() uint32 }).ID(), path, idx, new(noncommutative.Bytes)); err == nil && value != nil {
+	if value, _, err := this.api.WriteCache().(*cache.WriteCache).ReadAt(
+		this.api.GetEU().(interface{ ID() uint32 }).ID(),
+		path,
+		idx,
+		new(noncommutative.Bytes),
+	); err == nil && value != nil {
 		return value.([]byte), true, 0
 	}
 	return []byte{}, false, 0

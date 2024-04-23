@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/hex"
 	"math"
 	"math/big"
@@ -288,7 +289,8 @@ func (this *BaseHandlers) delByKey(caller evmcommon.Address, input []byte) ([]by
 // The function returns the minimum value in the container sorted by numerical order by
 // converting the byte array to a big integer and comparing the two values.
 func (this *BaseHandlers) minNumerical(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	entries, _, _ := this.ReadAll(this.pathBuilder.Key(caller))
+	path := this.pathBuilder.Key(caller)
+	entries, _, _ := this.ReadAll(path)
 
 	lhv, rhv := new(big.Int), new(big.Int)
 	idx, v := slice.Extreme(entries, func(lhvBytes, rhvBytes []byte) bool {
@@ -297,6 +299,11 @@ func (this *BaseHandlers) minNumerical(caller evmcommon.Address, input []byte) (
 		return lhv.Cmp(rhv) < 0
 	})
 
+	// This leaves a read access for the minimum value in the container. It will be used for the conflict detection
+	if val, _, _ := this.GetByIndex(path, uint64(idx)); !bytes.Equal(v, val) {
+		panic("The value is not equal to the value in the container.")
+	}
+
 	idxBytes, _ := abi.Encode(uint256.NewInt(uint64(idx)))
 	return append(idxBytes, v...), true, 0
 }
@@ -304,7 +311,8 @@ func (this *BaseHandlers) minNumerical(caller evmcommon.Address, input []byte) (
 // The function maxNumerical returns the maximum value in the container sorted by numerical order by
 // converting the byte array to a big integer and comparing the two values.
 func (this *BaseHandlers) maxNumerical(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	entries, _, _ := this.ReadAll(this.pathBuilder.Key(caller))
+	path := this.pathBuilder.Key(caller)
+	entries, _, _ := this.ReadAll(path)
 
 	lhv, rhv := new(big.Int), new(big.Int)
 	idx, v := slice.Extreme(entries, func(lhvBytes, rhvBytes []byte) bool {
@@ -313,25 +321,44 @@ func (this *BaseHandlers) maxNumerical(caller evmcommon.Address, input []byte) (
 		return lhv.Cmp(rhv) > 0
 	})
 
+	// This leaves a read access for the maxmium value in the container. It will be used for the conflict detection
+	if val, _, _ := this.GetByIndex(path, uint64(idx)); !bytes.Equal(v, val) {
+		panic("The value is not equal to the value in the container.")
+	}
+
 	idxBytes, _ := abi.Encode(uint256.NewInt(uint64(idx)))
 	return append(idxBytes, v...), true, 0
 }
 
 func (this *BaseHandlers) minString(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	entries, _, _ := this.ReadAll(this.pathBuilder.Key(caller))
+	path := this.pathBuilder.Key(caller)
+	entries, _, _ := this.ReadAll(path)
+
 	idx, v := slice.Extreme(entries, func(lhv, rhv []byte) bool {
 		return string(lhv) < string(rhv)
 	})
+
+	// This leaves a read access for the maxmium string in the container. It will be used for the conflict detection
+	if val, _, _ := this.GetByIndex(path, uint64(idx)); !bytes.Equal(v, val) {
+		panic("The value is not equal to the value in the container.")
+	}
 
 	idxBytes, _ := abi.Encode(uint256.NewInt(uint64(idx)))
 	return append(idxBytes, v...), true, 0
 }
 
 func (this *BaseHandlers) maxString(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	entries, _, _ := this.ReadAll(this.pathBuilder.Key(caller))
+	path := this.pathBuilder.Key(caller)
+	entries, _, _ := this.ReadAll(path)
+
 	idx, v := slice.Extreme(entries, func(lhv, rhv []byte) bool {
 		return string(lhv) > string(rhv)
 	})
+
+	// This leaves a read access for the maxmium string in the container. It will be used for the conflict detection
+	if val, _, _ := this.GetByIndex(path, uint64(idx)); !bytes.Equal(v, val) {
+		panic("The value is not equal to the value in the container.")
+	}
 
 	idxBytes, _ := abi.Encode(uint256.NewInt(uint64(idx)))
 	return append(idxBytes, v...), true, 0
