@@ -89,11 +89,14 @@ func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20
 	case [4]byte{0xd6, 0x99, 0x5f, 0x76}:
 		return this.maxNumerical(caller, input[4:]) // Delete the element by its key.
 
-	case [4]byte{0x9b, 0x78, 0xae, 0xcf}:
-		return this.minString(caller, input[4:]) // Delete the element by its key.
+	// case [4]byte{0x9b, 0x78, 0xae, 0xcf}:
+	// 	return this.minString(caller, input[4:]) // Delete the element by its key.
 
-	case [4]byte{0x05, 0x88, 0x52, 0x4c}:
-		return this.maxString(caller, input[4:]) // Delete the element by its key.
+	// case [4]byte{0x05, 0x88, 0x52, 0x4c}:
+	// 	return this.maxString(caller, input[4:]) // Delete the element by its key.
+
+	case [4]byte{0xa4, 0xec, 0xe5, 0x2c}:
+		return this.pop(caller, input[4:]) // shrink the size of the container by one
 
 	case [4]byte{0x52, 0xef, 0xea, 0x6e}:
 		return this.clear(caller, input[4:]) // Clear the container.
@@ -330,38 +333,61 @@ func (this *BaseHandlers) maxNumerical(caller evmcommon.Address, input []byte) (
 	return append(idxBytes, v...), true, 0
 }
 
-func (this *BaseHandlers) minString(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.pathBuilder.Key(caller)
-	entries, _, _ := this.ReadAll(path)
+// func (this *BaseHandlers) minString(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+// 	path := this.pathBuilder.Key(caller)
+// 	entries, _, _ := this.ReadAll(path)
 
-	idx, v := slice.Extreme(entries, func(lhv, rhv []byte) bool {
-		return string(lhv) < string(rhv)
-	})
+// 	idx, v := slice.Extreme(entries, func(lhv, rhv []byte) bool {
+// 		return string(lhv) < string(rhv)
+// 	})
 
-	// This leaves a read access for the maxmium string in the container. It will be used for the conflict detection
-	if val, _, _ := this.GetByIndex(path, uint64(idx)); !bytes.Equal(v, val) {
-		panic("The value is not equal to the value in the container.")
+// 	// This leaves a read access for the maxmium string in the container. It will be used for the conflict detection
+// 	if val, _, _ := this.GetByIndex(path, uint64(idx)); !bytes.Equal(v, val) {
+// 		panic("The value is not equal to the value in the container.")
+// 	}
+
+// 	idxBytes, _ := abi.Encode(uint256.NewInt(uint64(idx)))
+// 	return append(idxBytes, v...), true, 0
+// }
+
+// func (this *BaseHandlers) maxString(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+// 	path := this.pathBuilder.Key(caller)
+// 	entries, _, _ := this.ReadAll(path)
+
+// 	idx, v := slice.Extreme(entries, func(lhv, rhv []byte) bool {
+// 		return string(lhv) > string(rhv)
+// 	})
+
+// 	// This leaves a read access for the maxmium string in the container. It will be used for the conflict detection
+// 	if val, _, _ := this.GetByIndex(path, uint64(idx)); !bytes.Equal(v, val) {
+// 		panic("The value is not equal to the value in the container.")
+// 	}
+
+// 	idxBytes, _ := abi.Encode(uint256.NewInt(uint64(idx)))
+// 	return append(idxBytes, v...), true, 0
+// }
+
+// Get the last element in the container and remove it from the container.
+func (this *BaseHandlers) pop(caller evmcommon.Address, _ []byte) ([]byte, bool, int64) {
+	path := this.pathBuilder.Key(caller) // BaseHandlers path
+	if len(path) == 0 {
+		return []byte{}, false, 0
 	}
 
-	idxBytes, _ := abi.Encode(uint256.NewInt(uint64(idx)))
-	return append(idxBytes, v...), true, 0
-}
-
-func (this *BaseHandlers) maxString(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	path := this.pathBuilder.Key(caller)
-	entries, _, _ := this.ReadAll(path)
-
-	idx, v := slice.Extreme(entries, func(lhv, rhv []byte) bool {
-		return string(lhv) > string(rhv)
-	})
-
-	// This leaves a read access for the maxmium string in the container. It will be used for the conflict detection
-	if val, _, _ := this.GetByIndex(path, uint64(idx)); !bytes.Equal(v, val) {
-		panic("The value is not equal to the value in the container.")
+	length, successful, fee := this.Length(path)
+	if !successful || length == 0 {
+		return []byte{}, successful, fee
 	}
 
-	idxBytes, _ := abi.Encode(uint256.NewInt(uint64(idx)))
-	return append(idxBytes, v...), true, 0
+	// Get the last element in the container.
+	values, successful, _ := this.GetByIndex(path, length-1)
+	if len(values) == 0 || !successful {
+		return values, false, 0 // Failed to get the last element
+	}
+
+	// Delete the last element in the container.
+	successful, fee = this.SetByIndex(path, length-1, nil)
+	return values, successful, fee
 }
 
 func (this *BaseHandlers) clear(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
