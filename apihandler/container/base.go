@@ -50,14 +50,17 @@ func (this *BaseHandlers) Call(caller, callee [20]byte, input []byte, origin [20
 	case [4]byte{0xcd, 0xbf, 0x60, 0x8d}:
 		return this.new(caller, input[4:]) // Create a new container
 
-	case [4]byte{0x59, 0xe0, 0x2d, 0xd7}:
-		return this.peekLength(caller, input[4:]) // Get the initial length of the container, it remains the same in the same block.
-
 	case [4]byte{0xf1, 0x06, 0x84, 0x54}:
 		return this.pid(caller, input[4:]) // Get the pesudo process ID.
 
+	case [4]byte{0x59, 0xe0, 0x2d, 0xd7}:
+		return this.committedLength(caller, input[4:]) // Get the initial length of the container, it remains the same in the same block.
+
+	case [4]byte{0x86, 0x03, 0x9d, 0x78}:
+		return this.fullLength(caller, input[4:]) // Get the current number of elements in the container.
+
 	case [4]byte{0x1f, 0x7b, 0x6d, 0x32}:
-		return this.length(caller, input[4:]) // Get the current number of elements in the container.
+		return this.length(caller, input[4:]) // Get the current number of elements in the container, excluding the nil elements.
 
 	case [4]byte{0x6a, 0x3a, 0x16, 0xbd}:
 		return this.indexByKey(caller, input[4:]) // Get the index of the element by its key.
@@ -131,6 +134,17 @@ func (this *BaseHandlers) pid(caller evmcommon.Address, input []byte) ([]byte, b
 }
 
 // getByIndex the number of elements in the container
+func (this *BaseHandlers) fullLength(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+	path := this.pathBuilder.Key(caller)
+	if length, successful, _ := this.FullLength(path); successful {
+		if encoded, err := abi.Encode(uint256.NewInt(length)); err == nil {
+			return encoded, true, 0
+		}
+	}
+	return []byte{}, false, 0
+}
+
+// getByIndex the number of elements in the container
 func (this *BaseHandlers) length(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.pathBuilder.Key(caller)
 	if length, successful, _ := this.Length(path); successful {
@@ -141,8 +155,8 @@ func (this *BaseHandlers) length(caller evmcommon.Address, input []byte) ([]byte
 	return []byte{}, false, 0
 }
 
-// peekLength the initial length of the container, which would remain the same in the same block.
-func (this *BaseHandlers) peekLength(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
+// committedLength the initial length of the container, which would remain the same in the same block.
+func (this *BaseHandlers) committedLength(caller evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	path := this.pathBuilder.Key(caller) // BaseHandlers path
 	if len(path) == 0 {
 		return []byte{}, false, 0

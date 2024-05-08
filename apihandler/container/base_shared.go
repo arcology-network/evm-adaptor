@@ -11,7 +11,7 @@ import (
 	cache "github.com/arcology-network/storage-committer/storage/writecache"
 )
 
-// Get the number of elements in the container, including the nil elements.
+// Get the number of elements in the container, EXCLUDING the nil elements.
 func (this *BaseHandlers) Length(path string) (uint64, bool, int64) {
 	if len(path) == 0 {
 		return 0, false, 0
@@ -19,6 +19,18 @@ func (this *BaseHandlers) Length(path string) (uint64, bool, int64) {
 
 	if path, _, _ := this.api.WriteCache().(*cache.WriteCache).Read(this.api.GetEU().(interface{ ID() uint32 }).ID(), path, new(commutative.Path)); path != nil {
 		return path.(*deltaset.DeltaSet[string]).NonNilCount(), true, 0
+	}
+	return 0, false, 0
+}
+
+// Get the number of elements in the container, INCLUDING the nil elements.
+func (this *BaseHandlers) FullLength(path string) (uint64, bool, int64) {
+	if len(path) == 0 {
+		return 0, false, 0
+	}
+
+	if path, _, _ := this.api.WriteCache().(*cache.WriteCache).Read(this.api.GetEU().(interface{ ID() uint32 }).ID(), path, new(commutative.Path)); path != nil {
+		return path.(*deltaset.DeltaSet[string]).Length(), true, 0
 	}
 	return 0, false, 0
 }
