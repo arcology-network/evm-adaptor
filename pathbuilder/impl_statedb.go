@@ -1,4 +1,4 @@
-package adaptorcommon
+package pathbuilder
 
 import (
 	"math/big"

@@ -1,4 +1,4 @@
-package adaptorcommon
+package pathbuilder
 
 import (
 	commonlib "github.com/arcology-network/common-lib/common"
