@@ -18,6 +18,7 @@ import (
 	adaptorcommon "github.com/arcology-network/evm-adaptor/common"
 	pathbuilder "github.com/arcology-network/evm-adaptor/pathbuilder"
 	"github.com/arcology-network/storage-committer/commutative"
+	"github.com/arcology-network/storage-committer/noncommutative"
 	cache "github.com/arcology-network/storage-committer/storage/writecache"
 )
 
@@ -51,17 +52,11 @@ func (this *RuntimeHandlers) Call(caller, callee [20]byte, input []byte, origin 
 	case [4]byte{0xbb, 0x07, 0xe8, 0x5d}: // bb 07 e8 5d
 		return this.uuid(caller, callee, input[4:])
 
-	case [4]byte{0x83, 0x2e, 0x49, 0xcf}: //
-		return this.sequentializeAll(caller, callee, input[4:])
+	case [4]byte{0x68, 0x7b, 0x09, 0xb7}: //
+		return this.setExecutionMethod(caller, callee, input[4:], scheduler.SEQUENTIAL_EXECUTION)
 
 	case [4]byte{0xc4, 0xdf, 0xfe, 0x6e}: //
-		return this.sequentialize(caller, callee, input[4:])
-
-	case [4]byte{0x68, 0x7b, 0x09, 0xb7}: //
-		return this.parallelize(caller, callee, input[4:])
-
-	case [4]byte{0x68, 0x7b, 0x09, 0xb7}: //
-		return this.parallelize(caller, callee, input[4:])
+		return this.setExecutionMethod(caller, callee, input[4:], scheduler.PARALLEL_EXECUTION)
 
 	case [4]byte{0xa8, 0x7a, 0xe4, 0x81}: // bb 07 e8 5d
 		return this.instances(caller, callee, input[4:])
@@ -122,26 +117,7 @@ func (this *RuntimeHandlers) instances(caller evmcommon.Address, callee evmcommo
 	return []byte{}, false, 0
 }
 
-func (this *RuntimeHandlers) sequentializeAll(caller, _ evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	if !this.api.VM().(*vm.EVM).ArcologyNetworkAPIs.IsInConstructor() {
-		return []byte{}, false, 0 // Can only be called from a constructor.
-	}
-
-	cache := this.api.WriteCache().(*cache.WriteCache)
-	txID := this.api.GetEU().(interface{ ID() uint32 }).ID()
-
-	signatures, err := abi.DecodeTo(input[32:], 1, [][4]byte{}, 2, math.MaxInt)
-	for _, signature := range signatures {
-		path := pathbuilder.FuncPropertyPath(caller, signature)
-		_, err = cache.Write(txID, path, commutative.NewPath())
-		if err != nil {
-			return []byte{}, false, 0 // Create a new sequentializer path.
-		}
-	}
-	return []byte{}, true, 0 // Create a new sequentializer path.
-}
-
-func (this *RuntimeHandlers) sequentialize(caller, _ evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *RuntimeHandlers) setExecutionMethod(caller, _ evmcommon.Address, input []byte, method uint8) ([]byte, bool, int64) {
 	if !this.api.VM().(*vm.EVM).ArcologyNetworkAPIs.IsInConstructor() {
 		return []byte{}, false, 0 // Can only be called from a constructor.
 	}
@@ -164,42 +140,55 @@ func (this *RuntimeHandlers) sequentialize(caller, _ evmcommon.Address, input []
 	}
 
 	// Parse the function signatures.
-	signatures, err := abi.DecodeTo(signBytes[32:], 2, [][4]byte{}, 2, math.MaxInt)
+	signatures, err := abi.DecodeTo(signBytes[32:], 0, [][4]byte{}, 2, math.MaxInt)
 
 	cache := this.api.WriteCache().(*cache.WriteCache)
 	txID := this.api.GetEU().(interface{ ID() uint32 }).ID()
 
-	parentPath := pathbuilder.FuncPropertyPath(caller, sourceFunc)
-	if _, err = cache.Write(txID, parentPath, commutative.NewPath()); err != nil { // Create a new sequentializer path.
+	// Create the parent path for the properties.
+	propertyPath := pathbuilder.FuncPropertyPath(caller, sourceFunc)
+	if _, err = cache.Write(txID, propertyPath, commutative.NewPath()); err != nil {
 		return []byte{}, err == nil, 0
 	}
 
-	callees := slice.Transform(signatures, func(i int, signature [4]byte) string {
+	path := pathbuilder.ExecutionMethodPath(caller, sourceFunc)
+
+	// If local method is parallel, global method is sequential and vice versa.
+	globalMethod := scheduler.PARALLEL_EXECUTION
+	if method == scheduler.PARALLEL_EXECUTION {
+		globalMethod = scheduler.SEQUENTIAL_EXECUTION
+	}
+	_, err = cache.Write(txID, path, noncommutative.NewBytes([]byte{globalMethod})) //
+
+	// Users can add some excepted callees so they can be handled differently.
+	callees := slice.Transform(signatures, func(i int, signature [4]byte) string { // Get the excepted callees.
 		return hex.EncodeToString(new(scheduler.Callee).Compact(targetAddr[:], signature[:]))
 	})
 
-	path := pathbuilder.SequentializerPath(caller, sourceFunc)
-	_, err = cache.Write(txID, path, commutative.NewPath(callees...)) // Write the sequentializer path regardless of its existence.
+	path = pathbuilder.ExceptPaths(caller, sourceFunc)
+	_, err = cache.Write(txID, path, commutative.NewPath(callees...)) // Write the excepted callees regardless of its existence.
 	return []byte{}, err == nil, 0
 }
 
-func (this *RuntimeHandlers) parallelize(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
-	fmt.Println(input)
-
-	if !this.api.VM().(*vm.EVM).ArcologyNetworkAPIs.IsInConstructor() {
-		return []byte{}, false, 0 // Can only be called from a constructor.
-	}
-	return []byte{}, true, 0 // Can only initialize once.
-}
-
 // This function needs to schedule a defer call to the next generation.
-func (this *RuntimeHandlers) deferred(caller, callee evmcommon.Address, input []byte) ([]byte, bool, int64) {
+func (this *RuntimeHandlers) deferred(caller, _ evmcommon.Address, input []byte) ([]byte, bool, int64) {
 	if !this.api.VM().(*vm.EVM).ArcologyNetworkAPIs.IsInConstructor() {
 		return []byte{}, false, 0 // Can only be called from a constructor.
 	}
 
-	if len(input) >= 4 {
-		this.api.AuxDict()["deferrable"] = input[:4]
+	if len(input) < 4 {
+		return []byte{}, false, 0
 	}
-	return []byte{}, false, 0 // Can only initialize once.
+
+	funSign := new(codec.Bytes4).FromBytes(input[:4])
+	cache := this.api.WriteCache().(*cache.WriteCache)
+	txID := this.api.GetEU().(interface{ ID() uint32 }).ID()
+
+	// Get the function signature.
+	propertyPath := pathbuilder.FuncPropertyPath(caller, funSign)
+	cache.Write(txID, propertyPath, commutative.NewPath())
+
+	deferPath := pathbuilder.DeferrablePath(caller, funSign)
+	_, err := cache.Write(txID, deferPath, noncommutative.NewBytes([]byte{255})) // Set the function deferrable
+	return []byte{}, err == nil, 0
 }

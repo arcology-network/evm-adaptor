@@ -20,6 +20,7 @@ package pathbuilder
 import (
 	"encoding/hex"
 
+	scheduler "github.com/arcology-network/eu/new-scheduler"
 	statestorecommon "github.com/arcology-network/storage-committer/common"
 	evmcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -30,17 +31,17 @@ func PropertyPath(source evmcommon.Address) string {
 }
 
 func FuncPropertyPath(source evmcommon.Address, sourceFun [4]byte) string {
-	return PropertyPath(source) + "func/" + hex.EncodeToString(sourceFun[:]) + "/"
+	return PropertyPath(source) + scheduler.PROPERTY_PATH + hex.EncodeToString(sourceFun[:]) + "/"
 }
 
-func SequentializerPath(source evmcommon.Address, sourceFun [4]byte) string {
-	return FuncPropertyPath(source, sourceFun) + "seq/"
+func ExecutionMethodPath(source evmcommon.Address, sourceFun [4]byte) string {
+	return FuncPropertyPath(source, sourceFun) + scheduler.EXECUTION_METHOD
 }
 
-func ParallelizerPath(source evmcommon.Address, sourceFun [4]byte) string {
-	return FuncPropertyPath(source, sourceFun) + "para/"
+func ExceptPaths(source evmcommon.Address, sourceFun [4]byte) string {
+	return FuncPropertyPath(source, sourceFun) + scheduler.EXECUTION_EXCEPTED
 }
 
 func DeferrablePath(source evmcommon.Address, sourceFun [4]byte) string {
-	return FuncPropertyPath(source, sourceFun) + "defer"
+	return FuncPropertyPath(source, sourceFun) + scheduler.DEFERRED_FUNC
 }
