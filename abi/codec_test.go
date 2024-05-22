@@ -83,7 +83,7 @@ func TestDecoder(t *testing.T) {
 	fmt.Println(buffer)
 
 	subbytes := buffer.([]byte)
-	idx, _ := slice.FindFirstIf(subbytes, func(v byte) bool { return v != 65 })
+	idx, _ := slice.FindFirstIf(subbytes, func(_ int, v byte) bool { return v != 65 })
 	if len(buffer.([]byte)) != 75 || idx != -1 {
 		t.Error("Error; The array should be 75 byte long!")
 	}
