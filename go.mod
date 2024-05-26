@@ -2,19 +2,19 @@ module github.com/arcology-network/evm-adaptor
 
 go 1.22
 
-replace github.com/ethereum/go-ethereum => ../concurrent-evm
+replace github.com/ethereum/go-ethereum v1.13.1 => ../concurrent-evm/
 
 replace github.com/arcology-network/common-lib => ../common-lib/
 
-replace github.com/arcology-network/concurrenturl => ../storage-committer/
+replace github.com/arcology-network/storage-committer => ../storage-committer/
 
 replace github.com/arcology-network/eu => ../eu/
 
 require (
-	github.com/arcology-network/common-lib v1.9.0
-	github.com/arcology-network/concurrenturl v1.9.0
-	github.com/arcology-network/eu v0.0.0-20231224215632-ab78ac9f31af
-	github.com/ethereum/go-ethereum v1.13.7
+	github.com/arcology-network/common-lib v0.0.0-00010101000000-000000000000
+	github.com/arcology-network/eu v0.0.0-00010101000000-000000000000
+	github.com/arcology-network/storage-committer v0.0.0-00010101000000-000000000000
+	github.com/ethereum/go-ethereum v1.13.1
 	github.com/holiman/uint256 v1.2.4
 )
 
@@ -24,7 +24,7 @@ require (
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
 	github.com/crate-crypto/go-kzg-4844 v0.7.0 // indirect
-	github.com/ethereum-optimism/superchain-registry/superchain v0.0.0-20231030223232-e16eae11e492 // indirect
+	github.com/ethereum-optimism/superchain-registry/superchain v0.0.0-20240227051544-1ec5013384e8 // indirect
 	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/supranational/blst v0.3.11 // indirect
@@ -39,12 +39,11 @@ require (
 	github.com/VictoriaMetrics/fastcache v1.12.2 // indirect
 	github.com/btcsuite/btcd v0.21.0-beta // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/elliotchance/orderedmap v1.5.1 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
-	github.com/google/uuid v1.3.0 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/google/uuid v1.6.0 // indirect
+	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
@@ -53,9 +52,10 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tklauser/go-sysconf v0.3.13 // indirect
 	github.com/tklauser/numcpus v0.7.0 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
+	golang.org/x/crypto v0.20.0 // indirect
 	golang.org/x/exp v0.0.0-20231206192017-f3f8817b8deb // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 )
 
@@ -66,10 +66,10 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cockroachdb/errors v1.11.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
-	github.com/cockroachdb/pebble v0.0.0-20231208175357-58bdc725addc // indirect
+	github.com/cockroachdb/pebble v1.1.0 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
+	github.com/deckarep/golang-set/v2 v2.6.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/getsentry/sentry-go v0.25.0 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
