@@ -1,91 +1,83 @@
-package tests
+/*
+ *   Copyright (c) 2024 Arcology Network
+
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package api
 
 import (
-	"math/big"
-	"os"
-	"path"
-	"path/filepath"
+	"bytes"
+	"fmt"
+	"math"
 	"testing"
 
-	commontypes "github.com/arcology-network/common-lib/types"
-	concurrenturl "github.com/arcology-network/concurrenturl"
-	evmcommon "github.com/arcology-network/evm/common"
-	"github.com/arcology-network/evm/core"
-	"github.com/arcology-network/evm/crypto"
-	eucommon "github.com/arcology-network/vm-adaptor/common"
-	"github.com/arcology-network/vm-adaptor/compiler"
-	"github.com/arcology-network/vm-adaptor/execution"
+	"github.com/arcology-network/common-lib/exp/mempool"
+	"github.com/arcology-network/evm-adaptor/abi"
+	apihandler "github.com/arcology-network/evm-adaptor/apihandler"
+	base "github.com/arcology-network/evm-adaptor/apihandler/container"
+	cache "github.com/arcology-network/storage-committer/storage/writecache"
+	"github.com/holiman/uint256"
 )
 
-func TestBaseContainer(t *testing.T) {
-	eu, config, db, url, _ := NewTestEU()
+type MockID struct{}
 
-	// ================================== Compile the contract ==================================
-	currentPath, _ := os.Getwd()
-	targetPath := path.Join(path.Dir(filepath.Dir(currentPath)), "concurrentlib", "lib")
+func (MockID) ID() uint32 { return 0 }
 
-	code, err := compiler.CompileContracts(targetPath, "/base/base_test.sol", "0.8.19", "BaseTest", true)
-	if err != nil || len(code) == 0 {
-		t.Error("Error: Failed to generate the byte code")
-	}
+func TestBaseHandlers(t *testing.T) {
+	api := apihandler.NewAPIHandler(mempool.NewMempool[*cache.WriteCache](16, 1, func() *cache.WriteCache {
+		return cache.NewWriteCache(nil, 32, 1)
+	}, func(cache *cache.WriteCache) { cache.Clear() }))
+	api.SetEU(MockID{})
+	baseContainer := base.NewBaseHandlers(api)
 
-	// ================================== Deploy the contract ==================================
-	msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true)
-	stdMsg := &execution.StandardMessage{
-		ID:     1,
-		TxHash: [32]byte{1, 1, 1},
-		Native: &msg, // Build the message
-		Source: commontypes.TX_SOURCE_LOCAL,
-	}
+	// Create a new container
+	baseContainer.Call(
+		[20]byte{0xc2},
+		[20]byte{0xc2},
+		[]byte{0xcd, 0xbf, 0x60, 0x8d},
+		[20]byte{},
+		0) // Nonce
 
-	receipt, execResult, err := eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
-	_, transitions := eu.Api().StateFilter().ByType()
-
-	// msg := core.NewMessage(eucommon.Alice, nil, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), evmcommon.Hex2Bytes(code), nil, true) // Build the message
-	// receipt, _, err := eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg)) // Execute it
-	// _, transitions := eu.Api().StateFilter().ByType()
-
-	//t.Log("\n" + eucommon.FormatTransitions(transitions))
-	// t.Log(receipt)
-
-	if receipt.Status != 1 || err != nil {
-		t.Error("Error: Deployment failed!!!", err)
-	}
-
-	contractAddress := receipt.ContractAddress
-	url = concurrenturl.NewConcurrentUrl(db)
-	url.Import(transitions)
-	url.Sort()
-	url.Commit([]uint32{1})
-
-	// ================================== Call() ==================================
-	// receipt, _, err = eu.Run(evmcommon.BytesToHash([]byte{1, 1, 1}), 1, &msg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(msg))
-	// if err != nil {
-	// 	fmt.Print(err)
+	// Push a new element by calling setByKey()
+	data, _ := abi.Encode(uint256.NewInt(11))
+	d, _ := abi.Decode(data, 0, new(uint256.Int), 1, math.MaxInt)
+	// if d, _ := abi.Decode(data, 0, new(uint256.Int), 1, math.MaxInt); !u256.Eq(d.(*uint256.Int)) {
+	// 	t.Error("Error: Should be equal!")
 	// }
-	// return
 
-	data := crypto.Keccak256([]byte("call()"))[:4]
-	msg = core.NewMessage(eucommon.Alice, &contractAddress, 0, new(big.Int).SetUint64(0), 1e15, new(big.Int).SetUint64(1), data, nil, false)
-	stdMsg = &execution.StandardMessage{
-		ID:     1,
-		TxHash: [32]byte{1, 1, 1},
-		Native: &msg, // Build the message
-		Source: commontypes.TX_SOURCE_LOCAL,
-	}
+	fmt.Println(d)
 
-	receipt, execResult, err = eu.Run(stdMsg, execution.NewEVMBlockContext(config), execution.NewEVMTxContext(*stdMsg.Native)) // Execute it
-	_, transitions = eu.Api().StateFilter().ByType()
+	baseContainer.Call(
+		[20]byte{0xc2},
+		[20]byte{0xc2},
+		append([]byte{0xc2, 0x78, 0xb7, 0x99}, data...),
+		[20]byte{},
+		0)
 
-	if err != nil {
-		t.Error(err)
-	}
+	// Get length
+	data, _, _ = baseContainer.Call(
+		[20]byte{0xc2},
+		[20]byte{0xc2},
+		[]byte{0x1f, 0x7b, 0x6d, 0x32},
+		[20]byte{},
+		0) // Nonce
 
-	if execResult != nil && execResult.Err != nil {
-		t.Error(execResult.Err)
-	}
-
-	if receipt.Status != 1 || err != nil {
-		t.Error("Error: Failed to call!!!", err)
+	buffer := [32]byte{}
+	if bytes.Equal(data, buffer[:]) {
+		t.Log("Success")
+	} else {
+		t.Error("Failed")
 	}
 }

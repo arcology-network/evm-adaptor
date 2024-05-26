@@ -120,9 +120,14 @@ func Decode(raw []byte, idx int, initv interface{}, depth uint8, maxLength int) 
 		v.SetBytes(raw[idx*32 : idx*32+32])
 		return v, nil
 
-	case [20]uint8:
+	case [20]uint8: // address
 		var v [20]byte
 		copy(v[:], raw[idx*32+12:idx*32+32])
+		return v, nil
+
+	case [4]uint8:
+		var v [4]byte
+		copy(v[:], raw[idx*32:idx*32+4])
 		return v, nil
 
 	case [32]uint8:
@@ -140,6 +145,22 @@ func Decode(raw []byte, idx int, initv interface{}, depth uint8, maxLength int) 
 		sub := raw[idx*32+32-4 : idx*32+32]
 		offset := binary.BigEndian.Uint32(sub)
 		return next(raw, offset, depth, maxLength)
+
+	case [][4]byte:
+		count, err := DecodeTo(raw, 0, uint64(0), 1, 32)
+		if err != nil {
+			return [][4]byte{}, errors.New("Error: Failed to decode the length")
+		}
+
+		signatures := make([][4]byte, count)
+		for i := 0; i < int(count); i++ {
+			if bytes, err := DecodeTo(raw, i+1, [4]byte{}, 1, 0); err == nil {
+				signatures[i] = bytes
+			} else {
+				return [][4]byte{}, errors.New("Error: Failed to decode")
+			}
+		}
+		return signatures, nil
 	}
 
 	return raw, errors.New("Error: Unknown type")
